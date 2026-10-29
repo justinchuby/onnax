@@ -44,6 +44,11 @@
         broadcast derivatives for concrete shapes and retains runtime handling
         for symbolic dimensions. ONNXScript can fold constants and share work
         across the complete graph.</p>
+      <p>For repeated directional products, the optional
+        <code>HoistLinearCoefficientsPass(inputs=["q_tangent"])</code> can first
+        extract direction-independent coefficients for CSE. This explicitly
+        permits floating-point reassociation; validate numerical behavior for
+        your workload. The pass preserves its source and does not require ONNXScript.</p>
       <p>The jelly exporter uses ONNXScript for offline optimization; browser
         ONNX Runtime graph optimization is disabled.
         <a href="https://github.com/justinchuby/onnax#optimize-generated-models">See the export example and validation guidance</a>.</p>

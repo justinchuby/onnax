@@ -13,7 +13,17 @@ import onnx_ir as ir
 from onnx.reference import ReferenceEvaluator
 
 import onnax
-from onnax import GradPass, JvpPass, VjpPass, VmapPass, grad, jvp, vjp, vmap
+from onnax import (
+    GradPass,
+    HoistLinearCoefficientsPass,
+    JvpPass,
+    VjpPass,
+    VmapPass,
+    grad,
+    jvp,
+    vjp,
+    vmap,
+)
 
 
 def main() -> None:
@@ -44,6 +54,7 @@ def main() -> None:
         "JvpPass",
         "VjpPass",
         "VmapPass",
+        "HoistLinearCoefficientsPass",
     }
 
     input_x = ir.val("x", dtype=ir.DataType.DOUBLE, shape=[2])
@@ -114,6 +125,11 @@ def main() -> None:
     values = run(hvp, {"x": x, hvp.graph.inputs[-1].name: direction})
     np.testing.assert_allclose(values[2], 2 * x**2 * weight)
     np.testing.assert_allclose(values[3], 2 * x**2 * direction)
+    factored = HoistLinearCoefficientsPass(inputs=[hvp.graph.inputs[-1].name])(hvp).model
+    np.testing.assert_allclose(
+        run(factored, {"x": x, factored.graph.inputs[-1].name: direction})[-1],
+        2 * x**2 * direction,
+    )
     assert ir.to_proto(model).SerializeToString() == before
 
     readme = distribution.metadata.get_payload()
@@ -145,9 +161,7 @@ def main() -> None:
     np.testing.assert_allclose(
         run(hvp, {**feeds, hvp.graph.inputs[-1].name: seed})[-1], 2 * sample**2 * seed
     )
-    print(
-        f"Installed onnax {distribution.version}: all eight exports and compositions passed."
-    )
+    print(f"Installed onnax {distribution.version}: all nine exports and compositions passed.")
 
 
 if __name__ == "__main__":

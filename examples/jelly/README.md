@@ -198,8 +198,9 @@ gradient, and factor linear HVP expressions for repeated execution.
 At a fixed Newton position `q`, the HVP is linear in the CG direction `v`.
 For example, `(a(q) * v) * b(q) + c(q) * v` can be factored into
 `(a(q) * b(q) + c(q)) * v`. All multiplications in this example are elementwise;
-the exporter does not commute arbitrary matrix products. `hoist_linear_coefficients`
-performs this algebra on the generated HVP, and the unrolled CG graph can share
+the exporter does not commute arbitrary matrix products. The public
+`onnax.HoistLinearCoefficientsPass(inputs=["q_tangent"])` performs this algebra on
+the generated HVP, and ONNXScript CSE on the unrolled CG graph can share
 the direction-independent coefficient work across its eight direction updates.
 Those coefficients still depend on runtime positions and physical parameters:
 they must be recomputed when those inputs change. This is neither a precomputed

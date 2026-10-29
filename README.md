@@ -57,6 +57,7 @@ pushforward = jvp(model, inputs=["x"], outputs=["loss"])
 pullback = vjp(model, inputs=["weight"], outputs=["loss"])
 hvp = jvp(gradient, inputs=["weight"])
 ir.save(per_example, "per_example.onnx")
+ir.save(hvp, "hvp.onnx")
 ```
 
 Every transform returns a **new graph**, leaves its source unchanged, and
@@ -118,6 +119,36 @@ Unknown or symbolic sizes retain runtime shape handling. Deployment optimization
 can additionally fold constants and share computation across the composed graph;
 it is separate from differentiation. The jelly exporter uses ONNXScript for this
 step and disables ONNX Runtime graph optimization during browser execution.
+
+For repeated directional products, use the optional
+[`HoistLinearCoefficientsPass`](src/onnax/_linear.py) before ONNXScript optimization:
+
+```python
+import onnx_ir as ir
+from onnxscript import optimizer
+
+from onnax import HoistLinearCoefficientsPass
+
+hvp = ir.load("hvp.onnx")
+# The model above appends one direction input; inspect names for other models.
+direction = hvp.graph.inputs[-1].name
+factored = HoistLinearCoefficientsPass(inputs=[direction])(hvp).model
+optimized = optimizer.optimize(factored, onnx_shape_inference=False)
+ir.save(optimized, "hvp.optimized.onnx")
+```
+
+The pass factors elementwise linear islands such as `a * v + b * v` into
+`v * (a + b)`, exposing direction-independent work for later CSE. Select one
+or more runtime inputs; coefficients must be independent of every selection.
+It returns a clone and needs no ONNXScript dependency itself. It preserves
+nonlinear operations, matrix products, functions, and subgraphs as boundaries;
+it does not prove the entire model is linear. `max_terms=64` bounds the number
+of dependent bases represented per island.
+
+This is an explicit opt-in to floating-point reassociation: rounding, overflow,
+underflow, signed zeros, and non-finite behavior may change, even for finite
+inputs. Validate numerical tolerances for the intended workload. Coefficients
+are computed from the current runtime inputs, not cached across executions.
 
 ## Development
 

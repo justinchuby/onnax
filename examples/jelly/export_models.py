@@ -17,7 +17,7 @@ from onnx.reference import ReferenceEvaluator
 from onnx_ir.passes.common import CheckerPass
 from onnxscript import optimizer
 
-from onnax import grad, jvp
+from onnax import HoistLinearCoefficientsPass, grad, jvp
 from onnax._inference import _infer_shapes
 
 GRID = 6
@@ -203,105 +203,6 @@ def fold_static_shapes(model: ir.Model) -> ir.Model:
     return _infer_shapes(model)
 
 
-def hoist_linear_coefficients(model: ir.Model, variable: str) -> ir.Model:
-    """Factor linear elementwise islands, hoisting invariant work out of CG.
-
-    This is graph algebra, not a spring-specific replacement HVP. Reassociation
-    changes FLOAT32 rounding, so exported equivalence is checked numerically.
-    """
-    tape = ir.tape.Tape()
-    inputs = [ir.val(v.name, dtype=v.dtype, shape=list(v.shape)) for v in model.graph.inputs]
-    mapped = dict(zip(model.graph.inputs, inputs))
-    for v in model.graph.initializers.values():
-        mapped[v] = tape.initializer(v.const_value, name=v.name)
-    one = tape.initializer(ir.tensor(np.float32(1), name="linear_one"))
-    dependencies, expressions = {}, {}
-
-    def op(name, *values):
-        return tape.op(name, values)
-
-    def dependent(value):
-        if value not in dependencies:
-            node = value.producer()
-            dependencies[value] = value.name == variable or (
-                node is not None and any(dependent(v) for v in node.inputs if v is not None)
-            )
-        return dependencies[value]
-
-    def terms(value):
-        if value in expressions:
-            return expressions[value]
-        node = value.producer()
-        result = {value: one}
-        if node is not None and node.op_type in ("Mul", "Div"):
-            a, b = node.inputs
-            if dependent(a) and not dependent(b):
-                result = {
-                    basis: op(node.op_type, coefficient, transform(b))
-                    for basis, coefficient in terms(a).items()
-                }
-            elif node.op_type == "Mul" and dependent(b) and not dependent(a):
-                result = {
-                    basis: op("Mul", coefficient, transform(a))
-                    for basis, coefficient in terms(b).items()
-                }
-        elif node is not None and node.op_type in ("Add", "Sub"):
-            a, b = node.inputs
-            if dependent(a) and dependent(b):
-                result = dict(terms(a))
-                for basis, coefficient in terms(b).items():
-                    if basis in result:
-                        result[basis] = op(node.op_type, result[basis], coefficient)
-                    else:
-                        result[basis] = (
-                            coefficient if node.op_type == "Add" else op("Neg", coefficient)
-                        )
-        elif node is not None and node.op_type == "Neg":
-            result = {
-                basis: op("Neg", coefficient)
-                for basis, coefficient in terms(node.inputs[0]).items()
-            }
-        expressions[value] = result
-        return result
-
-    def transform(value):
-        if value in mapped:
-            return mapped[value]
-        node = value.producer()
-        expression = terms(value) if dependent(value) else {value: one}
-        if value not in expression:
-            parts = [
-                op("Mul", transform(basis), coefficient)
-                for basis, coefficient in expression.items()
-            ]
-            result = parts[0]
-            for part in parts[1:]:
-                result = op("Add", result, part)
-        else:
-            result = tape.op(
-                node.op_type,
-                [transform(v) if v is not None else None for v in node.inputs],
-                node.attributes,
-                domain=node.domain,
-            )
-        mapped[value] = result
-        return result
-
-    outputs = [transform(v) for v in model.graph.outputs]
-    for before, after in zip(model.graph.outputs, outputs):
-        after.name = before.name
-    graph = ir.Graph(
-        inputs,
-        outputs,
-        nodes=tape.nodes,
-        initializers=tape.initializers,
-        opset_imports=dict(model.graph.opset_imports),
-        name=model.graph.name,
-        metadata_props=dict(model.graph.metadata_props),
-    )
-    return _infer_shapes(ir.Model(graph, ir_version=model.ir_version))
-
-
 def runtime_model(model: ir.Model, kind: str) -> ir.Model:
     """Specialize execution outputs and eliminate provably redundant reductions."""
     model = model.clone(deep_copy=True)
@@ -384,7 +285,7 @@ def runtime_model(model: ir.Model, kind: str) -> ir.Model:
         original_outputs.append("physical_gradient")
     model = optimizer.optimize(model, num_iterations=3, onnx_shape_inference=False)
     if kind == "hvp":
-        model = hoist_linear_coefficients(model, "q_tangent")
+        model = HoistLinearCoefficientsPass(inputs=["q_tangent"])(model).model
         model = optimizer.optimize(model, num_iterations=3, onnx_shape_inference=False)
     graph = model.graph
     tape = ir.tape.Tape(graph)
