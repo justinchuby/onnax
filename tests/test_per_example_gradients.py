@@ -4,6 +4,10 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
+from pathlib import Path
+
 import numpy as np
 import onnx
 import onnx_ir as ir
@@ -241,3 +245,155 @@ def test_unbroadcast_leading_singleton_scalar_and_empty_extents(shape, tmp_path)
             expected = np.empty((batch, 0, 3))
         assert actual.shape == (batch, *shape)
         np.testing.assert_allclose(actual, expected)
+
+
+@pytest.mark.parametrize("noop", [0, 1])
+def test_generated_gradients_reuse_variable_length_shared_axes(noop, tmp_path):
+    x = ir.val("x", dtype=ir.DataType.DOUBLE, shape=["rows", 3])
+    p = ir.val("p", dtype=ir.DataType.DOUBLE, shape=[3])
+    axes = ir.val("axes", dtype=ir.DataType.INT64, shape=["count"])
+    tape = ir.tape.Tape()
+    reduced = tape.op(
+        "ReduceMean",
+        [tape.op("Mul", [x, p]), axes],
+        {"keepdims": 1, "noop_with_empty_axes": noop},
+    )
+    # The symbolic engine does not infer rank for unknown reduction-axis values.
+    reduced.shape = ir.Shape([None, None])
+    loss = tape.op("ReduceSum", [reduced], {"keepdims": 0})
+    loss.name = "loss"
+    model = ir.Model(
+        ir.Graph(
+            [x, p, axes],
+            [loss],
+            nodes=tape.nodes,
+            opset_imports={"": 18},
+            name="runtime_reduction_loss",
+        ),
+        ir_version=10,
+    )
+    derivative = GradPass(inputs=["p"])(model).model
+    session = _session(
+        VmapPass([0, None, None])(derivative).model, tmp_path / "runtime_grad.onnx"
+    )
+    for batch, rows in ((1, 1), (3, 2), (7, 4)):
+        x_data = np.arange(batch * rows * 3, dtype=np.float64).reshape(batch, rows, 3) / 10
+        for axis_values in ([], [-1], [0], [0, -1]):
+            actual = session.run(
+                None,
+                {"x": x_data, "p": np.ones(3), "axes": np.array(axis_values, dtype=np.int64)},
+            )[-1]
+            count = (
+                np.prod([x_data.shape[a % 2 + 1] for a in axis_values])
+                if axis_values
+                else (1 if noop else rows * 3)
+            )
+            np.testing.assert_allclose(actual, x_data.sum(axis=1) / count)
+
+
+def test_initializer_default_axes_do_not_specialize_runtime_shapes(tmp_path):
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[2, 4])
+    axes = ir.val(
+        "axes",
+        dtype=ir.DataType.INT64,
+        shape=[1],
+        const_value=ir.tensor(np.array([0], dtype=np.int64)),
+    )
+    tape = ir.tape.Tape()
+    reduced = tape.op("ReduceSum", [x, axes], {"keepdims": 1})
+    reduced.name, reduced.dtype, reduced.shape = "reduced", x.dtype, ir.Shape([None, None])
+    shape = tape.op("Shape", [reduced])
+    shape.name = "example_shape"
+    model = ir.Model(
+        ir.Graph(
+            [x, axes],
+            [reduced, shape],
+            nodes=tape.nodes,
+            initializers=[axes],
+            opset_imports={"": 18},
+            name="default_axes",
+        ),
+        ir_version=10,
+    )
+    before = ir.to_proto(model).SerializeToString()
+    mapped = VmapPass([0, None])(model).model
+    assert not isinstance(mapped.graph.outputs[0].shape[1], int)
+    assert not isinstance(mapped.graph.outputs[0].shape[2], int)
+    session = _session(mapped, tmp_path / "defaults.onnx")
+    data = np.arange(24, dtype=np.float32).reshape(3, 2, 4)
+    for axis in (None, 0, 1, -1):
+        controls = {} if axis is None else {"axes": np.array([axis], dtype=np.int64)}
+        actual, shapes = session.run(None, {"x": data, **controls})
+        expected = data.sum(axis=1 if axis is None else (axis % 2 + 1), keepdims=True)
+        np.testing.assert_allclose(actual, expected)
+        np.testing.assert_array_equal(shapes, np.tile(expected.shape[1:], (3, 1)))
+    np.testing.assert_array_equal(mapped.graph.initializers["axes"].const_value.numpy(), [0])
+    assert ir.to_proto(model).SerializeToString() == before
+
+
+@pytest.mark.parametrize("op", ["ReduceSum", "ReduceLogSum", "ReduceL1"])
+@pytest.mark.parametrize("noop", [0, 1])
+def test_runtime_empty_axes_preserve_scalar_example_semantics(op, noop, tmp_path):
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[])
+    axes = ir.val("axes", dtype=ir.DataType.INT64, shape=["count"])
+    node = ir.node(op, [x, axes], {"keepdims": 1, "noop_with_empty_axes": noop})
+    node.outputs[0].name, node.outputs[0].dtype, node.outputs[0].shape = (
+        "y",
+        x.dtype,
+        ir.Shape([]),
+    )
+    model = ir.Model(
+        ir.Graph(
+            [x, axes],
+            node.outputs,
+            nodes=[node],
+            opset_imports={"": 18},
+            name="scalar_reduction",
+        ),
+        ir_version=10,
+    )
+    session = _session(VmapPass([0, None])(model).model, tmp_path / "scalar.onnx")
+    data = np.array([0.3, 0.8, 1.2], dtype=np.float32)
+    actual = session.run(None, {"x": data, "axes": np.array([], dtype=np.int64)})[0]
+    expected = np.log(data) if op == "ReduceLogSum" else data
+    np.testing.assert_allclose(actual, expected)
+
+
+def test_practical_example_saves_and_executes_graphs(tmp_path):
+    script = Path(__file__).resolve().parents[1] / "examples" / "per_example_gradients.py"
+    result = subprocess.run(
+        [sys.executable, str(script), "--output-dir", str(tmp_path)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    for batch in (1, 3, 7):
+        assert f"Batch {batch}: per-example parameter-gradient norms:" in result.stdout
+    assert "Norm of mean-loss gradient:" in result.stdout
+    for name in (
+        "single_example",
+        "single_gradient",
+        "per_example_gradient",
+        "mean_loss_gradient",
+    ):
+        proto = onnx.load(tmp_path / f"{name}.onnx")
+        onnx.checker.check_model(proto, full_check=True)
+        text = (tmp_path / f"{name}.txt").read_text(encoding="utf-8")
+        assert text in result.stdout
+        onnx.checker.check_model(onnx.parser.parse_model(text), full_check=True)
+    session = _session(ir.load(tmp_path / "per_example_gradient.onnx"), tmp_path / "ort.onnx")
+    mean_session = _session(
+        ir.load(tmp_path / "mean_loss_gradient.onnx"), tmp_path / "mean_ort.onnx"
+    )
+    for batch in (1, 3, 7):
+        x = np.arange(batch * 3, dtype=np.float64).reshape(batch, 3) / 10
+        target = np.full((batch, 2), 0.7)
+        prediction, _, gw, gb = session.run(None, {"features": x, "target": target})
+        residual = prediction - target
+        np.testing.assert_allclose(gw, x[:, :, None] * residual[:, None, :])
+        np.testing.assert_allclose(gb, residual)
+        mean_loss, mean_gw, mean_gb = mean_session.run(None, {"features": x, "target": target})
+        np.testing.assert_allclose(mean_loss, np.mean(residual**2))
+        np.testing.assert_allclose(mean_gw, gw.mean(axis=0))
+        np.testing.assert_allclose(mean_gb, gb.mean(axis=0))

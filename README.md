@@ -14,9 +14,10 @@ Requires Python 3.11 or later:
 uv sync
 uv run python examples/vmap.py --output-dir vmap_models
 uv run python examples/autodiff.py --output-dir autodiff_models
+uv run python examples/per_example_gradients.py --output-dir per_example_models
 ```
 
-Both examples print before/after ONNX graphs, save `.onnx` and readable `.txt`
+The examples print before/after ONNX graphs, save `.onnx` and readable `.txt`
 files, reload the saved models, and check their numerical meaning.
 The batching example includes a convolutional classifier and embedding-based
 recommendation with dynamic batches of 1, 3, and 7. The autodiff example computes
@@ -24,6 +25,11 @@ linear-regression gradients, checks a loss-reducing optimization step, and
 compares directional sensitivities and reverse attribution with NumPy.
 It also computes a forward-over-reverse parameter Hessian-vector product and
 directional curvature, saving the original, gradient, and HVP graphs.
+
+The per-example example differentiates a single-example two-response regressor
+and maps the generated gradients with one shared weight/bias set. It reports
+per-example parameter-gradient norms for dynamic batches of 1, 3, and 7, and
+contrasts them with the norm of the mean-batch-loss gradient.
 
 ## Public transforms
 
@@ -66,8 +72,9 @@ parameters. Autodiff supports FLOAT/DOUBLE first derivatives, gradient
 accumulation, runtime unbroadcasting (including zero extents), and existing
 shape metadata through `onnx-shape-inference>=0.4.0`. Both transforms infer on
 isolated clones with the engine's `refine` policy; there is no fallback engine
-or separate shape implementation. Unsupported active derivative paths, random operators, control
-flow, and local functions that have not been inlined fail explicitly.
+or separate shape implementation. Unsupported active derivative paths, random
+operators, control flow, and local functions that have not been inlined fail
+explicitly.
 
 `_batching`, `_autodiff`, and `_rule_registry` are private implementation homes.
 Batching, JVP, and VJP have separate typed rule contracts and instance-local

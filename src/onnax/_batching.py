@@ -313,11 +313,16 @@ class VmapPass(ir.passes.FunctionalPass):
     This covers supported first-order arithmetic, smooth activations, linear
     algebra, reductions, and layout/index paths when every generated node meets
     the batching rules; it is not a guarantee for every autodiff graph.
+    The inference engine can leave runtime-axis reductions unranked; provide
+    valid source rank annotations at such boundaries rather than relying on
+    a second inference engine. Composite reductions with empty axes and
+    ``noop_with_empty_axes=1`` still apply their non-reduction steps (for
+    example, ReduceLogSum takes Log).
     See ``examples/per_example_gradients.py`` for a runnable regression example.
 
-    Names and graph/model
-    metadata are preserved, except directly returned inputs/initializers can
-    need renamed output adapters. Failure never modifies the source model.
+    Names and graph/model metadata are preserved, except directly returned
+    inputs/initializers can need renamed output adapters. Failure never
+    modifies the source model.
     """
 
     def __init__(
@@ -1039,8 +1044,15 @@ class _Batcher:
             min(max(bound + rank if bound < 0 else bound, 0), rank) for bound in bounds
         ]
         if self.mapped[value]:
-            node.attributes["start"] = ir.AttrInt64("start", start + 1)
-            node.attributes["end"] = ir.AttrInt64("end", end + 1)
+            # Materialize the example slice: runtime optimizers can incorrectly
+            # fold Size(Shape(x, start=1)) to rank(x), including the batch axis.
+            shape = self._emit("Shape", [self.values[value]])
+            node.op_type = "Gather"
+            node.attributes.clear()
+            node.attributes["axis"] = ir.AttrInt64("axis", 0)
+            node.resize_inputs(2)
+            node.replace_input_with(0, shape)
+            node.replace_input_with(1, self._ints(list(range(start + 1, end + 1))))
         node.outputs[0].dtype = ir.DataType.INT64
         if node.outputs[0].shape is None:
             node.outputs[0].shape = ir.Shape([max(end - start, 0)])
