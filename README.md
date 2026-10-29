@@ -106,5 +106,3 @@ the actual version and supported interval. Keep remedies specific.
 ## License
 
 [MIT](https://github.com/justinchuby/onnax/blob/main/LICENSE).
-[NOTICE](https://github.com/justinchuby/onnax/blob/main/NOTICE) preserves source
-revisions and provenance for the author's upstream transformation work.
