@@ -4,9 +4,7 @@
 with `vmap`, differentiate with `grad`, `jvp`, and `vjp`, and save the result as
 ordinary ONNX. Built on [ONNX IR](https://github.com/onnx/ir-py).
 
-Experimental alpha software. These functions
-transform `onnx_ir.Model` objects, not Python callables or arrays: there is no
-Python tracing or execution runtime, and no claim of full JAX compatibility.
+Experimental alpha software.
 
 ## Install
 
@@ -87,54 +85,9 @@ Runnable examples cover [batching](https://github.com/justinchuby/onnax/blob/mai
 [autodiff and nonzero HVPs](https://github.com/justinchuby/onnax/blob/main/examples/autodiff.py),
 and [per-example parameter gradients](https://github.com/justinchuby/onnax/blob/main/examples/per_example_gradients.py).
 
-## Experimental support
-
-- Standard ONNX opsets **18-28**, subject to each operator's rule restrictions;
-  accepting an opset does not support every operator or dtype. Autodiff supports
-  FLOAT/DOUBLE. Shape inference uses `onnx-shape-inference`.
-- Supported compositions include batching generated reverse gradients and
-  **one forward-over-reverse** `jvp(grad(...))` or `jvp(vjp(...))`, including
-  after serialization. Arbitrary higher-order differentiation, nested batching,
-  or transform commutation is not promised.
-- Unsupported active derivative paths, random operators, control flow, and
-  non-inlined local functions fail explicitly. Mapped controls and ragged
-  outputs are unsupported; ordinary real-domain and nonsmooth-point limits apply.
-- Generated graphs need an external ONNX executor. ONNX Runtime **1.31.1**
-  accepts opsets only through **26**; opsets 27-28 are checked and executed with
-  ONNX's reference evaluator without downgrading their imports.
-
 ## Development
 
-```shell
-uv sync --group dev
-uv run pytest
-uv run ruff check .
-uv run ruff format --check .
-uv run mypy
-uv build
-uv run twine check --strict dist/*
-```
-
-CI checks Python 3.11 and 3.12 and exercises both built distributions outside
-the source tree.
-
-### Releases
-
-Update the version in `pyproject.toml` and the installation example above through
-a validated pull request. After merging, create a matching `v<version>` tag on
-the merged commit and publish a GitHub release for that tag.
-`.github/workflows/publish.yml` checks the version/tag match and that the tagged
-commit belongs to `main`, validates the wheel and source distribution, and
-publishes those exact artifacts using PyPI trusted publishing. The GitHub
-environment must be named `pypi`, and the PyPI trusted publisher must reference
-this repository, `publish.yml`, and that environment. No upload token is used.
-The workflow then compares the published filenames and SHA-256 checksums with
-the build and smoke-tests a fresh installation from PyPI outside the checkout.
-Do not reuse a version that has already been uploaded.
-
-Ruff lint and formatting are both required. The lint families, preview rules,
-Google docstring convention, and readability exclusions follow
-[ONNX IR](https://github.com/onnx/ir-py/blob/main/pyproject.toml).
+Ruff lint and formatting are both required.
 Use absolute imports in library modules and native ONNX IR APIs for model and
 tensor construction, including README snippets and examples. Direct ONNX schema,
 checker, serialization, and reference-evaluator APIs are valid interoperability
@@ -148,22 +101,10 @@ For operator failures include the transform mode, domain/operator, effective
 opset, and node name or output location, with only the offending input's
 shape/dtype/axis/control metadata as needed. Never dump tensor contents.
 Selection errors should list available graph names; version errors should state
-the actual version and supported interval. Keep remedies specific: changing
-training modes, reductions, dtypes, or opset labels can change semantics and
-must not be suggested as unconditional workarounds for unsupported behavior.
-
-Preserve exception types, chaining, source isolation, and actionable dependency
-errors. The inference adapter retains `onnx-shape-inference` exceptions and adds
-boundary context in Python exception notes; batching retains its
-`PreconditionError` wrapper with the original cause. No fallback inference engine
-or public exception hierarchy is needed. Use explicit validation, not assertions,
-for user inputs. Regression tests should check diagnostic context and remedies,
-not just that something raises; retain numerical and source-preservation checks.
+the actual version and supported interval. Keep remedies specific.
 
 ## License
 
 [MIT](https://github.com/justinchuby/onnax/blob/main/LICENSE).
 [NOTICE](https://github.com/justinchuby/onnax/blob/main/NOTICE) preserves source
 revisions and provenance for the author's upstream transformation work.
-ONNX IR is an external dependency, not a vendored fork; dependency licenses
-remain their own.
