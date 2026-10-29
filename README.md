@@ -22,6 +22,8 @@ The batching example includes a convolutional classifier and embedding-based
 recommendation with dynamic batches of 1, 3, and 7. The autodiff example computes
 linear-regression gradients, checks a loss-reducing optimization step, and
 compares directional sensitivities and reverse attribution with NumPy.
+It also computes a forward-over-reverse parameter Hessian-vector product and
+directional curvature, saving the original, gradient, and HVP graphs.
 
 ## Public transforms
 
@@ -75,10 +77,40 @@ running ONNX IR's `ShapeInferencePass` to annotate the generated graph.
 Arbitrary derivative graphs are not guaranteed to batch: for example,
 runtime-computed reduction axes used by unbroadcasting remain unsupported
 by the batching pass.
-**Higher-order autodiff remains explicitly rejected**, including after model
-serialization or batching. Forward-over-reverse Hessian-vector products belong
-in a follow-up: derivative-rule closure, selectable generated interfaces, and
-fixed seeds need deliberate support before removing the first-order guard.
+**One forward-over-reverse composition is supported**, including after
+serialization: `JvpPass` over a `GradPass` or `VjpPass` graph differentiates the
+ordinary emitted ONNX operations. For a scalar loss this computes Hessian-vector
+products without constructing a Hessian:
+
+```python
+gradient = GradPass(inputs=["weight"], output="loss")(model).model
+hvp = JvpPass(inputs=["weight"])(gradient).model
+# Original inputs/outputs and gradients remain, then a weight tangent input
+# and its Hessian-vector product output are appended. Feed the direction seed
+# with exactly the weight's shape/dtype; stored initializers are unchanged.
+```
+
+On a generated reverse graph, omitted `inputs` selects original non-initializer
+FLOAT/DOUBLE inputs, not cotangent seeds; omitted `outputs` selects generated
+gradients/cotangents, not original outputs. Explicit selections use exact graph
+names and may include original outputs or cotangent seeds. Parameters and seeds
+are fixed unless selected. Versioned JSON in graph metadata
+`onnax.autodiff.interface` records the ordered source input/output names, seed
+names, derivative output names, latest selections, and mode history, including
+collision-resolved names. See `JvpPass`'s docstring for the schema.
+
+Covered smooth paths include arithmetic (including active Pow exponents),
+Exp/Log/Sqrt/Reciprocal, trigonometric/hyperbolic functions, Sigmoid/Softplus/Erf,
+Softmax/LogSoftmax, MatMul/Gemm, runtime broadcasting and reductions, and
+layout/indexing paths including Gather's additive ScatterND pullback.
+Dimensions and reduction axes may be dynamic; shape/index computations remain
+structural, while floating-point dependencies are differentiated. Unsupported
+active generated paths fail precisely; for example Abs's Sign pullback is not
+supported. Piecewise rules retain their first-order fixed-predicate conventions
+away from boundaries; no higher derivative at a nonsmooth point is claimed.
+The usual real-domain restrictions still apply. Reverse-over-forward,
+reverse-over-reverse, forward-over-forward, third derivatives, and legacy
+marker-only derivative models remain explicitly rejected.
 General nested batching or arbitrary transform commutation is not promised.
 
 ## Development
@@ -97,7 +129,10 @@ reference-evaluator fixes used by the runnable examples. The development suite
 requires ONNX Runtime 1.29 or newer for opset 24 and CPU kernel coverage.
 Tests compare batching with
 independent examples, JVP/VJP with finite differences and their adjoint identity,
-and gradients with analytical references. Serialized graphs are checked and
+and gradients with analytical references.
+HVPs are checked against central differences of gradients, differences of
+directional derivatives, analytic curvature, and Hessian symmetry.
+Serialized graphs are checked and
 executed with ONNX's reference evaluator and ONNX Runtime. Some reference
 evaluator kernels have limitations (for example negative Pad and LRN); those
 cases are executed with ONNX Runtime.
