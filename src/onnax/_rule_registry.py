@@ -28,7 +28,7 @@ from typing import Generic, TypeVar
 
 import onnx_ir as ir
 
-from onnax._diagnostics import _node_context
+from onnax._diagnostics import _argument_context, _node_context
 
 _RuleT = TypeVar("_RuleT", bound=Callable[..., object])
 
@@ -40,7 +40,7 @@ def _normalize_domain(domain: str) -> str:
 def _check_version(version: int, *, context: str = "opset registration/lookup") -> None:
     if isinstance(version, bool) or not isinstance(version, int) or version < 1:
         raise ValueError(
-            f"Opset version must be a positive integer, got {version!r} ({context}). "
+            f"Opset version must be a positive integer, got {_argument_context(version)} ({context}). "
             "Supply an integer >= 1 in the registration range or enclosing opset import."
         )
 
@@ -54,8 +54,8 @@ def _effective_opset(node: ir.Node, opset_imports: Mapping[str, int]) -> int:
         _check_version(opset_imports["ai.onnx"], context=context)
         if opset_imports[""] != opset_imports["ai.onnx"]:
             raise ValueError(
-                f"Conflicting opset imports for ''={opset_imports['']!r} and "
-                f"'ai.onnx'={opset_imports['ai.onnx']!r}: {context}. "
+                f"Conflicting opset imports for ''={_argument_context(opset_imports[''])} and "
+                f"'ai.onnx'={_argument_context(opset_imports['ai.onnx'])}: {context}. "
                 "Use one standard-domain import, or give both aliases the same version."
             )
     if node.version is not None:
@@ -68,7 +68,7 @@ def _effective_opset(node: ir.Node, opset_imports: Mapping[str, int]) -> int:
         raise ValueError(
             f"No opset import for domain {node.domain!r} while resolving "
             f"{_node_context(node, opset_imports, 'rule lookup')}. "
-            f"Available imports: {dict(opset_imports)!r}. Add the operator's actual "
+            f"Available imports: {_argument_context(dict(opset_imports))}. Add the operator's actual "
             "version to its enclosing graph/function imports; do not borrow another domain."
         )
     _check_version(version, context=context)
@@ -109,24 +109,28 @@ class _RuleRegistry(Generic[_RuleT]):
     ) -> None:
         """Register a callable for exactly the inclusive supported interval."""
         _check_version(
-            since_version, context=f"{self._kind} {domain!r}::{op_type} since_version"
+            since_version,
+            context=f"{self._kind} {_argument_context(domain)}::{_argument_context(op_type)} since_version",
         )
         _check_version(
-            until_version, context=f"{self._kind} {domain!r}::{op_type} until_version"
+            until_version,
+            context=f"{self._kind} {_argument_context(domain)}::{_argument_context(op_type)} until_version",
         )
         if since_version > until_version:
             raise ValueError(
                 f"since_version={since_version} must not exceed until_version={until_version} "
-                f"for {domain!r}::{op_type}. Supply an inclusive range in ascending order."
+                f"for {_argument_context(domain)}::{_argument_context(op_type)}. "
+                "Supply an inclusive range in ascending order."
             )
         if not op_type:
             raise ValueError(
-                f"Operator name must not be empty (domain={domain!r}). "
+                f"Operator name must not be empty (domain={_argument_context(domain)}). "
                 "Register the exact ONNX operator name, such as 'Add'."
             )
         if not callable(rule):
             raise TypeError(
-                f"An operator rule must be callable for {domain!r}::{op_type}; "
+                f"An operator rule must be callable for {_argument_context(domain)}::"
+                f"{_argument_context(op_type)}; "
                 f"got {type(rule).__name__}. Pass the rule function, not its result."
             )
         key = (_normalize_domain(domain), op_type)
@@ -137,7 +141,7 @@ class _RuleRegistry(Generic[_RuleT]):
                 and existing.since_version <= until_version
             ):
                 raise ValueError(
-                    f"Overlapping {self._kind} rules for {key!r}: "
+                    f"Overlapping {self._kind} rules for {_argument_context(key)}: "
                     f"[{since_version}, {until_version}] overlaps "
                     f"[{existing.since_version}, {existing.until_version}]. "
                     "Overrides are not supported; use a separate registry."
@@ -166,7 +170,7 @@ class _RuleRegistry(Generic[_RuleT]):
             f"[{entry.since_version}, {entry.until_version}]" for entry in registrations
         )
         raise NotImplementedError(
-            f"No {self._kind} rule for {key!r} at opset {version}. "
+            f"No {self._kind} rule for {_argument_context(key)} at opset {version}. "
             f"Registered intervals: {supported or 'none'}. "
             f"{_node_context(node, opset_imports, self._kind)}. "
             + (

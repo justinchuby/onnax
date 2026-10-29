@@ -11,7 +11,7 @@ import onnx_ir as ir
 from onnx_shape_inference import OpUsageError, ShapeInferenceError
 
 from onnax import _rule_registry
-from onnax._diagnostics import _node_context, _value_context
+from onnax._diagnostics import _argument_context, _node_context, _value_context
 from onnax._inference import _infer_shapes
 
 from . import _elementwise, _indexing, _layout, _linalg, _nn, _reductions
@@ -197,45 +197,57 @@ class VmapPass(ir.passes.FunctionalPass):
             isinstance(axis_size, bool) or not isinstance(axis_size, int) or axis_size <= 0
         ):
             raise ValueError(
-                f"axis_size must be a positive integer or None, got {axis_size!r}. "
+                f"axis_size must be a positive integer or None, got {_argument_context(axis_size)}. "
                 "Use a fixed batch length >= 1, or None to infer it from a mapped input."
             )
         try:
             self.in_axes = tuple(in_axes)
         except TypeError as error:
             raise TypeError(
-                f"in_axes must be a sequence of integers/None, got {in_axes!r}. "
+                f"in_axes must be a sequence of integers/None, got {_argument_context(in_axes)}. "
                 "Pass one entry per graph input, such as (0, None)."
             ) from error
         try:
             self.out_axes = out_axes if isinstance(out_axes, int) else tuple(out_axes)
         except TypeError as error:
             raise TypeError(
-                f"out_axes must be an integer or sequence of integers, got {out_axes!r}. "
+                f"out_axes must be an integer or sequence of integers, got {_argument_context(out_axes)}. "
                 "Use 0 for leading output batch axes, or one axis per graph output."
             ) from error
         self.axis_size = axis_size
 
     def call(self, model: ir.Model) -> ir.passes.PassResult:
         version = model.graph.opset_imports.get("", 0)
-        if not 18 <= version <= 28:
+        try:
+            supported = bool(18 <= version <= 28)
+        except (TypeError, ValueError) as error:
+            raise type(error)(
+                f"vmap: invalid standard-domain opset {_argument_context(version)} "
+                f"in graph {model.graph.name!r}; expected a positive integer, supported "
+                "18 through 28. Supply the actual integer opset version and validate "
+                "the model; do not relabel an unsupported model's imports."
+            ) from error
+        if not supported:
             raise ir.passes.PreconditionError(
                 f"VmapPass requires standard-domain opset >= 18 and <= 28; "
-                f"graph {model.graph.name!r} imports {model.graph.opset_imports.get('')!r}. "
+                f"graph {model.graph.name!r} imports {_argument_context(model.graph.opset_imports.get(''))}. "
                 "Use a model authored for supported opsets 18 through 28. If converting "
                 "an older model, use a semantics-preserving ONNX version converter and "
                 "validate the result; do not simply relabel the import or downgrade a newer model."
             )
+        _rule_registry._check_version(
+            version, context=f"vmap graph {model.graph.name!r}, supported opsets 18 through 28"
+        )
         if len(self.in_axes) != len(model.graph.inputs):
             raise ir.passes.PreconditionError(
-                f"in_axes={self.in_axes!r} must have one entry per graph input; "
+                f"in_axes={_argument_context(self.in_axes)} must have one entry per graph input; "
                 f"expected {len(model.graph.inputs)} for "
                 f"{[value.name for value in model.graph.inputs]!r}, got {len(self.in_axes)}. "
                 "Supply axes in graph-input order, using None for shared inputs."
             )
         if all(axis is None for axis in self.in_axes):
             raise ir.passes.PreconditionError(
-                f"At least one input must be mapped; in_axes={self.in_axes!r} "
+                f"At least one input must be mapped; in_axes={_argument_context(self.in_axes)} "
                 f"for {[value.name for value in model.graph.inputs]!r}. "
                 "Set an input's entry to an insertion axis such as 0, or use the "
                 "original model directly when all inputs are shared."
@@ -246,7 +258,7 @@ class VmapPass(ir.passes.FunctionalPass):
             out_axes = self.out_axes
         if len(out_axes) != len(model.graph.outputs):
             raise ir.passes.PreconditionError(
-                f"out_axes={out_axes!r} must have one entry per graph output; "
+                f"out_axes={_argument_context(out_axes)} must have one entry per graph output; "
                 f"expected {len(model.graph.outputs)} for "
                 f"{[value.name for value in model.graph.outputs]!r}, got {len(out_axes)}. "
                 "Include retained primal and derivative outputs, or pass one integer for all."
@@ -402,7 +414,7 @@ class _Batcher(_Context):
             if value.is_initializer():
                 raise ir.passes.PreconditionError(
                     f"Mapped inputs cannot have initializer defaults: {_value_context(value)}, "
-                    f"in_axes={axis!r}. Use None if this input is truly shared, or explicitly "
+                    f"in_axes={_argument_context(axis)}. Use None if this input is truly shared, or explicitly "
                     "remove its initializer default from a source clone and supply its mapped "
                     "value at runtime."
                 )

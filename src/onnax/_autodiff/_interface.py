@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 import onnx_ir as ir
 
-from onnax._diagnostics import _value_context
+from onnax._diagnostics import _argument_context, _value_context
 
 from ._common import _FLOATS, _INTERFACE, _MARKER
 from ._registry import _JvpRegistry, _VjpRegistry
@@ -34,7 +34,7 @@ def _select(
         or any(not isinstance(name, str) for name in names)
     ):
         raise TypeError(
-            f"{mode}: {what} must be a sequence of names, got {names!r}. "
+            f"{mode}: {what} must be a sequence of names, got {_argument_context(names)}. "
             f"Pass a list such as ['name'], not a bare string or non-string entries. {choices}"
         )
     if names is None:
@@ -42,7 +42,7 @@ def _select(
     else:
         if len(set(names)) != len(names):
             raise ValueError(
-                f"{mode}: Duplicate names in {what}: {names!r}. "
+                f"{mode}: Duplicate names in {what}: {_argument_context(names)}. "
                 f"Select each name once in the desired derivative order. {choices}"
             )
         by_name = {value.name: value for value in values}
@@ -50,13 +50,15 @@ def _select(
         for name in names:
             if name not in by_name:
                 raise ValueError(
-                    f"{mode}: Unknown {what} name {name!r} in selection {names!r}. {choices} "
+                    f"{mode}: Unknown {what} name {_argument_context(name)} "
+                    f"in selection {_argument_context(names)}. {choices} "
                     "Use exact graph names, including collision-resolved derivative suffixes."
                 )
             selected.append(by_name[name])
     if not selected:
         raise ValueError(
-            f"{mode}: Select at least one FLOAT or DOUBLE tensor in {what}; selection={names!r}. "
+            f"{mode}: Select at least one FLOAT or DOUBLE tensor in {what}; "
+            f"selection={_argument_context(names)}. "
             f"{choices} Eligible floating tensors: "
             f"{[v.name for v in values if isinstance(v.type, ir.TensorType) and v.dtype in _FLOATS]!r}. "
             "Pass a nonempty selection of eligible names; non-floating differentiation "
@@ -66,7 +68,7 @@ def _select(
         if not isinstance(value.type, ir.TensorType) or value.dtype not in _FLOATS:
             raise TypeError(
                 f"{mode}: Autodiff {what} {value.name!r} must be a FLOAT or DOUBLE tensor, "
-                f"got {_value_context(value)} in selection {names!r}. {choices} "
+                f"got {_value_context(value)} in selection {_argument_context(names)}. {choices} "
                 "Select a supported floating tensor. Integer/boolean, half-precision, "
                 "and complex derivatives are unsupported; casting the selection alone "
                 "does not preserve the original computation's derivative."
@@ -98,7 +100,7 @@ def _composition_defaults(
         "Higher-order differentiation supports only one JvpPass over a generated "
         "GradPass or VjpPass model with versioned interface metadata. "
         f"Requested {registry._kind} on graph {model.graph.name!r}, "
-        f"marker={props.get(_MARKER, props.get('onnx_ir.autodiff'))!r}."
+        f"marker={_argument_context(props.get(_MARKER, props.get('onnx_ir.autodiff')))}."
     )
     remedy = (
         "Regenerate from the original model with grad or vjp, preserve the generated "
@@ -120,12 +122,12 @@ def _composition_defaults(
         )
     if info.get("version") != 1:
         raise NotImplementedError(
-            f"{message} Invalid interface metadata version={info.get('version')!r}; "
+            f"{message} Invalid interface metadata version={_argument_context(info.get('version'))}; "
             f"supported version is 1. {remedy}"
         )
     if info.get("modes") not in (["grad"], ["vjp"]):
         raise NotImplementedError(
-            f"{message} Got modes={info.get('modes')!r}; expected ['grad'] or ['vjp']. "
+            f"{message} Got modes={_argument_context(info.get('modes'))}; expected ['grad'] or ['vjp']. "
             f"Forward-over-forward, reverse-over-forward/reverse and third derivatives "
             f"are unsupported. {remedy}"
         )
@@ -148,7 +150,7 @@ def _composition_defaults(
             or len(set(names)) != len(names)
         ):
             raise NotImplementedError(
-                f"{message} Invalid interface field {key!r}={names!r}; "
+                f"{message} Invalid interface field {key!r}={_argument_context(names)}; "
                 f"expected a list of unique names from {sorted(available, key=str)!r}. {remedy}"
             )
     by_name = {v.name: v for v in model.graph.inputs}

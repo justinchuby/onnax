@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 import onnx
 import onnx_ir as ir
 
-from onnax._diagnostics import _value_context
+from onnax._diagnostics import _argument_context, _value_context
 from onnax._rule_registry import _effective_opset
 
 from ._registry import _MULTI_OUTPUT
@@ -23,7 +23,7 @@ def _axis(axis: int, rank: int, *, what: str = "Axis") -> int:
             else "A scalar has no valid axis; use an operator/input with rank >= 1."
         )
         raise ir.passes.PreconditionError(
-            f"Axis {axis!r} is invalid for rank {rank} ({what}). {remedy}"
+            f"Axis {_argument_context(axis)} is invalid for rank {rank} ({what}). {remedy}"
         )
     return axis % rank
 

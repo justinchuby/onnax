@@ -14,6 +14,8 @@ from onnx_shape_inference import (
     infer_symbolic_shapes,
 )
 
+from onnax._diagnostics import _argument_context
+
 
 def _infer_shapes(model: ir.Model, *, context: str = "shape inference") -> ir.Model:
     """Infer a clone without sharing mutable tensor names with the source.
@@ -51,7 +53,7 @@ def _infer_shapes(model: ir.Model, *, context: str = "shape inference") -> ir.Mo
     except (OpUsageError, ShapeInferenceError) as error:
         error.add_note(
             f"{context}: onnx-shape-inference failed for graph {model.graph.name!r} "
-            f"with imports {dict(model.graph.opset_imports)!r}, policy='refine'. "
+            f"with imports {_argument_context(dict(model.graph.opset_imports))}, policy='refine'. "
             "Correct the reported operator inputs/attributes or incompatible shape "
             "annotations in the source model, then retry. The source is unchanged."
         )

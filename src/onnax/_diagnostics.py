@@ -5,8 +5,37 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from itertools import islice
 
 import onnx_ir as ir
+
+
+def _argument_context(value: object, *, _depth: int = 0) -> str:
+    """Describe malformed arguments without invoking arbitrary object reprs."""
+    if isinstance(value, ir.Value):
+        return _value_context(value)
+    if type(value) in (str, int, float, bool, type(None)):
+        return repr(value)
+    if (
+        _depth < 3
+        and isinstance(value, (list, tuple, dict))
+        and type(value) in (list, tuple, dict)
+    ):
+        if isinstance(value, dict):
+            entries = [
+                f"{_argument_context(k, _depth=_depth + 1)}: "
+                f"{_argument_context(v, _depth=_depth + 1)}"
+                for k, v in islice(value.items(), 8)
+            ]
+            left, right = "{", "}"
+        else:
+            entries = [_argument_context(v, _depth=_depth + 1) for v in value[:8]]
+            left, right = ("[", "]") if isinstance(value, list) else ("(", ")")
+        if len(value) > 8:
+            entries.append("...")
+        suffix = "," if isinstance(value, tuple) and len(value) == 1 else ""
+        return left + ", ".join(entries) + suffix + right
+    return f"<{type(value).__name__}>"
 
 
 def _node_context(node: ir.Node, imports: Mapping[str, int], mode: str) -> str:
@@ -24,7 +53,8 @@ def _node_context(node: ir.Node, imports: Mapping[str, int], mode: str) -> str:
         location += f", graph {node.graph.name!r}"
     return (
         f"{mode}: {node.domain or 'ai.onnx'}::{node.op_type} "
-        f"at opset {version if version is not None else 'missing'} ({location})"
+        f"at opset {_argument_context(version) if version is not None else 'missing'} "
+        f"({location})"
     )
 
 

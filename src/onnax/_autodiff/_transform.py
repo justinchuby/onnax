@@ -10,7 +10,7 @@ import onnx
 import onnx_ir as ir
 
 from onnax import _rule_registry
-from onnax._diagnostics import _node_context, _value_context
+from onnax._diagnostics import _argument_context, _node_context, _value_context
 from onnax._inference import _infer_shapes
 
 from . import _elementwise, _layout, _linalg, _reductions
@@ -34,15 +34,27 @@ def _prepare(
     if outputs is None and default_outputs is not None:
         outputs = default_outputs
     version = model.graph.opset_imports.get("", 0)
-    if not 18 <= version <= 28:
+    try:
+        supported = bool(18 <= version <= 28)
+    except (TypeError, ValueError) as error:
+        raise type(error)(
+            f"{mode}: invalid standard-domain opset {_argument_context(version)} "
+            f"in graph {model.graph.name!r}; expected a positive integer, supported "
+            "18 through 28. Supply the actual integer opset version and validate "
+            "the model; do not relabel an unsupported model's imports."
+        ) from error
+    if not supported:
         raise ValueError(
             f"{mode}: Autodiff requires the standard ONNX opset >= 18 and <= 28; "
-            f"graph {model.graph.name!r} imports {model.graph.opset_imports.get('')!r}. "
+            f"graph {model.graph.name!r} imports {_argument_context(model.graph.opset_imports.get(''))}. "
             "Use a model authored for supported opsets 18 through 28. For an older "
             "model, convert with ONNX's version converter only where semantics are "
             "preserved and validate the result. Do not relabel imports or assume "
             "a newer model can safely be downgraded."
         )
+    _rule_registry._check_version(
+        version, context=f"{mode} graph {model.graph.name!r}, supported opsets 18 through 28"
+    )
     result = model.clone()
     graph = result.graph
     try:

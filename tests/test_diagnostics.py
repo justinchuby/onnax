@@ -568,3 +568,89 @@ def test_registry_conflict_and_missing_import_diagnostics_are_actionable():
     with pytest.raises(NotImplementedError) as caught:
         registry.lookup(node, {"example": 7})
     _contains(caught.value, "opset 7", "[3, 5]", "registered interval", "relabel")
+
+
+@pytest.mark.parametrize(
+    "argument",
+    [
+        "axis_size",
+        "in_axes",
+        "in_axes_entry",
+        "in_axes_count",
+        "out_axes",
+        "out_axes_entry",
+        "inputs",
+        "nested_inputs",
+        "registry_version",
+        "graph_version",
+    ],
+)
+def test_malformed_tensor_arguments_never_print_payloads(argument):
+    parameter = ir.val(
+        "private_parameter",
+        dtype=ir.DataType.FLOAT,
+        shape=[2],
+        const_value=ir.tensor(np.array([987654.0, 123456.0], dtype=np.float32)),
+    )
+    source = _model()
+    actions = {
+        "axis_size": lambda: vmap(source, [0], axis_size=parameter),
+        "in_axes": lambda: vmap(source, parameter),
+        "in_axes_entry": lambda: vmap(source, [parameter]),
+        "in_axes_count": lambda: vmap(source, [parameter, None]),
+        "out_axes": lambda: vmap(source, [0], out_axes=parameter),
+        "out_axes_entry": lambda: vmap(source, [0], out_axes=[parameter]),
+        "inputs": lambda: jvp(source, inputs=[parameter]),
+        "nested_inputs": lambda: jvp(source, inputs=[[parameter]]),
+        "registry_version": lambda: _rule_registry._check_version(parameter),
+        "graph_version": lambda: jvp(source),
+    }
+    if argument == "graph_version":
+        source.graph.opset_imports[""] = parameter
+    with pytest.raises((TypeError, ValueError, ir.passes.PreconditionError)) as caught:
+        actions[argument]()
+    text = str(caught.value)
+    assert "private_parameter" in text and "shape=[2]" in text
+    assert "987654" not in text and "123456" not in text
+
+
+def test_arbitrary_invalid_argument_repr_is_not_called():
+    class InvalidAxis:
+        def __repr__(self):
+            raise AssertionError("diagnostics must not invoke this representation")
+
+    with pytest.raises(ir.passes.PreconditionError) as caught:
+        vmap(_model(), [InvalidAxis()])
+    _contains(caught.value, "<InvalidAxis>", "integer", "in_axes")
+
+
+@pytest.mark.parametrize("transform", [jvp, lambda m: vmap(m, [0])])
+@pytest.mark.parametrize("version,exception", [("18", TypeError), (18.5, ValueError)])
+def test_malformed_graph_version_errors_remain_typed_but_become_actionable(
+    transform, version, exception
+):
+    source = _model(opset=version)
+    with pytest.raises(exception) as caught:
+        transform(source)
+    _contains(
+        caught.value,
+        repr(version),
+        "diagnostic",
+        "positive integer",
+        "18 through 28",
+        "Supply",
+        "opset",
+    )
+
+
+def test_numpy_argument_and_recursive_sequence_diagnostics_are_bounded():
+    with pytest.raises(ir.passes.PreconditionError) as caught:
+        vmap(_model(), [np.array([987654, 123456])])
+    _contains(caught.value, "<ndarray>", "integer", "in_axes")
+    assert "987654" not in str(caught.value)
+    axes = []
+    axes.append(axes)
+    with pytest.raises(ir.passes.PreconditionError) as caught:
+        vmap(_model(), axes)
+    _contains(caught.value, "<list>", "integer", "in_axes")
+    assert len(str(caught.value)) < 500
