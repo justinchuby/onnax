@@ -46,7 +46,7 @@ model = ir.Model(
         [x, weight],
         [loss],
         nodes=tape.nodes,
-        opset_imports={"": 18},
+        opset_imports={"": 24},
         name="linear_loss",
     ),
     ir_version=10,
@@ -85,9 +85,10 @@ Runnable examples cover [batching](https://github.com/justinchuby/onnax/blob/mai
 [autodiff and nonzero HVPs](https://github.com/justinchuby/onnax/blob/main/examples/autodiff.py),
 and [per-example parameter gradients](https://github.com/justinchuby/onnax/blob/main/examples/per_example_gradients.py).
 
-Try the [interactive WebGPU jelly playground](examples/jelly): drag a spring sheet
-and compare explicit stepping with matrix-free Newton-CG, powered by exported
-`grad` and `jvp(grad(...))` ONNX graphs.
+Try the [hosted WebGPU jelly playground](https://www.justinchuby.com/onnax/jelly/): drag a spring sheet
+with matrix-free Newton-CG, powered by exported
+`grad` and `jvp(grad(...))` ONNX graphs. See the [documentation site](https://www.justinchuby.com/onnax/)
+and [playground source and run instructions](examples/jelly).
 
 ## Development
 

@@ -2,6 +2,13 @@
 // SPDX-License-Identifier: MIT
 import type { Simulation } from './simulation';
 
+export function forceArrow(fx: number, fy: number) {
+  const magnitude = Math.hypot(fx, fy);
+  if (magnitude < 0.02) return null;
+  const strength = Math.tanh(magnitude / 6);
+  return { dx: fx / magnitude, dy: fy / magnitude, length: 6 + 30 * strength, strength };
+}
+
 export class Renderer {
   private readonly context: CanvasRenderingContext2D;
   width = 1;
@@ -159,16 +166,13 @@ export class Renderer {
     c.shadowBlur = 0;
     if (s.settings.overlay === 'force') {
       for (let node = 0; node < s.mesh.positions.length; node++) {
-        const fx = s.forces[node * 2],
-          fy = s.forces[node * 2 + 1],
-          magnitude = Math.hypot(fx, fy);
-        if (magnitude < 0.02) continue;
-        const [x, y] = p(node),
-          length = 6 + 30 * Math.tanh(magnitude / 6);
-        const dx = fx / magnitude,
-          dy = fy / magnitude;
-        c.strokeStyle = '#bef5d6c9';
-        c.lineWidth = 1.2;
+        if (s.pinned.has(node)) continue;
+        const arrow = forceArrow(s.forces[node * 2], s.forces[node * 2 + 1]);
+        if (!arrow) continue;
+        const [x, y] = p(node);
+        const { dx, dy, length, strength } = arrow;
+        c.strokeStyle = `hsl(${160 - 70 * strength}, 85%, 78%)`;
+        c.lineWidth = 1.6;
         c.beginPath();
         c.moveTo(x, y);
         c.lineTo(x + length * dx, y + length * dy);
@@ -211,7 +215,7 @@ export class Renderer {
     c.textAlign = 'left';
     c.fillText(
       s.settings.overlay === 'force'
-        ? 'FORCE · nonlinear arrow scale'
+        ? 'ONNX FORCE · mint → gold · nonlinear scale'
         : s.settings.overlay === 'strain'
           ? 'STRAIN · lavender → rose'
           : 'REST SHAPE · dashed',

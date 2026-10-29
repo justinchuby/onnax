@@ -1,0 +1,58 @@
+name: Deploy docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: examples/jelly/package-lock.json
+      - name: Read existing Pages configuration
+        id: pages
+        uses: actions/configure-pages@v5
+      - run: npm ci
+        working-directory: examples/jelly
+      - run: npm run lint && npm test
+        working-directory: examples/jelly
+      - name: Build playground at the Pages subpath
+        run: npm run build -- --base="${{ steps.pages.outputs.base_path }}/jelly/"
+        working-directory: examples/jelly
+      - name: Assemble and verify documentation artifact
+        run: node tools/build_docs.mjs "${{ steps.pages.outputs.base_path }}"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

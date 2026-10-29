@@ -7,16 +7,19 @@ export default defineConfig({
   expect: { timeout: 30_000 },
   workers: 1,
   use: {
-    baseURL: 'http://127.0.0.1:5175',
+    baseURL:
+      process.env.JELLY_BASE_URL ?? `http://127.0.0.1:5175${process.env.JELLY_BASE_PATH ?? '/'}`,
     browserName: 'chromium',
     channel: process.env.JELLY_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
     headless: true,
     screenshot: 'only-on-failure',
     launchOptions: { args: ['--enable-unsafe-webgpu'] },
   },
-  webServer: {
-    command: `npm run ${process.env.JELLY_PREVIEW === '1' ? 'preview' : 'dev'} -- --port 5175 --strictPort`,
-    url: 'http://127.0.0.1:5175',
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: process.env.JELLY_BASE_URL
+    ? undefined
+    : {
+        command: `npm run ${process.env.JELLY_PREVIEW === '1' ? 'preview' : 'dev'} -- --base=${process.env.JELLY_BASE_PATH ?? '/'} --port 5175 --strictPort`,
+        url: `http://127.0.0.1:5175${process.env.JELLY_BASE_PATH ?? '/'}`,
+        reuseExistingServer: !process.env.CI,
+      },
 });

@@ -4,7 +4,6 @@ import type { Graphs, Mesh, Parameters } from './model';
 import { finite, newtonCG, norm, type SolveResult, type Vector } from './solver';
 
 export interface Settings {
-  mode: 'implicit' | 'explicit';
   stiffness: number;
   damping: number;
   dt: number;
@@ -22,13 +21,12 @@ export class Simulation {
   readonly anchors: Vector;
   dragging: { node: number; position: [number, number] } | null = null;
   settings: Settings = {
-    mode: 'implicit',
     stiffness: 120,
     damping: 2,
     dt: 0.025,
     gravity: true,
     pins: 'top',
-    overlay: 'strain',
+    overlay: 'force',
   };
   steps = 0;
   time = 0;
@@ -125,46 +123,31 @@ export class Simulation {
     const started = performance.now();
     // Snapshot parameters for one atomic step; UI changes take effect next step.
     const settings = { ...this.settings };
-    const { dt: h, damping, mode } = settings;
+    const { dt: h } = settings;
     const physical = this.parameters(false);
-    const objective = this.graphs.objective(this.parameters(mode === 'implicit'));
-    let next: Vector,
-      velocity: Vector,
-      solve: SolveResult | null = null;
-    if (mode === 'implicit') {
-      const predictor = Float32Array.from(this.x, (value, i) =>
-        physical.free[i]
-          ? value + h * this.v[i] + h * h * this.acceleration[i]
-          : physical.anchor[i],
-      );
-      solve = await newtonCG(objective, predictor, settings.stiffness);
-      next = solve.x;
-      velocity = Float32Array.from(next, (value, i) => (value - this.x[i]) / h);
-    } else {
-      const evaluation = await objective.evaluate(this.x);
-      // Symplectic Euler, explicit conservative force and explicit viscous drag.
-      velocity = Float32Array.from(
-        this.v,
-        (value, i) => value - h * (evaluation.gradient[i] / this.mesh.mass + damping * value),
-      );
-      next = Float32Array.from(this.x, (value, i) => value + h * velocity[i]);
-    }
+    const objective = this.graphs.objective(this.parameters(true));
+    const predictor = Float32Array.from(this.x, (value, i) =>
+      physical.free[i] ? value + h * this.v[i] + h * h * this.acceleration[i] : physical.anchor[i],
+    );
+    const solve = await newtonCG(objective, predictor, settings.stiffness);
+    const next = solve.x;
+    const velocity = Float32Array.from(next, (value, i) => (value - this.x[i]) / h);
     for (let i = 0; i < next.length; i++) {
       if (physical.free[i] === 0) {
         next[i] = physical.anchor[i];
         velocity[i] = 0;
       }
     }
-    finite(next, `${mode} step`);
-    finite(velocity, `${mode} velocity`);
+    finite(next, 'Implicit step');
+    finite(velocity, 'Implicit velocity');
     if (
       next.some((value) => Math.abs(value) > 5) ||
       velocity.some((value) => Math.abs(value) > 100)
     ) {
       throw new Error(
-        `${mode === 'explicit' ? 'Explicit instability' : 'Simulation safety limit'}: ` +
+        'Simulation safety limit: ' +
           `step would exceed 5 position units or 100 units/s (k=${settings.stiffness}, dt=${h}). ` +
-          'Last valid state preserved. Reduce timestep/stiffness or switch to implicit, then reset.',
+          'Last valid state preserved. Reduce timestep/stiffness or drag distance, then Reset and Resume.',
       );
     }
     const physicalResult = solve?.evaluation.physicalGradient
@@ -179,14 +162,12 @@ export class Simulation {
     this.elastic = physicalResult.elastic;
     this.kinetic = 0.5 * this.mesh.mass * norm(velocity) ** 2;
     this.lastSolve = solve;
-    this.residual = solve?.residual ?? norm(physicalResult.gradient);
-    this.status = solve
-      ? solve.converged
-        ? 'Converged · safeguarded Newton-CG'
-        : solve.termination === 'precision'
-          ? 'Float32 precision limit · approximate step'
-          : 'Iteration budget · approximate step'
-      : 'Explicit · symplectic Euler';
+    this.residual = solve.residual;
+    this.status = solve.converged
+      ? 'Converged · safeguarded Newton-CG'
+      : solve.termination === 'precision'
+        ? 'Float32 precision limit · approximate step'
+        : 'Iteration budget · approximate step';
     this.stepMs = performance.now() - started;
     this.frameSamples.push(this.stepMs);
     if (this.frameSamples.length > 200) this.frameSamples.shift();

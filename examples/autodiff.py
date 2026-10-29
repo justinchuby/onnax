@@ -51,7 +51,7 @@ def linear_regression(weight: np.ndarray, bias: np.ndarray) -> ir.Model:
             [prediction, loss],
             nodes=tape.nodes,
             initializers=tape.initializers,
-            opset_imports={"": 18},
+            opset_imports={"": 24},
             name="linear_regression",
         ),
         ir_version=9,

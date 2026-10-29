@@ -61,17 +61,6 @@ function reset(): void {
   refresh();
   renderer.draw();
 }
-function setMode(mode: Settings['mode']): void {
-  simulation.settings.mode = mode;
-  for (const name of ['implicit', 'explicit']) {
-    element(name).classList.toggle('selected', name === mode);
-    element(name).setAttribute('aria-pressed', String(name === mode));
-  }
-  element('mode-note').textContent =
-    mode === 'implicit'
-      ? 'Looks ahead with generated Hessian-vector products. More work, steadier stiff springs.'
-      : 'Uses the generated force at the current state. Fast, but large steps and stiff springs can become unstable.';
-}
 function queue(action: () => void): void {
   if (!ready) return;
   if (busy) pending.push(action);
@@ -84,6 +73,18 @@ function queue(action: () => void): void {
 function refresh(): void {
   if (!simulation) return;
   element('energy').innerHTML = `${simulation.elastic.toFixed(3)} <small>J*</small>`;
+  let maxForce = 0;
+  for (let node = 0; node < simulation.mesh.positions.length; node++) {
+    if (!simulation.pinned.has(node))
+      maxForce = Math.max(
+        maxForce,
+        Math.hypot(simulation.forces[node * 2], simulation.forces[node * 2 + 1]),
+      );
+  }
+  element('force-max').textContent = simulation.steps
+    ? `${maxForce.toFixed(3)} units`
+    : 'waiting for first step';
+  element('force-legend').hidden = simulation.settings.overlay !== 'force';
   element('residual').textContent = simulation.steps ? simulation.residual.toExponential(1) : '—';
   element('step-time').innerHTML = simulation.steps
     ? `${simulation.stepMs.toFixed(1)} <small>ms</small>`
@@ -91,9 +92,7 @@ function refresh(): void {
   const solve = simulation.lastSolve;
   element('iterations').textContent = solve
     ? `${solve.iterations} Newton · ${solve.cgIterations} CG · ${solve.negativeCurvature} curvature stops`
-    : simulation.steps
-      ? 'Force norm · explicit, no Newton solve'
-      : 'Waiting for the first step';
+    : 'Waiting for the first step';
   element('graph-time').textContent = graphs.baseline
     ? `grad ${graphs.timings.gradient.last.toFixed(1)} ms · H·v ${graphs.timings.hvp.last.toFixed(1)} ms`
     : `GPU Newton batch ${graphs.timings.batch.last.toFixed(1)} ms · 1 packed readback`;
@@ -183,9 +182,6 @@ async function physics(): Promise<void> {
   );
 }
 
-for (const mode of ['implicit', 'explicit'] as const) {
-  element(mode).addEventListener('click', () => queue(() => setMode(mode)));
-}
 for (const id of ['stiffness', 'damping', 'timestep'] as const) {
   element<HTMLInputElement>(id).addEventListener('input', (event) =>
     queue(() => {
@@ -306,12 +302,43 @@ declare global {
 }
 
 async function initialize(): Promise<void> {
-  const response = await fetch(`${import.meta.env.BASE_URL}models/mesh.json`);
+  const response = await fetch(
+    `${import.meta.env.BASE_URL}models/mesh.json?v=${__JELLY_MODEL_VERSION__}`,
+  );
   if (!response.ok)
     throw new Error(
       `Mesh manifest returned HTTP ${response.status}. Serve examples/jelly with npm run dev; include public/models when building.`,
     );
   const mesh = (await response.json()) as Mesh;
+  for (const kind of ['energy', 'gradient', 'hvp'] as const) {
+    const section = document.createElement('section');
+    const heading = document.createElement('h3');
+    heading.textContent = `${kind} · ONNX opset ${mesh.opset}`;
+    section.append(heading);
+    for (const [label, info, folder] of [
+      ['Original', mesh.models[kind], ''],
+      ['Optimized runtime', mesh.runtime[kind], 'runtime/'],
+    ] as const) {
+      const description = document.createElement('p');
+      description.textContent = `${label}: ${info.nodes} nodes · operators: ${info.operators.join(', ')}`;
+      const link = document.createElement('a');
+      link.href = `${import.meta.env.BASE_URL}models/${folder}${kind}.onnx?v=${__JELLY_MODEL_VERSION__}`;
+      link.textContent = `Open ${label.toLowerCase()} ${kind}.onnx`;
+      const pre = document.createElement('pre');
+      pre.textContent = [
+        'Inputs:',
+        ...info.graph.inputs,
+        '',
+        'Outputs:',
+        ...info.graph.outputs,
+        '',
+        'Selected nodes (omissions marked):',
+        ...info.graph.excerpt,
+      ].join('\n');
+      section.append(description, link, pre);
+    }
+    element('graph-excerpts').append(section);
+  }
   graphs = new Graphs(mesh);
   simulation = new Simulation(mesh, graphs);
   renderer = new Renderer(scene, simulation);
@@ -332,7 +359,7 @@ async function initialize(): Promise<void> {
     ? 'WEBGPU · SOFTWARE ADAPTER'
     : 'WEBGPU · GPU-ONLY GRAPHS';
   element('device-info').textContent =
-    `${graphs.deviceLabel}. ${mesh.grid} × ${mesh.grid} nodes / ${mesh.edges.length} springs / FLOAT32 / ONNX opset 18 / ORT Web 1.31.1. ` +
+    `${graphs.deviceLabel}. ${mesh.grid} × ${mesh.grid} nodes / ${mesh.edges.length} springs / FLOAT32 / ONNX opset ${mesh.opset} / ORT Web 1.31.1. ` +
     `Fallback adapter: ${graphs.fallbackAdapter}. Timestamp queries: ${graphs.timestampQueries}. ` +
     `Browser: ${navigator.userAgent}`;
   for (const id of ['pause', 'reset', 'tug', 'stiff-preset'])

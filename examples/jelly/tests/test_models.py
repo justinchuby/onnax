@@ -18,6 +18,7 @@ from examples.jelly.export_models import (
     OUTPUT,
     energy_difference_model,
     energy_model,
+    graph_summary,
     mesh,
 )
 from onnax import grad, jvp
@@ -137,15 +138,25 @@ def test_serialized_interfaces():
     manifest = json.loads((OUTPUT / "mesh.json").read_text())
     assert manifest["grid"] == 6
     assert len(manifest["edges"]) == 110
+    assert manifest["opset"] == 22
     for name in ("energy", "gradient", "hvp"):
         path = OUTPUT / f"{name}.onnx"
         onnx.checker.check_model(str(path), full_check=True)
         model = ir.load(path)
+        assert model.graph.opset_imports[""] == 22
+        assert manifest["models"][name]["graph"] == graph_summary(model)
         CheckerPass(full_check=True)(model)
         assert [v.name for v in model.graph.inputs] == manifest["models"][name]["inputs"]
         assert [v.name for v in model.graph.outputs] == manifest["models"][name]["outputs"]
         assert all(not node.domain and node.op_type != "NonZero" for node in model.graph)
     assert Path(OUTPUT).is_dir()
+    for name, info in manifest["runtime"].items():
+        path = OUTPUT / "runtime" / f"{name}.onnx"
+        model = ir.load(path)
+        assert model.graph.opset_imports[""] == 22
+        assert info["graph"] == graph_summary(model)
+        assert info["nodes"] == len(model.graph)
+        onnx.checker.check_model(str(path), full_check=True)
 
 
 @pytest.mark.parametrize("case", ["deformed", "rest", "compressed", "collapsed", "stiff"])

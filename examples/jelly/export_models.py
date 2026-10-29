@@ -25,6 +25,8 @@ from onnax._inference import _infer_shapes
 GRID = 6
 MASS = 0.04
 EPSILON = 0.015
+# ORT Web 1.31.1 JSEP lacks the Reshape/Unsqueeze schemas introduced at 23.
+OPSET = 22
 OUTPUT = Path(__file__).parent / "public" / "models"
 
 
@@ -59,7 +61,7 @@ def energy_model() -> ir.Model:
 
     x = free * q + anchor imposes exact Dirichlet constraints. diagonal/target
     encode backward-Euler inertia, viscous damping and the pointer tether.
-    Setting inertia/damping to zero gives the physical energy for explicit mode.
+    Setting inertia/damping to zero gives the physical energy for force overlays.
     """
     positions, _, incidence = mesh()
     n = len(positions)
@@ -115,7 +117,7 @@ def energy_model() -> ir.Model:
             [elastic, energy],
             nodes=tape.nodes,
             initializers=tape.initializers,
-            opset_imports={"": 18},
+            opset_imports={"": OPSET},
             name="jelly",
         ),
         ir_version=10,
@@ -194,7 +196,7 @@ def fold_static_shapes(model: ir.Model) -> ir.Model:
             feeds = {
                 value.name: constants[value.name] for value in node.inputs if value is not None
             }
-            arrays = ReferenceEvaluator(ir.serde.serialize_node(node), opsets={"": 18}).run(
+            arrays = ReferenceEvaluator(ir.serde.serialize_node(node), opsets={"": OPSET}).run(
                 None, feeds
             )
         if arrays is not None:
@@ -509,7 +511,7 @@ def cg_model(hvp: ir.Model) -> ir.Model:
             [packed],
             nodes=tape.nodes,
             initializers=tape.initializers,
-            opset_imports={"": 18},
+            opset_imports={"": OPSET},
             name="jelly_matrix_free_cg",
         ),
         ir_version=10,
@@ -627,7 +629,7 @@ def energy_difference_model() -> ir.Model:
                 [output],
                 nodes=tape.nodes,
                 initializers=tape.initializers,
-                opset_imports={"": 18},
+                opset_imports={"": OPSET},
                 name="jelly_energy_difference",
             ),
             ir_version=10,
@@ -688,7 +690,7 @@ def step_model(cg: ir.Model, gradient: ir.Model) -> ir.Model:
             [output],
             nodes=tape.nodes,
             initializers=tape.initializers,
-            opset_imports={"": 18},
+            opset_imports={"": OPSET},
             name="jelly_newton_proposal",
         ),
         ir_version=10,
@@ -741,7 +743,7 @@ def batch_model(step: ir.Model, gradient: ir.Model) -> ir.Model:
                 [output],
                 nodes=tape.nodes,
                 initializers=tape.initializers,
-                opset_imports={"": 18},
+                opset_imports={"": OPSET},
                 name="jelly_two_newton_batch",
             ),
             ir_version=10,
@@ -761,6 +763,7 @@ def export(output: Path = OUTPUT) -> dict:
     hessian_vector = jvp(gradient, inputs=["q"])
     positions, edges, _ = mesh()
     manifest = {
+        "opset": OPSET,
         "grid": GRID,
         "mass": MASS,
         "epsilon": EPSILON,
@@ -777,6 +780,7 @@ def export(output: Path = OUTPUT) -> dict:
             "outputs": [value.name for value in saved.graph.outputs],
             "operators": sorted({node.op_type for node in saved.graph}),
             "nodes": len(saved.graph),
+            "graph": graph_summary(saved),
         }
         runtime = runtime_model(saved, name)
         runtimes[name] = runtime
@@ -790,6 +794,7 @@ def export(output: Path = OUTPUT) -> dict:
             "outputs": [value.name for value in runtime.graph.outputs],
             "operators": sorted({node.op_type for node in runtime.graph}),
             "nodes": len(runtime.graph),
+            "graph": graph_summary(runtime),
         }
     cg = cg_model(runtime)
     CheckerPass(full_check=True)(cg)
@@ -800,27 +805,58 @@ def export(output: Path = OUTPUT) -> dict:
         "outputs": [value.name for value in cg.graph.outputs],
         "operators": sorted({node.op_type for node in cg.graph}),
         "nodes": len(cg.graph),
+        "graph": graph_summary(cg),
     }
     step = step_model(cg, runtimes["gradient"])
     CheckerPass(full_check=True)(step)
     ir.save(step, runtime_dir / "step.onnx")
+    onnx.checker.check_model(str(runtime_dir / "step.onnx"), full_check=True)
     manifest["runtime"]["step"] = {
         "inputs": [v.name for v in step.graph.inputs],
         "outputs": [v.name for v in step.graph.outputs],
         "operators": sorted({node.op_type for node in step.graph}),
         "nodes": len(step.graph),
+        "graph": graph_summary(step),
     }
     batch = batch_model(step, runtimes["gradient"])
     CheckerPass(full_check=True)(batch)
     ir.save(batch, runtime_dir / "batch.onnx")
+    onnx.checker.check_model(str(runtime_dir / "batch.onnx"), full_check=True)
     manifest["runtime"]["batch"] = {
         "inputs": [v.name for v in batch.graph.inputs],
         "outputs": [v.name for v in batch.graph.outputs],
         "operators": sorted({node.op_type for node in batch.graph}),
         "nodes": len(batch.graph),
+        "graph": graph_summary(batch),
     }
     (output / "mesh.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return manifest
+
+
+def graph_summary(model: ir.Model) -> dict:
+    """Describe real interfaces and bounded graph excerpts without rerunning inference."""
+    nodes = list(model.graph)
+    selected = list(range(min(6, len(nodes))))
+    selected.extend(i for i in range(max(6, len(nodes) - 6), len(nodes)))
+    excerpt = []
+    previous = -1
+    for index in selected:
+        if index > previous + 1:
+            excerpt.append(f"... {index - previous - 1} nodes omitted ...")
+        node = nodes[index]
+        inputs = ", ".join(value.name if value is not None else "" for value in node.inputs)
+        outputs = ", ".join(value.name for value in node.outputs)
+        excerpt.append(f"{index}: {outputs} = {node.op_type}({inputs})")
+        previous = index
+
+    def interface(values):
+        return [f"{value.name}: {value.dtype} {value.shape}" for value in values]
+
+    return {
+        "inputs": interface(model.graph.inputs),
+        "outputs": interface(model.graph.outputs),
+        "excerpt": excerpt,
+    }
 
 
 if __name__ == "__main__":

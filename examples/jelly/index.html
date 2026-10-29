@@ -82,19 +82,10 @@
               </div>
               <span class="number-tag">01</span>
             </div>
-            <fieldset class="integrator">
-              <legend class="section-label">INTEGRATOR</legend>
-              <div class="segmented">
-                <button type="button" id="implicit" class="selected" aria-pressed="true">
-                  Implicit <span>Newton-CG</span>
-                </button>
-                <button type="button" id="explicit" aria-pressed="false">
-                  Explicit <span>Euler</span>
-                </button>
-              </div>
-            </fieldset>
-            <p id="mode-note" class="control-note">
-              Looks ahead with generated Hessian-vector products. More work, steadier stiff springs.
+            <p class="section-label">IMPLICIT · NEWTON-CG</p>
+            <p class="control-note">
+              onnax generates the energy gradient and Hessian-vector products. Newton-CG uses both
+              to solve each backward-Euler step, keeping stiff springs steadier.
             </p>
             <div class="slider-heading">
               <label for="stiffness">Spring stiffness</label
@@ -123,8 +114,8 @@
             <div class="select-row">
               <label for="overlay">Show me</label
               ><select id="overlay">
+                <option value="force">ONNX force arrows</option>
                 <option value="strain">Spring strain</option>
-                <option value="force">Force arrows</option>
                 <option value="none">Just jelly</option>
               </select>
             </div>
@@ -151,11 +142,19 @@
               Try the stiff-spring test <span aria-hidden="true">↗</span>
             </button>
             <p class="control-note bottom-note">
-              Same energy, two integrators. Try stiff springs in explicit mode, then reset and
-              compare.
+              Try stiffer springs and a larger timestep. Residuals below show the solver's
+              convergence limits; failed steps pause with an explanation, never a hidden fallback.
             </p>
           </aside>
         </div>
+        <p id="force-legend" class="control-note">
+          <strong>ONNX force field: −grad E<sub>physical</sub>.</strong>
+          Arrows point along spring + gravity + pointer-tether force at free nodes. Mint → gold and
+          longer arrows mean larger magnitude (nonlinear display scale). Maximum node force:
+          <output id="force-max">waiting for first step</output>. Illustrative force units; no
+          inertia, viscous drag, or pinned reaction forces. Values are from the last completed step.
+          Use “Show me” to hide arrows.
+        </p>
         <section id="error" class="error" role="alert" hidden></section>
         <section class="telemetry" aria-label="Live physics and performance">
           <div class="metric">
@@ -208,8 +207,8 @@
               <div>
                 <h3>Find the force <code>−grad(E)</code></h3>
                 <p>
-                  Reverse-mode differentiation gives the gradient. Explicit stepping uses it
-                  directly.
+                  Reverse-mode differentiation gives the gradient used by the implicit solve and
+                  force overlays.
                 </p>
               </div>
               <span class="graph-file">gradient.onnx</span>
@@ -227,6 +226,49 @@
             </div>
           </div>
         </section>
+        <details class="device-details" id="computation">
+          <summary>How the computation works · inspect the real ONNX graphs</summary>
+          <div class="computation-content">
+            <p>
+              <strong>Browser compatibility: ONNX opset 22.</strong>
+              ORT Web 1.31.1's JSEP WebGPU provider is missing the newer Reshape/Unsqueeze
+              registrations needed by these derivative graphs at opset 23/24. This demo is genuinely
+              exported at 22, not relabeled while loading. Other Python examples use opset 24. CPU
+              physics fallback remains disabled.
+            </p>
+            <p>
+              Python authors spring energy in ONNX IR. <code>onnax.grad(E)</code> produces its
+              gradient; <code>onnax.jvp(grad(E))</code> produces a Hessian-vector product for a
+              supplied direction. No handwritten runtime derivatives or full Hessian are used.
+            </p>
+            <p>
+              The implicit objective adds backward-Euler inertia and viscous terms to physical
+              energy (springs, gravity, pointer tether). Safeguarded Newton-CG uses the objective
+              gradient and HVP to find the next position. The force arrows instead use the negative
+              <em>physical</em>
+              gradient: the runtime gradient graph returns this separately in its packed output,
+              without inertia or viscous drag. Pinned coordinates are projected out, so arrows are
+              not support reactions.
+            </p>
+            <p>
+              ORT WebGPU executes the generated FLOAT32 graphs with CPU execution-provider fallback
+              disabled. Optimized graphs keep buffers and captured commands on GPU; the solver reads
+              back packed positions and physical forces for Canvas 2D rendering. Arrow length is
+              <code>6 + 30 tanh(|F| / 6)</code>
+              CSS pixels for
+              <code>|F| ≥ 0.02</code>; color uses the same relative magnitude scale. These are
+              illustrative units in a coarse 2D spring model, not calibrated elasticity.
+            </p>
+            <p>
+              Below are deterministic excerpts from the checked-in, fully checked models. Original
+              means the canonical onnax-generated graph after static-shape folding; optimized means
+              its packed browser runtime graph. Excerpts omit nodes, and the HVP is a directional
+              curvature response, not a dense Hessian. Opening this panel performs no additional
+              inference.
+            </p>
+            <div id="graph-excerpts"></div>
+          </div>
+        </details>
         <details class="device-details">
           <summary>Execution details & limitations</summary>
           <p id="device-info">Waiting for a WebGPU adapter.</p>

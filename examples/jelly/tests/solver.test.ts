@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Graphs, Mesh, Parameters } from '../src/model';
+import { forceArrow } from '../src/render';
 import { Simulation } from '../src/simulation';
 import { conjugateGradient, dot, newtonCG, type Objective, type Vector } from '../src/solver';
 
@@ -174,6 +175,7 @@ test('a rejected speculative proposal discards the next proposal and backtracks 
 
 // Model-free tests here use a quadratic oracle, never a JS physics replacement.
 const mesh: Mesh = {
+  opset: 22,
   grid: 2,
   mass: 0.04,
   epsilon: 0.015,
@@ -210,31 +212,39 @@ const oracle: Pick<Graphs, 'objective'> = {
   }),
 };
 
-test('both integrators preserve pins and account for mass, gravity and damping', async () => {
-  for (const mode of ['implicit', 'explicit'] as const) {
-    const sim = new Simulation(mesh, oracle);
-    sim.settings.mode = mode;
-    sim.settings.dt = 0.01;
-    sim.settings.damping = 2;
-    sim.v[5] = 0.3;
-    const expected =
-      mode === 'implicit' ? (0.3 + 0.01 * 9.81) / 1.02 : 0.3 + 0.01 * (9.81 - 2 * 0.3);
-    await sim.step();
-    assert.ok(Math.abs(sim.v[5] - expected) < 0.002);
-    assert.deepEqual(Array.from(sim.x.slice(0, 4)), [0, 0, 1, 0]);
-    assert.equal(sim.v[0], 0);
-    sim.reset();
-    assert.deepEqual(sim.x, sim.rest);
-    assert.equal(sim.steps, 0);
-  }
+test('implicit integration preserves pins and accounts for mass, gravity and damping', async () => {
+  const sim = new Simulation(mesh, oracle);
+  sim.settings.dt = 0.01;
+  sim.settings.damping = 2;
+  sim.v[5] = 0.3;
+  const expected = (0.3 + 0.01 * 9.81) / 1.02;
+  await sim.step();
+  assert.ok(Math.abs(sim.v[5] - expected) < 0.002);
+  assert.deepEqual(Array.from(sim.x.slice(0, 4)), [0, 0, 1, 0]);
+  assert.equal(sim.v[0], 0);
+  sim.reset();
+  assert.deepEqual(sim.x, sim.rest);
+  assert.equal(sim.steps, 0);
 });
 
-test('explicit instability preserves the last valid state and reports a remedy', async () => {
+test('safety limit preserves the last valid state and reports a remedy', async () => {
   const sim = new Simulation(mesh, oracle);
-  sim.settings.mode = 'explicit';
   sim.v[5] = 1000;
   const initial = sim.x.slice();
-  await assert.rejects(sim.step(), /Explicit instability.*reduce timestep/i);
+  await assert.rejects(sim.step(), /Simulation safety limit.*reduce timestep/i);
   assert.deepEqual(sim.x, initial);
   assert.equal(sim.steps, 0);
+});
+
+test('force arrows preserve graph-force direction and use a bounded monotone magnitude scale', () => {
+  assert.equal(forceArrow(0, 0), null);
+  const gravity = forceArrow(0, mesh.mass * 9.81)!;
+  assert.equal(gravity.dx, 0);
+  assert.equal(gravity.dy, 1);
+  const diagonal = forceArrow(-3, 4)!;
+  assert.equal(diagonal.dx, -0.6);
+  assert.equal(diagonal.dy, 0.8);
+  assert.ok(diagonal.length > gravity.length);
+  assert.ok(forceArrow(1000, 0)!.length <= 36);
+  assert.ok(diagonal.strength > gravity.strength);
 });

@@ -1,9 +1,11 @@
 # Soft spot: an onnax WebGPU experiment
 
 A draggable 2D spring sheet demonstrating why second derivatives matter.
-The same generated force graph drives explicit symplectic Euler and implicit
-backward Euler; implicit stepping additionally uses generated Hessian-vector
-products in a safeguarded, matrix-free Newton-CG solve.
+Generated gradients and Hessian-vector products drive implicit backward Euler
+in a safeguarded, matrix-free Newton-CG solve.
+
+**[Open the hosted playground](https://www.justinchuby.com/onnax/jelly/)**
+or visit the [documentation site](https://www.justinchuby.com/onnax/).
 
 ## Run
 
@@ -23,18 +25,24 @@ a keyboard-accessible tether, and Space on the focused canvas toggles pause.
 Change anchor points, gravity, stiffness, damping, timestep, and strain/force
 overlays. Reset restores the rest state without changing the controls.
 
-For the comparison, select **Implicit**, then **Try the stiff-spring test**:
-stiffness 8000, timestep 40 ms. Switch to **Explicit** and reset. The explicit
-method quickly exceeds its safety limit and pauses with an explanation, preserving
-the last valid state. Switch back to implicit and reset to compare.
+Select **Try the stiff-spring test** for stiffness 8000 and timestep 40 ms.
+The implicit solver displays residuals and any precision/iteration limit.
+The former explicit selector was removed: symplectic Euler did use the onnax
+gradient, but not the HVP, and the shared 25 ms default was numerically unstable
+in that mode. It is not needed to demonstrate the implicit solver.
+
+**ONNX force arrows are visible by default.** Drag a node or use **Tug sheet**;
+mint-to-gold color and nonlinear arrow length show increasing force magnitude.
+The legend reports the largest free-node force. **Show me** switches to strain
+or hides overlays. Expand **How the computation works** for real energy,
+gradient, and HVP graph excerpts, tensor interfaces, node counts, and model links.
 
 ```shell
 npm run build
 npm run preview
 ```
 
-`dist/` is static-host-ready; no deployment or GitHub Pages configuration is
-required. The default build targets a site's root path. For a subpath, use
+`dist/` is static-host-ready. The default build targets a site's root path. For a subpath, use
 `npm run build -- --base=/your-path/`. Vite includes the pinned ORT JSEP
 WASM runtime locally (about 29 MB uncompressed); there is no CDN dependency.
 WASM hosts the runtime, **not a fallback physics execution provider**.
@@ -60,11 +68,14 @@ Changing pin mode anchors newly pinned nodes at their current location; reset
 anchors them at rest. Gravity contributes `load.y = mass * 9.81`.
 Dragging adds a quadratic tether of stiffness 180 to the selected node.
 
-Explicit mode sets `diagonal` to the pointer tether alone and uses
-`force = -grad(E)`. Velocity is updated by `h * (force / mass - damping * v)`,
-then position by `h * new_velocity` (symplectic Euler).
+For physical force overlays, `diagonal` contains only the pointer tether and
+`force = -grad(E)`. The gradient output is negated, not recomputed in JavaScript.
+Arrow direction is the free-node force direction; length is
+`6 + 30 tanh(|force| / 6)` CSS pixels above 0.02 illustrative force units.
+Color uses the same relative magnitude scale. Pinned reactions and viscous drag
+are excluded; the readback represents the last completed step.
 
-Implicit mode adds `mass / h**2` and `mass * damping / h` to the diagonal.
+The implicit objective adds `mass / h**2` and `mass * damping / h` to the diagonal.
 Its target is the diagonal-weighted combination of `x_old + h * v_old`,
 `x_old`, and the cursor. Minimizing this incremental energy is backward Euler
 with the **same mass, gravity, conservative spring/tether forces, and viscous
@@ -80,7 +91,15 @@ damping**, not a separate physical model.
 | `gradient.onnx` | Above plus generated `q_cotangent` |
 | `hvp.onnx` | Above plus generated `q_cotangent_tangent`; seed `q_tangent` |
 
-These are ordinary FLOAT32 ONNX opset-18 graphs. There are **no handwritten
+These are ordinary FLOAT32 ONNX opset-22 graphs, authored, differentiated,
+optimized, checked, and executed at 22. This is a temporary, explicit browser
+compatibility choice: ORT Web 1.31.1 JSEP lacks the `Reshape`/`Unsqueeze` schema
+registrations introduced at 23, and rejects these valid graphs at 23/24 with CPU
+fallback disabled. The native WebGPU Asyncify runtime accepts those schemas but
+fails GPU-buffer graph-capture replay in this setup. No runtime import relabeling
+or CPU physics fallback is used. Other runnable Python examples use opset 24. Their
+arithmetic uses the appropriate supported standard operators; no unrelated newer
+operator is inserted merely to change the operator list. There are **no handwritten
 runtime derivatives or dense Hessians**. Independent analytic derivatives exist
 only in the Python tests.
 
@@ -238,7 +257,7 @@ when used, are reported and are not hardware-performance evidence.
 
 The browser suite records **actual WebGPU compute dispatches at capture time**
 and queue submissions for energy/gradient/HVP replay, verifies finite-difference derivatives on that
-backend, compares stiff implicit residual/descent with explicit instability,
+backend, verifies physical force sign/pin projection and stiff implicit residual/descent,
 and exercises pointer/touch, all controls, pause/reset, resize, overlays, and
 unsupported-browser diagnostics. It saves desktop/mobile screenshots and a
 JSON timing/device attachment under `test-results/`.
@@ -268,3 +287,40 @@ npm run test:browser
 Enforcement requires at least 30 clock-paced updates/s, 45 render fps, and
 40 uncapped updates/s (at least real-time simulated-time throughput).
 Do not treat a software adapter's results as hardware performance evidence.
+
+## Documentation deployment
+
+The `Deploy docs` workflow builds on Node.js 24 using `npm ci`, preserves `docs/`
+at the site root, adds the Vite build at `/jelly/`, and publishes an official
+GitHub Pages artifact. Only trusted `main` builds can deploy to the
+`github-pages` environment; pull requests build and validate but cannot deploy.
+The repository inherits the owner's existing domain; no domain settings are
+replaced. The site uses one WASM host thread and no proxy worker, so it does not
+require cross-origin isolation headers or `SharedArrayBuffer` on Pages.
+The matching JSEP JavaScript host is bundled in the main JavaScript asset.
+
+Build the same artifact locally from the repository root:
+
+```shell
+npm ci --prefix examples/jelly
+npm run build --prefix examples/jelly -- --base=/onnax/jelly/
+node tools/build_docs.mjs /onnax
+```
+
+`_site/` includes the landing page, preserved static docs, `.nojekyll`, all nine
+ONNX models, manifest, and pinned ORT WASM/JS. Assembly rejects missing, empty,
+mixed-version models and incorrectly based HTML. Vite also fails before building
+if any checked-in model is missing. A content digest of the complete model set
+versions model/manifest requests and the JavaScript bundle to avoid stale model
+mixing after deployment. Graph excerpts are generated deterministically from the
+actual canonical/optimized IR graphs into the manifest; they do not execute models.
+
+Run the browser suite against the deployed URL without a local server:
+
+```powershell
+$env:JELLY_BASE_URL = 'https://www.justinchuby.com/onnax/jelly/'
+npm run test:browser --prefix examples/jelly
+```
+
+For local production testing at the project subpath, set `JELLY_PREVIEW=1` and
+`JELLY_BASE_PATH=/onnax/jelly/`; the suite starts Vite preview on port 5175.

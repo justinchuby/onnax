@@ -1,6 +1,6 @@
 <
    ir_version: 10,
-   opset_import: ["" : 18]
+   opset_import: ["" : 24]
 >
 recommendation (int64[3,?] history_ids, float[?,4] candidate, float[16,4] embedding_table) => (float[4,?] user_embedding, float[?] cosine_score)
    <int64[1] history_axis =  {0}, int64[1] history_axis, int64[?,3] val_0, float[?,3,4] history_embeddings, float[?,4] pooled_history, float[?,4] val_9, float[?,4] candidate_embedding, float[?,1,4] val_4, float[?,4,1] val_6, float[?,?,?] val_7>

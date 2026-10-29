@@ -12,8 +12,14 @@ export interface ModelInfo {
   outputs: string[];
   operators: string[];
   nodes: number;
+  graph: {
+    inputs: string[];
+    outputs: string[];
+    excerpt: string[];
+  };
 }
 export interface Mesh {
+  opset: number;
   grid: number;
   mass: number;
   epsilon: number;
@@ -88,7 +94,7 @@ export class Graphs {
         ? ['energy', 'gradient', 'hvp']
         : ['energy', 'gradient', 'hvp', 'cg', 'step', 'batch'];
       for (const name of kinds) {
-        const url = `${import.meta.env.BASE_URL}models/${this.baseline ? '' : 'runtime/'}${name}.onnx`;
+        const url = `${import.meta.env.BASE_URL}models/${this.baseline ? '' : 'runtime/'}${name}.onnx?v=${__JELLY_MODEL_VERSION__}`;
         const response = await fetch(url);
         if (!response.ok)
           throw new Error(
