@@ -8,13 +8,11 @@ Run from the repository root: python examples/jelly/export_models.py
 from __future__ import annotations
 
 import json
-import tempfile
 from pathlib import Path  # ruff: ignore[banned-api] - standalone export CLI.
 
 import numpy as np
 import onnx
 import onnx_ir as ir
-import onnxruntime as ort
 from onnx.reference import ReferenceEvaluator
 from onnx_ir.passes.common import CheckerPass
 from onnxscript import optimizer
@@ -127,24 +125,14 @@ def energy_model() -> ir.Model:
 def specialize(model: ir.Model, path: Path) -> ir.Model:
     """Fold static shape/broadcast plumbing without replacing any derivatives.
 
-    onnax intentionally emits general runtime unbroadcasting (including NonZero).
-    ORT's BASIC optimizer folds this constant shape algebra for this fixed mesh.
-    No extended/contrib fusions or manual derivative rules are used.
+    Fold the fixed mesh's remaining shape algebra with ONNXScript. No ORT
+    optimizer, execution-provider fusions, or manual derivative rules are used.
     """
     model = fold_static_shapes(_infer_shapes(model))
-    optimizer.remove_unused_nodes(model)
     metadata = dict(model.graph.metadata_props)
-    CheckerPass(full_check=True)(model)
-    with tempfile.TemporaryDirectory() as directory:
-        optimized = Path(directory) / "specialized.onnx"
-        options = ort.SessionOptions()
-        options.intra_op_num_threads = 1
-        options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_BASIC
-        options.optimized_model_filepath = str(optimized)
-        ort.InferenceSession(
-            ir.to_proto(model).SerializeToString(), options, providers=["CPUExecutionProvider"]
-        )
-        result = _infer_shapes(ir.load(optimized))
+    result = _infer_shapes(
+        optimizer.optimize(model, num_iterations=3, onnx_shape_inference=False)
+    )
     result.graph.metadata_props.update(metadata)
     # These are precisely the static-only operations that must disappear for WebGPU.
     forbidden = {"NonZero", "ConstantOfShape", "If", "Loop"}
@@ -152,7 +140,7 @@ def specialize(model: ir.Model, path: Path) -> ir.Model:
         if node.domain or node.op_type in forbidden:
             raise RuntimeError(
                 f"WebGPU export contains {node.domain or 'ai.onnx'}::{node.op_type} "
-                f"at {node.name!r}. Check fixed input shapes and BASIC constant folding; "
+                f"at {node.name!r}. Check fixed input shapes and ONNXScript constant folding; "
                 "do not enable a silent CPU fallback."
             )
     CheckerPass(full_check=True)(result)
@@ -164,7 +152,7 @@ def specialize(model: ir.Model, path: Path) -> ir.Model:
 def fold_static_shapes(model: ir.Model) -> ir.Model:
     """Evaluate only constant subgraphs and concrete Shape/Size queries.
 
-    This is needed before ORT optimization: dynamic NonZero output lengths in
+    This is needed before ONNXScript optimization: dynamic NonZero output lengths in
     general unbroadcast rules otherwise obscure subsequent static shape queries.
     Derivative arithmetic with any runtime dependency is left untouched.
     """
@@ -405,7 +393,9 @@ def runtime_model(model: ir.Model, kind: str) -> ir.Model:
         parts = [tape.op("Reshape", [value, flat]) for value in graph.outputs]
         output = tape.op("Concat", parts, {"axis": 0})
     else:
-        output = tape.op("Identity", [graph.outputs[-1]])
+        # Rename the retained result rather than adding an Identity wrapper.
+        # With ORT optimization disabled, that wrapper can prevent JSEP capture.
+        output = graph.outputs[-1]
     output.name = "packed"
     graph.outputs.clear()
     graph.outputs.append(output)

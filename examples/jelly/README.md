@@ -103,10 +103,13 @@ operator is inserted merely to change the operator list. There are **no handwrit
 runtime derivatives or dense Hessians**. Independent analytic derivatives exist
 only in the Python tests.
 
-General onnax broadcast derivatives contain runtime shape algebra, including
-`NonZero`. The exporter evaluates only constant subgraphs and concrete `Shape`
-and `Size` queries, then applies ORT **BASIC** constant folding. Runtime-dependent
-derivative arithmetic stays intact. A fixed incidence `MatMul` avoids index/scatter
+For concrete broadcast shapes, onnax skips unnecessary reductions or emits
+fixed reduction axes directly. Unknown/symbolic shapes retain general runtime
+shape algebra, including `NonZero`. The exporter evaluates only constant subgraphs
+and concrete `Shape` and `Size` queries, then applies the **ONNXScript optimizer**.
+No ONNX Runtime optimizer is used in export, and browser sessions set
+`graphOptimizationLevel: 'disabled'`. Runtime-dependent derivative arithmetic
+stays intact during shape specialization. A fixed incidence `MatMul` avoids index/scatter
 derivatives. Shape inference uses **onnx-shape-inference**, and source/generated/
 specialized models pass IR `CheckerPass(full_check=True)` and ONNX full checking.
 No library transformation guarantees or unsupported-case errors are changed.
@@ -183,9 +186,24 @@ Reassociation changes FLOAT32 rounding and is tested against the canonical graph
 
 | Graph | Canonical nodes | Optimized runtime nodes |
 |---|---:|---:|
-| Energy | 21 | 22 (one scalar output wrapper) |
-| Gradient | 74 | 48 (also supplies physical force for overlays) |
-| HVP | 125 | 42 |
+| Energy | 21 | 21 |
+| Gradient | 41 | 48 (also supplies physical force for overlays) |
+| HVP | 68 | 41 |
+
+The UI's **Original** graphs have already undergone static shape specialization
+and ONNXScript optimization. They retain the canonical derivative interfaces.
+**Optimized runtime** graphs additionally specialize outputs, compose the physical
+gradient, and factor linear HVP expressions for repeated execution.
+
+At a fixed Newton position `q`, the HVP is linear in the CG direction `v`.
+For example, `(a(q) * v) * b(q) + c(q) * v` can be factored into
+`(a(q) * b(q) + c(q)) * v`. All multiplications in this example are elementwise;
+the exporter does not commute arbitrary matrix products. `hoist_linear_coefficients`
+performs this algebra on the generated HVP, and the unrolled CG graph can share
+the direction-independent coefficient work across its eight direction updates.
+Those coefficients still depend on runtime positions and physical parameters:
+they must be recomputed when those inputs change. This is neither a precomputed
+dense Hessian nor a handwritten spring derivative.
 
 The runtime gradient composes the same generated gradient with physical-only
 diagonal/target inputs. CSE shares spring arithmetic, avoiding a separate
@@ -207,6 +225,10 @@ decisions and Canvas 2D rendering still require a readback. A batch executes
 masked slots cannot change a stopped CG result. Timing JSON records both.
 
 ### Measured hardware performance
+
+The measurements below are historical results from the earlier export pipeline
+with ONNX Runtime graph optimization enabled. They have not been remeasured for
+the current ONNXScript-only pipeline and disabled runtime graph optimization.
 
 On Intel **gen-12lp**, hardware adapter (not a fallback), Windows Edge 157,
 the production build was tested with the unchanged 6×6 mesh, stiffness 120,

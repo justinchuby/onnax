@@ -28,6 +28,7 @@ from onnax import grad, jvp
 def sessions():
     options = ort.SessionOptions()
     options.intra_op_num_threads = 1
+    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
     return {
         name: ort.InferenceSession(
             str(OUTPUT / f"{name}.onnx"), options, providers=["CPUExecutionProvider"]
@@ -172,6 +173,7 @@ def test_optimized_runtime_equivalence(sessions, case):
         data["stiffness"] = np.array(8000, dtype=np.float32)
     options = ort.SessionOptions()
     options.intra_op_num_threads = 1
+    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
     for kind in ("energy", "gradient", "hvp"):
         path = OUTPUT / "runtime" / f"{kind}.onnx"
         model = ir.load(path)

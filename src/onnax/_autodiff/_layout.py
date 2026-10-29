@@ -131,7 +131,7 @@ def vjp(
     if op in ("Flatten", "Reshape", "Squeeze", "Unsqueeze"):
         return {0: ctx.reshape(g, ctx.op("Shape", _input(node)))}
     elif op in ("Expand",):
-        return {0: ctx.unbroadcast(g, _input(node))}
+        return {0: ctx.unbroadcast(g, _input(node), broadcasted=node.outputs[0])}
     elif op in ("Transpose",):
         attr = node.attributes.get("perm")
         perm = (
@@ -148,6 +148,7 @@ def vjp(
             i: ctx.unbroadcast(
                 ctx.op("Where", _input(node), g if i == 1 else zero, zero if i == 1 else g),
                 _input(node, i),
+                broadcasted=node.outputs[0],
             )
             for i in indices
         }

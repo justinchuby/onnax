@@ -225,7 +225,10 @@ class JvpPass(ir.passes.FunctionalPass):
           Pow accepts an inactive integer exponent; floating operands must have
           matching dtypes.
         * Reverse-mode broadcast reduction uses runtime shapes, including
-          singleton/leading axes and zero-length dimensions. MatMul, Gather, and
+          singleton/leading axes and zero-length dimensions. Elementwise, Where,
+          Expand, and Gemm bias pullbacks use concrete shapes to skip unnecessary
+          reductions or emit fixed axes; symbolic dimensions retain runtime handling.
+          MatMul, Gather, and
           default Transpose need known ranks, but dimension sizes may be symbolic.
         * Shape, size, axes, indices, split sizes, and boolean conditions are
           structural, not differentiable tensor values. Comparisons are treated

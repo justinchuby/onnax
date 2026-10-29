@@ -38,6 +38,15 @@
         <li><a href="https://github.com/justinchuby/onnax/tree/main/examples/jelly#readme">Playground physics, execution, and reproducible validation</a></li>
         <li><a href="https://github.com/justinchuby/onnax">Source repository (MIT)</a></li>
       </ul>
+      <h2>Optimize for deployment</h2>
+      <p>Compose <code>grad</code>, <code>jvp</code>, or <code>vmap</code> first,
+        then optimize a copy with the ONNXScript optimizer. onnax emits compact
+        broadcast derivatives for concrete shapes and retains runtime handling
+        for symbolic dimensions. ONNXScript can fold constants and share work
+        across the complete graph.</p>
+      <p>The jelly exporter uses ONNXScript for offline optimization; browser
+        ONNX Runtime graph optimization is disabled.
+        <a href="https://github.com/justinchuby/onnax#optimize-generated-models">See the export example and validation guidance</a>.</p>
     </main>
   </body>
 </html>

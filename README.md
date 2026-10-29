@@ -90,6 +90,35 @@ with matrix-free Newton-CG, powered by exported
 `grad` and `jvp(grad(...))` ONNX graphs. See the [documentation site](https://www.justinchuby.com/onnax/)
 and [playground source and run instructions](examples/jelly).
 
+## Optimize generated models
+
+For deployment, we recommend applying the **ONNXScript optimizer** after composing
+the desired transforms. Install `onnxscript` separately; it is an optional export
+dependency, not required by onnax:
+
+```python
+import onnx_ir as ir
+from onnxscript import optimizer
+
+per_example = ir.load("per_example.onnx")
+optimized = optimizer.optimize(per_example.clone(), onnx_shape_inference=False)
+ir.save(optimized, "per_example.optimized.onnx")
+```
+
+The example loads the model saved above. `optimizer.optimize` mutates IR models,
+so clone first when retaining the original. This disables the optimizer's ONNX
+shape-inference option; onnax has already inferred the transformed model's shapes.
+Check and numerically validate the optimized graph with representative inputs,
+especially before applying another differentiation transform. Keep the original
+transform graph for further composition and optimize a deployment copy.
+
+Autodiff already emits fixed-axis broadcast reductions when both operand and
+broadcast-result shapes are concrete, and skips reductions when shapes match.
+Unknown or symbolic sizes retain runtime shape handling. Deployment optimization
+can additionally fold constants and share computation across the composed graph;
+it is separate from differentiation. The jelly exporter uses ONNXScript for this
+step and disables ONNX Runtime graph optimization during browser execution.
+
 ## Development
 
 Ruff lint and formatting are both required.

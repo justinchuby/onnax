@@ -102,7 +102,7 @@ export class Graphs {
           );
         sessions[name] = await ort.InferenceSession.create(await response.arrayBuffer(), {
           executionProviders: ['webgpu'],
-          graphOptimizationLevel: 'all',
+          graphOptimizationLevel: 'disabled',
           enableGraphCapture: !this.baseline,
           ...(!this.baseline ? { preferredOutputLocation: 'gpu-buffer' as const } : {}),
           extra: { session: { disable_cpu_ep_fallback: '1' } },

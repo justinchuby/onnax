@@ -65,7 +65,9 @@ def gemm(
             1: ctx.op("Mul", ctx.transpose(gb, 2) if tb else gb, alpha),
         }
         if len(node.inputs) > 2 and node.inputs[2] is not None:
-            result[2] = ctx.unbroadcast(ctx.op("Mul", g, beta), _input(node, 2))
+            result[2] = ctx.unbroadcast(
+                ctx.op("Mul", g, beta), _input(node, 2), broadcasted=node.outputs[0]
+            )
         return result
     terms = []
     if 0 in derivatives:

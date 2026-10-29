@@ -79,8 +79,36 @@ class _Context:
         output.shape = ir.Shape(primal.shape) if primal.shape is not None else None
         self.graph.outputs.append(output)
 
-    def unbroadcast(self, gradient: ir.Value, primal: ir.Value) -> ir.Value:
+    def unbroadcast(
+        self, gradient: ir.Value, primal: ir.Value, *, broadcasted: ir.Value | None = None
+    ) -> ir.Value:
         """Sum runtime singleton and leading broadcast dimensions, including zero extents."""
+        source_shape = broadcasted.shape if broadcasted is not None else gradient.shape
+        if (
+            primal.shape is not None
+            and source_shape is not None
+            and all(isinstance(d, int) for d in (*primal.shape, *source_shape))
+        ):
+            # For concrete shapes, broadcasting is known before graph execution.
+            # Symbolic/unknown dimensions must keep the general runtime path:
+            # equal-looking symbolic names alone cannot prove a dimension is 1.
+            leading_count = len(source_shape) - len(primal.shape)
+            reduction_axes = [
+                *range(leading_count),
+                *(
+                    leading_count + i
+                    for i, dimension in enumerate(primal.shape)
+                    if dimension == 1 and source_shape[leading_count + i] != 1
+                ),
+            ]
+            if reduction_axes:
+                gradient = self.op(
+                    "ReduceSum", gradient, self.constant(reduction_axes), keepdims=1
+                )
+            if leading_count:
+                dimensions = [d for d in primal.shape if isinstance(d, int)]
+                gradient = self.reshape(gradient, self.constant(dimensions))
+            return gradient
         shape = self.op("Shape", primal)
         grad_shape = self.op("Shape", gradient)
         leading = self.op("Sub", self.op("Size", grad_shape), self.op("Size", shape))
