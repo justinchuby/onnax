@@ -72,7 +72,7 @@ def _regressor(dtype, opset, stored):
 
 
 @pytest.mark.parametrize("dtype", [np.float32, np.float64])
-@pytest.mark.parametrize("opset", range(18, 25))
+@pytest.mark.parametrize("opset", range(18, 27))
 @pytest.mark.parametrize("stored", [False, True])
 def test_shared_multi_parameter_gradients_dynamic_batches(dtype, opset, stored, tmp_path):
     source, parameters = _regressor(dtype, opset, stored)

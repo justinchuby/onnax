@@ -119,7 +119,7 @@ class VmapPass(ir.passes.FunctionalPass):
     .. rubric:: Controls and restrictions
 
     * Requires a valid, topologically sorted source graph, standard-domain
-      opset 18 through 24, tensor graph inputs with known ranks, and uniform example
+      opset 18 through 28, tensor graph inputs with known ranks, and uniform example
       shapes. Dimensions may be symbolic, unknown, or zero. Empty *batches*
       are outside the input contract. Shape inference does not replace source
       model validation.
@@ -203,8 +203,8 @@ class VmapPass(ir.passes.FunctionalPass):
     def call(self, model: ir.Model) -> ir.passes.PassResult:
         if model.graph.opset_imports.get("", 0) < 18:
             raise ir.passes.PreconditionError("VmapPass requires standard-domain opset >= 18.")
-        if model.graph.opset_imports[""] > 24:
-            raise ir.passes.PreconditionError("VmapPass supports opsets 18 through 24 only.")
+        if model.graph.opset_imports[""] > 28:
+            raise ir.passes.PreconditionError("VmapPass supports opsets 18 through 28 only.")
         if len(self.in_axes) != len(model.graph.inputs):
             raise ir.passes.PreconditionError("in_axes must have one entry per graph input.")
         if all(axis is None for axis in self.in_axes):
@@ -249,7 +249,7 @@ class _Batcher(_Context):
                     op,
                     family.apply,
                     since_version=20 if op == "Gelu" else 18,
-                    until_version=24,
+                    until_version=28,
                 )
 
     def _node(self, node: ir.Node) -> None:
@@ -272,9 +272,9 @@ class _Batcher(_Context):
                 f"VmapPass has no batching rule for random operator {op}."
             )
         version = _rule_registry._effective_opset(node, self.graph.opset_imports)
-        if not 18 <= version <= 24:
+        if not 18 <= version <= 28:
             raise ir.passes.PreconditionError(
-                f"No batching rule for {op!r} at opset {version}; supported opsets are 18 through 24."
+                f"No batching rule for {op!r} at opset {version}; supported opsets are 18 through 28."
             )
         if op == "Gelu" and version < 20:
             raise ir.passes.PreconditionError("Gelu requires standard-domain opset >= 20.")

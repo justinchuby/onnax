@@ -10,8 +10,8 @@ from pathlib import Path
 import numpy as np
 import onnx
 import onnx_ir as ir
-import onnxruntime as ort
 import pytest
+from _testing import runtime_session
 from onnx_shape_inference import infer_symbolic_shapes
 
 from onnax import GradPass, JvpPass, VjpPass, VmapPass, _autodiff, _batching
@@ -35,11 +35,11 @@ def _run(model, feeds, path):
     ir.save(model, path)
     proto = onnx.load(path)
     onnx.checker.check_model(proto, full_check=True)
-    session = ort.InferenceSession(str(path), providers=["CPUExecutionProvider"])
+    session = runtime_session(path)
     return session.run(None, feeds)
 
 
-@pytest.mark.parametrize("opset", range(18, 25))
+@pytest.mark.parametrize("opset", range(18, 27))
 @pytest.mark.parametrize("mode", ["batching", "jvp", "vjp", "grad"])
 def test_supported_opsets_execute_serialized_graphs(opset, mode, tmp_path):
     model = _square(opset)
@@ -68,7 +68,7 @@ def test_supported_opsets_execute_serialized_graphs(opset, mode, tmp_path):
 
 
 @pytest.mark.parametrize("mode", ["batching", "jvp", "vjp", "grad"])
-@pytest.mark.parametrize("version", [17, 25])
+@pytest.mark.parametrize("version", [17, 29])
 def test_outside_verified_opset_range_is_rejected(mode, version):
     model = _square(version)
     transforms = {
@@ -110,8 +110,8 @@ def test_actual_transforms_dispatch_through_typed_registry(
 @pytest.mark.parametrize("transform", [VmapPass([0]), JvpPass(), VjpPass()])
 def test_explicit_node_version_controls_dispatch(transform):
     model = _square()
-    model.graph[0].version = 25
-    with pytest.raises((NotImplementedError, ir.passes.PreconditionError), match="opset 25"):
+    model.graph[0].version = 29
+    with pytest.raises((NotImplementedError, ir.passes.PreconditionError), match="opset 29"):
         transform(model)
 
 

@@ -32,8 +32,8 @@ def _prepare(
         outputs = default_outputs
     if model.graph.opset_imports.get("", 0) < 18:
         raise ValueError("Autodiff requires the standard ONNX opset >= 18; convert first.")
-    if model.graph.opset_imports[""] > 24:
-        raise ValueError("Autodiff supports opsets 18 through 24 only.")
+    if model.graph.opset_imports[""] > 28:
+        raise ValueError("Autodiff supports opsets 18 through 28 only.")
     result = model.clone()
     graph = result.graph
     graph.sort()
@@ -136,7 +136,7 @@ class JvpPass(ir.passes.FunctionalPass):
             Each selection must contain at least one tensor.
 
     Support contract (also applies to :class:`VjpPass` and :class:`GradPass`):
-        * Standard ONNX opsets 18 through 24; real FLOAT/DOUBLE tensor derivatives
+        * Standard ONNX opsets 18 through 28; real FLOAT/DOUBLE tensor derivatives
           only. Original opset imports are preserved, not silently upgraded.
           Shape inference runs on a clone using
           :func:`onnx_shape_inference.infer_symbolic_shapes` with ``policy="refine"``.
@@ -241,7 +241,7 @@ class JvpPass(ir.passes.FunctionalPass):
         registry = _JvpRegistry[_Context]()
         for family in (_elementwise, _linalg, _layout, _reductions):
             for op in sorted(family.OPS):
-                registry.register("", op, family.jvp, since_version=18, until_version=24)
+                registry.register("", op, family.jvp, since_version=18, until_version=28)
         result, xs, ys, nodes, _ = _prepare(model, self.inputs, self.outputs, registry)
         b = _Context(result.graph)
         tangents = {x: b.seed(x, "tangent") for x in xs}
@@ -304,7 +304,7 @@ class VjpPass(ir.passes.FunctionalPass):
         registry = _VjpRegistry[_Context]()
         for family in (_elementwise, _linalg, _layout, _reductions):
             for op in sorted(family.OPS - {"ScatterND"}):
-                registry.register("", op, family.vjp, since_version=18, until_version=24)
+                registry.register("", op, family.vjp, since_version=18, until_version=28)
         result, xs, ys, nodes, active = _prepare(model, self.inputs, self.outputs, registry)
         if scalar and (len(ys) != 1 or ys[0].shape is None or len(ys[0].shape) != 0):
             raise ValueError("GradPass requires one selected rank-zero (scalar) output.")
