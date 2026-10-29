@@ -9,7 +9,7 @@ import string
 
 import onnx_ir as ir
 
-from ._context import _Context
+from onnax._batching._context import _Context
 
 OPS = frozenset(("Det", "Einsum", "Gemm", "MatMul", "MatMulInteger", "QLinearMatMul"))
 

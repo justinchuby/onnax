@@ -11,11 +11,10 @@ import onnx_ir as ir
 from onnx_shape_inference import OpUsageError, ShapeInferenceError
 
 from onnax import _rule_registry
+from onnax._batching import _elementwise, _indexing, _layout, _linalg, _nn, _reductions
+from onnax._batching._context import _axis, _Context
+from onnax._batching._registry import _RANDOM, _BatchingRegistry
 from onnax._inference import _infer_shapes
-
-from . import _elementwise, _indexing, _layout, _linalg, _nn, _reductions
-from ._context import _axis, _Context
-from ._registry import _RANDOM, _BatchingRegistry
 
 
 class VmapPass(ir.passes.FunctionalPass):

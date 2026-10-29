@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import onnx_ir as ir
 
-from ._context import _axis, _Context
+from onnax._batching._context import _axis, _Context
 
 OPS = frozenset(
     (

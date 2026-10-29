@@ -8,8 +8,8 @@ from collections.abc import Mapping, Sequence
 
 import onnx_ir as ir
 
-from ._common import _FLOATS, _input, _int
-from ._context import _Context
+from onnax._autodiff._common import _FLOATS, _input, _int
+from onnax._autodiff._context import _Context
 
 OPS = frozenset(("LogSoftmax", "ReduceMean", "ReduceSum", "Softmax"))
 

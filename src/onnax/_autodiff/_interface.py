@@ -10,11 +10,11 @@ from typing import TYPE_CHECKING
 
 import onnx_ir as ir
 
-from ._common import _FLOATS, _INTERFACE, _MARKER
-from ._registry import _JvpRegistry, _VjpRegistry
+from onnax._autodiff._common import _FLOATS, _INTERFACE, _MARKER
+from onnax._autodiff._registry import _JvpRegistry, _VjpRegistry
 
 if TYPE_CHECKING:
-    from ._context import _Context
+    from onnax._autodiff._context import _Context
 
 
 def _select(

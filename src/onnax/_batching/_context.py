@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 
 import onnx_ir as ir
 
-from ._registry import _MULTI_OUTPUT
+from onnax._batching._registry import _MULTI_OUTPUT
 
 
 def _axis(axis: int, rank: int) -> int:

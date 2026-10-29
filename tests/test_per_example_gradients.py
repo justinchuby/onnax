@@ -215,7 +215,7 @@ def test_unrepresentable_runtime_reductions_fail_without_mutation(mapped_axes):
         ir_version=10,
     )
     before = ir.to_proto(model).SerializeToString()
-    with pytest.raises(ir.passes.PreconditionError, match="shared|known axes length"):
+    with pytest.raises(ir.passes.PreconditionError, match=r"shared|known axes length"):
         VmapPass([0, 0 if mapped_axes else None])(model)
     assert ir.to_proto(model).SerializeToString() == before
 

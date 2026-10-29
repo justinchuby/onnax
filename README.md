@@ -43,8 +43,11 @@ loss = tape.op("ReduceSum", [squared], {"keepdims": 0})
 loss.name = "loss"
 model = ir.Model(
     ir.Graph(
-        [x, weight], [loss], nodes=tape.nodes,
-        opset_imports={"": 18}, name="linear_loss",
+        [x, weight],
+        [loss],
+        nodes=tape.nodes,
+        opset_imports={"": 18},
+        name="linear_loss",
     ),
     ir_version=10,
 )
@@ -112,6 +115,7 @@ uv run twine check --strict dist/*
 
 CI checks Python 3.11 and 3.12 and exercises both built distributions outside
 the source tree. No publication workflow or credentials are configured.
+
 Ruff lint and formatting are both required. The lint families, preview rules,
 Google docstring convention, and readability exclusions follow
 [ONNX IR](https://github.com/onnx/ir-py/blob/main/pyproject.toml).

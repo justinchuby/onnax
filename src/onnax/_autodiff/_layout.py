@@ -9,8 +9,8 @@ from collections.abc import Mapping, Sequence
 import numpy as np
 import onnx_ir as ir
 
-from ._common import _FLOATS, _input, _int, _rank
-from ._context import _Context
+from onnax._autodiff._common import _FLOATS, _input, _int, _rank
+from onnax._autodiff._context import _Context
 
 OPS = frozenset(
     (
