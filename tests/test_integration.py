@@ -153,7 +153,7 @@ def test_runtime_unbroadcast_axes_remain_an_explicit_batching_limitation():
 
 
 @pytest.mark.parametrize("mode", ["jvp", "vjp", "grad"])
-def test_batching_a_derivative_preserves_higher_order_rejection(mode, tmp_path):
+def test_batching_a_derivative_preserves_composition_contract(mode, tmp_path):
     model = _square()
     model.graph[0].op_type = "Exp"
     model.graph[0].resize_inputs(1)
@@ -181,6 +181,13 @@ def test_batching_a_derivative_preserves_higher_order_rejection(mode, tmp_path):
     np.testing.assert_allclose(actual[-1], expected)
     reloaded = ir.load(tmp_path / "batched_derivative.onnx")
     for transform in (JvpPass(), VjpPass(), GradPass(output="loss")):
+        if mode != "jvp" and isinstance(transform, JvpPass):
+            second = transform(reloaded).model
+            second_feeds = {**feeds, second.graph.inputs[-1].name: np.ones_like(x)}
+            np.testing.assert_allclose(
+                _run(second, second_feeds, tmp_path / "hvp.onnx")[-1], expected
+            )
+            continue
         with pytest.raises(NotImplementedError, match="Higher-order"):
             transform(reloaded)
 
@@ -209,7 +216,9 @@ def test_autodiff_example_executes_saved_models(tmp_path):
     assert "MSE before/after one gradient step:" in result.stdout
     assert "Directional prediction derivative:" in result.stdout
     assert "Feature cotangent:" in result.stdout
-    for name in ("original", "grad", "jvp", "vjp"):
+    assert "Hessian-vector product (weight, bias):" in result.stdout
+    assert "Directional curvature v.T @ H @ v:" in result.stdout
+    for name in ("original", "grad", "jvp", "vjp", "hvp"):
         proto = onnx.load(tmp_path / f"{name}.onnx")
         onnx.checker.check_model(proto, full_check=True)
         text = (tmp_path / f"{name}.txt").read_text(encoding="utf-8")

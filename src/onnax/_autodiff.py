@@ -1,6 +1,6 @@
 # Copyright (c) 2026 onnax contributors
 # SPDX-License-Identifier: MIT
-"""First-order automatic differentiation as ordinary ONNX graph transformations.
+"""Automatic differentiation as ordinary ONNX graph transformations.
 
 The functional passes in this module implement forward linearization (JVP) and
 reverse transposition (VJP), rather than inserting training-domain gradient
@@ -12,6 +12,7 @@ from __future__ import annotations
 
 __all__ = ["JvpPass", "VjpPass", "GradPass"]
 
+import json
 import math
 from collections.abc import Mapping, Sequence
 from typing import Generic, TypeVar
@@ -63,6 +64,7 @@ class _VjpRegistry(_rule_registry._RuleRegistry[_VjpRule[_ContextT]], Generic[_C
 
 _FLOATS = frozenset((ir.DataType.FLOAT, ir.DataType.DOUBLE))
 _MARKER = "onnax.autodiff"
+_INTERFACE = "onnax.autodiff.interface"
 _BINARY = frozenset(("Add", "Sub", "Mul", "Div", "Pow"))
 _ELEMENTWISE = frozenset(
     (
@@ -141,6 +143,8 @@ def _data_indices(node: ir.Node) -> Sequence[int]:
         return ()
     if node.op_type == "Where":
         return (1, 2)
+    if node.op_type == "ScatterND":
+        return (0, 2)
     if node.op_type in _STRUCTURAL | {"Gather", "Split", "ReduceSum", "ReduceMean"}:
         return (0,)
     return range(len(node.inputs))
@@ -407,8 +411,13 @@ class _Builder:
                 if b.dtype != x.dtype:
                     b = self.op("Cast", b, to=x.dtype)
                 if index == 0:
-                    # x**0 has zero base derivative even at x=0: avoid 0 * x**-1.
-                    safe_b = self.op("Where", self.op("Equal", b, self.scalar(x, 0)), one, b)
+                    # Guard only 0**0, preserving mixed exponent derivatives at b=0
+                    # for positive bases. A blanket b=0 branch loses that dependence.
+                    zero = self.scalar(x, 0)
+                    at_origin = self.op(
+                        "And", self.op("Equal", x, zero), self.op("Equal", b, zero)
+                    )
+                    safe_b = self.op("Where", at_origin, one, b)
                     p = self.op("Mul", b, self.op("Pow", x, self.op("Sub", safe_b, one)))
                 else:
                     p = self.op("Mul", y, self.op("Log", x))
@@ -546,6 +555,20 @@ class _Builder:
                     num_outputs=len(node.outputs),
                 )
             )
+        if op == "ScatterND":
+            if node.attributes.get("reduction") is None or (
+                node.attributes["reduction"].as_string() != "add"
+            ):
+                raise NotImplementedError("JVP ScatterND requires reduction='add'.")
+            return [
+                self.op(
+                    "ScatterND",
+                    d[0] if 0 in d else self.like(_input(node)),
+                    _input(node, 1),
+                    d[2] if 2 in d else self.like(_input(node, 2)),
+                    reduction="add",
+                )
+            ]
         if op in ("Softmax", "LogSoftmax"):
             y = node.outputs[0]
             axis = self.constant([_int(node, "axis", -1)])
@@ -636,17 +659,101 @@ class _Builder:
         raise NotImplementedError(f"No VJP rule for {op}.")
 
 
+def _composition_defaults(
+    model: ir.Model, registry: _JvpRegistry[_Builder] | _VjpRegistry[_Builder]
+) -> tuple[Sequence[str] | None, Sequence[str] | None]:
+    """Authorize a bounded composition, not arbitrary removal of the marker."""
+    props = model.graph.metadata_props
+    if _MARKER not in props and "onnx_ir.autodiff" not in props:
+        if _INTERFACE in props:
+            raise NotImplementedError("Higher-order interface has no autodiff marker.")
+        return None, None
+    message = (
+        "Higher-order differentiation supports only one JvpPass over a generated "
+        "GradPass or VjpPass model with versioned interface metadata."
+    )
+    if "onnx_ir.autodiff" in props or not isinstance(registry, _JvpRegistry):
+        raise NotImplementedError(message)
+    try:
+        info = json.loads(props.get(_INTERFACE, "null"))
+    except (ValueError, TypeError) as e:
+        raise NotImplementedError(f"{message} Invalid interface metadata.") from e
+    if (
+        not isinstance(info, dict)
+        or info.get("version") != 1
+        or info.get("modes") not in (["grad"], ["vjp"])
+        or props[_MARKER] != info["modes"][0]
+    ):
+        raise NotImplementedError(message)
+    graph_inputs = {v.name for v in model.graph.inputs}
+    graph_outputs = {v.name for v in model.graph.outputs}
+    for key, available in (
+        ("source_inputs", graph_inputs),
+        ("source_outputs", graph_outputs),
+        ("seeds", graph_inputs),
+        ("derivative_outputs", graph_outputs),
+    ):
+        names = info.get(key)
+        if (
+            not isinstance(names, list)
+            or any(not isinstance(n, str) or n not in available for n in names)
+            or len(set(names)) != len(names)
+        ):
+            raise NotImplementedError(f"{message} Invalid interface field {key!r}.")
+    by_name = {v.name: v for v in model.graph.inputs}
+    default_inputs = [
+        name
+        for name in info["source_inputs"]
+        if by_name[name].dtype in _FLOATS and not by_name[name].is_initializer()
+    ]
+    return default_inputs, info["derivative_outputs"]
+
+
+def _record_interface(
+    source: ir.Model,
+    result: ir.Model,
+    mode: str,
+    xs: Sequence[ir.Value],
+    ys: Sequence[ir.Value],
+) -> None:
+    """Record actual collision-resolved names, retained by ONNX serialization."""
+    graph = result.graph
+    previous = source.graph.metadata_props.get(_INTERFACE)
+    prior = json.loads(previous) if previous is not None else None
+    info = {
+        "version": 1,
+        "modes": [*(prior["modes"] if prior else []), mode],
+        "source_inputs": (
+            prior["source_inputs"] if prior else [v.name for v in source.graph.inputs]
+        ),
+        "source_outputs": (
+            prior["source_outputs"] if prior else [v.name for v in source.graph.outputs]
+        ),
+        "seeds": [
+            *(prior["seeds"] if prior else []),
+            *(v.name for v in graph.inputs[len(source.graph.inputs) :]),
+        ],
+        "derivative_outputs": [v.name for v in graph.outputs[len(source.graph.outputs) :]],
+        "selection": {
+            "inputs": [v.name for v in xs],
+            "outputs": [v.name for v in ys],
+        },
+    }
+    graph.metadata_props[_INTERFACE] = json.dumps(info, sort_keys=True)
+    graph.metadata_props[_MARKER] = mode
+
+
 def _prepare(
     model: ir.Model,
     inputs: Sequence[str] | None,
     outputs: Sequence[str] | None,
     registry: _JvpRegistry[_Builder] | _VjpRegistry[_Builder],
 ) -> tuple[ir.Model, list[ir.Value], list[ir.Value], list[ir.Node], set[ir.Value]]:
-    if (
-        _MARKER in model.graph.metadata_props
-        or "onnx_ir.autodiff" in model.graph.metadata_props
-    ):
-        raise NotImplementedError("Higher-order differentiation is not supported.")
+    default_inputs, default_outputs = _composition_defaults(model, registry)
+    if inputs is None and default_inputs is not None:
+        inputs = default_inputs
+    if outputs is None and default_outputs is not None:
+        outputs = default_outputs
     if model.graph.opset_imports.get("", 0) < 18:
         raise ValueError("Autodiff requires the standard ONNX opset >= 18; convert first.")
     if model.graph.opset_imports[""] > 24:
@@ -769,6 +876,8 @@ class JvpPass(ir.passes.FunctionalPass):
         * Layout/indexing: Reshape, Flatten, Squeeze, Unsqueeze, Transpose,
           Expand, Concat, Split, Gather (including repeated/negative indices).
           Also floating-point Cast, Where, Softmax, and LogSoftmax.
+          Forward mode additionally supports ScatterND with reduction="add";
+          its data/updates are differentiable and its indices are structural.
           Pow accepts an inactive integer exponent; floating operands must have
           matching dtypes.
         * Reverse-mode broadcast reduction uses runtime shapes, including
@@ -783,8 +892,32 @@ class JvpPass(ir.passes.FunctionalPass):
           returning zero. Inactive paths can contain unsupported/custom operators.
           Control flow/subgraphs and random operators (including Dropout) are
           rejected. Inline active local-function calls with InlinePass first.
-        * Only first derivatives are supported. Applying an autodiff pass to its
-          generated model is rejected. Complex numbers, sequences, sparse tensors,
+        * One forward-over-reverse composition is supported: apply JvpPass to a
+          GradPass or VjpPass model, including after serialization. By default
+          differentiate the original non-initializer FLOAT/DOUBLE inputs and
+          only the generated gradient/cotangent outputs. Explicit selections
+          use actual graph value names, including collision-resolved suffixes;
+          parameters and existing cotangent seeds stay fixed unless selected.
+          All existing inputs/outputs are preserved and new seeds are appended.
+          Graph metadata ``onnax.autodiff.interface`` is JSON with ``version=1``,
+          ``modes``, ``source_inputs``, ``source_outputs``, ``seeds``,
+          ``derivative_outputs``, and the latest ``selection`` of inputs/outputs.
+          Source lists contain the full original graph interfaces, seeds list
+          all appended seed inputs, and derivative_outputs lists only the latest
+          appended outputs, in selection order (reverse: selected inputs;
+          forward: selected outputs). These actual, collision-resolved names
+          disambiguate generated interfaces.
+          Other repeated modes, third derivatives, and legacy marker-only models
+          remain rejected. Support is checked by dispatching the ordinary
+          generated graph, not by an operator-level higher-order flag.
+        * Forward-over-reverse covers smooth arithmetic/nonlinearities, matrix
+          operations, broadcasting, reductions, layouts, and Gather's additive
+          ScatterND pullback. Shape/index paths remain structural even when
+          computed at runtime. Unsupported active generated operators still fail
+          precisely (for example Sign in the pullback of Abs). Piecewise
+          rules such as Relu/Where retain fixed-predicate conventions away from
+          boundaries; no second derivative at a nonsmooth point is claimed.
+          Complex numbers, sequences, sparse tensors,
           integer/boolean casts on active data paths, and half-precision
           differentiation are not supported.
         * Derivatives assume finite inputs within the operators' differentiable
@@ -817,7 +950,8 @@ class JvpPass(ir.passes.FunctionalPass):
 
     See Also:
         ``python examples/autodiff.py`` prints original/derivative graphs
-        and executes parameter gradients and prediction sensitivities.
+        and executes parameter gradients, prediction sensitivities, and
+        forward-over-reverse parameter Hessian-vector products.
     """
 
     def __init__(
@@ -830,6 +964,7 @@ class JvpPass(ir.passes.FunctionalPass):
         registry = _JvpRegistry[_Builder]()
         for op in _SUPPORTED:
             registry.register("", op, _Builder.jvp, since_version=18, until_version=24)
+        registry.register("", "ScatterND", _Builder.jvp, since_version=18, until_version=24)
         result, xs, ys, nodes, _ = _prepare(model, self.inputs, self.outputs, registry)
         b = _Builder(result.graph)
         tangents = {x: b.seed(x, "tangent") for x in xs}
@@ -847,7 +982,7 @@ class JvpPass(ir.passes.FunctionalPass):
             tangents.update(zip(node.outputs, values))
         for y in ys:
             b.output(tangents[y] if y in tangents else b.like(y), y, "tangent")
-        result.graph.metadata_props[_MARKER] = "jvp"
+        _record_interface(model, result, "jvp", xs, ys)
         return ir.passes.PassResult(result, modified=True)
 
 
@@ -918,7 +1053,7 @@ class VjpPass(ir.passes.FunctionalPass):
                 )
         for x in xs:
             b.output(cotangents[x] if x in cotangents else b.like(x), x, "cotangent")
-        result.graph.metadata_props[_MARKER] = "grad" if scalar else "vjp"
+        _record_interface(model, result, "grad" if scalar else "vjp", xs, ys)
         return ir.passes.PassResult(result, modified=True)
 
     def call(self, model: ir.Model) -> ir.passes.PassResult:
@@ -942,7 +1077,7 @@ class GradPass(VjpPass):
     Example::
 
         import onnx_ir as ir
-        from onnax import GradPass
+        from onnax import GradPass, JvpPass
 
         prediction = ir.val("prediction", dtype=ir.DataType.DOUBLE, shape=["batch"])
         target = ir.val("target", dtype=ir.DataType.DOUBLE, shape=["batch"])
@@ -958,6 +1093,10 @@ class GradPass(VjpPass):
         # The gradient is 2 * (prediction - target) / batch.
         print(model)
         print(differentiated)
+        hvp = JvpPass(inputs=["prediction"])(differentiated).model
+        # Feed prediction_tangent=v; the last output is 2 * v / batch.
+        # No Hessian is materialized; the saved graph uses ordinary ONNX ops.
+        print(hvp)
     """
 
     def __init__(self, inputs: Sequence[str] | None = None, output: str | None = None) -> None:

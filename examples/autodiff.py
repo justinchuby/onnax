@@ -9,6 +9,9 @@ The original model computes predictions and mean-squared error for a symbolic
 batch size. This example prints the before/after IR graphs, checks parameter
 gradients against NumPy, takes one loss-reducing optimization step, and computes
 both directional prediction sensitivities and a reverse-mode attribution.
+It then applies JvpPass to the reloaded gradient graph to compute an exact
+parameter Hessian-vector product and directional curvature without materializing
+the Hessian. Initializer values stay stored; only their direction seeds are inputs.
 
 All derivative models are ordinary, serializable ONNX models. For example,
 ``ir.save(gradient_model, "linear_regression_grad.onnx")`` exports the executable
@@ -102,6 +105,25 @@ def main() -> None:
     print(f"MSE before/after one gradient step: {loss:.6f} -> {updated_loss:.6f}")
     print("d(MSE)/d(weight):", grad_weight.ravel())
     print("d(MSE)/d(bias):", grad_bias)
+
+    # Default outputs on a reverse-mode graph are its generated gradients.
+    hvp_model = JvpPass(inputs=["weight", "bias"])(gradient_model).model
+    dw, db = np.array([[0.4], [-0.2]]), np.array([0.1])
+    hvp_feeds = dict(feeds)
+    for seed, direction in zip(
+        hvp_model.graph.inputs[len(gradient_model.graph.inputs) :], (dw, db)
+    ):
+        hvp_feeds[seed.name] = direction
+    print("\nAFTER JvpPass(GradPass): parameter Hessian-vector product")
+    hvp_model = save_graph(hvp_model, "hvp", args.output_dir)
+    _, _, _, _, h_weight, h_bias = evaluate(hvp_model, hvp_feeds)
+    response = features @ dw + db
+    np.testing.assert_allclose(h_weight, 2 * features.T @ response / response.size)
+    np.testing.assert_allclose(h_bias, 2 * response.mean(axis=0))
+    curvature = np.vdot(dw, h_weight) + np.vdot(db, h_bias)
+    np.testing.assert_allclose(curvature, 2 * np.mean(response**2))
+    print("Hessian-vector product (weight, bias):", h_weight.ravel(), h_bias)
+    print(f"Directional curvature v.T @ H @ v: {curvature:.6f}")
 
     jvp_model = JvpPass(inputs=["features"], outputs=["prediction"])(original).model
     direction = np.broadcast_to(np.array([1.0, 0.0]), features.shape).copy()

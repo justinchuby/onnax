@@ -604,13 +604,14 @@ def test_randomness_and_control_flow_rejected():
         VjpPass()(_model([x], tape, [y]))
 
 
-def test_higher_order_rejected():
+def test_forward_over_reverse_square():
     x = _value("x", [])
     tape = ir.tape.Tape()
     model = _model([x], tape, [tape.op("Mul", [x, x])])
     first = GradPass()(model).model
-    with pytest.raises(NotImplementedError, match="Higher-order"):
-        JvpPass()(first)
+    second = JvpPass()(first).model
+    actual = _evaluator(second).run(None, {"x": np.array(3.0), "x_tangent": np.array(0.7)})
+    np.testing.assert_allclose(actual, [9.0, 6.0, 1.4])
 
 
 def test_onnxruntime_executes_standard_gradient_graph():
