@@ -654,3 +654,29 @@ def test_numpy_argument_and_recursive_sequence_diagnostics_are_bounded():
         vmap(_model(), axes)
     _contains(caught.value, "<list>", "integer", "in_axes")
     assert len(str(caught.value)) < 500
+
+
+@pytest.mark.parametrize("transform", [jvp, lambda m: vmap(m, [0])])
+@pytest.mark.parametrize("exception", [TypeError, ValueError])
+def test_opset_comparison_error_subclass_keeps_original_cause(transform, exception):
+    class ComparisonError(exception):
+        def __init__(self, left, right):
+            super().__init__("invalid comparison")
+
+    original = ComparisonError(18, 28)
+
+    class InvalidOpset:
+        def __ge__(self, other):
+            raise original
+
+    with pytest.raises(exception) as caught:
+        transform(_model(opset=InvalidOpset()))
+    assert caught.value.__cause__ is original
+    _contains(
+        caught.value,
+        "<InvalidOpset>",
+        "diagnostic",
+        "positive integer",
+        "18 through 28",
+        "validate",
+    )

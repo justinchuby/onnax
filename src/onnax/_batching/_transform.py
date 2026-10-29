@@ -221,12 +221,15 @@ class VmapPass(ir.passes.FunctionalPass):
         try:
             supported = bool(18 <= version <= 28)
         except (TypeError, ValueError) as error:
-            raise type(error)(
+            message = (
                 f"vmap: invalid standard-domain opset {_argument_context(version)} "
                 f"in graph {model.graph.name!r}; expected a positive integer, supported "
                 "18 through 28. Supply the actual integer opset version and validate "
                 "the model; do not relabel an unsupported model's imports."
-            ) from error
+            )
+            if isinstance(error, TypeError):
+                raise TypeError(message) from error
+            raise ValueError(message) from error
         if not supported:
             raise ir.passes.PreconditionError(
                 f"VmapPass requires standard-domain opset >= 18 and <= 28; "
