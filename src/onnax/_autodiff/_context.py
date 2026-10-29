@@ -9,7 +9,7 @@ from collections.abc import Sequence
 import numpy as np
 import onnx_ir as ir
 
-from ._common import _FLOATS
+from onnax._autodiff._common import _FLOATS
 
 
 class _Context:

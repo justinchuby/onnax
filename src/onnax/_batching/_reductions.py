@@ -6,8 +6,8 @@ from __future__ import annotations
 
 import onnx_ir as ir
 
-from ._context import _axis, _Context
-from ._registry import _REDUCTIONS
+from onnax._batching._context import _axis, _Context
+from onnax._batching._registry import _REDUCTIONS
 
 OPS = _REDUCTIONS | frozenset(
     ("ArgMax", "ArgMin", "CumSum", "Hardmax", "LogSoftmax", "Softmax")

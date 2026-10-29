@@ -6,8 +6,8 @@ from __future__ import annotations
 
 import onnx_ir as ir
 
-from ._context import _Context
-from ._registry import _BINARY, _UNARY, _VARIADIC
+from onnax._batching._context import _Context
+from onnax._batching._registry import _BINARY, _UNARY, _VARIADIC
 
 OPS = (
     _UNARY
@@ -88,8 +88,7 @@ def apply(ctx: _Context, node: ir.Node) -> None:
                 ctx._align(ctx.values[slope], ctx.ranks[slope], ctx.mapped[slope], rank),
             )
     elif (
-        op in _BINARY
-        and len(inputs) == 2
+        (op in _BINARY and len(inputs) == 2)
         or (op == "Where" and len(inputs) == 3)
         or (op in _VARIADIC and inputs)
     ):

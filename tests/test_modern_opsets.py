@@ -311,7 +311,7 @@ def test_new_opsets_do_not_enable_unsupported_derivative_types_or_operators(opse
         input_dtypes=[ir.DataType.FLOAT16],
         dtype=ir.DataType.FLOAT16,
     )
-    with pytest.raises((TypeError, ValueError), match="FLOAT|DOUBLE"):
+    with pytest.raises((TypeError, ValueError), match=r"FLOAT|DOUBLE"):
         jvp(source, inputs=["x0"])
     source = _model("Sin", [[2]], opset=opset)
     source.graph[0].op_type = "Sign"

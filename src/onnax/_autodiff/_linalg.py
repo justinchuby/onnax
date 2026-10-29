@@ -8,10 +8,9 @@ from collections.abc import Mapping, Sequence
 
 import onnx_ir as ir
 
+from onnax._autodiff._common import _float, _input, _int, _rank
+from onnax._autodiff._context import _Context
 from onnax._diagnostics import _value_context
-
-from ._common import _float, _input, _int, _rank
-from ._context import _Context
 
 OPS = frozenset(("Gemm", "MatMul"))
 

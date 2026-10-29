@@ -22,7 +22,7 @@ its norm is generally not the mean of their individual norms.
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
+from pathlib import Path  # ruff: ignore[banned-api] - CLI artifact paths, not library code.
 
 import numpy as np
 import onnx

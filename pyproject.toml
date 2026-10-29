@@ -39,7 +39,7 @@ Examples = "https://github.com/justinchuby/onnax/tree/main/examples"
 dev = [
     "pytest>=8",
     "onnxruntime>=1.31.1",
-    "ruff>=0.11",
+    "ruff>=0.17.3",
     "mypy>=1.15",
     "build>=1.2",
     "twine>=6.1",
@@ -60,7 +60,51 @@ line-length = 95
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "I"]
+# Follow onnx/ir-py (55d1304); keep the Python target and width above local.
+select = [
+    "B", "C4", "D", "E", "F", "G", "I", "ISC", "LOG", "N", "NPY",
+    "PERF", "PIE", "PYI", "RUF", "SIM", "SLOT", "T10", "TID", "TRY", "UP",
+    "W", "YTT",
+]
+preview = true
+ignore = [
+    "B9",  # Opinionated bugbear rules.
+    "unnecessary-collection-call",  # C408: dict() can be clearer for kwargs.
+    "D1",  # Missing docstrings are not enforced.
+    "non-imperative-mood",  # D401: Imperative mood is not required.
+    "E1", "E2", "E3",  # Let the formatter handle layout.
+    "line-too-long",  # E501: Let the formatter handle line length.
+    "needless-bool",  # SIM103: Returning a condition can obscure logic.
+    "collapsible-if",  # SIM102: Nested conditions can be clearer.
+    "if-else-block-instead-of-if-exp",  # SIM108: Do not require ternaries.
+    "if-with-same-arms",  # SIM114: Separate branches can help debugging.
+    "if-else-block-instead-of-dict-lookup",  # SIM116: Keep readable branches.
+    "numpy-legacy-random",  # NPY002: A generator is not always necessary.
+    "try-except-in-loop",  # PERF203: Exception handling in loops can be necessary.
+    "manual-list-comprehension",  # PERF401: Explicit loops can be clearer.
+    "redundant-numeric-union",  # PYI041: int | float is explicit.
+    "unsorted-dunder-all",  # RUF022: Keep related exports grouped.
+    "incorrectly-parenthesized-tuple-in-subscript",  # RUF031: Allow tuple parentheses.
+    "used-dummy-variable",  # RUF052: _-prefixed names are not always dummy variables.
+    "non-empty-init-module",  # RUF067: Allow implementation imports in __init__.py.
+    "raise-vanilla-args",  # TRY003: Keep actionable messages at the raise site.
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"pathlib".msg = "Use os.path in library code to avoid pathlib overhead; supporting scripts may use a narrow ruff: ignore[banned-api]."
+"onnx.helper".msg = "Construct models with onnx_ir.Graph, ir.tape.Tape and ir.val instead of protobuf helpers."
+"onnx.numpy_helper".msg = "Construct tensors with onnx_ir.tensor instead of protobuf helpers."
+# ONNX schema queries, checker, serialization and reference evaluation remain valid.
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["relative-imports"]  # Package re-exports may use relative imports.
+"tests/**/*.py" = ["banned-api"]  # Tests also exercise protobuf interoperability.
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.mypy]
 files = ["src"]

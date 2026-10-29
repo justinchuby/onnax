@@ -21,12 +21,12 @@ gradient graph, not a Python callback or a training-domain operator.
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
+from pathlib import Path  # ruff: ignore[banned-api] - CLI artifact paths, not library code.
 
 import numpy as np
-import onnx  # ruff: ignore[banned-api]
+import onnx
 import onnx_ir as ir
-from onnx.reference import ReferenceEvaluator  # ruff: ignore[banned-api]
+from onnx.reference import ReferenceEvaluator
 from onnx_ir.passes.common import CheckerPass
 
 from onnax import grad, jvp, vjp

@@ -10,14 +10,13 @@ import onnx
 import onnx_ir as ir
 
 from onnax import _rule_registry
+from onnax._autodiff import _elementwise, _layout, _linalg, _reductions
+from onnax._autodiff._common import _FLOATS, _data_indices, _input
+from onnax._autodiff._context import _Context
+from onnax._autodiff._interface import _composition_defaults, _record_interface, _select
+from onnax._autodiff._registry import _JvpRegistry, _VjpRegistry
 from onnax._diagnostics import _argument_context, _node_context, _value_context
 from onnax._inference import _infer_shapes
-
-from . import _elementwise, _layout, _linalg, _reductions
-from ._common import _FLOATS, _data_indices, _input
-from ._context import _Context
-from ._interface import _composition_defaults, _record_interface, _select
-from ._registry import _JvpRegistry, _VjpRegistry
 
 
 def _prepare(

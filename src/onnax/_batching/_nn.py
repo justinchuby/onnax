@@ -6,8 +6,8 @@ from __future__ import annotations
 
 import onnx_ir as ir
 
-from ._context import _axis, _Context
-from ._registry import _NATIVE_BATCH
+from onnax._batching._context import _axis, _Context
+from onnax._batching._registry import _NATIVE_BATCH
 
 OPS = _NATIVE_BATCH | frozenset(
     (

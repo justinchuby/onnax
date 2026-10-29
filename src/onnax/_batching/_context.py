@@ -9,10 +9,9 @@ from collections.abc import Mapping, Sequence
 import onnx
 import onnx_ir as ir
 
+from onnax._batching._registry import _MULTI_OUTPUT
 from onnax._diagnostics import _argument_context, _value_context
 from onnax._rule_registry import _effective_opset
-
-from ._registry import _MULTI_OUTPUT
 
 
 def _axis(axis: int, rank: int, *, what: str = "Axis") -> int:

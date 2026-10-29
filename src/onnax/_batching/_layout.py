@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import onnx_ir as ir
 
-from ._context import _axis, _Context
+from onnax._batching._context import _axis, _Context
 
 OPS = frozenset(
     (
@@ -162,7 +162,9 @@ def apply(ctx: _Context, node: ir.Node) -> None:
     elif op == "Flatten" and len(inputs) == 1:
         _flatten(ctx, node, inputs[0])
         rank = 2
-    elif op == "Squeeze" and 1 <= len(inputs) <= 2 or (op == "Unsqueeze" and len(inputs) == 2):
+    elif (op == "Squeeze" and 1 <= len(inputs) <= 2) or (
+        op == "Unsqueeze" and len(inputs) == 2
+    ):
         rank = _squeeze_or_unsqueeze(ctx, node, inputs)
     elif op == "Shape" and len(inputs) == 1:
         _shape(ctx, node, inputs[0])
