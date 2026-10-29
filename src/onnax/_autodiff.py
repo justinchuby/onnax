@@ -20,10 +20,10 @@ from typing import Generic, TypeVar
 import numpy as np
 import onnx
 import onnx_ir as ir
-from onnx_ir.passes.common.shape_inference import ShapeInferencePass
 from typing_extensions import Protocol
 
 from onnax import _rule_registry
+from onnax._inference import _infer_shapes
 
 _ContextT = TypeVar("_ContextT")
 _ContextT_contra = TypeVar("_ContextT_contra", contravariant=True)
@@ -777,7 +777,8 @@ def _prepare(
                 raise NotImplementedError(
                     f"Autodiff does not support randomness: {node.op_type}."
                 )
-    ShapeInferencePass()(result)
+    result = _infer_shapes(result)
+    graph = result.graph
     candidates = list(graph.inputs)
     if inputs is None:
         candidates = [v for v in candidates if not v.is_initializer()]
@@ -861,9 +862,9 @@ class JvpPass(ir.passes.FunctionalPass):
     Support contract (also applies to :class:`VjpPass` and :class:`GradPass`):
         * Standard ONNX opsets 18 through 24; real FLOAT/DOUBLE tensor derivatives
           only. Original opset imports are preserved, not silently upgraded.
-          Shape inference runs on a clone using :class:`ShapeInferencePass`.
-          Existing symbolic shape metadata is reused; no additional inference
-          package or training runtime is required.
+          Shape inference runs on a clone using
+          :func:`onnx_shape_inference.infer_symbolic_shapes` with ``policy="refine"``.
+          Existing symbolic shape metadata is reused; no training runtime is required.
           Selected graph inputs/outputs need known ranks so their derivative
           interfaces are valid ONNX; all dimension sizes may be symbolic.
         * Elementwise: Identity, Add, Sub, Mul, Div, Pow, Neg, Abs, Exp, Log,
