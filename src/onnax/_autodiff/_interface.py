@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 
 import onnx_ir as ir
 
+from onnax._diagnostics import _value_context
+
 from ._common import _FLOATS, _INTERFACE, _MARKER
 from ._registry import _JvpRegistry, _VjpRegistry
 
@@ -18,33 +20,62 @@ if TYPE_CHECKING:
 
 
 def _select(
-    values: Sequence[ir.Value], names: Sequence[str] | None, what: str
+    values: Sequence[ir.Value],
+    names: Sequence[str] | None,
+    what: str,
+    *,
+    mode: str = "Autodiff",
 ) -> list[ir.Value]:
-    if isinstance(names, str):
-        raise TypeError(f"{what} must be a sequence of names, not a string.")
+    available = [value.name for value in values]
+    choices = f"Available {what}: {available!r}."
+    if names is not None and (
+        not isinstance(names, Sequence)
+        or isinstance(names, (str, bytes))
+        or any(not isinstance(name, str) for name in names)
+    ):
+        raise TypeError(
+            f"{mode}: {what} must be a sequence of names, got {names!r}. "
+            f"Pass a list such as ['name'], not a bare string or non-string entries. {choices}"
+        )
     if names is None:
         selected = [value for value in values if value.dtype in _FLOATS]
     else:
         if len(set(names)) != len(names):
-            raise ValueError(f"Duplicate names in {what}: {names!r}.")
+            raise ValueError(
+                f"{mode}: Duplicate names in {what}: {names!r}. "
+                f"Select each name once in the desired derivative order. {choices}"
+            )
         by_name = {value.name: value for value in values}
         selected = []
         for name in names:
             if name not in by_name:
-                raise ValueError(f"Unknown {what} name {name!r}.")
+                raise ValueError(
+                    f"{mode}: Unknown {what} name {name!r} in selection {names!r}. {choices} "
+                    "Use exact graph names, including collision-resolved derivative suffixes."
+                )
             selected.append(by_name[name])
     if not selected:
-        raise ValueError(f"Select at least one FLOAT or DOUBLE tensor in {what}.")
+        raise ValueError(
+            f"{mode}: Select at least one FLOAT or DOUBLE tensor in {what}; selection={names!r}. "
+            f"{choices} Eligible floating tensors: "
+            f"{[v.name for v in values if isinstance(v.type, ir.TensorType) and v.dtype in _FLOATS]!r}. "
+            "Pass a nonempty selection of eligible names; non-floating differentiation "
+            "requires a separately authored supported real-valued model."
+        )
     for value in selected:
         if not isinstance(value.type, ir.TensorType) or value.dtype not in _FLOATS:
             raise TypeError(
-                f"Autodiff {what} {value.name!r} must be a FLOAT or DOUBLE tensor, "
-                f"got {value.type}."
+                f"{mode}: Autodiff {what} {value.name!r} must be a FLOAT or DOUBLE tensor, "
+                f"got {_value_context(value)} in selection {names!r}. {choices} "
+                "Select a supported floating tensor. Integer/boolean, half-precision, "
+                "and complex derivatives are unsupported; casting the selection alone "
+                "does not preserve the original computation's derivative."
             )
         if value.shape is None:
             raise ValueError(
-                f"Selected {what} {value.name!r} needs known-rank shape metadata; "
-                "dimension sizes may be symbolic."
+                f"{mode}: Selected {what} {value.name!r} needs known-rank shape metadata; "
+                f"got {_value_context(value)}. Annotate this source value's shape "
+                "(dimension sizes may be symbolic); inference could not determine its rank."
             )
     return selected
 
@@ -56,25 +87,52 @@ def _composition_defaults(
     props = model.graph.metadata_props
     if _MARKER not in props and "onnx_ir.autodiff" not in props:
         if _INTERFACE in props:
-            raise NotImplementedError("Higher-order interface has no autodiff marker.")
+            raise NotImplementedError(
+                f"Higher-order interface {_INTERFACE!r} has no autodiff marker {_MARKER!r} "
+                f"in graph {model.graph.name!r}. Regenerate the derivative from the "
+                "original model using grad/vjp and preserve both metadata entries "
+                "through serialization; do not fabricate or remove markers."
+            )
         return None, None
     message = (
         "Higher-order differentiation supports only one JvpPass over a generated "
-        "GradPass or VjpPass model with versioned interface metadata."
+        "GradPass or VjpPass model with versioned interface metadata. "
+        f"Requested {registry._kind} on graph {model.graph.name!r}, "
+        f"marker={props.get(_MARKER, props.get('onnx_ir.autodiff'))!r}."
+    )
+    remedy = (
+        "Regenerate from the original model with grad or vjp, preserve the generated "
+        "interface metadata, then apply jvp once. Do not remove markers to bypass "
+        "unsupported compositions."
     )
     if "onnx_ir.autodiff" in props or not isinstance(registry, _JvpRegistry):
-        raise NotImplementedError(message)
+        raise NotImplementedError(f"{message} {remedy}")
     try:
         info = json.loads(props.get(_INTERFACE, "null"))
     except (ValueError, TypeError) as e:
-        raise NotImplementedError(f"{message} Invalid interface metadata.") from e
-    if (
-        not isinstance(info, dict)
-        or info.get("version") != 1
-        or info.get("modes") not in (["grad"], ["vjp"])
-        or props[_MARKER] != info["modes"][0]
-    ):
-        raise NotImplementedError(message)
+        raise NotImplementedError(
+            f"{message} Invalid interface metadata {_INTERFACE!r}: {e}. {remedy}"
+        ) from e
+    if not isinstance(info, dict):
+        raise NotImplementedError(
+            f"{message} Invalid interface metadata: expected a JSON object, "
+            f"got {type(info).__name__}. {remedy}"
+        )
+    if info.get("version") != 1:
+        raise NotImplementedError(
+            f"{message} Invalid interface metadata version={info.get('version')!r}; "
+            f"supported version is 1. {remedy}"
+        )
+    if info.get("modes") not in (["grad"], ["vjp"]):
+        raise NotImplementedError(
+            f"{message} Got modes={info.get('modes')!r}; expected ['grad'] or ['vjp']. "
+            f"Forward-over-forward, reverse-over-forward/reverse and third derivatives "
+            f"are unsupported. {remedy}"
+        )
+    if props[_MARKER] != info["modes"][0]:
+        raise NotImplementedError(
+            f"{message} Interface modes={info['modes']!r} disagree with the marker. {remedy}"
+        )
     graph_inputs = {v.name for v in model.graph.inputs}
     graph_outputs = {v.name for v in model.graph.outputs}
     for key, available in (
@@ -89,7 +147,10 @@ def _composition_defaults(
             or any(not isinstance(n, str) or n not in available for n in names)
             or len(set(names)) != len(names)
         ):
-            raise NotImplementedError(f"{message} Invalid interface field {key!r}.")
+            raise NotImplementedError(
+                f"{message} Invalid interface field {key!r}={names!r}; "
+                f"expected a list of unique names from {sorted(available, key=str)!r}. {remedy}"
+            )
     by_name = {v.name: v for v in model.graph.inputs}
     default_inputs = [
         name

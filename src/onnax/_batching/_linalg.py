@@ -19,7 +19,11 @@ def _einsum(ctx: _Context, node: ir.Node, inputs: list[ir.Value]) -> int:
     left, separator, right = equation.partition("->")
     terms = left.split(",")
     if len(terms) != len(inputs):
-        raise ir.passes.PreconditionError("Einsum equation must match the input count.")
+        raise ir.passes.PreconditionError(
+            f"Einsum equation {equation!r} must match the input count: "
+            f"got {len(terms)} terms for {len(inputs)} inputs. "
+            "Supply one comma-separated term per input and a valid output term."
+        )
     if not separator:
         counts = collections.Counter(char for char in left if char in string.ascii_letters)
         right = ("..." if "..." in left else "") + "".join(
@@ -38,7 +42,9 @@ def _einsum(ctx: _Context, node: ir.Node, inputs: list[ir.Value]) -> int:
         label = next((char for char in string.ascii_letters if char not in equation), None)
         if label is None:
             raise ir.passes.PreconditionError(
-                "Einsum needs an unused label for the batch axis."
+                f"Einsum needs an unused label for the batch axis; equation={equation!r} "
+                "uses all 52 ASCII labels. Rewrite the equation with fewer distinct labels "
+                "if equivalent, or execute examples independently."
             )
         terms = [
             label + term if ctx.mapped[value] else term for value, term in zip(inputs, terms)
@@ -51,7 +57,11 @@ def _einsum(ctx: _Context, node: ir.Node, inputs: list[ir.Value]) -> int:
 
 def _gemm(ctx: _Context, node: ir.Node, inputs: list[ir.Value]) -> None:
     if any(ctx.ranks[value] != 2 for value in inputs[:2]):
-        raise ir.passes.PreconditionError("Gemm matrix operands must have example rank 2.")
+        raise ir.passes.PreconditionError(
+            f"Gemm matrix operands must have example rank 2; got "
+            f"{[ctx._describe(v) for v in inputs[:2]]}. "
+            "Supply two matrices per example, or use MatMul for vector/batched-matrix semantics."
+        )
     left, right = [ctx.values[value] for value in inputs[:2]]
     for i, key in enumerate(("transA", "transB")):
         if node.attributes.get_int(key, 0):
@@ -98,7 +108,11 @@ def _matmul(
     left, right = inputs
     left_rank, right_rank = ctx.ranks[left], ctx.ranks[right]
     if min(left_rank, right_rank) < 1:
-        raise ir.passes.PreconditionError("MatMul operands must have rank >= 1.")
+        raise ir.passes.PreconditionError(
+            f"{node.op_type} operands must have rank >= 1; got "
+            f"{[ctx._describe(v) for v in inputs]}. "
+            "Supply vectors/matrices; use Mul for scalar multiplication."
+        )
     target = max(left_rank, right_rank, 2)
     rank = target - int(left_rank == 1) - int(right_rank == 1)
     if not mapped:
@@ -152,10 +166,11 @@ def apply(ctx: _Context, node: ir.Node) -> None:
     elif op == "Det" and len(inputs) == 1:
         rank = ctx.ranks[inputs[0]] - 2
         if rank < 0:
-            raise ir.passes.PreconditionError("Det requires example rank >= 2.")
+            raise ir.passes.PreconditionError(
+                f"Det requires example rank >= 2; got {ctx._describe(inputs[0])}. "
+                "Supply square matrices in the last two example dimensions."
+            )
     else:
-        raise ir.passes.PreconditionError(
-            f"VmapPass has no batching rule for {op!r} with {len(inputs)} inputs."
-        )
+        raise ctx._input_error(node)
     for output in node.outputs:
         ctx._register(output, rank, mapped)

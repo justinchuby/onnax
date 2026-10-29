@@ -86,7 +86,12 @@ def main() -> None:
     gradient = save_graph(gradient, "single_gradient", args.output_dir)
     mapped = vmap(gradient, in_axes=[0, 0])
     mapped = save_graph(mapped, "per_example_gradient", args.output_dir)
-    assert [v.name for v in mapped.graph.inputs] == ["features", "target"]
+    actual_inputs = [v.name for v in mapped.graph.inputs]
+    assert actual_inputs == ["features", "target"], (
+        f"Per-example gradient example expected runtime inputs ['features', 'target'], "
+        f"got {actual_inputs!r}. Check that weight/bias remain stored initializers "
+        "and grad adds no cotangent seed inputs."
+    )
     evaluator = ReferenceEvaluator(ir.to_proto(mapped))
     independent = ReferenceEvaluator(ir.to_proto(gradient))
 
@@ -124,7 +129,10 @@ def main() -> None:
             f"Norm of mean-loss gradient: {mean_gradient_norm:.6f}; "
             f"mean of individual norms: {norms.mean():.6f}"
         )
-    assert ir.to_proto(original).SerializeToString() == before
+    assert ir.to_proto(original).SerializeToString() == before, (
+        "Per-example gradient example detected source-model mutation after grad/vmap/export. "
+        "Check clone/tensor-metadata isolation before reusing the original model."
+    )
 
 
 if __name__ == "__main__":

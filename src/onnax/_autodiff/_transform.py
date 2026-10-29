@@ -10,6 +10,7 @@ import onnx
 import onnx_ir as ir
 
 from onnax import _rule_registry
+from onnax._diagnostics import _node_context, _value_context
 from onnax._inference import _infer_shapes
 
 from . import _elementwise, _layout, _linalg, _reductions
@@ -24,44 +25,67 @@ def _prepare(
     inputs: Sequence[str] | None,
     outputs: Sequence[str] | None,
     registry: _JvpRegistry[_Context] | _VjpRegistry[_Context],
+    *,
+    mode: str,
 ) -> tuple[ir.Model, list[ir.Value], list[ir.Value], list[ir.Node], set[ir.Value]]:
     default_inputs, default_outputs = _composition_defaults(model, registry)
     if inputs is None and default_inputs is not None:
         inputs = default_inputs
     if outputs is None and default_outputs is not None:
         outputs = default_outputs
-    if model.graph.opset_imports.get("", 0) < 18:
-        raise ValueError("Autodiff requires the standard ONNX opset >= 18; convert first.")
-    if model.graph.opset_imports[""] > 28:
-        raise ValueError("Autodiff supports opsets 18 through 28 only.")
+    version = model.graph.opset_imports.get("", 0)
+    if not 18 <= version <= 28:
+        raise ValueError(
+            f"{mode}: Autodiff requires the standard ONNX opset >= 18 and <= 28; "
+            f"graph {model.graph.name!r} imports {model.graph.opset_imports.get('')!r}. "
+            "Use a model authored for supported opsets 18 through 28. For an older "
+            "model, convert with ONNX's version converter only where semantics are "
+            "preserved and validate the result. Do not relabel imports or assume "
+            "a newer model can safely be downgraded."
+        )
     result = model.clone()
     graph = result.graph
-    graph.sort()
-    for graph_like in (graph, *result.functions.values()):
+    try:
+        graph.sort()
+    except ValueError as error:
+        error.add_note(
+            f"{mode}: could not topologically sort graph {graph.name!r}. "
+            "Correct cyclic or unresolved producer references in the source graph."
+        )
+        raise
+    for graph_like in (graph, *(function.graph for function in result.functions.values())):
         for node in graph_like:
             if any(
                 a.type in (ir.AttributeType.GRAPH, ir.AttributeType.GRAPHS)
                 for a in node.attributes.values()
             ):
                 raise NotImplementedError(
-                    "Autodiff does not support control flow or subgraphs."
+                    f"{_node_context(node, graph_like.opset_imports, mode)}: "
+                    "Autodiff does not support control flow or subgraphs. "
+                    "Use a semantics-equivalent supported tensor graph when possible, "
+                    "or differentiate the required branch/body separately outside this "
+                    "transform; no derivative through branch/loop control is provided."
                 )
             if node.domain == "" and (
                 node.op_type.startswith("Random")
                 or node.op_type in ("Dropout", "Multinomial", "Bernoulli")
             ):
                 raise NotImplementedError(
-                    f"Autodiff does not support randomness: {node.op_type}."
+                    f"{_node_context(node, graph_like.opset_imports, mode)}: "
+                    f"Autodiff does not support randomness: {node.op_type}. "
+                    "Supply externally generated samples as explicit inputs to a "
+                    "deterministic graph only if differentiating with samples held "
+                    "fixed is intended; stochastic/distributional derivatives are unsupported."
                 )
-    result = _infer_shapes(result)
+    result = _infer_shapes(result, context=mode)
     graph = result.graph
     candidates = list(graph.inputs)
     if inputs is None:
         candidates = [v for v in candidates if not v.is_initializer()]
     else:
         candidates.extend(v for v in graph.initializers.values() if v not in candidates)
-    xs = _select(candidates, inputs, "inputs")
-    ys = _select(list(graph.outputs), outputs, "outputs")
+    xs = _select(candidates, inputs, "inputs", mode=mode)
+    ys = _select(list(graph.outputs), outputs, "outputs", mode=mode)
     nodes = list(graph)
     needed = set(ys)
     for node in reversed(nodes):
@@ -79,35 +103,63 @@ def _prepare(
         ]
         if not indices or not any(y in needed for y in node.outputs):
             continue
+        context = _node_context(node, graph.opset_imports, mode)
         if node.domain or node.overload or node.op_identifier() in result.functions:
             raise NotImplementedError(
-                f"No autodiff rule for active operator {node.domain!r}::{node.op_type} "
-                f"(node {node.name!r}). Inline local functions before differentiation."
+                f"{context}: No autodiff rule for active operator "
+                f"{node.domain!r}::{node.op_type}. "
+                + (
+                    "Inline local functions before differentiation with "
+                    "onnx_ir.passes.common.InlinePass and ensure the body uses supported rules."
+                    if node.op_identifier() in result.functions or node.overload
+                    else "Express the custom computation with semantics-equivalent supported "
+                    "standard ONNX operators; public transforms do not dispatch custom-domain rules."
+                )
             )
         try:
             registry.lookup(node, graph.opset_imports)
         except NotImplementedError as e:
+            if node.version is not None and not 18 <= node.version <= 28:
+                raise NotImplementedError(
+                    f"{context}: supported {mode} opsets are 18 through 28. "
+                    "Use a node and graph authored for a supported opset, or implement "
+                    "and validate support for this schema; do not relabel the imports."
+                ) from e
             raise NotImplementedError(
-                f"No autodiff rule for active operator {node.op_type!r}: {e}"
+                f"{context}: No autodiff rule for active operator {node.op_type!r}. "
+                "Use a semantics-equivalent supported tensor graph or a separate derivative "
+                "implementation for this operator; unsupported active paths cannot be "
+                "treated as zero. See JvpPass's operator/support contract."
             ) from e
         version = _rule_registry._effective_opset(node, graph.opset_imports)
         schema = onnx.defs.get_schema(node.op_type, version, "")
-        if (
-            schema.since_version
-            != onnx.defs.get_schema(node.op_type, graph.opset_imports[""], "").since_version
-        ):
+        graph_schema = onnx.defs.get_schema(node.op_type, graph.opset_imports[""], "")
+        if schema.since_version != graph_schema.since_version:
             raise NotImplementedError(
-                f"Node version for {node.op_type} selects a different schema than the graph opset."
+                f"{context}: Node version for {node.op_type} (schema {schema.since_version}) "
+                f"selects a different schema than the graph opset {graph.opset_imports['']} "
+                f"(schema {graph_schema.since_version}). Rewrite/convert the node to the "
+                "graph's schema and validate it; serialization cannot preserve per-node "
+                "schema overrides."
             )
         if node.op_type == "Pow":
             base, exponent = _input(node), _input(node, 1)
             if exponent.dtype in _FLOATS and exponent.dtype != base.dtype:
-                raise TypeError("Differentiating Pow requires matching floating-point dtypes.")
+                raise TypeError(
+                    f"{context}: Differentiating Pow requires matching floating-point dtypes; "
+                    f"base={_value_context(base)}, exponent={_value_context(exponent)}. "
+                    "Use matching FLOAT/FLOAT or DOUBLE/DOUBLE operands in the source "
+                    "computation, or leave an integer exponent inactive. Do not cast seeds "
+                    "alone or make an active exponent inactive to bypass this restriction."
+                )
         for value in [*(_input(node, i) for i in indices), *node.outputs]:
             if not isinstance(value.type, ir.TensorType) or value.dtype not in _FLOATS:
                 raise TypeError(
-                    f"Active value {value.name!r} at {node.op_type} must be FLOAT or DOUBLE. "
-                    "Integer/boolean casts and complex differentiation are not supported."
+                    f"{context}: Active value {_value_context(value)} must be FLOAT or DOUBLE. "
+                    "Integer/boolean casts and complex differentiation are not supported; "
+                    "neither are half-precision derivatives. Select a supported floating "
+                    "path or use a separately authored real FLOAT/DOUBLE model. Casting "
+                    "seeds cannot make this original path differentiable."
                 )
         active.update(y for y in node.outputs if y in needed)
         relevant_nodes.append(node)
@@ -242,7 +294,9 @@ class JvpPass(ir.passes.FunctionalPass):
         for family in (_elementwise, _linalg, _layout, _reductions):
             for op in sorted(family.OPS):
                 registry.register("", op, family.jvp, since_version=18, until_version=28)
-        result, xs, ys, nodes, _ = _prepare(model, self.inputs, self.outputs, registry)
+        result, xs, ys, nodes, _ = _prepare(
+            model, self.inputs, self.outputs, registry, mode="JVP"
+        )
         b = _Context(result.graph)
         tangents = {x: b.seed(x, "tangent") for x in xs}
         for node in nodes:
@@ -251,10 +305,17 @@ class JvpPass(ir.passes.FunctionalPass):
                 for i in _data_indices(node)
                 if node.inputs[i] in tangents
             }
-            values = registry.lookup(node, result.graph.opset_imports)(b, node, d)
+            try:
+                values = registry.lookup(node, result.graph.opset_imports)(b, node, d)
+            except (ValueError, TypeError, NotImplementedError) as error:
+                error.add_note(_node_context(node, result.graph.opset_imports, "JVP"))
+                raise
             if len(values) != len(node.outputs):
                 raise ValueError(
-                    f"JVP rule for {node.op_type} returned an invalid output arity."
+                    f"{_node_context(node, result.graph.opset_imports, 'JVP')}: "
+                    f"JVP rule for {node.op_type} returned an invalid output arity: "
+                    f"got {len(values)}, expected {len(node.outputs)}. "
+                    "Fix the private rule to return one tangent per primal node output."
                 )
             tangents.update(zip(node.outputs, values))
         for y in ys:
@@ -305,9 +366,20 @@ class VjpPass(ir.passes.FunctionalPass):
         for family in (_elementwise, _linalg, _layout, _reductions):
             for op in sorted(family.OPS - {"ScatterND"}):
                 registry.register("", op, family.vjp, since_version=18, until_version=28)
-        result, xs, ys, nodes, active = _prepare(model, self.inputs, self.outputs, registry)
+        mode = "grad (VJP)" if scalar else "VJP"
+        result, xs, ys, nodes, active = _prepare(
+            model, self.inputs, self.outputs, registry, mode=mode
+        )
         if scalar and (len(ys) != 1 or ys[0].shape is None or len(ys[0].shape) != 0):
-            raise ValueError("GradPass requires one selected rank-zero (scalar) output.")
+            raise ValueError(
+                "GradPass requires one selected rank-zero (scalar) output; "
+                f"got {[_value_context(y) for y in ys]}. "
+                f"Available scalar FLOAT/DOUBLE outputs: "
+                f"{[v.name for v in result.graph.outputs if v.dtype in _FLOATS and v.shape is not None and len(v.shape) == 0]!r}. "
+                "Select one with output='name'. For a vector-valued result, use jvp/vjp "
+                "with explicit tangent/cotangent seeds; reduce to a scalar only if that "
+                "reduction defines the intended loss."
+            )
         b = _Context(result.graph)
         cotangents = {y: b.scalar(y, 1) if scalar else b.seed(y, "cotangent") for y in ys}
         for node in reversed(nodes):
@@ -315,12 +387,20 @@ class VjpPass(ir.passes.FunctionalPass):
                 continue
             gs = [cotangents[y] if y in cotangents else b.like(y) for y in node.outputs]
             indices = [i for i in _data_indices(node) if node.inputs[i] in active]
-            contributions = registry.lookup(node, result.graph.opset_imports)(
-                b, node, gs, indices
-            )
+            try:
+                contributions = registry.lookup(node, result.graph.opset_imports)(
+                    b, node, gs, indices
+                )
+            except (ValueError, TypeError, NotImplementedError) as error:
+                error.add_note(_node_context(node, result.graph.opset_imports, mode))
+                raise
             if set(contributions) != set(indices):
                 raise ValueError(
-                    f"VJP rule for {node.op_type} returned invalid input contributions."
+                    f"{_node_context(node, result.graph.opset_imports, mode)}: "
+                    f"VJP rule for {node.op_type} returned invalid input contributions: "
+                    f"got indices {sorted(contributions)!r}, expected {sorted(indices)!r}. "
+                    "Fix the private rule to return one contribution for each active data "
+                    "input index, excluding structural/inactive inputs."
                 )
             for i in indices:
                 x, contribution = _input(node, i), contributions[i]

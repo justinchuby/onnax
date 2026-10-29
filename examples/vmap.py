@@ -148,7 +148,18 @@ def _run_example(name, model, in_axes, out_axes, make_feeds, output_dir):
         ]
         for j, (result, axis) in enumerate(zip(actual, out_axes)):
             expected = np.stack([outputs[j] for outputs in independent], axis=axis)
-            np.testing.assert_allclose(result, expected, rtol=2e-5, atol=1e-6)
+            np.testing.assert_allclose(
+                result,
+                expected,
+                rtol=2e-5,
+                atol=1e-6,
+                err_msg=(
+                    f"{name}: output {model.graph.outputs[j].name!r} at batch_size="
+                    f"{batch_size}, out_axis={axis} differs from independent execution. "
+                    "Check example-axis adaptation and shared-parameter handling in "
+                    "the batching rule for this graph."
+                ),
+            )
         print(
             f"{name}: batch_size={batch_size}, independent execution matches; "
             f"output shapes: {[value.shape for value in actual]}"

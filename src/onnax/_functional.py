@@ -49,7 +49,9 @@ def vmap(
 
     See :class:`VmapPass` for the complete operator/control restrictions.
     Mapped controls, ragged outputs, random operators and general nested mapping
-    remain unsupported. Errors propagate without modifying the source model.
+    remain unsupported. Errors identify the failed input/control and corrective
+    action without modifying the source model; inference failures retain their
+    original cause.
     """
     return VmapPass(in_axes, axis_size=axis_size, out_axes=out_axes)(model).model
 
@@ -91,6 +93,9 @@ def jvp(
     names, derivative output names and selections. See :class:`JvpPass` for that
     schema and the full opset, FLOAT/DOUBLE, shape, domain and operator contract.
     Unsupported active paths and other higher-order compositions fail explicitly.
+    Selection errors list available names; operator failures identify mode,
+    domain/operator, node and effective opset. Original inference errors propagate
+    with graph/boundary context in their Python exception notes.
     """
     return JvpPass(inputs=inputs, outputs=outputs)(model).model
 
