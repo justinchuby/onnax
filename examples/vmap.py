@@ -41,7 +41,7 @@ def _model(name, inputs, outputs, nodes, initializers):
             outputs,
             nodes=nodes,
             initializers=initializers,
-            opset_imports={"": 18},
+            opset_imports={"": 24},
             name=name,
         ),
         ir_version=10,

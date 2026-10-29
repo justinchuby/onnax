@@ -10,7 +10,7 @@
     "test": "tsx --test tests/solver.test.ts",
     "test:browser": "playwright test",
     "benchmark": "playwright test performance.browser.ts",
-    "lint": "biome check src tests index.html package.json tsconfig.json playwright.config.ts"
+    "lint": "biome check src tests index.html package.json tsconfig.json playwright.config.ts vite.config.ts"
   },
   "dependencies": {
     "onnxruntime-web": "1.31.1"

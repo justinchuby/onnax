@@ -52,7 +52,7 @@ def regressor(weight: np.ndarray, bias: np.ndarray) -> ir.Model:
             [prediction, loss],
             nodes=tape.nodes,
             initializers=tape.initializers,
-            opset_imports={"": 18},
+            opset_imports={"": 24},
             name="single_example_regressor",
         ),
         ir_version=10,

@@ -10,11 +10,17 @@ declare global {
   }
 }
 
-test('GPU-only autodiff, stiff comparison, controls, pointer/touch and responsive rendering', async ({
+test('GPU-only autodiff, force field, stiff solve, controls, pointer/touch and responsive rendering', async ({
   page,
 }, testInfo) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
+  page.on('requestfailed', (request) =>
+    errors.push(`${request.url()}: ${request.failure()?.errorText}`),
+  );
+  page.on('response', (response) => {
+    if (response.status() >= 400) errors.push(`HTTP ${response.status()}: ${response.url()}`);
+  });
   await page.addInitScript(() => {
     window.gpuDispatches = 0;
     window.gpuSubmissions = 0;
@@ -30,7 +36,7 @@ test('GPU-only autodiff, stiff comparison, controls, pointer/touch and responsiv
     };
   });
   await page.setViewportSize({ width: 1440, height: 1100 });
-  await page.goto('/');
+  await page.goto('./');
   await page.waitForFunction(
     () => window.jelly || !document.querySelector<HTMLElement>('#error')!.hidden,
     undefined,
@@ -41,11 +47,34 @@ test('GPU-only autodiff, stiff comparison, controls, pointer/touch and responsiv
   await page.evaluate(() => window.jelly!.pause());
   await page.waitForFunction(() => !window.jelly!.busy);
   await expect(page.locator('#backend-badge')).toContainText('WEBGPU');
+  await expect(page.locator('#device-info')).toContainText('ONNX opset 22');
+  await expect(page.locator('#explicit')).toHaveCount(0);
+  await expect(page.locator('#overlay')).toHaveValue('force');
+  await page.locator('#computation summary').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#graph-excerpts')).toBeVisible();
+  await expect(page.locator('#graph-excerpts section')).toHaveCount(3);
+  await expect(page.locator('#graph-excerpts')).toContainText('q_tangent');
+  await expect(page.locator('#graph-excerpts')).toContainText('ONNX opset 22');
+  await expect(page.locator('#graph-excerpts pre').first()).toContainText('[36,2]');
+  await page.keyboard.press('Enter');
   await expect(page.locator('#error')).toBeHidden();
 
   const derivatives = await page.evaluate(async () => {
     const { simulation: s, graphs } = window.jelly!;
     s.reset();
+    const restPhysical = await graphs.objective(s.parameters(false)).evaluate(s.rest);
+    for (let node = 0; node < s.mesh.positions.length; node++) {
+      if (Math.abs(restPhysical.gradient[2 * node]) > 1e-4)
+        throw new Error(
+          `Rest force x at node ${node} is not zero; inspect the physical gradient graph.`,
+        );
+      const expected = s.pinned.has(node) ? 0 : -s.mesh.mass * 9.81;
+      if (Math.abs(restPhysical.gradient[2 * node + 1] - expected) > 1e-4)
+        throw new Error(
+          `Rest gravity gradient at node ${node} differs from ${expected}; inspect force sign and pin projection.`,
+        );
+    }
     s.x[42] += 0.045;
     s.x[43] -= 0.03;
     const objective = graphs.objective(s.parameters(true));
@@ -113,6 +142,13 @@ test('GPU-only autodiff, stiff comparison, controls, pointer/touch and responsiv
   expect(
     await page.evaluate(() => window.jelly!.simulation.x[42] - window.jelly!.simulation.rest[42]),
   ).toBeGreaterThan(0.015);
+  const physicalForceError = await page.evaluate(async () => {
+    const { simulation: s, graphs } = window.jelly!;
+    const physical = await graphs.objective(s.parameters(false)).evaluate(s.x);
+    return Math.max(...physical.gradient.map((value, i) => Math.abs(s.forces[i] + value)));
+  });
+  expect(physicalForceError).toBeLessThan(0.005);
+  await expect(page.locator('#force-max')).toContainText('units');
   await page.mouse.up();
   expect(await page.evaluate(() => window.jelly!.simulation.dragging)).toBeNull();
   await page.locator('#overlay').selectOption('force');
@@ -120,7 +156,7 @@ test('GPU-only autodiff, stiff comparison, controls, pointer/touch and responsiv
     .poll(() => page.evaluate(() => window.jelly!.simulation.settings.overlay))
     .toBe('force');
   await page.locator('#overlay').selectOption('none');
-  await page.locator('#overlay').selectOption('strain');
+  await page.locator('#overlay').selectOption('force');
 
   // Pause/reset are UI actions, not hidden state changes.
   const pausedSteps = await page.evaluate(() => window.jelly!.simulation.steps);
@@ -192,49 +228,11 @@ test('GPU-only autodiff, stiff comparison, controls, pointer/touch and responsiv
     Math.fround(0.65),
     Math.fround(-0.65),
   ]);
-  await page.locator('#explicit').click();
-  expect(await page.evaluate(() => window.jelly!.simulation.settings.mode)).toBe('explicit');
-  await page.locator('#reset').click();
-  const explicit = await page.evaluate(async () => {
-    const s = window.jelly!.simulation;
-    const times = [];
-    for (let i = 0; i < 20; i++) {
-      await window.jelly!.step();
-      if (!document.querySelector<HTMLElement>('#error')!.hidden) break;
-      times.push(s.stepMs);
-    }
-    return {
-      steps: s.steps,
-      times,
-      finite: s.x.every(Number.isFinite),
-      error: document.querySelector('#error')!.textContent,
-    };
-  });
-  expect(explicit.steps).toBeGreaterThan(0);
-  expect(explicit.steps).toBeLessThan(20);
-  expect(explicit.finite).toBe(true);
-  await expect(page.locator('#error')).toContainText('Explicit instability');
-  await expect(page.locator('#scene-state')).toContainText('Paused');
-  await page.locator('#implicit').click();
-  await page.locator('#reset').click();
-  await expect(page.locator('#error')).toBeHidden();
-
-  // Verify a stable explicit configuration too, not only its failure case.
   await page.locator('#stiffness').focus();
   await page.keyboard.press('Home');
-  await page.locator('#timestep').focus();
-  await page.keyboard.press('Home');
-  await page.locator('#explicit').click();
-  await page.evaluate(async () => {
-    for (let i = 0; i < 8; i++) await window.jelly!.step();
-  });
-  await expect(page.locator('#error')).toBeHidden();
-  expect(await page.evaluate(() => window.jelly!.simulation.steps)).toBe(8);
-
-  await page.locator('#implicit').click();
-  await page.locator('#stiffness').focus();
   for (let i = 0; i < 40; i++) await page.keyboard.press('ArrowRight');
   await page.locator('#timestep').focus();
+  await page.keyboard.press('Home');
   for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight');
   await page.locator('#reset').click();
   await page.locator('#tug').click();
@@ -248,7 +246,7 @@ test('GPU-only autodiff, stiff comparison, controls, pointer/touch and responsiv
   await page.screenshot({ path: screenshot, fullPage: true });
   await testInfo.attach('Desktop playground', { path: screenshot, contentType: 'image/png' });
   await testInfo.attach('WebGPU measurements', {
-    body: JSON.stringify({ derivatives, stiff, explicit }, null, 2),
+    body: JSON.stringify({ derivatives, stiff, physicalForceError }, null, 2),
     contentType: 'application/json',
   });
   console.log(
@@ -256,9 +254,7 @@ test('GPU-only autodiff, stiff comparison, controls, pointer/touch and responsiv
       device: stiff.device,
       fallback: stiff.fallbackAdapter,
       stiffStepMs: stiff.stepTimes,
-      explicitStepMs: explicit.times,
       graphQueueSubmissions: derivatives.submissions,
-      explicitStoppedAfter: explicit.steps,
       convergedStiffSteps: stiff.solves.filter((s) => s.converged).length,
     }),
   );
@@ -293,7 +289,7 @@ test('GPU-only autodiff, stiff comparison, controls, pointer/touch and responsiv
 
 test('unsupported browser reports an actionable error, never a fake fallback', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'gpu', { value: undefined }));
-  await page.goto('/');
+  await page.goto('./');
   await expect(page.locator('#error')).toContainText('WebGPU is unavailable');
   await expect(page.locator('#error')).toContainText('No WASM physics fallback');
   await expect(page.locator('#pause')).toBeDisabled();

@@ -1,4 +1,5 @@
 {
+  "opset": 22,
   "grid": 6,
   "mass": 0.04,
   "epsilon": 0.015,
@@ -613,7 +614,37 @@
         "Sqrt",
         "Sub"
       ],
-      "nodes": 21
+      "nodes": 21,
+      "graph": {
+        "inputs": [
+          "q: FLOAT [36,2]",
+          "free: FLOAT [36,2]",
+          "anchor: FLOAT [36,2]",
+          "diagonal: FLOAT [36,2]",
+          "target: FLOAT [36,2]",
+          "load: FLOAT [36,2]",
+          "stiffness: FLOAT []"
+        ],
+        "outputs": [
+          "elastic: FLOAT []",
+          "energy: FLOAT []"
+        ],
+        "excerpt": [
+          "0: val_0 = Mul(free, q)",
+          "1: val_1 = Add(val_0, anchor)",
+          "2: val_2 = MatMul(incidence, val_1)",
+          "3: val_3 = Mul(val_2, val_2)",
+          "4: val_4 = ReduceSum(val_3, coordinate_axis)",
+          "5: val_5 = Add(val_4, epsilon_squared)",
+          "... 9 nodes omitted ...",
+          "15: val_14 = ReduceSum(val_13)",
+          "16: val_15 = Mul(half, val_14)",
+          "17: val_16 = Add(elastic, val_15)",
+          "18: val_17 = Mul(load, val_1)",
+          "19: val_18 = ReduceSum(val_17)",
+          "20: energy = Sub(val_16, val_18)"
+        ]
+      }
     },
     "gradient": {
       "inputs": [
@@ -642,7 +673,38 @@
         "Sub",
         "Unsqueeze"
       ],
-      "nodes": 74
+      "nodes": 74,
+      "graph": {
+        "inputs": [
+          "q: FLOAT [36,2]",
+          "free: FLOAT [36,2]",
+          "anchor: FLOAT [36,2]",
+          "diagonal: FLOAT [36,2]",
+          "target: FLOAT [36,2]",
+          "load: FLOAT [36,2]",
+          "stiffness: FLOAT []"
+        ],
+        "outputs": [
+          "elastic: FLOAT []",
+          "energy: FLOAT []",
+          "q_cotangent: FLOAT [36,2]"
+        ],
+        "excerpt": [
+          "0: val_0 = Mul(free, q)",
+          "1: val_1 = Add(val_0, anchor)",
+          "2: val_2 = MatMul(incidence, val_1)",
+          "3: val_3 = Mul(val_2, val_2)",
+          "4: val_4 = ReduceSum(val_3, coordinate_axis)",
+          "5: val_5 = Add(val_4, epsilon_squared)",
+          "... 62 nodes omitted ...",
+          "68: val_15 = Mul(half, val_14)",
+          "69: val_9 = Mul(val_7, val_7)",
+          "70: val_10 = ReduceSum(val_9)",
+          "71: elastic = Mul(val_8, val_10)",
+          "72: val_16 = Add(elastic, val_15)",
+          "73: energy = Sub(val_16, val_18)"
+        ]
+      }
     },
     "hvp": {
       "inputs": [
@@ -674,7 +736,40 @@
         "Sub",
         "Unsqueeze"
       ],
-      "nodes": 125
+      "nodes": 125,
+      "graph": {
+        "inputs": [
+          "q: FLOAT [36,2]",
+          "free: FLOAT [36,2]",
+          "anchor: FLOAT [36,2]",
+          "diagonal: FLOAT [36,2]",
+          "target: FLOAT [36,2]",
+          "load: FLOAT [36,2]",
+          "stiffness: FLOAT []",
+          "q_tangent: FLOAT [36,2]"
+        ],
+        "outputs": [
+          "elastic: FLOAT []",
+          "energy: FLOAT []",
+          "q_cotangent: FLOAT [36,2]",
+          "q_cotangent_tangent: FLOAT [36,2]"
+        ],
+        "excerpt": [
+          "0: val_506 = Mul(q_tangent, free)",
+          "1: val_513 = MatMul(incidence, val_506)",
+          "2: val_0 = Mul(free, q)",
+          "3: val_1 = Add(val_0, anchor)",
+          "4: val_2 = MatMul(incidence, val_1)",
+          "5: val_3 = Mul(val_2, val_2)",
+          "... 113 nodes omitted ...",
+          "119: val_15 = Mul(half, val_14)",
+          "120: val_9 = Mul(val_7, val_7)",
+          "121: val_10 = ReduceSum(val_9)",
+          "122: elastic = Mul(val_8, val_10)",
+          "123: val_16 = Add(elastic, val_15)",
+          "124: energy = Sub(val_16, val_18)"
+        ]
+      }
     }
   },
   "runtime": {
@@ -700,7 +795,36 @@
         "Sqrt",
         "Sub"
       ],
-      "nodes": 22
+      "nodes": 22,
+      "graph": {
+        "inputs": [
+          "q: FLOAT [36,2]",
+          "free: FLOAT [36,2]",
+          "anchor: FLOAT [36,2]",
+          "diagonal: FLOAT [36,2]",
+          "target: FLOAT [36,2]",
+          "load: FLOAT [36,2]",
+          "stiffness: FLOAT []"
+        ],
+        "outputs": [
+          "packed: FLOAT []"
+        ],
+        "excerpt": [
+          "0: val_0 = Mul(free, q)",
+          "1: val_1 = Add(val_0, anchor)",
+          "2: val_2 = MatMul(incidence, val_1)",
+          "3: val_3 = Mul(val_2, val_2)",
+          "4: val_4 = ReduceSum(val_3, coordinate_axis)",
+          "5: val_5 = Add(val_4, epsilon_squared)",
+          "... 10 nodes omitted ...",
+          "16: val_15 = Mul(half, val_14)",
+          "17: val_16 = Add(elastic, val_15)",
+          "18: val_17 = Mul(load, val_1)",
+          "19: val_18 = ReduceSum(val_17)",
+          "20: energy = Sub(val_16, val_18)",
+          "21: packed = Identity(energy)"
+        ]
+      }
     },
     "gradient": {
       "inputs": [
@@ -728,7 +852,38 @@
         "Sqrt",
         "Sub"
       ],
-      "nodes": 48
+      "nodes": 48,
+      "graph": {
+        "inputs": [
+          "q: FLOAT [36,2]",
+          "free: FLOAT [36,2]",
+          "anchor: FLOAT [36,2]",
+          "diagonal: FLOAT [36,2]",
+          "target: FLOAT [36,2]",
+          "load: FLOAT [36,2]",
+          "stiffness: FLOAT []",
+          "physical_diagonal: FLOAT [36,2]",
+          "physical_target: FLOAT [36,2]"
+        ],
+        "outputs": [
+          "packed: FLOAT [146]"
+        ],
+        "excerpt": [
+          "0: val_0 = Mul(free, q)",
+          "1: val_1 = Add(val_0, anchor)",
+          "2: val_2 = MatMul(incidence, val_1)",
+          "3: val_3 = Mul(val_2, val_2)",
+          "4: val_4 = ReduceSum(val_3, coordinate_axis)",
+          "5: val_5 = Add(val_4, epsilon_squared)",
+          "... 36 nodes omitted ...",
+          "42: physical_gradient = Mul(val_52, free)",
+          "43: val_67 = Reshape(elastic, pack_shape)",
+          "44: val_68 = Reshape(energy, pack_shape)",
+          "45: val_69 = Reshape(val_484, pack_shape)",
+          "46: val_70 = Reshape(physical_gradient, pack_shape)",
+          "47: packed = Concat(val_67, val_68, val_69, val_70)"
+        ]
+      }
     },
     "hvp": {
       "inputs": [
@@ -756,7 +911,37 @@
         "Sqrt",
         "Sub"
       ],
-      "nodes": 42
+      "nodes": 42,
+      "graph": {
+        "inputs": [
+          "q: FLOAT [36,2]",
+          "free: FLOAT [36,2]",
+          "anchor: FLOAT [36,2]",
+          "diagonal: FLOAT [36,2]",
+          "target: FLOAT [36,2]",
+          "load: FLOAT [36,2]",
+          "stiffness: FLOAT []",
+          "q_tangent: FLOAT [36,2]"
+        ],
+        "outputs": [
+          "packed: FLOAT [36,2]"
+        ],
+        "excerpt": [
+          "0: val_0 = Mul(half, stiffness)",
+          "1: val_1 = Mul(free, q)",
+          "2: val_2 = Add(val_1, anchor)",
+          "3: val_3 = MatMul(incidence, val_2)",
+          "4: val_4 = Mul(val_3, val_3)",
+          "5: val_5 = ReduceSum(val_4, coordinate_axis)",
+          "... 30 nodes omitted ...",
+          "36: val_59 = Mul(val_55, val_51)",
+          "37: val_60 = Add(val_58, val_59)",
+          "38: val_61 = MatMul(val_438, val_60)",
+          "39: val_62 = Mul(val_61, free)",
+          "40: val_657 = Add(val_38, val_62)",
+          "41: packed = Identity(val_657)"
+        ]
+      }
     },
     "cg": {
       "inputs": [
@@ -789,7 +974,38 @@
         "Sub",
         "Where"
       ],
-      "nodes": 387
+      "nodes": 387,
+      "graph": {
+        "inputs": [
+          "q: FLOAT [36,2]",
+          "free: FLOAT [36,2]",
+          "anchor: FLOAT [36,2]",
+          "diagonal: FLOAT [36,2]",
+          "target: FLOAT [36,2]",
+          "load: FLOAT [36,2]",
+          "stiffness: FLOAT []",
+          "gradient: FLOAT [36,2]",
+          "regularization: FLOAT []"
+        ],
+        "outputs": [
+          "packed: FLOAT [74]"
+        ],
+        "excerpt": [
+          "0: val_0 = Neg(gradient)",
+          "1: val_1 = Mul(gradient, cg_zero)",
+          "2: val_2 = Mul(val_0, val_0)",
+          "3: val_3 = ReduceSum(val_2)",
+          "4: val_4 = Mul(val_3, cg_tolerance_squared)",
+          "5: val_5 = Greater(val_4, cg_minimum_squared)",
+          "... 375 nodes omitted ...",
+          "381: val_618 = Add(val_542, val_617)",
+          "382: val_619 = Where(val_597, cg_one, val_543)",
+          "383: val_620 = Reshape(val_605, cg_pack_shape)",
+          "384: val_621 = Reshape(val_618, cg_pack_shape)",
+          "385: val_622 = Reshape(val_619, cg_pack_shape)",
+          "386: packed = Concat(val_620, val_621, val_622)"
+        ]
+      }
     },
     "step": {
       "inputs": [
@@ -825,7 +1041,40 @@
         "Sub",
         "Where"
       ],
-      "nodes": 491
+      "nodes": 491,
+      "graph": {
+        "inputs": [
+          "q: FLOAT [36,2]",
+          "free: FLOAT [36,2]",
+          "anchor: FLOAT [36,2]",
+          "diagonal: FLOAT [36,2]",
+          "target: FLOAT [36,2]",
+          "load: FLOAT [36,2]",
+          "stiffness: FLOAT []",
+          "gradient: FLOAT [36,2]",
+          "regularization: FLOAT []",
+          "physical_diagonal: FLOAT [36,2]",
+          "physical_target: FLOAT [36,2]"
+        ],
+        "outputs": [
+          "packed: FLOAT [221]"
+        ],
+        "excerpt": [
+          "0: val_0 = Neg(gradient)",
+          "1: val_1 = Mul(gradient, cg_cg_zero)",
+          "2: val_2 = Mul(val_0, val_0)",
+          "3: val_3 = ReduceSum(val_2)",
+          "4: val_4 = Mul(val_3, cg_cg_tolerance_squared)",
+          "5: val_5 = Greater(val_4, cg_cg_minimum_squared)",
+          "... 479 nodes omitted ...",
+          "485: val_489 = Reshape(val_401, step_flat)",
+          "486: val_490 = Reshape(val_449, step_flat)",
+          "487: val_491 = Reshape(val_488, step_flat)",
+          "488: val_492 = Reshape(val_381, step_flat)",
+          "489: val_493 = Reshape(val_382, step_flat)",
+          "490: packed = Concat(val_489, val_490, val_491, val_492, val_493)"
+        ]
+      }
     },
     "batch": {
       "inputs": [
@@ -860,7 +1109,39 @@
         "Sub",
         "Where"
       ],
-      "nodes": 1034
+      "nodes": 1034,
+      "graph": {
+        "inputs": [
+          "q: FLOAT [36,2]",
+          "free: FLOAT [36,2]",
+          "anchor: FLOAT [36,2]",
+          "diagonal: FLOAT [36,2]",
+          "target: FLOAT [36,2]",
+          "load: FLOAT [36,2]",
+          "stiffness: FLOAT []",
+          "regularization: FLOAT []",
+          "physical_diagonal: FLOAT [36,2]",
+          "physical_target: FLOAT [36,2]"
+        ],
+        "outputs": [
+          "packed: FLOAT [588]"
+        ],
+        "excerpt": [
+          "0: val_0 = Mul(free, q)",
+          "1: val_1 = Add(val_0, anchor)",
+          "2: val_2 = MatMul(initial_incidence, val_1)",
+          "3: val_3 = Mul(val_2, val_2)",
+          "4: val_4 = ReduceSum(val_3, initial_coordinate_axis)",
+          "5: val_5 = Add(val_4, initial_epsilon_squared)",
+          "... 1022 nodes omitted ...",
+          "1028: val_1028 = Reshape(val_987, stage1_step_flat)",
+          "1029: val_1029 = Reshape(val_1026, stage1_step_flat)",
+          "1030: val_1030 = Reshape(val_923, stage1_step_flat)",
+          "1031: val_1031 = Reshape(val_924, stage1_step_flat)",
+          "1032: val_1032 = Concat(val_1027, val_1028, val_1029, val_1030, val_1031)",
+          "1033: packed = Concat(val_47, val_538, val_1032)"
+        ]
+      }
     }
   }
 }

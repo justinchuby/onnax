@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="onnax: JAX-inspired transformations for ONNX graphs. Documentation and interactive WebGPU examples.">
+    <title>onnax documentation</title>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; line-height: 1.65; }
+      body { max-width: 48rem; margin: 4rem auto; padding: 0 1.5rem; }
+      h1, h2 { line-height: 1.2; }
+      a { color: light-dark(#61418b, #c8a9ee); }
+      .demo { border: 1px solid #8886; border-radius: 1rem; padding: 1.5rem; margin: 2rem 0; }
+      code { font-size: 1.05em; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>onnax</h1>
+      <p>JAX-inspired transformations for ONNX graphs. Batch with <code>vmap</code>,
+        differentiate with <code>grad</code>, <code>jvp</code>, and <code>vjp</code>,
+        and save the result as ordinary ONNX. Experimental alpha software.</p>
+      <section class="demo">
+        <h2><a href="jelly/">Soft spot: WebGPU jelly playground</a></h2>
+        <p>Drag a spring sheet simulated with matrix-free
+          Newton-CG. Genuine generated gradient and Hessian-vector-product ONNX
+          graphs run on WebGPU, with CPU physics fallback disabled.</p>
+        <p>Requires a current Chrome or Edge with WebGPU and hardware acceleration.
+          Try the stiff-spring preset to explore the implicit solver's stability
+          and displayed convergence limits.</p>
+        <a href="jelly/">Open the interactive playground</a>
+      </section>
+      <h2>Documentation and examples</h2>
+      <ul>
+        <li><a href="https://github.com/justinchuby/onnax#install">Installation and getting started</a></li>
+        <li><a href="https://github.com/justinchuby/onnax/blob/main/src/onnax/_functional.py">Python API reference and transformation contracts</a></li>
+        <li><a href="https://github.com/justinchuby/onnax/tree/main/examples">Runnable Python examples</a></li>
+        <li><a href="https://github.com/justinchuby/onnax/tree/main/examples/jelly#readme">Playground physics, execution, and reproducible validation</a></li>
+        <li><a href="https://github.com/justinchuby/onnax">Source repository (MIT)</a></li>
+      </ul>
+    </main>
+  </body>
+</html>
