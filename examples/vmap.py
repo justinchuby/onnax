@@ -15,9 +15,10 @@ import numpy as np
 import onnx  # ruff: ignore[banned-api]
 import onnx_ir as ir
 from onnx.reference import ReferenceEvaluator  # ruff: ignore[banned-api]
+from onnx_ir.passes.common import CheckerPass
 from onnx_shape_inference import infer_symbolic_shapes  # ruff: ignore[banned-api]
 
-from onnax import VmapPass
+from onnax import vmap
 
 
 def _initializer(name, array):
@@ -112,13 +113,13 @@ def _recommendation_feeds(batch_size, rng):
 
 
 def _run_example(name, model, in_axes, out_axes, make_feeds, output_dir):
-    batched = VmapPass(in_axes, out_axes=out_axes)(model).model
+    batched = vmap(model, in_axes, out_axes=out_axes)
     paths = {}
     for kind, current in (("single", model), ("batched", batched)):
+        CheckerPass(full_check=True)(current)
         proto = ir.to_proto(current)
-        onnx.checker.check_model(proto, full_check=True)
         path = os.path.join(output_dir, f"{name}.{kind}.onnx")
-        ir.save(current, path)
+        onnx.save(proto, path)
         paths[kind] = path
         text = (
             "\n".join(line.rstrip() for line in onnx.printer.to_text(proto).splitlines())

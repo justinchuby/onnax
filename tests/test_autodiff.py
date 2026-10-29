@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import numpy as np
-import onnx
 import onnx_ir as ir
 import pytest
-from onnx.reference import ReferenceEvaluator
+from _testing import evaluator as _evaluator
+from _testing import runtime_session
 from onnx_ir.passes.common import InlinePass
 
 from onnax import GradPass, JvpPass, VjpPass
-from onnax._inference import _infer_shapes
 
 
 def _value(name, shape, dtype=ir.DataType.DOUBLE):
@@ -32,12 +31,6 @@ def _model(inputs, tape, outputs, opset=18, initializers=()):
         ),
         ir_version=9,
     )
-
-
-def _evaluator(model):
-    proto = ir.to_proto(_infer_shapes(model))
-    onnx.checker.check_model(proto, full_check=True)
-    return ReferenceEvaluator(proto)
 
 
 def _products(model, feeds, inputs=None, outputs=None, rtol=2e-5, atol=2e-6, epsilon=1e-6):
@@ -616,7 +609,6 @@ def test_forward_over_reverse_square():
 
 
 def test_onnxruntime_executes_standard_gradient_graph():
-    ort = pytest.importorskip("onnxruntime")
     x, bias = (
         _value("x", ["batch", 3], ir.DataType.FLOAT),
         _value("bias", [3], ir.DataType.FLOAT),
@@ -625,9 +617,7 @@ def test_onnxruntime_executes_standard_gradient_graph():
     y = tape.op("Tanh", [tape.op("Add", [x, bias])])
     loss = tape.op("ReduceMean", [y], {"keepdims": 0})
     gradient = GradPass()(_model([x, bias], tape, [loss])).model
-    session = ort.InferenceSession(
-        ir.to_proto(gradient).SerializeToString(), providers=["CPUExecutionProvider"]
-    )
+    session = runtime_session(gradient)
     for batch in (1, 5):
         data = np.arange(batch * 3, dtype=np.float32).reshape(batch, 3) / 10
         actual = session.run(None, {"x": data, "bias": np.ones(3, dtype=np.float32)})
@@ -796,7 +786,6 @@ def test_gather_vector_data_and_integer_index_dtypes(index_dtype, index_shape):
     ],
 )
 def test_onnxruntime_derivative_edge_cases(pass_type, case):
-    ort = pytest.importorskip("onnxruntime")
     tape = ir.tape.Tape()
     if case in ("dot", "batched_vector"):
         sx, sz = ((3,), (3,)) if case == "dot" else ((3,), (2, 3, 2))
@@ -843,9 +832,7 @@ def test_onnxruntime_derivative_edge_cases(pass_type, case):
     for value, seed in zip(transformed.graph.inputs[len(inputs) :], seed_values):
         feeds[value.name] = seed
     expected = _evaluator(transformed).run(None, feeds)
-    session = ort.InferenceSession(
-        ir.to_proto(transformed).SerializeToString(), providers=["CPUExecutionProvider"]
-    )
+    session = runtime_session(transformed)
     for actual, reference in zip(session.run(None, feeds), expected):
         np.testing.assert_allclose(actual, reference, rtol=1e-10, atol=1e-12)
 

@@ -7,6 +7,7 @@ import json
 import numpy as np
 import onnx_ir as ir
 import pytest
+from _testing import runtime_session
 from test_autodiff import _evaluator, _model, _value
 
 from onnax import GradPass, JvpPass, VjpPass
@@ -240,10 +241,7 @@ def test_symbolic_shapes_disconnected_and_analytic_hvp(batch):
     np.testing.assert_allclose(actual[-3], 2 * (dx + db))
     np.testing.assert_allclose(actual[-2], (2 * (dx + db)).sum(axis=0))
     np.testing.assert_array_equal(actual[-1], np.zeros(2))
-    ort = pytest.importorskip("onnxruntime")
-    session = ort.InferenceSession(
-        ir.to_proto(hvp).SerializeToString(), providers=["CPUExecutionProvider"]
-    )
+    session = runtime_session(hvp)
     for a, b in zip(session.run(None, feeds), actual):
         np.testing.assert_allclose(a, b, atol=1e-12)
 
@@ -364,7 +362,7 @@ def test_original_integer_interfaces_do_not_become_default_tangents(tmp_path):
     np.testing.assert_allclose(actual[-1], [0.4, 0.8])
 
 
-@pytest.mark.parametrize("opset", range(18, 25))
+@pytest.mark.parametrize("opset", range(18, 27))
 @pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
 def test_nonlinear_dynamic_hvp_runtime_and_opsets(opset, dtype, tmp_path):
     x, w = _value("x", ["batch", 2], dtype), _value("w", [2, 1], dtype)
@@ -376,10 +374,7 @@ def test_nonlinear_dynamic_hvp_runtime_and_opsets(opset, dtype, tmp_path):
     hvp = JvpPass(inputs=["w"])(reverse).model
     ir.save(hvp, tmp_path / "hvp.onnx")
     hvp = ir.load(tmp_path / "hvp.onnx")
-    ort = pytest.importorskip("onnxruntime")
-    session = ort.InferenceSession(
-        ir.to_proto(hvp).SerializeToString(), providers=["CPUExecutionProvider"]
-    )
+    session = runtime_session(hvp)
     for batch in (1, 3, 7):
         xval = (np.arange(batch * 2).reshape(batch, 2) / 10).astype(dtype.numpy())
         wval = np.array([[0.3], [0.7]], dtype=dtype.numpy())

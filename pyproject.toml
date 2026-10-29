@@ -13,13 +13,12 @@ license-files = ["LICENSE", "NOTICE"]
 dependencies = [
     "numpy>=1.26",
     "onnx>=1.23.2",
-    "onnx-ir>=0.2.1",
+    "onnx-ir>=1.1.0",
     "onnx-shape-inference>=0.4.0",
-    "typing-extensions>=4.10",
 ]
 
 [dependency-groups]
-dev = ["pytest>=8", "onnxruntime>=1.29", "ruff>=0.11", "mypy>=1.15", "build>=1.2"]
+dev = ["pytest>=8", "onnxruntime>=1.31.1", "ruff>=0.11", "mypy>=1.15", "build>=1.2"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
