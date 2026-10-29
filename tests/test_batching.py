@@ -5,10 +5,10 @@
 from __future__ import annotations
 
 import numpy as np
-import onnx
 import onnx_ir as ir
 import pytest
 from onnx.reference import ReferenceEvaluator
+from onnx_ir.passes.common import CheckerPass
 from onnx_shape_inference import infer_symbolic_shapes
 
 from onnax import VmapPass
@@ -95,9 +95,8 @@ def _equivalent(model, in_axes, feeds, *, out_axes=0, size=3, dynamic=False, ort
     for old, new in zip(model.graph.outputs, result.model.graph.outputs):
         if not old.is_graph_input() and not old.is_initializer():
             assert new.name == old.name
+    CheckerPass(full_check=True)(result.model)
     proto = ir.to_proto(result.model)
-    onnx.checker.check_model(proto, full_check=True)
-    roundtrip = ir.to_proto(ir.from_proto(onnx.load_from_string(proto.SerializeToString())))
     if ort:
         onnxruntime = pytest.importorskip("onnxruntime")
         options = onnxruntime.SessionOptions()
@@ -111,7 +110,7 @@ def _equivalent(model, in_axes, feeds, *, out_axes=0, size=3, dynamic=False, ort
             )
     else:
         evaluator_factory = ReferenceEvaluator
-    actual = evaluator_factory(roundtrip).run(None, feeds)
+    actual = evaluator_factory(proto).run(None, feeds)
     evaluator = evaluator_factory(ir.to_proto(model))
     examples = [
         evaluator.run(
@@ -296,8 +295,8 @@ def test_scalar_reduce_log_sum_exp():
     # The reference evaluator's scalar ReduceLogSumExp raises TypeError.
     model = _model("ReduceLogSumExp", [[]])
     result = VmapPass([0], axis_size=3)(model).model
+    CheckerPass(full_check=True)(result)
     proto = ir.to_proto(result)
-    onnx.checker.check_model(proto, full_check=True)
     data = _data([3])
     actual = ReferenceEvaluator(proto).run(None, {"x0": data})[0]
     np.testing.assert_allclose(actual, data, rtol=2e-5, atol=1e-6)
@@ -661,11 +660,8 @@ def test_dynamic_model_reused_at_different_batch_sizes():
     transformed = VmapPass([1, 0, None], out_axes=[1, 2, 0])(model).model
     assert ir.to_proto(model).SerializeToString() == before
     assert transformed.graph.inputs[0].shape == [2, None, 4]
-    proto = ir.to_proto(transformed)
-    onnx.checker.check_model(proto, full_check=True)
-    evaluator = ReferenceEvaluator(
-        ir.to_proto(ir.from_proto(onnx.load_from_string(proto.SerializeToString())))
-    )
+    CheckerPass(full_check=True)(transformed)
+    evaluator = ReferenceEvaluator(ir.to_proto(transformed))
     single_example = ReferenceEvaluator(ir.to_proto(model))
     for size in (1, 3, 7):
         feeds = {"x": _data([2, size, 4]), "scalar": _data([size]), "shared": _data([2, 5])}
@@ -860,8 +856,8 @@ def test_flatten_empty_left_partition():
     # The reference evaluator's Flatten uses -1 and fails for an empty left partition.
     model = _model("Flatten", [[0, 4]], {"axis": 1})
     result = VmapPass([0])(model).model
+    CheckerPass(full_check=True)(result)
     proto = ir.to_proto(result)
-    onnx.checker.check_model(proto, full_check=True)
     actual = ReferenceEvaluator(proto).run(None, {"x0": _data([3, 0, 4])})[0]
     np.testing.assert_array_equal(actual, np.empty([3, 0, 4], dtype=np.float32))
 
@@ -1027,8 +1023,8 @@ def test_additional_shared_integer_output_branches(op):
 def test_runtime_shape_targets_and_batch_size_change_without_retransforming():
     model = _model("Reshape", [[4], [2]], input_dtypes=[ir.DataType.FLOAT, ir.DataType.INT64])
     transformed = VmapPass([1, None])(model).model
+    CheckerPass(full_check=True)(transformed)
     proto = ir.to_proto(transformed)
-    onnx.checker.check_model(proto, full_check=True)
     evaluator = ReferenceEvaluator(proto)
     for size, target in [(1, [2, 2]), (3, [1, 4]), (5, [4, 1])]:
         data = _data([4, size])

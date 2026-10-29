@@ -7,8 +7,8 @@ This prints and saves before/after ONNX and readable graphs, then reloads and
 executes them. Only onnax and its ordinary dependencies are required.
 
 The source predicts two responses from three features and has a scalar
-single-example mean-squared loss. GradPass differentiates its shared weight and
-bias initializers without promoting them to inputs. VmapPass then maps samples
+single-example mean-squared loss. grad differentiates its shared weight and
+bias initializers without promoting them to inputs. vmap then maps samples
 and targets, retaining a distinct example axis in each parameter gradient.
 The same exported graph accepts batches of 1, 3, and 7.
 
@@ -28,9 +28,10 @@ import numpy as np
 import onnx
 import onnx_ir as ir
 from onnx.reference import ReferenceEvaluator
-from onnx_shape_inference import infer_symbolic_shapes
+from onnx_ir.passes.common import CheckerPass
 
-from onnax import GradPass, VmapPass
+from onnax import grad, vmap
+from onnax._inference import _infer_shapes
 
 
 def regressor(weight: np.ndarray, bias: np.ndarray) -> ir.Model:
@@ -60,10 +61,9 @@ def regressor(weight: np.ndarray, bias: np.ndarray) -> ir.Model:
 
 def save_graph(model: ir.Model, name: str, output_dir: Path) -> ir.Model:
     """Print, save, check, and reload an ordinary executable ONNX artifact."""
-    # A serialization roundtrip isolates shared tensor objects before in-place inference.
-    inferred = infer_symbolic_shapes(ir.from_proto(ir.to_proto(model)), policy="refine")
+    inferred = _infer_shapes(model)
+    CheckerPass(full_check=True)(inferred)
     proto = ir.to_proto(inferred)
-    onnx.checker.check_model(proto, full_check=True)
     path = output_dir / f"{name}.onnx"
     onnx.save(proto, path)
     text = onnx.printer.to_text(proto)
@@ -82,21 +82,21 @@ def main() -> None:
     original = regressor(weight, bias)
     before = ir.to_proto(original).SerializeToString()
     save_graph(original, "single_example", args.output_dir)
-    gradient = GradPass(inputs=["weight", "bias"], output="loss")(original).model
+    gradient = grad(original, inputs=["weight", "bias"], output="loss")
     gradient = save_graph(gradient, "single_gradient", args.output_dir)
-    mapped = VmapPass(in_axes=[0, 0])(gradient).model
+    mapped = vmap(gradient, in_axes=[0, 0])
     mapped = save_graph(mapped, "per_example_gradient", args.output_dir)
     assert [v.name for v in mapped.graph.inputs] == ["features", "target"]
     evaluator = ReferenceEvaluator(ir.to_proto(mapped))
     independent = ReferenceEvaluator(ir.to_proto(gradient))
 
-    batch_loss = VmapPass(in_axes=[0, 0])(original).model
+    batch_loss = vmap(original, in_axes=[0, 0])
     tape = ir.tape.Tape(batch_loss.graph)
     mean_loss = tape.op("ReduceMean", [batch_loss.graph.outputs[1]], {"keepdims": 0})
     mean_loss.name = "mean_loss"
     batch_loss.graph.outputs.clear()
     batch_loss.graph.outputs.append(mean_loss)
-    batch_gradient = GradPass(inputs=["weight", "bias"])(batch_loss).model
+    batch_gradient = grad(batch_loss, inputs=["weight", "bias"])
     batch_gradient = save_graph(batch_gradient, "mean_loss_gradient", args.output_dir)
     mean_evaluator = ReferenceEvaluator(ir.to_proto(batch_gradient))
 

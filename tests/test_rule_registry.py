@@ -5,10 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 import numpy as np
-import onnx
 import onnx_ir as ir
 import pytest
 from onnx.reference import ReferenceEvaluator
+from onnx_ir.passes.common import CheckerPass
 
 from onnax import _autodiff, _batching, _rule_registry
 
@@ -227,8 +227,9 @@ def test_private_custom_domain_extension_executes_all_three_contracts():
         graph = ir.Graph(
             [value], outputs, nodes=context.tape.nodes, opset_imports={"": 18}, name=mode
         )
-        proto = ir.to_proto(ir.Model(graph, ir_version=9))
-        onnx.checker.check_model(proto, full_check=True)
+        model = ir.Model(graph, ir_version=9)
+        CheckerPass(full_check=True)(model)
+        proto = ir.to_proto(model)
         data = np.arange(np.prod(shape), dtype=np.float32).reshape(shape)
         actual = ReferenceEvaluator(proto).run(None, {"input": data})[0]
         np.testing.assert_array_equal(actual, 2.5 * data)

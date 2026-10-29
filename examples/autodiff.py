@@ -9,7 +9,7 @@ The original model computes predictions and mean-squared error for a symbolic
 batch size. This example prints the before/after IR graphs, checks parameter
 gradients against NumPy, takes one loss-reducing optimization step, and computes
 both directional prediction sensitivities and a reverse-mode attribution.
-It then applies JvpPass to the reloaded gradient graph to compute an exact
+It then applies jvp to the reloaded gradient graph to compute an exact
 parameter Hessian-vector product and directional curvature without materializing
 the Hessian. Initializer values stay stored; only their direction seeds are inputs.
 
@@ -27,9 +27,10 @@ import numpy as np
 import onnx  # ruff: ignore[banned-api]
 import onnx_ir as ir
 from onnx.reference import ReferenceEvaluator  # ruff: ignore[banned-api]
-from onnx_shape_inference import infer_symbolic_shapes
+from onnx_ir.passes.common import CheckerPass
 
-from onnax import GradPass, JvpPass, VjpPass
+from onnax import grad, jvp, vjp
+from onnax._inference import _infer_shapes
 
 
 def linear_regression(weight: np.ndarray, bias: np.ndarray) -> ir.Model:
@@ -59,16 +60,17 @@ def linear_regression(weight: np.ndarray, bias: np.ndarray) -> ir.Model:
 
 def evaluate(model: ir.Model, feeds: dict[str, np.ndarray]) -> list[np.ndarray]:
     """Check and execute a generated graph without an autodiff runtime."""
-    proto = ir.to_proto(infer_symbolic_shapes(ir.from_proto(ir.to_proto(model))))
-    onnx.checker.check_model(proto, full_check=True)
-    return ReferenceEvaluator(proto).run(None, feeds)
+    inferred = _infer_shapes(model)
+    CheckerPass(full_check=True)(inferred)
+    return ReferenceEvaluator(ir.to_proto(inferred)).run(None, feeds)
 
 
 def save_graph(model: ir.Model, name: str, output_dir: Path) -> ir.Model:
     """Save ONNX and printable graphs, then reload the executable artifact."""
     path = output_dir / f"{name}.onnx"
-    proto = ir.to_proto(infer_symbolic_shapes(ir.from_proto(ir.to_proto(model))))
-    onnx.checker.check_model(proto, full_check=True)
+    inferred = _infer_shapes(model)
+    CheckerPass(full_check=True)(inferred)
+    proto = ir.to_proto(inferred)
     onnx.save(proto, path)
     text = onnx.printer.to_text(proto)
     path.with_suffix(".txt").write_text(text, encoding="utf-8")
@@ -91,8 +93,8 @@ def main() -> None:
     print("BEFORE: predictions and scalar MSE")
     save_graph(original, "original", args.output_dir)
 
-    gradient_model = GradPass(inputs=["weight", "bias"], output="mse")(original).model
-    print("\nAFTER GradPass: predictions, MSE, weight gradient, bias gradient")
+    gradient_model = grad(original, inputs=["weight", "bias"], output="mse")
+    print("\nAFTER grad: predictions, MSE, weight gradient, bias gradient")
     gradient_model = save_graph(gradient_model, "grad", args.output_dir)
     prediction, loss, grad_weight, grad_bias = evaluate(gradient_model, feeds)
     residual = prediction - target
@@ -108,14 +110,14 @@ def main() -> None:
     print("d(MSE)/d(bias):", grad_bias)
 
     # Default outputs on a reverse-mode graph are its generated gradients.
-    hvp_model = JvpPass(inputs=["weight", "bias"])(gradient_model).model
+    hvp_model = jvp(gradient_model, inputs=["weight", "bias"])
     dw, db = np.array([[0.4], [-0.2]]), np.array([0.1])
     hvp_feeds = dict(feeds)
     for seed, direction in zip(
         hvp_model.graph.inputs[len(gradient_model.graph.inputs) :], (dw, db)
     ):
         hvp_feeds[seed.name] = direction
-    print("\nAFTER JvpPass(GradPass): parameter Hessian-vector product")
+    print("\nAFTER jvp(grad): parameter Hessian-vector product")
     hvp_model = save_graph(hvp_model, "hvp", args.output_dir)
     _, _, _, _, h_weight, h_bias = evaluate(hvp_model, hvp_feeds)
     response = features @ dw + db
@@ -126,19 +128,19 @@ def main() -> None:
     print("Hessian-vector product (weight, bias):", h_weight.ravel(), h_bias)
     print(f"Directional curvature v.T @ H @ v: {curvature:.6f}")
 
-    jvp_model = JvpPass(inputs=["features"], outputs=["prediction"])(original).model
+    jvp_model = jvp(original, inputs=["features"], outputs=["prediction"])
     direction = np.broadcast_to(np.array([1.0, 0.0]), features.shape).copy()
     jvp_feeds = {**feeds, jvp_model.graph.inputs[-1].name: direction}
-    print("\nAFTER JvpPass: sensitivity to increasing the first feature")
+    print("\nAFTER jvp: sensitivity to increasing the first feature")
     jvp_model = save_graph(jvp_model, "jvp", args.output_dir)
     _, _, prediction_tangent = evaluate(jvp_model, jvp_feeds)
     np.testing.assert_allclose(prediction_tangent, direction @ weight)
     print("Directional prediction derivative:", prediction_tangent.ravel())
 
-    vjp_model = VjpPass(inputs=["features"], outputs=["prediction"])(original).model
+    vjp_model = vjp(original, inputs=["features"], outputs=["prediction"])
     cotangent = np.array([[1.0], [0.0], [0.0], [0.0]])
     vjp_feeds = {**feeds, vjp_model.graph.inputs[-1].name: cotangent}
-    print("\nAFTER VjpPass: attribute the first prediction to its input features")
+    print("\nAFTER vjp: attribute the first prediction to its input features")
     vjp_model = save_graph(vjp_model, "vjp", args.output_dir)
     _, _, feature_cotangent = evaluate(vjp_model, vjp_feeds)
     np.testing.assert_allclose(feature_cotangent, cotangent @ weight.T)
