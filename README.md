@@ -4,23 +4,25 @@
 with `vmap`, differentiate with `grad`, `jvp`, and `vjp`, and save the result as
 ordinary ONNX. Built on [ONNX IR](https://github.com/onnx/ir-py).
 
-Experimental, currently private, and not published to PyPI. These functions
+Experimental alpha software. These functions
 transform `onnx_ir.Model` objects, not Python callables or arrays: there is no
 Python tracing or execution runtime, and no claim of full JAX compatibility.
 
-## Install from source
+## Install
 
-Requires Python 3.11+ and access to this private repository:
+Requires Python 3.11+:
+
+```shell
+python -m pip install onnax==0.1.0
+```
+
+To develop from source:
 
 ```shell
 git clone https://github.com/justinchuby/onnax.git
 cd onnax
 python -m pip install .
 ```
-
-`onnax` is the intended PyPI distribution name, but `pip install onnax` is
-**not currently an installation method**. A future release requires a separate,
-explicit publication decision.
 
 ## Transform a model
 
@@ -114,7 +116,21 @@ uv run twine check --strict dist/*
 ```
 
 CI checks Python 3.11 and 3.12 and exercises both built distributions outside
-the source tree. No publication workflow or credentials are configured.
+the source tree.
+
+### Releases
+
+Update the version in `pyproject.toml` and the installation example above through
+a validated pull request. After merging, create a matching `v<version>` tag on
+the merged commit and publish a GitHub release for that tag.
+`.github/workflows/publish.yml` checks the version/tag match and that the tagged
+commit belongs to `main`, validates the wheel and source distribution, and
+publishes those exact artifacts using PyPI trusted publishing. The GitHub
+environment must be named `pypi`, and the PyPI trusted publisher must reference
+this repository, `publish.yml`, and that environment. No upload token is used.
+The workflow then compares the published filenames and SHA-256 checksums with
+the build and smoke-tests a fresh installation from PyPI outside the checkout.
+Do not reuse a version that has already been uploaded.
 
 Ruff lint and formatting are both required. The lint families, preview rules,
 Google docstring convention, and readability exclusions follow
