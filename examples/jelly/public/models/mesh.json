@@ -673,7 +673,7 @@
         "Sub",
         "Unsqueeze"
       ],
-      "nodes": 74,
+      "nodes": 41,
       "graph": {
         "inputs": [
           "q: FLOAT [36,2]",
@@ -696,13 +696,13 @@
           "3: val_3 = Mul(val_2, val_2)",
           "4: val_4 = ReduceSum(val_3, coordinate_axis)",
           "5: val_5 = Add(val_4, epsilon_squared)",
-          "... 62 nodes omitted ...",
-          "68: val_15 = Mul(half, val_14)",
-          "69: val_9 = Mul(val_7, val_7)",
-          "70: val_10 = ReduceSum(val_9)",
-          "71: elastic = Mul(val_8, val_10)",
-          "72: val_16 = Add(elastic, val_15)",
-          "73: energy = Sub(val_16, val_18)"
+          "... 29 nodes omitted ...",
+          "35: val_99 = MatMul(val_98, val_97)",
+          "36: val_117 = Unsqueeze(val_99, val_115)",
+          "37: val_118 = ReduceSum(val_117, val_115)",
+          "38: val_119 = Reshape(val_118, val_100)",
+          "39: val_120 = Add(val_59, val_119)",
+          "40: q_cotangent = Mul(val_120, free)"
         ]
       }
     },
@@ -736,7 +736,7 @@
         "Sub",
         "Unsqueeze"
       ],
-      "nodes": 125,
+      "nodes": 68,
       "graph": {
         "inputs": [
           "q: FLOAT [36,2]",
@@ -755,19 +755,19 @@
           "q_cotangent_tangent: FLOAT [36,2]"
         ],
         "excerpt": [
-          "0: val_506 = Mul(q_tangent, free)",
-          "1: val_513 = MatMul(incidence, val_506)",
-          "2: val_0 = Mul(free, q)",
-          "3: val_1 = Add(val_0, anchor)",
-          "4: val_2 = MatMul(incidence, val_1)",
-          "5: val_3 = Mul(val_2, val_2)",
-          "... 113 nodes omitted ...",
-          "119: val_15 = Mul(half, val_14)",
-          "120: val_9 = Mul(val_7, val_7)",
-          "121: val_10 = ReduceSum(val_9)",
-          "122: elastic = Mul(val_8, val_10)",
-          "123: val_16 = Add(elastic, val_15)",
-          "124: energy = Sub(val_16, val_18)"
+          "0: val_0 = Mul(free, q)",
+          "1: val_1 = Add(val_0, anchor)",
+          "2: val_2 = MatMul(incidence, val_1)",
+          "3: val_3 = Mul(val_2, val_2)",
+          "4: val_4 = ReduceSum(val_3, coordinate_axis)",
+          "5: val_5 = Add(val_4, epsilon_squared)",
+          "... 56 nodes omitted ...",
+          "62: val_232 = MatMul(val_98, val_229)",
+          "63: val_233 = Unsqueeze(val_232, val_115)",
+          "64: val_234 = ReduceSum(val_233, val_115)",
+          "65: val_235 = Reshape(val_234, val_100)",
+          "66: val_239 = Add(val_168, val_235)",
+          "67: q_cotangent_tangent = Mul(val_239, free)"
         ]
       }
     }
@@ -788,14 +788,13 @@
       ],
       "operators": [
         "Add",
-        "Identity",
         "MatMul",
         "Mul",
         "ReduceSum",
         "Sqrt",
         "Sub"
       ],
-      "nodes": 22,
+      "nodes": 21,
       "graph": {
         "inputs": [
           "q: FLOAT [36,2]",
@@ -816,13 +815,13 @@
           "3: val_3 = Mul(val_2, val_2)",
           "4: val_4 = ReduceSum(val_3, coordinate_axis)",
           "5: val_5 = Add(val_4, epsilon_squared)",
-          "... 10 nodes omitted ...",
+          "... 9 nodes omitted ...",
+          "15: val_14 = ReduceSum(val_13)",
           "16: val_15 = Mul(half, val_14)",
           "17: val_16 = Add(elastic, val_15)",
           "18: val_17 = Mul(load, val_1)",
           "19: val_18 = ReduceSum(val_17)",
-          "20: energy = Sub(val_16, val_18)",
-          "21: packed = Identity(energy)"
+          "20: packed = Sub(val_16, val_18)"
         ]
       }
     },
@@ -876,12 +875,12 @@
           "4: val_4 = ReduceSum(val_3, coordinate_axis)",
           "5: val_5 = Add(val_4, epsilon_squared)",
           "... 36 nodes omitted ...",
-          "42: physical_gradient = Mul(val_52, free)",
-          "43: val_67 = Reshape(elastic, pack_shape)",
-          "44: val_68 = Reshape(energy, pack_shape)",
-          "45: val_69 = Reshape(val_484, pack_shape)",
-          "46: val_70 = Reshape(physical_gradient, pack_shape)",
-          "47: packed = Concat(val_67, val_68, val_69, val_70)"
+          "42: physical_gradient = Mul(val_61, free)",
+          "43: val_64 = Reshape(elastic, pack_shape)",
+          "44: val_65 = Reshape(energy, pack_shape)",
+          "45: val_66 = Reshape(q_cotangent, pack_shape)",
+          "46: val_67 = Reshape(physical_gradient, pack_shape)",
+          "47: packed = Concat(val_64, val_65, val_66, val_67)"
         ]
       }
     },
@@ -902,7 +901,6 @@
       "operators": [
         "Add",
         "Div",
-        "Identity",
         "MatMul",
         "Mul",
         "Neg",
@@ -911,7 +909,7 @@
         "Sqrt",
         "Sub"
       ],
-      "nodes": 42,
+      "nodes": 41,
       "graph": {
         "inputs": [
           "q: FLOAT [36,2]",
@@ -933,13 +931,13 @@
           "3: val_3 = MatMul(incidence, val_2)",
           "4: val_4 = Mul(val_3, val_3)",
           "5: val_5 = ReduceSum(val_4, coordinate_axis)",
-          "... 30 nodes omitted ...",
-          "36: val_59 = Mul(val_55, val_51)",
-          "37: val_60 = Add(val_58, val_59)",
-          "38: val_61 = MatMul(val_438, val_60)",
-          "39: val_62 = Mul(val_61, free)",
-          "40: val_657 = Add(val_38, val_62)",
-          "41: packed = Identity(val_657)"
+          "... 29 nodes omitted ...",
+          "35: val_60 = Mul(val_59, val_52)",
+          "36: val_61 = Mul(val_57, val_53)",
+          "37: val_62 = Add(val_60, val_61)",
+          "38: val_63 = MatMul(val_98, val_62)",
+          "39: val_64 = Mul(val_63, free)",
+          "40: packed = Add(val_39, val_64)"
         ]
       }
     },
@@ -998,12 +996,12 @@
           "4: val_4 = Mul(val_3, cg_tolerance_squared)",
           "5: val_5 = Greater(val_4, cg_minimum_squared)",
           "... 375 nodes omitted ...",
-          "381: val_618 = Add(val_542, val_617)",
-          "382: val_619 = Where(val_597, cg_one, val_543)",
-          "383: val_620 = Reshape(val_605, cg_pack_shape)",
-          "384: val_621 = Reshape(val_618, cg_pack_shape)",
-          "385: val_622 = Reshape(val_619, cg_pack_shape)",
-          "386: packed = Concat(val_620, val_621, val_622)"
+          "381: val_610 = Add(val_535, val_609)",
+          "382: val_611 = Where(val_589, cg_one, val_536)",
+          "383: val_612 = Reshape(val_597, cg_pack_shape)",
+          "384: val_613 = Reshape(val_610, cg_pack_shape)",
+          "385: val_614 = Reshape(val_611, cg_pack_shape)",
+          "386: packed = Concat(val_612, val_613, val_614)"
         ]
       }
     },

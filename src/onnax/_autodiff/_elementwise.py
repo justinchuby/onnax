@@ -220,7 +220,7 @@ def vjp(
         for i in indices:
             contribution = ctx.op("Mul", g, partials[i])
             result[i] = (
-                ctx.unbroadcast(contribution, _input(node, i))
+                ctx.unbroadcast(contribution, _input(node, i), broadcasted=node.outputs[0])
                 if op in _BINARY
                 else contribution
             )
