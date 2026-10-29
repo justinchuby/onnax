@@ -85,6 +85,10 @@ Runnable examples cover [batching](https://github.com/justinchuby/onnax/blob/mai
 [autodiff and nonzero HVPs](https://github.com/justinchuby/onnax/blob/main/examples/autodiff.py),
 and [per-example parameter gradients](https://github.com/justinchuby/onnax/blob/main/examples/per_example_gradients.py).
 
+Try the [interactive WebGPU jelly playground](examples/jelly): drag a spring sheet
+and compare explicit stepping with matrix-free Newton-CG, powered by exported
+`grad` and `jvp(grad(...))` ONNX graphs.
+
 ## Development
 
 Ruff lint and formatting are both required.

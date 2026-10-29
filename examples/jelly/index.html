@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f5f2eb">
+    <meta
+      name="description"
+      content="Pull a soft spring sheet. Explore ONNX autodiff and matrix-free Newton-CG running on WebGPU."
+    >
+    <title>Soft spot · an onnax experiment</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="masthead">
+        <a
+          class="brand"
+          href="https://github.com/justinchuby/onnax"
+          target="_blank"
+          rel="noreferrer"
+          ><span class="brand-mark">o</span>
+          onnax <span class="brand-divider">/</span>
+          <span class="lab-label">INTERACTIVE LAB</span></a
+        >
+        <a
+          class="source-link"
+          href="https://github.com/justinchuby/onnax/tree/main/examples/jelly"
+          target="_blank"
+          rel="noreferrer"
+          >Explore the source <span aria-hidden="true">↗</span></a
+        >
+      </header>
+      <main>
+        <section class="intro">
+          <div>
+            <p class="eyebrow"><span></span> EXPERIMENT 01 · DIFFERENTIABLE MATERIALS</p>
+            <h1>Find your <em>soft spot.</em></h1>
+            <p class="subtitle">
+              A little jelly. A second-order idea. Pull the sheet and feel what an ONNX graph can
+              do.
+            </p>
+          </div>
+          <div class="intro-note">
+            <span class="small-orbit" aria-hidden="true">✳</span>
+            <p>
+              Energy → <b>grad</b> → <b>jvp</b><br><span>Real graphs. Real GPU computation.</span>
+            </p>
+          </div>
+        </section>
+        <div class="workspace">
+          <section class="stage-card" aria-label="Interactive jelly simulation">
+            <div class="stage-top">
+              <span class="stage-label"><i></i> SOFT BODY / 6 × 6</span
+              ><span id="backend-badge" class="backend">CONNECTING TO GPU</span>
+            </div>
+            <canvas
+              id="scene"
+              aria-label="Jelly sheet. Drag a free node with a mouse or touch. Use Tug sheet for keyboard interaction."
+              tabindex="0"
+            ></canvas>
+            <div class="stage-instruction">
+              <span class="pointer-icon" aria-hidden="true">↖</span>
+              Grab a point. Give it a little pull.<span class="pin-key"><i></i> pinned</span>
+            </div>
+            <div class="stage-bottom">
+              <div>
+                <span class="live-dot"></span><span id="scene-state">Loading ONNX graphs…</span>
+              </div>
+              <span id="sim-clock">t = 0.000 s</span>
+            </div>
+            <div id="loading" class="loading">
+              <div class="loader"></div>
+              <strong>Warming up the soft stuff</strong
+              ><span>Loading generated ONNX graphs onto WebGPU.</span>
+            </div>
+          </section>
+          <aside class="controls" aria-label="Material and solver controls">
+            <div class="control-heading">
+              <div>
+                <p class="eyebrow">YOUR MATERIAL</p>
+                <h2>Make it move.</h2>
+              </div>
+              <span class="number-tag">01</span>
+            </div>
+            <fieldset class="integrator">
+              <legend class="section-label">INTEGRATOR</legend>
+              <div class="segmented">
+                <button type="button" id="implicit" class="selected" aria-pressed="true">
+                  Implicit <span>Newton-CG</span>
+                </button>
+                <button type="button" id="explicit" aria-pressed="false">
+                  Explicit <span>Euler</span>
+                </button>
+              </div>
+            </fieldset>
+            <p id="mode-note" class="control-note">
+              Looks ahead with generated Hessian-vector products. More work, steadier stiff springs.
+            </p>
+            <div class="slider-heading">
+              <label for="stiffness">Spring stiffness</label
+              ><output id="stiffness-value" for="stiffness">120</output>
+            </div>
+            <input id="stiffness" type="range" min="0" max="100" step="1" value="39">
+            <div class="range-ends"><span>Squishy</span><span>Stubborn</span></div>
+            <div class="slider-heading">
+              <label for="damping">Damping</label
+              ><output id="damping-value" for="damping">2.0 s⁻¹</output>
+            </div>
+            <input id="damping" type="range" min="0" max="12" step="0.5" value="2">
+            <div class="slider-heading">
+              <label for="timestep">Timestep</label
+              ><output id="timestep-value" for="timestep">25 ms</output>
+            </div>
+            <input id="timestep" type="range" min="5" max="50" step="5" value="25">
+            <div class="select-row">
+              <label for="pins">Anchor points</label
+              ><select id="pins">
+                <option value="top">Top corners</option>
+                <option value="corners">All corners</option>
+                <option value="none">Unpinned</option>
+              </select>
+            </div>
+            <div class="select-row">
+              <label for="overlay">Show me</label
+              ><select id="overlay">
+                <option value="strain">Spring strain</option>
+                <option value="force">Force arrows</option>
+                <option value="none">Just jelly</option>
+              </select>
+            </div>
+            <label class="toggle-row" for="gravity"
+              ><span>Gravity <span class="muted">9.81 units/s²</span></span>
+              <input id="gravity" type="checkbox" checked>
+              <span class="toggle" aria-hidden="true"></span></label
+            >
+            <div class="transport">
+              <button type="button" id="pause" class="primary" disabled>Pause</button
+              ><button type="button" id="reset" disabled>
+                Reset <span aria-hidden="true">↺</span>
+              </button><button
+                type="button"
+                id="tug"
+                title="Apply a brief pointer tether to the center of the sheet"
+                disabled
+              >
+                Tug sheet
+              </button>
+            </div>
+            <button type="button" id="stiff-preset" class="preset" disabled>
+              <span aria-hidden="true">✦</span>
+              Try the stiff-spring test <span aria-hidden="true">↗</span>
+            </button>
+            <p class="control-note bottom-note">
+              Same energy, two integrators. Try stiff springs in explicit mode, then reset and
+              compare.
+            </p>
+          </aside>
+        </div>
+        <section id="error" class="error" role="alert" hidden></section>
+        <section class="telemetry" aria-label="Live physics and performance">
+          <div class="metric">
+            <span>ELASTIC ENERGY</span><strong id="energy">0.000 <small>J*</small></strong>
+            <div class="metric-detail">Stored in 110 smooth springs</div>
+          </div>
+          <div class="metric">
+            <span>NEWTON RESIDUAL</span><strong id="residual">—</strong>
+            <div id="iterations" class="metric-detail">Waiting for the first step</div>
+          </div>
+          <div class="metric">
+            <span>SIMULATION STEP</span><strong id="step-time">— <small>ms</small></strong>
+            <div id="graph-time" class="metric-detail">Includes graph calls + readback</div>
+          </div>
+          <div class="metric energy-metric">
+            <span>ENERGY HISTORY <small>ELASTIC + KINETIC</small></span
+            ><canvas id="sparkline" aria-label="Recent elastic and kinetic energy history"></canvas>
+            <div id="step-rate" class="metric-detail">
+              Independent rendering and bounded physics updates
+            </div>
+          </div>
+        </section>
+        <section class="under-the-hood">
+          <div class="explanation">
+            <p class="eyebrow">THE INTERESTING PART</p>
+            <h2>One energy.<br><em>Two derivatives.</em></h2>
+            <p>
+              No hand-coded spring forces. No dense Hessian. Python authors a scalar energy in ONNX
+              IR; onnax turns it into executable derivative graphs.
+            </p>
+            <p class="footnote">
+              *Illustrative units and a coarse spring sheet, not a calibrated material model. Canvas
+              rendering; ONNX physics on WebGPU.
+            </p>
+          </div>
+          <div class="graph-story">
+            <div class="graph-row">
+              <span class="graph-index">01</span>
+              <div>
+                <h3>Describe the energy <code>E(x)</code></h3>
+                <p>
+                  Regularized spring lengths + gravity + pointer tether. In implicit mode, add mass,
+                  inertia, and viscous damping.
+                </p>
+              </div>
+              <span class="graph-file">energy.onnx</span>
+            </div>
+            <div class="graph-row">
+              <span class="graph-index">02</span>
+              <div>
+                <h3>Find the force <code>−grad(E)</code></h3>
+                <p>
+                  Reverse-mode differentiation gives the gradient. Explicit stepping uses it
+                  directly.
+                </p>
+              </div>
+              <span class="graph-file">gradient.onnx</span>
+            </div>
+            <div class="graph-row">
+              <span class="graph-index">03</span>
+              <div>
+                <h3>Ask about curvature <code>jvp(grad(E))</code></h3>
+                <p>
+                  Generated H·v products power damped Newton-CG, with curvature checks and a
+                  safeguarded line search.
+                </p>
+              </div>
+              <span class="graph-file">hvp.onnx</span>
+            </div>
+          </div>
+        </section>
+        <details class="device-details">
+          <summary>Execution details & limitations</summary>
+          <p id="device-info">Waiting for a WebGPU adapter.</p>
+          <p>
+            CPU execution-provider fallback is disabled. Generated H·v graphs and eight CG slots
+            stay on the GPU. Two speculative Newton proposals share one packed readback; the CPU
+            checks every accepted step with an Armijo line search. Rejected speculation is
+            discarded. Small position readbacks feed Canvas 2D rendering. Timings are end-to-end
+            wall time, not GPU-only kernel time. Simulation time does not catch up to wall time on
+            slower devices.
+          </p>
+          <p>
+            The automated browser smoke test also counts actual WebGPU compute dispatches. Adapter
+            identity and live timings above describe this browser, not a promised framerate.
+          </p>
+        </details>
+      </main>
+      <footer>
+        <span>onnax <span class="muted">/</span> Small graphs. New possibilities.</span
+        ><span>Built with ONNX IR · onnax · ONNX Runtime WebGPU</span>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

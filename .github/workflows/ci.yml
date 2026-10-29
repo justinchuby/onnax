@@ -16,6 +16,8 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: uv sync --group dev
       - run: uv run --no-sync pytest
+      - run: uv pip install -r examples/jelly/requirements-export.txt
+      - run: uv run --no-sync pytest examples/jelly/tests/test_models.py
       - run: uv run --no-sync ruff check .
       - run: uv run --no-sync ruff format --check .
       - run: uv run --no-sync mypy
@@ -32,3 +34,20 @@ jobs:
             uv pip check --python "$python"
             (cd "$RUNNER_TEMP" && "$python" -I check_distribution.py)
           done
+
+  jelly-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/jelly
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: examples/jelly/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
