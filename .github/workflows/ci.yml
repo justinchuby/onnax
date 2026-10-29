@@ -17,7 +17,7 @@ jobs:
       - run: uv sync --group dev
       - run: uv run --no-sync pytest
       - run: uv pip install -r examples/jelly/requirements-export.txt
-      - run: uv run --no-sync pytest examples/jelly/tests/test_models.py
+      - run: uv run --no-sync python -m pytest examples/jelly/tests/test_models.py
       - run: uv run --no-sync ruff check .
       - run: uv run --no-sync ruff format --check .
       - run: uv run --no-sync mypy
