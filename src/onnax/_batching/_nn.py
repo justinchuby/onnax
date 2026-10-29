@@ -27,9 +27,16 @@ def _native_batch(ctx: _Context, node: ir.Node, inputs: list[ir.Value]) -> int:
     data = inputs[0]
     rank = ctx.ranks[data]
     if rank < 3:
-        raise ir.passes.PreconditionError(f"{node.op_type} requires example rank >= 3.")
+        raise ir.passes.PreconditionError(
+            f"{node.op_type} requires example rank >= 3; got {ctx._describe(data)}. "
+            "Include the operator's native N and C dimensions plus spatial dimensions "
+            "in each example; vmap adds a separate axis."
+        )
     if node.op_type in ("DepthToSpace", "SpaceToDepth") and rank != 4:
-        raise ir.passes.PreconditionError(f"{node.op_type} requires example rank 4.")
+        raise ir.passes.PreconditionError(
+            f"{node.op_type} requires example rank 4; got {ctx._describe(data)}. "
+            "Supply one NCHW tensor per example; vmap adds a separate axis."
+        )
     native_positions = (0, 1) if node.op_type == "GridSample" else (0,)
     ctx._require_shared(
         [value for i, value in enumerate(inputs) if i not in native_positions],
@@ -37,7 +44,12 @@ def _native_batch(ctx: _Context, node: ir.Node, inputs: list[ir.Value]) -> int:
     )
     training_mode = node.attributes.get_int("training_mode", 0)
     if node.op_type == "BatchNormalization" and training_mode:
-        raise ir.passes.PreconditionError("Mapped BatchNormalization requires inference mode.")
+        raise ir.passes.PreconditionError(
+            f"Mapped BatchNormalization requires inference mode; training_mode={training_mode}. "
+            "Set training_mode=0 only if inference with fixed statistics is intended. "
+            "For training statistics, execute examples independently; changing the mode "
+            "would change the computation."
+        )
     if not any(ctx.mapped[value] for value in inputs):
         return rank
     native_size = None
@@ -75,6 +87,10 @@ def apply(ctx: _Context, node: ir.Node) -> None:
         if ctx.ranks[inputs[1]] > 1 or block_size:
             raise ir.passes.PreconditionError(
                 f"{op} supports shared scalar or per-axis parameters, not blocked quantization."
+                f" scale={ctx._describe(inputs[1])}, block_size={block_size}. "
+                "Use genuinely scalar/per-axis quantization parameters with block_size=0, "
+                "or execute the blocked-quantized examples independently; do not relabel "
+                "blocked parameters as per-axis."
             )
         if mapped and ctx.ranks[inputs[1]] == 1:
             axis = _axis(node.attributes.get_int("axis", 1), rank)
@@ -94,7 +110,10 @@ def apply(ctx: _Context, node: ir.Node) -> None:
             if mapped:
                 node.attributes["axis"] = ir.AttrInt64("axis", axis + 1)
         elif rank < 2:
-            raise ir.passes.PreconditionError("Trilu requires example rank >= 2.")
+            raise ir.passes.PreconditionError(
+                f"Trilu requires example rank >= 2; got {ctx._describe(inputs[0])}. "
+                "Supply matrices in the last two example dimensions."
+            )
     elif op == "LayerNormalization" and inputs:
         ctx._require_shared(inputs[1:], op)
         rank = ctx.ranks[inputs[0]]
@@ -117,14 +136,16 @@ def apply(ctx: _Context, node: ir.Node) -> None:
                 or bool(training_tensor.numpy().item())
             ):
                 raise ir.passes.PreconditionError(
-                    "Dropout requires a constant false or omitted training_mode."
+                    f"Dropout requires a constant false or omitted training_mode; "
+                    f"got {ctx._describe(training)}"
+                    f"{' (constant true)' if training_tensor is not None and training_tensor.dtype == ir.DataType.BOOL and len(training_tensor.shape) == 0 and bool(training_tensor.numpy().item()) else ''}. "
+                    "Use inference Dropout only if inference is intended; for training "
+                    "randomness, execute examples independently rather than disabling it."
                 )
         rank = ctx.ranks[inputs[0]]
         mapped = ctx.mapped[inputs[0]]
         node.resize_inputs(1)
     else:
-        raise ir.passes.PreconditionError(
-            f"VmapPass has no batching rule for {op!r} with {len(inputs)} inputs."
-        )
+        raise ctx._input_error(node)
     for output in node.outputs:
         ctx._register(output, rank, mapped)

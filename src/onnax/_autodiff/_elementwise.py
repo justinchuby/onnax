@@ -118,7 +118,11 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
                 ctx.op("Exp", ctx.op("Neg", ctx.op("Mul", x, x))),
             )
         else:
-            raise NotImplementedError(f"No elementwise derivative for {op}.")
+            raise NotImplementedError(
+                f"No elementwise derivative for {op}, input index {index}. "
+                "Correct the private registry dispatch or implement and validate the "
+                "missing partial derivative; do not silently substitute zero."
+            )
         result[index] = p
     return result
 
@@ -158,7 +162,11 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
             if op in _BINARY
             else result
         ]
-    raise NotImplementedError(f"No JVP rule for {op}.")
+    raise NotImplementedError(
+        f"No JVP rule for {op} in the elementwise family. "
+        "Correct the private registry dispatch or implement and validate the missing rule; "
+        "unsupported active paths cannot be replaced with zero tangents."
+    )
 
 
 def vjp(
@@ -201,4 +209,8 @@ def vjp(
                 else contribution
             )
         return result
-    raise NotImplementedError(f"No VJP rule for {op}.")
+    raise NotImplementedError(
+        f"No VJP rule for {op} in the elementwise family. "
+        "Correct the private registry dispatch or implement and validate the missing rule; "
+        "unsupported active paths cannot be replaced with zero cotangents."
+    )

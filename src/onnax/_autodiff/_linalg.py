@@ -10,6 +10,7 @@ import onnx_ir as ir
 
 from onnax._autodiff._common import _float, _input, _int, _rank
 from onnax._autodiff._context import _Context
+from onnax._diagnostics import _value_context
 
 OPS = frozenset(("Gemm", "MatMul"))
 
@@ -20,7 +21,11 @@ def matmul_vjp(
     a, b = _input(node), _input(node, 1)
     ra, rb = _rank(a), _rank(b)
     if ra == 0 or rb == 0:
-        raise ValueError("MatMul inputs must have rank at least one.")
+        raise ValueError(
+            "MatMul inputs must have rank at least one; "
+            f"got {_value_context(a)} and {_value_context(b)}. "
+            "Supply vectors/matrices; use Mul for scalar multiplication."
+        )
     av = ctx.op("Unsqueeze", a, ctx.constant([0])) if ra == 1 else a
     bv = ctx.op("Unsqueeze", b, ctx.constant([-1])) if rb == 1 else b
     g = gradient
@@ -86,7 +91,11 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
         return [ctx.sum(terms)]
     elif op in ("Gemm",):
         return [gemm(ctx, node, d, reverse=False)[0]]
-    raise NotImplementedError(f"No JVP rule for {op}.")
+    raise NotImplementedError(
+        f"No JVP rule for {op} in the linear algebra family. "
+        "Correct the private registry dispatch or implement and validate the missing rule; "
+        "unsupported active paths cannot be replaced with zero tangents."
+    )
 
 
 def vjp(
@@ -98,4 +107,8 @@ def vjp(
     elif op in ("Gemm",):
         contributions = gemm(ctx, node, {0: g}, reverse=True)
         return {i: contributions[i] for i in indices}
-    raise NotImplementedError(f"No VJP rule for {op}.")
+    raise NotImplementedError(
+        f"No VJP rule for {op} in the linear algebra family. "
+        "Correct the private registry dispatch or implement and validate the missing rule; "
+        "unsupported active paths cannot be replaced with zero cotangents."
+    )

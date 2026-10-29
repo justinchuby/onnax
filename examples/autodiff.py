@@ -104,7 +104,11 @@ def main() -> None:
     np.testing.assert_allclose(grad_bias, expected_bias)
     updated = linear_regression(weight - 0.1 * grad_weight, bias - 0.1 * grad_bias)
     _, updated_loss = evaluate(updated, feeds)
-    assert updated_loss < loss
+    assert updated_loss < loss, (
+        f"Optimization example expected updated MSE < original MSE, got "
+        f"{updated_loss:.6f} >= {loss:.6f}. Check the analytical gradient comparison "
+        "above and the update's minus sign and learning rate (0.1)."
+    )
     print(f"MSE before/after one gradient step: {loss:.6f} -> {updated_loss:.6f}")
     print("d(MSE)/d(weight):", grad_weight.ravel())
     print("d(MSE)/d(bias):", grad_bias)
@@ -149,7 +153,11 @@ def main() -> None:
         np.sum(prediction_tangent * cotangent),
         np.sum(direction * feature_cotangent),
     )
-    assert ir.to_proto(original).SerializeToString() == source_bytes
+    assert ir.to_proto(original).SerializeToString() == source_bytes, (
+        "Autodiff example detected source-model mutation after transformation/export. "
+        "Check clone/tensor-metadata isolation in the inference adapter before "
+        "reusing the source model."
+    )
 
 
 if __name__ == "__main__":

@@ -59,7 +59,11 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
         mean = ctx.op("ReduceSum", weighted, axis, keepdims=1)
         centered = ctx.op("Sub", d[0], mean)
         return [ctx.op("Mul", y, centered) if op == "Softmax" else centered]
-    raise NotImplementedError(f"No JVP rule for {op}.")
+    raise NotImplementedError(
+        f"No JVP rule for {op} in the reductions family. "
+        "Correct the private registry dispatch or implement and validate the missing rule; "
+        "unsupported active paths cannot be replaced with zero tangents."
+    )
 
 
 def vjp(
@@ -77,4 +81,8 @@ def vjp(
             return {0: ctx.op("Mul", y, ctx.op("Sub", g, mean))}
         total = ctx.op("ReduceSum", g, axis_tensor, keepdims=1)
         return {0: ctx.op("Sub", g, ctx.op("Mul", ctx.op("Exp", y), total))}
-    raise NotImplementedError(f"No VJP rule for {op}.")
+    raise NotImplementedError(
+        f"No VJP rule for {op} in the reductions family. "
+        "Correct the private registry dispatch or implement and validate the missing rule; "
+        "unsupported active paths cannot be replaced with zero cotangents."
+    )

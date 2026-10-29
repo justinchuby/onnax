@@ -25,7 +25,11 @@ OPS = frozenset(
 def _index_aligned(ctx: _Context, node: ir.Node, inputs: list[ir.Value]) -> int:
     rank = ctx.ranks[inputs[0]]
     if any(ctx.ranks[value] != rank for value in inputs):
-        raise ir.passes.PreconditionError(f"{node.op_type} operands must have equal ranks.")
+        raise ir.passes.PreconditionError(
+            f"{node.op_type} operands must have equal ranks; got "
+            f"{[ctx._describe(v) for v in inputs]}. "
+            "Match the data/indices (and updates) example ranks required by the ONNX schema."
+        )
     axis = _axis(node.attributes.get_int("axis", 0), rank)
     if any(ctx.mapped[value] for value in inputs):
         node.attributes["axis"] = ir.AttrInt64("axis", axis + 1)
@@ -40,14 +44,22 @@ def _gather_nd(ctx: _Context, node: ir.Node, inputs: list[ir.Value]) -> int:
     batch_dims = node.attributes.get_int("batch_dims", 0)
     index_shape = ctx._example_shape(indices)
     if not len(index_shape):
-        raise ir.passes.PreconditionError("GatherND indices must have rank >= 1.")
+        raise ir.passes.PreconditionError(
+            f"GatherND indices must have rank >= 1; got {ctx._describe(indices)}. "
+            "Supply an indices tensor whose last dimension holds each index tuple."
+        )
     depth = index_shape[-1]
     if isinstance(depth, int):
         rank = ctx.ranks[data] + ctx.ranks[indices] - depth - batch_dims - 1
     elif node.outputs[0].shape is not None:
         rank = len(node.outputs[0].shape)
     else:
-        raise ir.passes.PreconditionError("GatherND needs a known index depth or output rank.")
+        raise ir.passes.PreconditionError(
+            f"GatherND needs a known index depth or output rank; indices={ctx._describe(indices)}, "
+            f"batch_dims={batch_dims}, output={node.outputs[0].name!r} has no shape. "
+            "Annotate the indices' last dimension or the output's rank in the source model; "
+            "dimension sizes other than index depth may remain symbolic."
+        )
     if any(ctx.mapped[value] for value in inputs):
         node.attributes["batch_dims"] = ir.AttrInt64("batch_dims", batch_dims + 1)
         for i, value in enumerate(inputs):
@@ -67,7 +79,10 @@ def _scatter_nd(ctx: _Context, node: ir.Node, inputs: list[ir.Value]) -> int:
     indices = values[1]
     index_rank = ctx.ranks[inputs[1]]
     if index_rank < 1:
-        raise ir.passes.PreconditionError("ScatterND indices must have rank >= 1.")
+        raise ir.passes.PreconditionError(
+            f"ScatterND indices must have rank >= 1; got {ctx._describe(inputs[1])}. "
+            "Supply an indices tensor with index tuples in its last dimension."
+        )
     batch = ctx._emit("Squeeze", [ctx._get_batch_shape(), ctx._ints([0])])
     ids = ctx._emit("Range", [ctx._scalar_int(0), batch, ctx._scalar_int(1)])
     id_shape = ctx._emit(
@@ -100,12 +115,17 @@ def _slice(ctx: _Context, node: ir.Node, inputs: list[ir.Value]) -> int:
             or not isinstance(starts_shape[0], int)
         ):
             raise ir.passes.PreconditionError(
-                "Slice without axes needs a known starts length."
+                f"Slice without axes needs a known starts length; got "
+                f"{ctx._describe(inputs[1])}. Annotate starts with shape=[N], "
+                "or provide explicit shared constant 1-D INT64 axes."
             )
         axes = list(range(starts_shape[0]))
     axes = [_axis(axis, rank) + 1 for axis in axes]
     if len(set(axes)) != len(axes):
-        raise ir.passes.PreconditionError("Slice axes must not contain duplicates.")
+        raise ir.passes.PreconditionError(
+            f"Slice axes must not contain duplicates; shifted axes={axes!r}, "
+            f"example rank={rank}. Use unique axes in the original example coordinates."
+        )
     for i in (1, 2, 4):
         if i < len(node.inputs):
             control = node.inputs[i]
@@ -202,8 +222,6 @@ def apply(ctx: _Context, node: ir.Node) -> None:
     elif op == "Gather" and len(inputs) == 2:
         rank = _gather(ctx, node, inputs)
     else:
-        raise ir.passes.PreconditionError(
-            f"VmapPass has no batching rule for {op!r} with {len(inputs)} inputs."
-        )
+        raise ctx._input_error(node)
     for output in node.outputs:
         ctx._register(output, rank, mapped)

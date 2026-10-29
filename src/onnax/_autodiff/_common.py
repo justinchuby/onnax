@@ -8,6 +8,8 @@ from collections.abc import Sequence
 
 import onnx_ir as ir
 
+from onnax._diagnostics import _value_context
+
 _FLOATS = frozenset((ir.DataType.FLOAT, ir.DataType.DOUBLE))
 
 _MARKER = "onnax.autodiff"
@@ -57,7 +59,12 @@ def _data_indices(node: ir.Node) -> Sequence[int]:
 
 def _input(node: ir.Node, index: int = 0) -> ir.Value:
     if index >= len(node.inputs) or node.inputs[index] is None:
-        raise ValueError(f"{node.op_type} requires input {index}.")
+        raise ValueError(
+            f"{node.op_type} requires input {index}; got {len(node.inputs)} slots, "
+            f"present indices={[i for i, v in enumerate(node.inputs) if v is not None]!r} "
+            f"(node {node.name!r}). Supply the required operand in its ONNX schema slot; "
+            "retain empty slots only for optional inputs."
+        )
     value = node.inputs[index]
     assert value is not None
     return value
@@ -76,7 +83,8 @@ def _float(node: ir.Node, name: str, default: float) -> float:
 def _rank(value: ir.Value) -> int:
     if value.shape is None:
         raise ValueError(
-            f"Autodiff requires a known rank for {value.name!r}; "
-            "provide shape metadata or run shape inference first."
+            f"Autodiff requires a known rank for {_value_context(value)}; "
+            "annotate this value's source shape with one entry per dimension "
+            "(symbolic dimensions are allowed). Inference could not determine its rank."
         )
     return len(value.shape)

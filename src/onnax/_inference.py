@@ -7,16 +7,25 @@ from __future__ import annotations
 import copy
 
 import onnx_ir as ir
-from onnx_shape_inference import SYM_DATA_KEY, infer_symbolic_shapes
+from onnx_shape_inference import (
+    SYM_DATA_KEY,
+    OpUsageError,
+    ShapeInferenceError,
+    infer_symbolic_shapes,
+)
+
+from onnax._diagnostics import _argument_context
 
 
-def _infer_shapes(model: ir.Model) -> ir.Model:
+def _infer_shapes(model: ir.Model, *, context: str = "shape inference") -> ir.Model:
     """Infer a clone without sharing mutable tensor names with the source.
 
     IR cloning shares tensor payload objects. Inference exposes Constant tensors
     as value.const_value; subsequent serialization can name those tensors.
     Shallow copies isolate tensor metadata without duplicating array storage.
     The engine's refine policy preserves declared shapes and propagates errors.
+    Known engine failures retain their type/cause and receive a graph-specific
+    exception note naming the calling transform and the corrective action.
     """
     result = model.clone(deep_copy=True)
     defaults: list[tuple[ir.Value, ir.TensorProtocol]] = []
@@ -41,6 +50,14 @@ def _infer_shapes(model: ir.Model) -> ir.Model:
                     value.const_value = None
     try:
         return infer_symbolic_shapes(result, policy="refine")
+    except (OpUsageError, ShapeInferenceError) as error:
+        error.add_note(
+            f"{context}: onnx-shape-inference failed for graph {model.graph.name!r} "
+            f"with imports {_argument_context(dict(model.graph.opset_imports))}, policy='refine'. "
+            "Correct the reported operator inputs/attributes or incompatible shape "
+            "annotations in the source model, then retry. The source is unchanged."
+        )
+        raise
     finally:
         # A graph-input initializer is an overridable default, not a constant
         # for inference. Restore its stored payload without specializing users.

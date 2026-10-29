@@ -40,7 +40,12 @@ def apply(ctx: _Context, node: ir.Node) -> None:
                 node.attributes["value"] = attr
                 break
         if inputs or attr is None or attr.type != ir.AttributeType.TENSOR:
-            raise ir.passes.PreconditionError("Only tensor-valued Constant is supported.")
+            raise ir.passes.PreconditionError(
+                f"Only tensor-valued Constant is supported; got {len(inputs)} inputs "
+                f"and attributes {list(node.attributes)!r}. "
+                "Use a tensor 'value' or a numeric value_int/value_ints/value_float/"
+                "value_floats attribute with no inputs; sparse/string literals are unsupported."
+            )
         tensor = attr.as_tensor()
         rank = len(tensor.shape)
         node.outputs[0].type = ir.TensorType(tensor.dtype)
@@ -59,13 +64,22 @@ def apply(ctx: _Context, node: ir.Node) -> None:
             node.outputs[0].shape = ctx._example_shape(inputs[0])
     elif op == "Clip" and 1 <= len(inputs) <= 3:
         if any(ctx.mapped[value] or ctx.ranks[value] != 0 for value in inputs[1:]):
-            raise ir.passes.PreconditionError("Clip bounds must be shared scalars.")
+            raise ir.passes.PreconditionError(
+                "Clip bounds must be shared scalars; got "
+                f"{[ctx._describe(v) for v in inputs[1:]]}. "
+                "Provide rank-zero bounds with in_axes=None if shared; "
+                "per-example bounds require independent execution."
+            )
         rank = ctx.ranks[inputs[0]]
     elif op == "PRelu" and len(inputs) == 2:
         data, slope = inputs
         rank = ctx.ranks[data]
         if ctx.ranks[slope] > rank:
-            raise ir.passes.PreconditionError("PRelu slope rank must not exceed data rank.")
+            raise ir.passes.PreconditionError(
+                f"PRelu slope rank must not exceed data rank {rank}; "
+                f"slope={ctx._describe(slope)}, data={ctx._describe(data)}. "
+                "Provide a slope broadcastable to the single-example data shape."
+            )
         if mapped:
             if not ctx.mapped[data]:
                 node.replace_input_with(0, ctx._repeat(ctx.values[data]))
@@ -86,8 +100,6 @@ def apply(ctx: _Context, node: ir.Node) -> None:
                     ctx._align(ctx.values[value], ctx.ranks[value], ctx.mapped[value], rank),
                 )
     else:
-        raise ir.passes.PreconditionError(
-            f"VmapPass has no batching rule for {op!r} with {len(inputs)} inputs."
-        )
+        raise ctx._input_error(node)
     for output in node.outputs:
         ctx._register(output, rank, mapped)

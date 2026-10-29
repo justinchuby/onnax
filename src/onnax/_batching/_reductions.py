@@ -24,7 +24,9 @@ def _reduce(ctx: _Context, node: ir.Node, inputs: list[ir.Value], mapped: bool) 
             or axes_value.dtype != ir.DataType.INT64
         ):
             raise ir.passes.PreconditionError(
-                "Reduction axes must be a shared 1-D INT64 tensor."
+                f"Reduction axes must be a shared 1-D INT64 tensor; "
+                f"got {ctx._describe(axes_value)}. Supply axes with dtype=INT64, shape=[N], "
+                "and in_axes=None if shared. Per-example axes require independent execution."
             )
         keepdims = node.attributes.get_int("keepdims", 1)
         noop = node.attributes.get_int("noop_with_empty_axes", 0)
@@ -35,7 +37,10 @@ def _reduce(ctx: _Context, node: ir.Node, inputs: list[ir.Value], mapped: bool) 
             output_rank = rank - length if length or noop else 0
         else:
             raise ir.passes.PreconditionError(
-                "Runtime reduction axes with keepdims=0 require a known axes length."
+                "Runtime reduction axes with keepdims=0 require a known axes length; "
+                f"got {ctx._describe(axes_value)}. Annotate shape=[N] with a fixed N "
+                "matching the runtime axes count. Use keepdims=1 only if retaining "
+                "reduced dimensions matches the intended output interface."
             )
         if not mapped:
             return output_rank
@@ -77,7 +82,10 @@ def _reduce(ctx: _Context, node: ir.Node, inputs: list[ir.Value], mapped: bool) 
         return rank
     axes = [_axis(axis, rank) for axis in axes] if axes else list(range(rank))
     if len(set(axes)) != len(axes):
-        raise ir.passes.PreconditionError("Reduction axes must not contain duplicates.")
+        raise ir.passes.PreconditionError(
+            f"Reduction axes must not contain duplicates after normalization; got "
+            f"{axes!r} for example rank {rank}. Supply each reduced example axis once."
+        )
     if mapped:
         if not axes:
             # A singleton example dimension preserves scalar ReduceL1,
@@ -116,8 +124,6 @@ def apply(ctx: _Context, node: ir.Node) -> None:
     elif op in _REDUCTIONS and 1 <= len(inputs) <= 2:
         rank = _reduce(ctx, node, inputs, mapped)
     else:
-        raise ir.passes.PreconditionError(
-            f"VmapPass has no batching rule for {op!r} with {len(inputs)} inputs."
-        )
+        raise ctx._input_error(node)
     for output in node.outputs:
         ctx._register(output, rank, mapped)

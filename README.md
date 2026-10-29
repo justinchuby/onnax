@@ -124,6 +124,26 @@ tensor construction, including README snippets and examples. Direct ONNX schema,
 checker, serialization, and reference-evaluator APIs are valid interoperability
 boundaries; protobuf construction helpers are reserved for interoperability tests.
 
+### Contributing diagnostics
+
+All user-reachable errors must explain what failed, show the relevant actual
+versus expected values, and give a concrete, accurate corrective action.
+For operator failures include the transform mode, domain/operator, effective
+opset, and node name or output location, with only the offending input's
+shape/dtype/axis/control metadata as needed. Never dump tensor contents.
+Selection errors should list available graph names; version errors should state
+the actual version and supported interval. Keep remedies specific: changing
+training modes, reductions, dtypes, or opset labels can change semantics and
+must not be suggested as unconditional workarounds for unsupported behavior.
+
+Preserve exception types, chaining, source isolation, and actionable dependency
+errors. The inference adapter retains `onnx-shape-inference` exceptions and adds
+boundary context in Python exception notes; batching retains its
+`PreconditionError` wrapper with the original cause. No fallback inference engine
+or public exception hierarchy is needed. Use explicit validation, not assertions,
+for user inputs. Regression tests should check diagnostic context and remedies,
+not just that something raises; retain numerical and source-preservation checks.
+
 ## License
 
 [MIT](https://github.com/justinchuby/onnax/blob/main/LICENSE).

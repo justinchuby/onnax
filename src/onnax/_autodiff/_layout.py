@@ -100,7 +100,14 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
         if node.attributes.get("reduction") is None or (
             node.attributes["reduction"].as_string() != "add"
         ):
-            raise NotImplementedError("JVP ScatterND requires reduction='add'.")
+            reduction = node.attributes.get("reduction")
+            raise NotImplementedError(
+                "JVP ScatterND requires reduction='add'; "
+                f"got reduction={reduction.as_string() if reduction is not None else 'none (default)'!r} "
+                f"(node {node.name!r}). Only additive ScatterND differentiation is supported. "
+                "Keep the original reduction and use a separate derivative implementation "
+                "for overwrite/mul/min/max semantics; changing to 'add' changes the function."
+            )
         return [
             ctx.op(
                 "ScatterND",
@@ -110,7 +117,11 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
                 reduction="add",
             )
         ]
-    raise NotImplementedError(f"No JVP rule for {op}.")
+    raise NotImplementedError(
+        f"No JVP rule for {op} in the layout family. "
+        "Correct the private registry dispatch or implement and validate the missing "
+        "layout rule; unsupported active paths cannot be replaced with zero tangents."
+    )
 
 
 def vjp(
@@ -157,4 +168,8 @@ def vjp(
         return {0: ctx.op("Concat", *gs, axis=_int(node, "axis", 0))}
     elif op in ("Gather",):
         return {0: gather_vjp(ctx, node, g)}
-    raise NotImplementedError(f"No VJP rule for {op}.")
+    raise NotImplementedError(
+        f"No VJP rule for {op} in the layout family. "
+        "Correct the private registry dispatch or implement and validate the missing "
+        "layout rule; unsupported active paths cannot be replaced with zero cotangents."
+    )
