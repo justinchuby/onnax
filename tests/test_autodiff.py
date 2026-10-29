@@ -115,6 +115,8 @@ def _products(model, feeds, inputs=None, outputs=None, rtol=2e-5, atol=2e-6, eps
         "Sigmoid",
         "Relu",
         "LeakyRelu",
+        "Elu",
+        "Selu",
         "Softplus",
         "Softsign",
         "Erf",

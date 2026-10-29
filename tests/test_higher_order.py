@@ -105,6 +105,8 @@ def _hvp_check(model, feeds, inputs=None, *, rtol=3e-5, atol=3e-6, epsilon=1e-5)
         "Erf",
         "Relu",
         "LeakyRelu",
+        "Elu",
+        "Selu",
         "Softmax",
         "LogSoftmax",
     ],

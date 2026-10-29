@@ -19,6 +19,7 @@ OPS = frozenset(
         "Cos",
         "Cosh",
         "Div",
+        "Elu",
         "Erf",
         "Exp",
         "Identity",
@@ -29,6 +30,7 @@ OPS = frozenset(
         "Pow",
         "Reciprocal",
         "Relu",
+        "Selu",
         "Sigmoid",
         "Sin",
         "Sinh",
@@ -106,6 +108,16 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
                 one,
                 ctx.scalar(x, negative),
             )
+        elif op in ("Elu", "Selu"):
+            # ONNX stores attribute defaults as float32, even for DOUBLE inputs.
+            alpha = _float(node, "alpha", 1.0 if op == "Elu" else 1.6732631921768188)
+            gamma = 1.0 if op == "Elu" else _float(node, "gamma", 1.0507010221481323)
+            positive = ctx.op("Greater", x, ctx.scalar(x, 0))
+            # Where evaluates both branches. Clamp the exponential's input so
+            # large positive primals cannot overflow the inactive branch or HVP.
+            negative_x = ctx.op("Where", positive, ctx.scalar(x, 0), x)
+            slope = ctx.op("Mul", ctx.scalar(x, alpha * gamma), ctx.op("Exp", negative_x))
+            p = ctx.op("Where", positive, ctx.scalar(x, gamma), slope)
         elif op == "Softplus":
             p = ctx.op("Sigmoid", x)
         elif op == "Softsign":
@@ -135,6 +147,7 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
         "Cos",
         "Cosh",
         "Div",
+        "Elu",
         "Erf",
         "Exp",
         "Identity",
@@ -145,6 +158,7 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
         "Pow",
         "Reciprocal",
         "Relu",
+        "Selu",
         "Sigmoid",
         "Sin",
         "Sinh",
@@ -179,6 +193,7 @@ def vjp(
         "Cos",
         "Cosh",
         "Div",
+        "Elu",
         "Erf",
         "Exp",
         "Identity",
@@ -189,6 +204,7 @@ def vjp(
         "Pow",
         "Reciprocal",
         "Relu",
+        "Selu",
         "Sigmoid",
         "Sin",
         "Sinh",

@@ -211,7 +211,8 @@ class JvpPass(ir.passes.FunctionalPass):
           interfaces are valid ONNX; all dimension sizes may be symbolic.
         * Elementwise: Identity, Add, Sub, Mul, Div, Pow, Neg, Abs, Exp, Log,
           Sqrt, Reciprocal, Sin, Cos, Tan, Sinh, Cosh, Tanh, Sigmoid, Relu,
-          LeakyRelu, Softplus, Softsign, Erf.
+          LeakyRelu, Elu, Selu, Softplus, Softsign, Erf. Elu and Selu use the
+          nonpositive branch's slope at zero (alpha and alpha * gamma).
         * Linear algebra: MatMul (vectors, matrices, broadcast batches), Gemm
           (including transposes and broadcast bias).
         * Reductions: ReduceSum and ReduceMean, including negative/runtime axes,
