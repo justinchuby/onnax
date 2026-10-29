@@ -20,3 +20,15 @@ jobs:
       - run: uv run --no-sync ruff format --check .
       - run: uv run --no-sync mypy
       - run: uv build
+      - run: uv run --no-sync twine check --strict dist/*
+      - name: Exercise installed wheel and sdist outside the checkout
+        shell: bash
+        run: |
+          uv venv "$RUNNER_TEMP/onnax-smoke"
+          python="$RUNNER_TEMP/onnax-smoke/bin/python"
+          cp tools/check_distribution.py "$RUNNER_TEMP/check_distribution.py"
+          for artifact in "$GITHUB_WORKSPACE"/dist/*.whl "$GITHUB_WORKSPACE"/dist/*.tar.gz; do
+            uv pip install --python "$python" --reinstall "$artifact"
+            uv pip check --python "$python"
+            (cd "$RUNNER_TEMP" && "$python" -I check_distribution.py)
+          done
