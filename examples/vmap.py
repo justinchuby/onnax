@@ -12,11 +12,11 @@ import argparse
 import os
 
 import numpy as np
-import onnx  # ruff: ignore[banned-api]
+import onnx
 import onnx_ir as ir
-from onnx.reference import ReferenceEvaluator  # ruff: ignore[banned-api]
+from onnx.reference import ReferenceEvaluator
 from onnx_ir.passes.common import CheckerPass
-from onnx_shape_inference import infer_symbolic_shapes  # ruff: ignore[banned-api]
+from onnx_shape_inference import infer_symbolic_shapes
 
 from onnax import vmap
 

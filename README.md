@@ -29,27 +29,25 @@ and Hessian-vector-product graphs. It does not execute them.
 
 ```python
 import onnx_ir as ir
-from onnx import TensorProto, helper
+
 from onnax import grad, jvp, vjp, vmap
 
-proto = helper.make_model(
-    helper.make_graph(
-        [
-            helper.make_node("Mul", ["x", "weight"], ["prediction"]),
-            helper.make_node("Mul", ["prediction", "prediction"], ["squared"]),
-            helper.make_node("ReduceSum", ["squared"], ["loss"], keepdims=0),
-        ],
-        "linear_loss",
-        [
-            helper.make_tensor_value_info("x", TensorProto.FLOAT, [2]),
-            helper.make_tensor_value_info("weight", TensorProto.FLOAT, [2]),
-        ],
-        [helper.make_tensor_value_info("loss", TensorProto.FLOAT, [])],
+x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[2])
+weight = ir.val("weight", dtype=ir.DataType.FLOAT, shape=[2])
+tape = ir.tape.Tape()
+prediction = tape.op("Mul", [x, weight])
+prediction.name = "prediction"
+squared = tape.op("Mul", [prediction, prediction])
+squared.name = "squared"
+loss = tape.op("ReduceSum", [squared], {"keepdims": 0})
+loss.name = "loss"
+model = ir.Model(
+    ir.Graph(
+        [x, weight], [loss], nodes=tape.nodes,
+        opset_imports={"": 18}, name="linear_loss",
     ),
-    opset_imports=[helper.make_opsetid("", 18)],
     ir_version=10,
 )
-model = ir.from_proto(proto)
 gradient = grad(model, inputs=["weight"], output="loss")
 per_example = vmap(gradient, in_axes=(0, None))
 pushforward = jvp(model, inputs=["x"], outputs=["loss"])
@@ -114,6 +112,13 @@ uv run twine check --strict dist/*
 
 CI checks Python 3.11 and 3.12 and exercises both built distributions outside
 the source tree. No publication workflow or credentials are configured.
+Ruff lint and formatting are both required. The lint families, preview rules,
+Google docstring convention, and readability exclusions follow
+[ONNX IR](https://github.com/onnx/ir-py/blob/main/pyproject.toml).
+Use absolute imports in library modules and native ONNX IR APIs for model and
+tensor construction, including README snippets and examples. Direct ONNX schema,
+checker, serialization, and reference-evaluator APIs are valid interoperability
+boundaries; protobuf construction helpers are reserved for interoperability tests.
 
 ## License
 

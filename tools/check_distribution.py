@@ -5,12 +5,11 @@
 from __future__ import annotations
 
 import importlib.metadata
-from pathlib import Path
+from pathlib import Path  # ruff: ignore[banned-api] - Supporting installed-distribution checks.
 
 import numpy as np
 import onnx
 import onnx_ir as ir
-from onnx import TensorProto, helper
 from onnx.reference import ReferenceEvaluator
 
 import onnax
@@ -43,25 +42,26 @@ def main() -> None:
         "VmapPass",
     }
 
-    proto = helper.make_model(
-        helper.make_graph(
-            [
-                helper.make_node("Mul", ["x", "weight"], ["prediction"]),
-                helper.make_node("Mul", ["prediction", "prediction"], ["squared"]),
-                helper.make_node("ReduceSum", ["squared"], ["loss"], keepdims=0),
-            ],
-            "distribution_smoke",
-            [helper.make_tensor_value_info("x", TensorProto.DOUBLE, [2])],
-            [
-                helper.make_tensor_value_info("prediction", TensorProto.DOUBLE, [2]),
-                helper.make_tensor_value_info("loss", TensorProto.DOUBLE, []),
-            ],
-            initializer=[helper.make_tensor("weight", TensorProto.DOUBLE, [2], [2, 3])],
+    input_x = ir.val("x", dtype=ir.DataType.DOUBLE, shape=[2])
+    tape = ir.tape.Tape()
+    parameter = tape.initializer(ir.tensor(np.array([2.0, 3.0]), name="weight"))
+    predicted = tape.op("Mul", [input_x, parameter])
+    predicted.name = "prediction"
+    squared = tape.op("Mul", [predicted, predicted])
+    squared.name = "squared"
+    total = tape.op("ReduceSum", [squared], {"keepdims": 0})
+    total.name = "loss"
+    model = ir.Model(
+        ir.Graph(
+            [input_x],
+            [predicted, total],
+            nodes=tape.nodes,
+            initializers=tape.initializers,
+            opset_imports={"": 18},
+            name="distribution_smoke",
         ),
-        opset_imports=[helper.make_opsetid("", 18)],
         ir_version=10,
     )
-    model = ir.from_proto(proto)
     before = ir.to_proto(model).SerializeToString()
     x = np.array([1.0, 2.0])
     direction = np.array([0.5, -0.25])
