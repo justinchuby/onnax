@@ -15,6 +15,7 @@ import pytest
 from onnx_shape_inference import infer_symbolic_shapes
 
 from onnax import GradPass, JvpPass, VjpPass, VmapPass, _autodiff, _batching
+from onnax._autodiff import _elementwise
 
 
 def _square(opset=18):
@@ -197,13 +198,13 @@ def test_batching_a_derivative_preserves_composition_contract(mode, tmp_path):
 
 
 def test_jvp_rule_arity_is_checked(monkeypatch):
-    monkeypatch.setattr(_autodiff._Builder, "jvp", lambda *args: [])
+    monkeypatch.setattr(_elementwise, "jvp", lambda *args: [])
     with pytest.raises(ValueError, match="output arity"):
         JvpPass()(_square())
 
 
 def test_vjp_rule_contribution_keys_are_checked(monkeypatch):
-    monkeypatch.setattr(_autodiff._Builder, "vjp", lambda *args: {})
+    monkeypatch.setattr(_elementwise, "vjp", lambda *args: {})
     with pytest.raises(ValueError, match="input contributions"):
         VjpPass()(_square())
 
