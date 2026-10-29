@@ -49,7 +49,11 @@ def _flatten(ctx: _Context, node: ir.Node, value: ir.Value) -> None:
     rank = ctx.ranks[value]
     axis = node.attributes.get_int("axis", 1)
     if not -rank <= axis <= rank:
-        raise ir.passes.PreconditionError(f"Flatten axis {axis} is invalid for rank {rank}.")
+        raise ir.passes.PreconditionError(
+            f"Flatten axis {axis} is invalid for example rank {rank} "
+            f"of {ctx._describe(value)}. Set axis in [{-rank}, {rank}]; "
+            "it partitions example dimensions, not the inserted batch dimension."
+        )
     if axis < 0:
         axis += rank
     if not ctx.mapped[value]:
@@ -75,14 +79,20 @@ def _squeeze_or_unsqueeze(ctx: _Context, node: ir.Node, inputs: list[ir.Value]) 
         shape = ctx._example_shape(value)
         if not shape.is_static():
             raise ir.passes.PreconditionError(
-                "Squeeze without axes requires a fully static example shape."
+                f"Squeeze without axes requires a fully static example shape; "
+                f"got {ctx._describe(value)}. Provide explicit shared constant INT64 axes "
+                "for dimensions guaranteed to be singleton, or annotate a truly static shape."
             )
         axes = [i for i, dim in enumerate(shape) if dim == 1]
     output_rank = rank + len(axes) if node.op_type == "Unsqueeze" else rank - len(axes)
     axis_rank = output_rank if node.op_type == "Unsqueeze" else rank
     axes = [_axis(axis, axis_rank) for axis in axes]
     if len(set(axes)) != len(axes):
-        raise ir.passes.PreconditionError(f"{node.op_type} axes must not contain duplicates.")
+        raise ir.passes.PreconditionError(
+            f"{node.op_type} axes must not contain duplicates after normalization; "
+            f"got {axes!r} for example axis rank {axis_rank}. "
+            "Supply unique axes in example coordinates, excluding the batch axis."
+        )
     if node.outputs[0].shape is None:
         dims = list(ctx._example_shape(value))
         if node.op_type == "Unsqueeze":
@@ -137,7 +147,10 @@ def apply(ctx: _Context, node: ir.Node) -> None:
     elif op == "EyeLike" and len(inputs) == 1:
         rank = ctx.ranks[inputs[0]]
         if rank != 2:
-            raise ir.passes.PreconditionError("EyeLike requires example rank 2.")
+            raise ir.passes.PreconditionError(
+                f"EyeLike requires example rank 2; got {ctx._describe(inputs[0])}. "
+                "Supply a matrix per example; rank-N EyeLike batching is unsupported."
+            )
         if mapped:
             shape_value = ctx._emit("Shape", [ctx.values[inputs[0]]], {"start": 1})
             stub = ctx._emit("ConstantOfShape", [shape_value])
@@ -168,13 +181,22 @@ def apply(ctx: _Context, node: ir.Node) -> None:
         rank = ctx.ranks[inputs[0]]
         perm = list(node.attributes.get_ints("perm", range(rank - 1, -1, -1)))
         if sorted(perm) != list(range(rank)):
-            raise ir.passes.PreconditionError("Transpose perm must be a rank permutation.")
+            raise ir.passes.PreconditionError(
+                f"Transpose perm must be a rank permutation of {list(range(rank))!r}; "
+                f"got {perm!r} for {ctx._describe(inputs[0])}. "
+                "Include every example axis exactly once; do not include the new batch axis."
+            )
         if mapped:
             node.attributes["perm"] = ir.AttrInt64s("perm", [0, *(i + 1 for i in perm)])
     elif op == "Concat" and inputs:
         rank = ctx.ranks[inputs[0]]
         if any(ctx.ranks[value] != rank for value in inputs):
-            raise ir.passes.PreconditionError("Concat inputs must have equal ranks.")
+            raise ir.passes.PreconditionError(
+                f"Concat inputs must have equal ranks; got "
+                f"{[ctx._describe(v) for v in inputs]}. "
+                "Reshape inputs to equal example ranks and matching non-concatenated "
+                "dimensions before concatenation."
+            )
         axis = _axis(node.attributes.get_int("axis"), rank)
         if node.outputs[0].shape is None:
             output_shape = ctx._example_shape(inputs[0])
@@ -191,8 +213,6 @@ def apply(ctx: _Context, node: ir.Node) -> None:
                 if not ctx.mapped[value]:
                     node.replace_input_with(i, ctx._repeat(ctx.values[value]))
     else:
-        raise ir.passes.PreconditionError(
-            f"VmapPass has no batching rule for {op!r} with {len(inputs)} inputs."
-        )
+        raise ctx._input_error(node)
     for output in node.outputs:
         ctx._register(output, rank, mapped)

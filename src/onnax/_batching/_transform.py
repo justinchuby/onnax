@@ -11,6 +11,7 @@ import onnx_ir as ir
 from onnx_shape_inference import OpUsageError, ShapeInferenceError
 
 from onnax import _rule_registry
+from onnax._diagnostics import _argument_context, _node_context, _value_context
 from onnax._inference import _infer_shapes
 
 from . import _elementwise, _indexing, _layout, _linalg, _nn, _reductions
@@ -195,44 +196,108 @@ class VmapPass(ir.passes.FunctionalPass):
         if axis_size is not None and (
             isinstance(axis_size, bool) or not isinstance(axis_size, int) or axis_size <= 0
         ):
-            raise ValueError("axis_size must be a positive integer or None.")
-        self.in_axes = tuple(in_axes)
+            raise ValueError(
+                f"axis_size must be a positive integer or None, got {_argument_context(axis_size)}. "
+                "Use a fixed batch length >= 1, or None to infer it from a mapped input."
+            )
+        try:
+            self.in_axes = tuple(in_axes)
+        except TypeError as error:
+            raise TypeError(
+                f"in_axes must be a sequence of integers/None, got {_argument_context(in_axes)}. "
+                "Pass one entry per graph input, such as (0, None)."
+            ) from error
+        try:
+            self.out_axes = out_axes if isinstance(out_axes, int) else tuple(out_axes)
+        except TypeError as error:
+            raise TypeError(
+                f"out_axes must be an integer or sequence of integers, got {_argument_context(out_axes)}. "
+                "Use 0 for leading output batch axes, or one axis per graph output."
+            ) from error
         self.axis_size = axis_size
-        self.out_axes = out_axes if isinstance(out_axes, int) else tuple(out_axes)
 
     def call(self, model: ir.Model) -> ir.passes.PassResult:
-        if model.graph.opset_imports.get("", 0) < 18:
-            raise ir.passes.PreconditionError("VmapPass requires standard-domain opset >= 18.")
-        if model.graph.opset_imports[""] > 28:
-            raise ir.passes.PreconditionError("VmapPass supports opsets 18 through 28 only.")
+        version = model.graph.opset_imports.get("", 0)
+        try:
+            supported = bool(18 <= version <= 28)
+        except (TypeError, ValueError) as error:
+            message = (
+                f"vmap: invalid standard-domain opset {_argument_context(version)} "
+                f"in graph {model.graph.name!r}; expected a positive integer, supported "
+                "18 through 28. Supply the actual integer opset version and validate "
+                "the model; do not relabel an unsupported model's imports."
+            )
+            if isinstance(error, TypeError):
+                raise TypeError(message) from error
+            raise ValueError(message) from error
+        if not supported:
+            raise ir.passes.PreconditionError(
+                f"VmapPass requires standard-domain opset >= 18 and <= 28; "
+                f"graph {model.graph.name!r} imports {_argument_context(model.graph.opset_imports.get(''))}. "
+                "Use a model authored for supported opsets 18 through 28. If converting "
+                "an older model, use a semantics-preserving ONNX version converter and "
+                "validate the result; do not simply relabel the import or downgrade a newer model."
+            )
+        _rule_registry._check_version(
+            version, context=f"vmap graph {model.graph.name!r}, supported opsets 18 through 28"
+        )
         if len(self.in_axes) != len(model.graph.inputs):
-            raise ir.passes.PreconditionError("in_axes must have one entry per graph input.")
+            raise ir.passes.PreconditionError(
+                f"in_axes={_argument_context(self.in_axes)} must have one entry per graph input; "
+                f"expected {len(model.graph.inputs)} for "
+                f"{[value.name for value in model.graph.inputs]!r}, got {len(self.in_axes)}. "
+                "Supply axes in graph-input order, using None for shared inputs."
+            )
         if all(axis is None for axis in self.in_axes):
-            raise ir.passes.PreconditionError("At least one input must be mapped.")
+            raise ir.passes.PreconditionError(
+                f"At least one input must be mapped; in_axes={_argument_context(self.in_axes)} "
+                f"for {[value.name for value in model.graph.inputs]!r}. "
+                "Set an input's entry to an insertion axis such as 0, or use the "
+                "original model directly when all inputs are shared."
+            )
         if isinstance(self.out_axes, int):
             out_axes = (self.out_axes,) * len(model.graph.outputs)
         else:
             out_axes = self.out_axes
         if len(out_axes) != len(model.graph.outputs):
-            raise ir.passes.PreconditionError("out_axes must have one entry per graph output.")
+            raise ir.passes.PreconditionError(
+                f"out_axes={_argument_context(out_axes)} must have one entry per graph output; "
+                f"expected {len(model.graph.outputs)} for "
+                f"{[value.name for value in model.graph.outputs]!r}, got {len(out_axes)}. "
+                "Include retained primal and derivative outputs, or pass one integer for all."
+            )
         available = set(model.graph.inputs) | set(model.graph.initializers.values())
         for node in model.graph:
             if node.op_identifier() in model.functions:
                 raise ir.passes.PreconditionError(
-                    "VmapPass does not support local function calls. Inline functions first."
+                    f"{_node_context(node, model.graph.opset_imports, 'vmap')}: "
+                    "VmapPass does not support local function calls. Inline functions first "
+                    "with onnx_ir.passes.common.InlinePass, then ensure their bodies use "
+                    "supported batching operators."
                 )
             if any(value is not None and value not in available for value in node.inputs):
                 raise ir.passes.PreconditionError(
-                    "VmapPass requires a topologically sorted graph without outer-scope values."
+                    f"{_node_context(node, model.graph.opset_imports, 'vmap')}: "
+                    "VmapPass requires a topologically sorted graph without outer-scope values; "
+                    f"unavailable inputs: {[v.name for v in node.inputs if v is not None and v not in available]!r}. "
+                    "Define these values as graph inputs/initializers or earlier node outputs; "
+                    "sort a clone with graph.sort() if only node order is wrong."
                 )
             available.update(node.outputs)
         if any(value not in available for value in model.graph.outputs):
-            raise ir.passes.PreconditionError("Graph output is not defined in the graph.")
+            raise ir.passes.PreconditionError(
+                f"Graph {model.graph.name!r} output is not defined in the graph: "
+                f"{[v.name for v in model.graph.outputs if v not in available]!r}. "
+                "Return a graph input, initializer, or node output defined in this graph."
+            )
         try:
-            result = _infer_shapes(model)
+            result = _infer_shapes(model, context="vmap")
         except (OpUsageError, ShapeInferenceError) as e:
             raise ir.passes.PreconditionError(
-                f"Shape inference failed while preparing batching rules: {e}"
+                f"Shape inference failed while preparing batching rules for graph "
+                f"{model.graph.name!r} (vmap, opset {version}): {e}. "
+                "Correct the reported operator inputs/attributes or incompatible source "
+                "shape annotations, then retry."
             ) from e
         _Batcher(result.graph, self.axis_size).run(self.in_axes, out_axes)
         return ir.passes.PassResult(result, modified=True)
@@ -262,33 +327,50 @@ class _Batcher(_Context):
             )
         ):
             raise ir.passes.PreconditionError(
-                f"VmapPass does not support custom/function calls or subgraphs: {node.op_type}."
+                "VmapPass does not support custom/function calls or subgraphs. "
+                "Inline supported local functions with onnx_ir.passes.common.InlinePass; "
+                "for custom operators or control flow, use a semantics-equivalent supported "
+                "tensor graph or execute examples independently."
             )
         inputs = [value for value in node.inputs if value is not None]
         mapped = any(self.mapped[value] for value in inputs)
         op = node.op_type
         if op in _RANDOM:
             raise ir.passes.PreconditionError(
-                f"VmapPass has no batching rule for random operator {op}."
+                f"VmapPass has no batching rule for random operator {op}. "
+                "Generate independent random samples outside the transformed graph and "
+                "supply them as mapped tensor inputs, or execute the original examples independently."
             )
         version = _rule_registry._effective_opset(node, self.graph.opset_imports)
         if not 18 <= version <= 28:
             raise ir.passes.PreconditionError(
-                f"No batching rule for {op!r} at opset {version}; supported opsets are 18 through 28."
+                f"No batching rule for {op!r} at opset {version}; supported opsets are 18 through 28. "
+                "Use a node and graph authored for a supported opset; do not relabel "
+                "versions to bypass this check."
             )
         if op == "Gelu" and version < 20:
-            raise ir.passes.PreconditionError("Gelu requires standard-domain opset >= 20.")
+            raise ir.passes.PreconditionError(
+                f"Gelu requires standard-domain opset >= 20 (supported 20 through 28), "
+                f"got {version}. Use a Gelu model authored at opset 20 through 28, "
+                "or express its exact/approximate formula with supported operators."
+            )
         try:
             schema = onnx.defs.get_schema(op, version, "")
             graph_schema = onnx.defs.get_schema(op, self.graph.opset_imports[""], "")
         except onnx.defs.SchemaError as e:
             raise ir.passes.PreconditionError(
                 f"No standard ONNX schema for operator {op} at node opset {version} "
-                f"and graph opset {self.graph.opset_imports['']}."
+                f"and graph opset {self.graph.opset_imports['']}: {e}. "
+                "Check the operator spelling/domain and use a schema available at both "
+                "versions; install an ONNX version providing the model's schemas if needed."
             ) from e
         if schema.since_version != graph_schema.since_version:
             raise ir.passes.PreconditionError(
-                f"Node version for {op} selects a different schema than the graph opset."
+                f"Node version for {op} (opset {version}, schema {schema.since_version}) "
+                f"selects a different schema than the graph opset "
+                f"{self.graph.opset_imports['']} (schema {graph_schema.since_version}). "
+                "Rewrite/convert the node to the graph's schema and validate it before "
+                "retrying; serialization cannot preserve a per-node schema override."
             )
         if (
             not mapped
@@ -305,7 +387,10 @@ class _Batcher(_Context):
         try:
             rule = self.registry.lookup(node, self.graph.opset_imports)
         except NotImplementedError as e:
-            raise ir.passes.PreconditionError(str(e)) from e
+            raise ir.passes.PreconditionError(
+                f"{e} For operators requiring per-example/ragged outputs, execute "
+                "the source examples independently rather than forcing a uniform batch."
+            ) from e
         rule(self, node)
 
     def run(self, in_axes: Sequence[int | None], out_axes: Sequence[int]) -> None:
@@ -313,12 +398,17 @@ class _Batcher(_Context):
         self.before = nodes[0] if nodes else None
         for value in self.graph.initializers.values():
             if value.shape is None:
-                raise ir.passes.PreconditionError("Initializers must have known ranks.")
+                raise ir.passes.PreconditionError(
+                    f"Initializers must have known ranks; got {_value_context(value)}. "
+                    "Attach shape metadata matching this initializer's stored tensor."
+                )
             self._register(value, len(value.shape), False)
         for value, axis in zip(self.graph.inputs, in_axes):
             if not isinstance(value.type, ir.TensorType) or value.shape is None:
                 raise ir.passes.PreconditionError(
-                    "Graph inputs must be tensors with known ranks."
+                    f"Graph inputs must be tensors with known ranks; got {_value_context(value)}. "
+                    "Annotate the input with TensorType and a shape (symbolic dimensions "
+                    "are allowed); sequences/optionals cannot be batched."
                 )
             rank = len(value.shape)
             if axis is None:
@@ -326,9 +416,14 @@ class _Batcher(_Context):
                 continue
             if value.is_initializer():
                 raise ir.passes.PreconditionError(
-                    "Mapped inputs cannot have initializer defaults."
+                    f"Mapped inputs cannot have initializer defaults: {_value_context(value)}, "
+                    f"in_axes={_argument_context(axis)}. Use None if this input is truly shared, or explicitly "
+                    "remove its initializer default from a source clone and supply its mapped "
+                    "value at runtime."
                 )
-            axis = _axis(axis, rank + 1)
+            axis = _axis(
+                axis, rank + 1, what=f"in_axes for input {value.name!r}, inserted rank"
+            )
             self._register(value, rank, True)
             dims = list(value.shape)
             dims.insert(axis, dims.pop(0))
@@ -340,11 +435,17 @@ class _Batcher(_Context):
                 self.batch_source = self.values[value]
         for node in nodes:
             self.before = node
-            self._node(node)
+            context = _node_context(node, self.graph.opset_imports, "vmap")
+            try:
+                self._node(node)
+            except ir.passes.PreconditionError as error:
+                raise ir.passes.PreconditionError(f"{context}: {error}") from error
         self.before = None
         for i, (output, axis) in enumerate(zip(tuple(self.graph.outputs), out_axes)):
             rank = self.ranks[output]
-            axis = _axis(axis, rank + 1)
+            axis = _axis(
+                axis, rank + 1, what=f"out_axes[{i}] for output {output.name!r}, inserted rank"
+            )
             value = self.values[output]
             if not self.mapped[output]:
                 value = self._repeat(value)

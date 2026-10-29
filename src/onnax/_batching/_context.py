@@ -6,14 +6,25 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+import onnx
 import onnx_ir as ir
+
+from onnax._diagnostics import _argument_context, _value_context
+from onnax._rule_registry import _effective_opset
 
 from ._registry import _MULTI_OUTPUT
 
 
-def _axis(axis: int, rank: int) -> int:
+def _axis(axis: int, rank: int, *, what: str = "Axis") -> int:
     if isinstance(axis, bool) or not isinstance(axis, int) or not -rank <= axis < rank:
-        raise ir.passes.PreconditionError(f"Axis {axis!r} is invalid for rank {rank}.")
+        remedy = (
+            f"Use an integer in [{-rank}, {rank - 1}] (not bool)."
+            if rank > 0
+            else "A scalar has no valid axis; use an operator/input with rank >= 1."
+        )
+        raise ir.passes.PreconditionError(
+            f"Axis {_argument_context(axis)} is invalid for rank {rank} ({what}). {remedy}"
+        )
     return axis % rank
 
 
@@ -27,6 +38,27 @@ class _Context:
         self.before: ir.Node | None = None
         self.batch_source: ir.Value | None = None
         self.batch_shape: ir.Value | None = None
+
+    def _describe(self, value: ir.Value) -> str:
+        if value not in self.ranks:
+            return _value_context(value)
+        return (
+            f"{value.name!r} (example shape={list(self._example_shape(value))}, "
+            f"rank={self.ranks[value]}, dtype={value.dtype}, mapped={self.mapped[value]})"
+        )
+
+    def _input_error(self, node: ir.Node) -> ir.passes.PreconditionError:
+        version = _effective_opset(node, self.graph.opset_imports)
+        schema = onnx.defs.get_schema(node.op_type, version, "")
+        return ir.passes.PreconditionError(
+            f"VmapPass has no batching rule for {node.op_type!r} with "
+            f"{sum(value is not None for value in node.inputs)} present inputs "
+            f"in {len(node.inputs)} slots. Expected schema inputs "
+            f"{[value.name for value in schema.inputs]!r}, "
+            f"count {schema.min_input}..{schema.max_input}. "
+            "Supply required inputs in schema order and retain empty slots for "
+            "omitted optional inputs."
+        )
 
     def _emit(
         self,
@@ -105,9 +137,16 @@ class _Context:
 
     def _register(self, value: ir.Value, rank: int, mapped: bool) -> None:
         if value.type is not None and not isinstance(value.type, ir.TensorType):
-            raise ir.passes.PreconditionError(f"Expected a tensor value, got {value!r}.")
+            raise ir.passes.PreconditionError(
+                f"Expected a tensor value, got {_value_context(value)}. "
+                "Use tensor-valued inputs/outputs; sequence and optional batching is unsupported."
+            )
         if value.shape is not None and len(value.shape) != rank:
-            raise ir.passes.PreconditionError(f"Inconsistent rank annotation for {value!r}.")
+            raise ir.passes.PreconditionError(
+                f"Inconsistent rank annotation for {_value_context(value)}: "
+                f"batching rule expects example rank {rank}. "
+                "Correct the source output shape annotation to match the operator's result."
+            )
         self.ranks[value] = rank
         self.mapped[value] = mapped
         self.values[value] = value
@@ -142,14 +181,22 @@ class _Context:
             or self.mapped.get(value, False)
         ):
             raise ir.passes.PreconditionError(
-                f"{purpose} must be a shared constant 1-D INT64 tensor, not a runtime input."
+                f"{purpose} must be a shared constant 1-D INT64 tensor, not a runtime input; "
+                f"got {self._describe(value)}. Supply a non-input INT64 initializer/Constant, "
+                "not an overridable graph input. If this control must vary "
+                "between examples, execute the examples independently instead."
             )
         return [int(axis) for axis in tensor.numpy().tolist()]
 
     def _require_shared(self, values: Sequence[ir.Value], op: str) -> None:
-        if any(self.mapped[value] for value in values):
+        mapped = [value for value in values if self.mapped[value]]
+        if mapped:
             raise ir.passes.PreconditionError(
-                f"{op} requires shared control/parameter inputs."
+                f"{op} requires shared control/parameter inputs; mapped controls: "
+                f"{[self._describe(value) for value in mapped]}. "
+                "Keep these controls independent of mapped values; use in_axes=None "
+                "for graph inputs only if they are truly shared; "
+                "for per-example controls/parameters, execute examples independently."
             )
 
     def _constant_axis(self, value: ir.Value, rank: int) -> int:
@@ -159,7 +206,11 @@ class _Context:
             or tensor.dtype not in (ir.DataType.INT32, ir.DataType.INT64)
             or len(tensor.shape) != 0
         ):
-            raise ir.passes.PreconditionError("Axis must be a shared constant integer scalar.")
+            raise ir.passes.PreconditionError(
+                "Axis must be a shared constant integer scalar (INT32 or INT64); "
+                f"got {self._describe(value)}. Supply a rank-zero integer non-input initializer/Constant "
+                "and keep it shared; runtime or per-example CumSum axes are unsupported."
+            )
         return _axis(int(tensor.numpy().item()), rank)
 
     def _scalar_int(self, value: int) -> ir.Value:
@@ -178,7 +229,10 @@ class _Context:
             or value.dtype not in (None, ir.DataType.INT64)
         ):
             raise ir.passes.PreconditionError(
-                "Shape targets must be shared 1-D INT64 tensors with statically known lengths."
+                "Shape targets must be shared 1-D INT64 tensors with statically known lengths; "
+                f"got {self._describe(value)}. Annotate the target as shape=[N], dtype=INT64 "
+                "where N is the target rank, and keep it shared. Values may remain dynamic; "
+                "per-example target shapes require independent execution."
             )
         return shape[0]
 
@@ -187,7 +241,11 @@ class _Context:
         mapped = any(self.mapped[value] for value in inputs)
         if len(node.outputs) != 1 and node.op_type not in _MULTI_OUTPUT:
             raise ir.passes.PreconditionError(
-                f"VmapPass requires single-output operators for {node.op_type}."
+                f"VmapPass requires single-output operators for {node.op_type}; "
+                f"got {len(node.outputs)} outputs {[value.name for value in node.outputs]!r}. "
+                "Use a single primary output only if secondary outputs are not needed; "
+                "otherwise execute examples independently. Multiple outputs are supported "
+                "only for the documented multi-output rules."
             )
         for i, value in enumerate(node.inputs):
             if value is not None:
