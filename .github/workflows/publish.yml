@@ -1,0 +1,152 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+concurrency:
+  group: publish-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+      - name: Validate release source and version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          git merge-base --is-ancestor HEAD origin/main
+          python - <<'PY'
+          import os
+          import tomllib
+
+          with open("pyproject.toml", "rb") as stream:
+              project = tomllib.load(stream)["project"]
+          expected = f"v{project['version']}"
+          actual = os.environ["RELEASE_TAG"]
+          if actual != expected:
+              raise SystemExit(
+                  f"Release tag {actual!r} does not match {expected!r}. "
+                  "Merge the intended package version before creating its release tag."
+              )
+          print(f"Building {project['name']} {project['version']} from {actual}")
+          PY
+      - run: uv sync --group dev
+      - run: uv run --no-sync pytest
+      - run: uv run --no-sync ruff check .
+      - run: uv run --no-sync ruff format --check .
+      - run: uv run --no-sync mypy
+      - run: uv build
+      - run: uv run --no-sync twine check --strict dist/*
+      - name: Exercise the exact wheel and sdist outside the checkout
+        shell: bash
+        run: |
+          uv venv "$RUNNER_TEMP/onnax-smoke"
+          python="$RUNNER_TEMP/onnax-smoke/bin/python"
+          cp tools/check_distribution.py "$RUNNER_TEMP/check_distribution.py"
+          for artifact in "$GITHUB_WORKSPACE"/dist/*.whl "$GITHUB_WORKSPACE"/dist/*.tar.gz; do
+            uv pip install --python "$python" --reinstall "$artifact"
+            uv pip check --python "$python"
+            (cd "$RUNNER_TEMP" && "$python" -I check_distribution.py)
+          done
+          sha256sum dist/*
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: distributions
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/onnax
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: distributions
+          path: dist
+      - name: Publish to PyPI using trusted publishing
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+
+  verify:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: distributions
+          path: dist
+      - name: Verify published identity and checksums
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import time
+          import tomllib
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+
+          with open("pyproject.toml", "rb") as stream:
+              project = tomllib.load(stream)["project"]
+          url = f"https://pypi.org/pypi/{project['name']}/{project['version']}/json"
+          for attempt in range(6):
+              try:
+                  with urllib.request.urlopen(url, timeout=30) as response:
+                      published = json.load(response)
+                  break
+              except urllib.error.HTTPError as error:
+                  if error.code != 404 or attempt == 5:
+                      raise
+                  time.sleep(10)
+          assert published["info"]["name"] == project["name"], published["info"]["name"]
+          assert published["info"]["version"] == project["version"], published["info"]["version"]
+          expected = {
+              path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+              for path in Path("dist").iterdir()
+          }
+          actual = {
+              item["filename"]: item["digests"]["sha256"]
+              for item in published["urls"]
+          }
+          assert actual == expected, f"PyPI artifacts differ from this build: {actual} != {expected}"
+          print(json.dumps({"project": project["name"], "version": project["version"], "sha256": actual}, indent=2))
+          PY
+      - name: Smoke-test a fresh published installation
+        shell: bash
+        run: |
+          version="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          uv venv "$RUNNER_TEMP/onnax-published"
+          python="$RUNNER_TEMP/onnax-published/bin/python"
+          uv pip install --python "$python" --no-cache --index-url https://pypi.org/simple "onnax==$version"
+          uv pip check --python "$python"
+          cp tools/check_distribution.py "$RUNNER_TEMP/check_distribution.py"
+          cd "$RUNNER_TEMP"
+          "$python" -I -c "import importlib.metadata; assert importlib.metadata.version('onnax') == '$version'"
+          "$python" -I check_distribution.py
