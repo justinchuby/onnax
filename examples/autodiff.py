@@ -27,6 +27,7 @@ import numpy as np
 import onnx  # ruff: ignore[banned-api]
 import onnx_ir as ir
 from onnx.reference import ReferenceEvaluator  # ruff: ignore[banned-api]
+from onnx_shape_inference import infer_symbolic_shapes
 
 from onnax import GradPass, JvpPass, VjpPass
 
@@ -58,7 +59,7 @@ def linear_regression(weight: np.ndarray, bias: np.ndarray) -> ir.Model:
 
 def evaluate(model: ir.Model, feeds: dict[str, np.ndarray]) -> list[np.ndarray]:
     """Check and execute a generated graph without an autodiff runtime."""
-    proto = onnx.shape_inference.infer_shapes(ir.to_proto(model), strict_mode=True)
+    proto = ir.to_proto(infer_symbolic_shapes(ir.from_proto(ir.to_proto(model))))
     onnx.checker.check_model(proto, full_check=True)
     return ReferenceEvaluator(proto).run(None, feeds)
 
@@ -66,7 +67,7 @@ def evaluate(model: ir.Model, feeds: dict[str, np.ndarray]) -> list[np.ndarray]:
 def save_graph(model: ir.Model, name: str, output_dir: Path) -> ir.Model:
     """Save ONNX and printable graphs, then reload the executable artifact."""
     path = output_dir / f"{name}.onnx"
-    proto = onnx.shape_inference.infer_shapes(ir.to_proto(model), strict_mode=True)
+    proto = ir.to_proto(infer_symbolic_shapes(ir.from_proto(ir.to_proto(model))))
     onnx.checker.check_model(proto, full_check=True)
     onnx.save(proto, path)
     text = onnx.printer.to_text(proto)

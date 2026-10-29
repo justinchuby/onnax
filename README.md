@@ -64,19 +64,24 @@ are rejected because ONNX serialization cannot preserve that distinction.
 Batching preserves example-level reductions, dynamic shapes, and shared
 parameters. Autodiff supports FLOAT/DOUBLE first derivatives, gradient
 accumulation, runtime unbroadcasting (including zero extents), and existing
-shape metadata through ONNX IR's shape inference pass. No separate shape engine
-is introduced. Unsupported active derivative paths, random operators, control
+shape metadata through `onnx-shape-inference>=0.4.0`. Both transforms infer on
+isolated clones with the engine's `refine` policy; there is no fallback engine
+or separate shape implementation. Unsupported active derivative paths, random operators, control
 flow, and local functions that have not been inlined fail explicitly.
 
 `_batching`, `_autodiff`, and `_rule_registry` are private implementation homes.
 Batching, JVP, and VJP have separate typed rule contracts and instance-local
 registries, not a shared untyped plugin API. There is no `higher_order` umbrella.
 
-Batching a first-order derivative is covered for a smooth unary subset after
-running ONNX IR's `ShapeInferencePass` to annotate the generated graph.
-Arbitrary derivative graphs are not guaranteed to batch: for example,
-runtime-computed reduction axes used by unbroadcasting remain unsupported
-by the batching pass.
+`VmapPass` can batch generated reverse-mode gradients, including shared runtime
+unbroadcast axes. Compose `GradPass` on a **single-example scalar loss** with
+`VmapPass`: map samples and targets, keep parameter inputs shared (`None`) or
+stored as initializers, and retain an example axis in each parameter gradient.
+The same graph can accept batches of 1, 3, and 7 without retransformation.
+This is not the gradient of an already-reduced batch loss.
+Runtime reduction axes must be shared; variable-length axes need `keepdims=1`.
+Mapped controls, ragged outputs, and arbitrary derivative graphs outside the
+documented operator/control contracts remain unsupported.
 **One forward-over-reverse composition is supported**, including after
 serialization: `JvpPass` over a `GradPass` or `VjpPass` graph differentiates the
 ordinary emitted ONNX operations. For a scalar loss this computes Hessian-vector

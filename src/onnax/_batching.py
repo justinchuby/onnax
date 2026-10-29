@@ -13,9 +13,11 @@ from typing import Generic, TypeVar
 
 import onnx  # ruff: ignore[banned-api]
 import onnx_ir as ir
+from onnx_shape_inference import OpUsageError, ShapeInferenceError
 from typing_extensions import Protocol
 
 from onnax import _rule_registry
+from onnax._inference import _infer_shapes
 
 _ContextT = TypeVar("_ContextT")
 _ContextT_contra = TypeVar("_ContextT_contra", contravariant=True)
@@ -259,17 +261,24 @@ class VmapPass(ir.passes.FunctionalPass):
     * Requires a valid, topologically sorted source graph, standard-domain
       opset 18 through 24, tensor graph inputs with known ranks, and uniform example
       shapes. Dimensions may be symbolic, unknown, or zero. Empty *batches*
-      are outside the input contract. The pass does not perform general shape
-      inference or validate the source model.
+      are outside the input contract. Shape inference does not replace source
+      model validation.
     * Initializers are shared. Mapped inputs cannot have initializer defaults.
       All mapped inputs must have equal positive batch lengths, even if a
       singleton batch would happen to broadcast. Equality is not asserted
       inside the generated graph.
-    * Reduction and Squeeze/Unsqueeze axes must be omitted where allowed, or
-      shared constant 1-D INT64 tensors. CumSum's axis must be a shared constant
-      integer scalar. Negative axes retain example semantics, as do
-      ``keepdims`` and ``noop_with_empty_axes``. Omitted Squeeze axes require
-      a static example shape; B=1 never causes the batch axis to be squeezed.
+    * Reduction axes may be shared runtime 1-D INT64 tensors, including
+      shape-dependent axes emitted by reverse-mode unbroadcasting. With
+      ``keepdims=1`` their length may vary between calls; with ``keepdims=0``
+      their length must be statically known so output rank stays fixed.
+      Axes must be unique and valid in example coordinates. Mapped axes are
+      rejected even if their values happen to agree at runtime. Negative axes,
+      empty axes, ``keepdims``, and ``noop_with_empty_axes`` retain example
+      semantics; the batch dimension is never reduced.
+    * Squeeze/Unsqueeze axes must be shared constant 1-D INT64 tensors (or
+      omitted where allowed). CumSum's axis must be a shared constant integer
+      scalar. Omitted Squeeze axes require a static example shape; B=1 never
+      causes the batch axis to be squeezed.
     * Reshape/Expand targets are shared 1-D INT64 tensors of known length;
       values may be runtime inputs. Reshape preserves per-example ``0``,
       ``-1``, and ``allowzero`` semantics. Flatten never folds B into an
@@ -290,7 +299,23 @@ class VmapPass(ir.passes.FunctionalPass):
       supported local functions first; unused function definitions remain
       unchanged. General nested mapping is not guaranteed.
 
-    Shape annotations are updated using known ranks. Names and graph/model
+    Before batching, :func:`onnx_shape_inference.infer_symbolic_shapes` runs on
+    an isolated clone with ``policy="refine"``: declared annotations are retained
+    and missing information is refined. Inference errors propagate; there is
+    no alternate inference engine. Known ranks are still required at rule
+    boundaries, and truly varying/ragged shapes remain unsupported.
+
+    In particular, ``VmapPass([0, 0])(GradPass(inputs=["weight", "bias"],
+    output="loss")(model).model)`` maps a scalar single-example loss and its
+    parameter gradients when the source has sample/target inputs and shared
+    parameter initializers. Runtime parameters instead use ``in_axes=None``.
+    Each gradient has a distinct example axis, not a sum or mean over examples.
+    This covers supported first-order arithmetic, smooth activations, linear
+    algebra, reductions, and layout/index paths when every generated node meets
+    the batching rules; it is not a guarantee for every autodiff graph.
+    See ``examples/per_example_gradients.py`` for a runnable regression example.
+
+    Names and graph/model
     metadata are preserved, except directly returned inputs/initializers can
     need renamed output adapters. Failure never modifies the source model.
     """
@@ -338,7 +363,12 @@ class VmapPass(ir.passes.FunctionalPass):
             available.update(node.outputs)
         if any(value not in available for value in model.graph.outputs):
             raise ir.passes.PreconditionError("Graph output is not defined in the graph.")
-        result = model.clone()
+        try:
+            result = _infer_shapes(model)
+        except (OpUsageError, ShapeInferenceError) as e:
+            raise ir.passes.PreconditionError(
+                f"Shape inference failed while preparing batching rules: {e}"
+            ) from e
         _Batcher(result.graph, self.axis_size).run(self.in_axes, out_axes)
         return ir.passes.PassResult(result, modified=True)
 
@@ -796,6 +826,63 @@ class _Batcher:
 
     def _reduce(self, node: ir.Node, inputs: list[ir.Value], mapped: bool) -> int:
         rank = self.ranks[inputs[0]]
+        if len(inputs) == 2 and self._constant_tensor(inputs[1]) is None:
+            axes_value = inputs[1]
+            if (
+                self.mapped[axes_value]
+                or self.ranks[axes_value] != 1
+                or axes_value.dtype != ir.DataType.INT64
+            ):
+                raise ir.passes.PreconditionError(
+                    "Reduction axes must be a shared 1-D INT64 tensor."
+                )
+            keepdims = node.attributes.get_int("keepdims", 1)
+            noop = node.attributes.get_int("noop_with_empty_axes", 0)
+            length = self._example_shape(axes_value)[0]
+            if keepdims:
+                output_rank = rank
+            elif isinstance(length, int):
+                output_rank = rank - length if length or noop else 0
+            else:
+                raise ir.passes.PreconditionError(
+                    "Runtime reduction axes with keepdims=0 require a known axes length."
+                )
+            if not mapped:
+                return output_rank
+            # Normalize negatives in example coordinates, then skip the batch axis.
+            runtime_axes = self.values[axes_value]
+            normalized = self._emit(
+                "Where",
+                [
+                    self._emit("Less", [runtime_axes, self._scalar_int(0)]),
+                    self._emit("Add", [runtime_axes, self._scalar_int(rank)]),
+                    runtime_axes,
+                ],
+            )
+            shifted = self._emit("Add", [normalized, self._scalar_int(1)])
+            if not noop:
+                # Empty axes mean all *example* dimensions, never the batch.
+                # A nonempty sentinel also implements scalar reductions.
+                if rank == 0:
+                    node.replace_input_with(0, self._unsqueeze(self.values[inputs[0]], [1]))
+                    shifted = self._ints([1])
+                    node.attributes["keepdims"] = ir.AttrInt64("keepdims", 0)
+                else:
+                    size = self._emit("Size", [runtime_axes])
+                    stop = self._emit(
+                        "Where",
+                        [
+                            self._emit("Equal", [size, self._scalar_int(0)]),
+                            self._scalar_int(rank + 1),
+                            self._scalar_int(1),
+                        ],
+                    )
+                    all_axes = self._emit(
+                        "Range", [self._scalar_int(1), stop, self._scalar_int(1)]
+                    )
+                    shifted = self._emit("Concat", [shifted, all_axes], {"axis": 0})
+            node.replace_input_with(1, shifted)
+            return output_rank
         axes = self._constant_ints(inputs[1], "Reduction axes") if len(inputs) == 2 else []
         noop = node.attributes.get_int("noop_with_empty_axes", 0)
         if not axes and noop:

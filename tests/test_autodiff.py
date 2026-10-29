@@ -10,6 +10,7 @@ from onnx.reference import ReferenceEvaluator
 from onnx_ir.passes.common import InlinePass
 
 from onnax import GradPass, JvpPass, VjpPass
+from onnax._inference import _infer_shapes
 
 
 def _value(name, shape, dtype=ir.DataType.DOUBLE):
@@ -34,7 +35,7 @@ def _model(inputs, tape, outputs, opset=18, initializers=()):
 
 
 def _evaluator(model):
-    proto = onnx.shape_inference.infer_shapes(ir.to_proto(model), strict_mode=True)
+    proto = ir.to_proto(_infer_shapes(model))
     onnx.checker.check_model(proto, full_check=True)
     return ReferenceEvaluator(proto)
 

@@ -15,6 +15,7 @@ import numpy as np
 import onnx  # ruff: ignore[banned-api]
 import onnx_ir as ir
 from onnx.reference import ReferenceEvaluator  # ruff: ignore[banned-api]
+from onnx_shape_inference import infer_symbolic_shapes  # ruff: ignore[banned-api]
 
 from onnax import VmapPass
 
@@ -44,7 +45,7 @@ def _model(name, inputs, outputs, nodes, initializers):
         ),
         ir_version=10,
     )
-    return ir.from_proto(onnx.shape_inference.infer_shapes(ir.to_proto(model)))
+    return infer_symbolic_shapes(model, policy="refine")
 
 
 def image_classifier():

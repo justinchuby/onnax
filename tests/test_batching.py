@@ -9,6 +9,7 @@ import onnx
 import onnx_ir as ir
 import pytest
 from onnx.reference import ReferenceEvaluator
+from onnx_shape_inference import infer_symbolic_shapes
 
 from onnax import VmapPass
 
@@ -39,7 +40,7 @@ def _model(
         ),
         ir_version=10,
     )
-    return ir.from_proto(onnx.shape_inference.infer_shapes(ir.to_proto(model)))
+    return infer_symbolic_shapes(model, policy="refine")
 
 
 def _constant_model(
@@ -72,7 +73,7 @@ def _constant_model(
         ),
         ir_version=10,
     )
-    return ir.from_proto(onnx.shape_inference.infer_shapes(ir.to_proto(model)))
+    return infer_symbolic_shapes(model, policy="refine")
 
 
 def _data(shape, offset=0):
@@ -269,7 +270,7 @@ def test_reductions(op, axes, keepdims, dynamic):
         node.resize_inputs(2)
         node.replace_input_with(1, value)
     model.graph.outputs[0].shape = None
-    model = ir.from_proto(onnx.shape_inference.infer_shapes(ir.to_proto(model)))
+    model = infer_symbolic_shapes(model, policy="refine")
     _equivalent(model, [-1], {"x0": _data([2, 4, 3])}, dynamic=dynamic)
 
 
@@ -439,14 +440,16 @@ def test_unsupported_operators_leave_source_unchanged(op):
 
 
 @pytest.mark.parametrize("axes", [[0], [0, 1]])
-def test_dynamic_reduction_axes_rejected(axes):
+def test_shared_dynamic_reduction_axes(axes):
     model = _model("ReduceSum", [[2, 4]], {"keepdims": 1})
     axes_value = ir.val("axes", dtype=ir.DataType.INT64, shape=[len(axes)])
     model.graph.inputs.append(axes_value)
     model.graph[0].resize_inputs(2)
     model.graph[0].replace_input_with(1, axes_value)
-    with pytest.raises(ir.passes.PreconditionError, match="shared constant"):
-        VmapPass([0, None], axis_size=3)(model)
+    model.graph.outputs[0].shape = ir.Shape([None, None])
+    _equivalent(
+        model, [0, None], {"x0": _data([3, 2, 4]), "axes": np.array(axes, dtype=np.int64)}
+    )
 
 
 @pytest.mark.parametrize(
@@ -564,15 +567,17 @@ def test_constant_node_reduction_axes(op):
     _equivalent(model, [1], {"x0": _data([2, 3, 4])})
 
 
-def test_overridable_reduction_axes_rejected():
+def test_overridable_reduction_axes_are_runtime_controls():
     model = _model("ReduceSum", [[2, 4]])
     axes = ir.val("axes", dtype=ir.DataType.INT64, shape=[1], const_value=ir.tensor([0]))
     model.graph.register_initializer(axes)
     model.graph.inputs.append(axes)
     model.graph[0].resize_inputs(2)
     model.graph[0].replace_input_with(1, axes)
-    with pytest.raises(ir.passes.PreconditionError, match="shared constant"):
-        VmapPass([0, None], axis_size=3)(model)
+    model.graph.outputs[0].shape = ir.Shape([None, None])
+    _equivalent(
+        model, [0, None], {"x0": _data([3, 2, 4]), "axes": np.array([1], dtype=np.int64)}
+    )
 
 
 def test_subgraph_and_multiple_outputs_rejected():
@@ -581,8 +586,7 @@ def test_subgraph_and_multiple_outputs_rejected():
     with pytest.raises(ir.passes.PreconditionError, match="subgraphs"):
         VmapPass([0], axis_size=3)(model)
     model.graph[0].attributes.clear()
-    extra = ir.node("MaxPool", [model.graph.inputs[0]], {"kernel_shape": [2]}, num_outputs=2)
-    model.graph.append(extra)
+    model = _model("MaxPool", [[1, 1, 4]], {"kernel_shape": [2]}, num_outputs=2)
     with pytest.raises(ir.passes.PreconditionError, match="single-output"):
         VmapPass([0], axis_size=3)(model)
 

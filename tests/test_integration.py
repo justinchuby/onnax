@@ -12,7 +12,7 @@ import onnx
 import onnx_ir as ir
 import onnxruntime as ort
 import pytest
-from onnx_ir.passes.common import ShapeInferencePass
+from onnx_shape_inference import infer_symbolic_shapes
 
 from onnax import GradPass, JvpPass, VjpPass, VmapPass, _autodiff, _batching
 
@@ -143,12 +143,16 @@ def test_differentiating_a_batched_model(mode, tmp_path):
     np.testing.assert_allclose(actual[-1], expected)
 
 
-def test_runtime_unbroadcast_axes_remain_an_explicit_batching_limitation():
+def test_runtime_unbroadcast_axes_batch_generated_vjp(tmp_path):
     model = VjpPass(inputs=["x"], outputs=["y"])(_square()).model
-    ShapeInferencePass()(model)
     before = ir.to_proto(model).SerializeToString()
-    with pytest.raises(ir.passes.PreconditionError, match="shared constant"):
-        VmapPass([0, 0])(model)
+    batched = VmapPass([0, 0])(model).model
+    x = np.arange(6, dtype=np.float32).reshape(3, 2)
+    seed = np.full_like(x, 2)
+    actual = _run(
+        batched, {"x": x, batched.graph.inputs[-1].name: seed}, tmp_path / "vmap_vjp.onnx"
+    )
+    np.testing.assert_allclose(actual[-1], 2 * x * seed)
     assert ir.to_proto(model).SerializeToString() == before
 
 
@@ -167,7 +171,7 @@ def test_batching_a_derivative_preserves_composition_contract(mode, tmp_path):
         "grad": GradPass(inputs=["x"], output="y"),
     }
     derivative = transforms[mode](model).model
-    ShapeInferencePass()(derivative)
+    infer_symbolic_shapes(derivative, policy="refine")
     batched = VmapPass([0] * len(derivative.graph.inputs))(derivative).model
     x = np.array([[2, 3], [4, 5]], dtype=np.float32)
     if mode == "grad":
