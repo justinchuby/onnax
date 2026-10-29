@@ -26,11 +26,15 @@ def main() -> None:
     assert (package / "py.typed").is_file(), f"Missing typing marker in {package}."
     assert distribution.metadata["License-Expression"] == "MIT"
     assert distribution.metadata["Description-Content-Type"] == "text/markdown"
-    assert set(distribution.metadata.get_all("License-File")) == {"LICENSE", "NOTICE"}
-    for name in ("LICENSE", "NOTICE"):
-        assert distribution.read_text(f"licenses/{name}"), (
-            f"Missing {name} in installed metadata. Include both files in license-files."
-        )
+    license_files = distribution.metadata.get_all("License-File", [])
+    assert set(license_files) == {"LICENSE"}, (
+        f"Expected only LICENSE in installed License-File metadata, got {license_files!r}. "
+        "Set project.license-files to ['LICENSE'] and rebuild the distribution."
+    )
+    assert distribution.read_text("licenses/LICENSE"), (
+        "Missing LICENSE in installed metadata. Include LICENSE in project.license-files "
+        "and rebuild the distribution."
+    )
     assert set(onnax.__all__) == {
         "grad",
         "jvp",
