@@ -58,6 +58,7 @@ def _data_indices(node: ir.Node) -> Sequence[int]:
         "ReduceSum",
         "ReduceMean",
         "ReduceL1",
+        "ReduceLogSum",
         "ReduceSumSquare",
     }:
         return (0,)

@@ -12,7 +12,7 @@ from test_higher_order import _hvp_check
 from onnax import grad, jvp, vjp, vmap
 
 
-@pytest.mark.parametrize("op", ["ReduceL1", "ReduceSumSquare"])
+@pytest.mark.parametrize("op", ["ReduceL1", "ReduceSumSquare", "ReduceLogSum"])
 @pytest.mark.parametrize("axes", [None, [], [-1], [0, 1]])
 @pytest.mark.parametrize("keepdims", [0, 1])
 @pytest.mark.parametrize("noop", [0, 1])
@@ -26,10 +26,12 @@ def test_products_axes_and_noop_semantics(op, axes, keepdims, noop):
         )
     y = tape.op(op, inputs, {"keepdims": keepdims, "noop_with_empty_axes": noop})
     values = np.array([[-1.2, 0.4, -0.7], [0.3, -0.9, 1.1]])
+    if op == "ReduceLogSum":
+        values = np.abs(values)
     _products(_model([x], tape, [y]), {"x": values})
 
 
-@pytest.mark.parametrize("op", ["ReduceL1", "ReduceSumSquare"])
+@pytest.mark.parametrize("op", ["ReduceL1", "ReduceSumSquare", "ReduceLogSum"])
 @pytest.mark.parametrize("keepdims", [0, 1])
 def test_runtime_axes_and_nonlinear_outer_hvp(op, keepdims):
     x, axes = _value("x", ["n", 3]), _value("axes", [1], dtype=ir.DataType.INT64)
@@ -41,6 +43,8 @@ def test_runtime_axes_and_nonlinear_outer_hvp(op, keepdims):
         "x": np.array([[-1.2, 0.4, -0.7], [0.3, -0.9, 1.1]]),
         "axes": np.array([-1], dtype=np.int64),
     }
+    if op == "ReduceLogSum":
+        feeds["x"] = np.abs(feeds["x"])
     product = _hvp_check(_model([x, axes], tape, [loss]), feeds, inputs=["x"])
     feeds[product.graph.inputs[-1].name] = np.ones_like(feeds["x"])
     expected = evaluator(product).run(None, feeds)
@@ -220,3 +224,58 @@ def test_sum_pushforward_needs_no_multiplication():
     derivative = jvp(source)
     assert all(node.op_type != "Mul" for node in derivative.graph)
     _products(source, {value.name: np.ones((2, 3)) for value in inputs})
+
+
+@pytest.mark.parametrize("opset", [18, 28])
+@pytest.mark.parametrize("noop", [0, 1])
+@pytest.mark.parametrize("shape", [[], [2, 3]])
+@pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
+def test_log_sum_serialized_batched_hvp(opset, noop, shape, dtype, tmp_path):
+    x = _value("x", [None] * len(shape), dtype=dtype)
+    tape = ir.tape.Tape()
+    y = tape.op("ReduceLogSum", [x], {"keepdims": 0, "noop_with_empty_axes": noop})
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    source = _model([x], tape, [loss], opset=opset)
+    before = ir.to_proto(source).SerializeToString()
+    gradient = grad(source)
+    ir.save(gradient, tmp_path / "gradient.onnx")
+    product = jvp(ir.load(tmp_path / "gradient.onnx"))
+    mapped = vmap(product, in_axes=(0, 0))
+    np_dtype = np.float32 if dtype == ir.DataType.FLOAT else np.float64
+    values = np.arange(1, int(np.prod(shape)) + 1, dtype=np_dtype).reshape(shape)
+    direction = np.full_like(values, 0.3)
+    denominator = values if noop else values.sum()
+    slope = np.broadcast_to(1 / denominator, values.shape)
+    hvp = np.broadcast_to(
+        -(direction if noop else direction.sum()) / denominator**2, values.shape
+    )
+    executor = runtime_session if opset == 18 else evaluator
+    actual = executor(mapped).run(
+        None,
+        {
+            "x": np.stack([values, 2 * values]),
+            mapped.graph.inputs[-1].name: np.stack([direction, direction]),
+        },
+    )
+    np.testing.assert_allclose(actual[-2], np.stack([slope, slope / 2]), rtol=2e-6)
+    np.testing.assert_allclose(actual[-1], np.stack([hvp, hvp / 4]), rtol=2e-6)
+    assert ir.to_proto(source).SerializeToString() == before
+
+
+@pytest.mark.parametrize("scale", [1e-100, 1.0, 1e100])
+def test_log_sum_reuses_primal_with_signed_inputs(scale):
+    x = _value("x", [3])
+    tape = ir.tape.Tape()
+    source = _model([x], tape, [tape.op("ReduceLogSum", [x], {"keepdims": 0})])
+    gradient = grad(source)
+    assert all(node.op_type != "ReduceSum" for node in gradient.graph)
+    product = jvp(gradient)
+    values = np.array([-1.0, 2.0, 3.0]) * scale
+    direction = np.array([0.2, -0.1, 0.3])
+    actual = runtime_session(product).run(
+        None, {"x": values, product.graph.inputs[-1].name: direction}
+    )
+    np.testing.assert_allclose(actual[-2], 1 / values.sum(), rtol=1e-13, atol=0)
+    np.testing.assert_allclose(
+        actual[-1], -direction.sum() / values.sum() ** 2, rtol=1e-13, atol=0
+    )

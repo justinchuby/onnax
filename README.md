@@ -115,6 +115,9 @@ ReduceSumSquare and ReduceL1 support direct differentiation, HVPs, and batching,
 including runtime axes and `noop_with_empty_axes`. Their non-reduction steps
 (square or absolute value) still apply when the reduction itself is a no-op.
 ReduceL1 uses the same zero-slope/zero-curvature convention as Abs at zero.
+ReduceLogSum supports JVP, VJP, HVPs, and batching wherever each reduced sum
+is positive. Runtime axes and no-op reductions are supported; no-op mode still
+applies Log. Its derivative reuses the primal result without repeating the sum.
 
 Try the [hosted WebGPU jelly playground](https://www.justinchuby.com/onnax/jelly/): drag a spring sheet
 with matrix-free Newton-CG, powered by exported
