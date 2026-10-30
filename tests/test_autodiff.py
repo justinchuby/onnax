@@ -887,25 +887,35 @@ def test_gemm_unit_coefficients_need_no_derivative_multiplications(attributes):
 
 
 @pytest.mark.parametrize("selected,expected_products", [("a", 1), ("b", 1), ("c", 0)])
+@pytest.mark.parametrize("ta,tb", [(0, 0), (0, 1), (1, 0), (1, 1)])
 def test_gemm_pullback_only_constructs_requested_products(
-    monkeypatch, selected, expected_products
+    monkeypatch, selected, expected_products, ta, tb
 ):
     from onnax import AutodiffContext
 
     original = AutodiffContext.op
     products = []
+    transposes = []
 
     def record(self, op, *args, **kwargs):
         if op == "MatMul":
             products.append(args)
+        if op == "Transpose":
+            transposes.append(args)
         return original(self, op, *args, **kwargs)
 
     monkeypatch.setattr(AutodiffContext, "op", record)
     a, b, c = _value("a", [2, 2]), _value("b", [2, 2]), _value("c", [])
     tape = ir.tape.Tape()
-    source = _model([a, b, c], tape, [tape.op("Gemm", [a, b, c])])
+    source = _model(
+        [a, b, c], tape, [tape.op("Gemm", [a, b, c], {"transA": ta, "transB": tb})]
+    )
     derivative = VjpPass(inputs=[selected])(source).model
     assert len(products) == expected_products
+    expected_transposes = (
+        (1 - tb + ta) if selected == "a" else ((1 - ta + tb) if selected == "b" else 0)
+    )
+    assert len(transposes) == expected_transposes
     actual = runtime_session(derivative).run(
         None,
         {

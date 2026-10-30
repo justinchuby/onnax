@@ -57,8 +57,6 @@ def gemm(
 ) -> dict[int, ir.Value]:
     a, b = _input(node), _input(node, 1)
     ta, tb = _int(node, "transA", 0), _int(node, "transB", 0)
-    av = ctx.transpose(a, 2) if ta else a
-    bv = ctx.transpose(b, 2) if tb else b
     alpha = _float(node, "alpha", 1)
     beta = _float(node, "beta", 1)
     scalars: dict[float, ir.Value] = {}
@@ -74,10 +72,10 @@ def gemm(
         g = derivatives[0]
         result = {}
         if 0 in indices:
-            ga = ctx.op("MatMul", g, ctx.transpose(bv, 2))
+            ga = ctx.op("MatMul", g, b if tb else ctx.transpose(b, 2))
             result[0] = scale(ctx.transpose(ga, 2) if ta else ga, alpha)
         if 1 in indices:
-            gb = ctx.op("MatMul", ctx.transpose(av, 2), g)
+            gb = ctx.op("MatMul", a if ta else ctx.transpose(a, 2), g)
             result[1] = scale(ctx.transpose(gb, 2) if tb else gb, alpha)
         if 2 in indices:
             result[2] = ctx.unbroadcast(
@@ -87,9 +85,11 @@ def gemm(
     terms = []
     if 0 in derivatives:
         da = ctx.transpose(derivatives[0], 2) if ta else derivatives[0]
+        bv = ctx.transpose(b, 2) if tb else b
         terms.append(scale(ctx.op("MatMul", da, bv), alpha))
     if 1 in derivatives:
         db = ctx.transpose(derivatives[1], 2) if tb else derivatives[1]
+        av = ctx.transpose(a, 2) if ta else a
         terms.append(scale(ctx.op("MatMul", av, db), alpha))
     if 2 in derivatives:
         terms.append(scale(derivatives[2], beta))
