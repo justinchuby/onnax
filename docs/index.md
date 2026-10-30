@@ -18,6 +18,7 @@ precision
 iobinding
 dlpack
 coreml
+mlx-bf16
 bf16
 roadmap
 api

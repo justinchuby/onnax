@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "models": {
+    "gradient": {
+      "nodes": 51,
+      "bytes": 7224
+    },
+    "validation": {
+      "nodes": 51,
+      "bytes": 7224
+    }
+  },
+  "parameter_bytes": 640,
+  "threads": {
+    "intra_op": 1,
+    "inter_op": 1
+  },
+  "ort_graph_optimizer": "disabled",
+  "cpu_ep_fallback": "disabled",
+  "steps": 200,
+  "comparison_tolerance": {
+    "rtol": 0.0001,
+    "atol": 1e-06
+  },
+  "first_same_parameter_mismatch_step": 68,
+  "strict_numerical_acceptance": false,
+  "initial_loss": 0.018899232149124146,
+  "final_loss": 2.9086913855280727e-06,
+  "initial_validation_loss": 0.016215331852436066,
+  "final_validation_loss": 2.887164328058134e-06,
+  "independent_final_validation_loss": 2.7064741061622044e-06,
+  "executed_providers": [
+    "MLXExecutionProvider"
+  ],
+  "session_creation_ms": 40.57266598101705,
+  "execution_ms": {
+    "median": 0.5830419977428392,
+    "p95": 0.6270357480389066
+  },
+  "timing_scope": "Execution/exchange only, first 10 steps warmup and next 100 measured; same process also runs independent references and validation sessions. Excludes Adam/reference/export. Use isolated benchmarks for provider comparisons.",
+  "versions": {
+    "onnxruntime": "1.31.1",
+    "onnxruntime-ep-mlx": "0.31.0",
+    "onnx": "1.23.2",
+    "onnxscript": "0.7.2",
+    "numpy": "2.4.6"
+  },
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "peak_process_rss_bytes": 166674432,
+  "rss_scope": "Isolated CLI process including imports, graph generation, three native sessions, references, checkpoint replay and allocators.",
+  "frozen_master": {
+    "base.W": "581206af414683b765bffda1328863488417c0403a552106ad35b0b16a7f6c86",
+    "base.C": "c9b93aeddfcebb6653054168f6cd7df9ac5bae859ea549b90d5adbdf93befff3"
+  },
+  "parameters": [
+    {
+      "input": "lora.A",
+      "gradient": "lora.A_cotangent",
+      "shape": [
+        16,
+        4
+      ],
+      "dtype": "float32"
+    },
+    {
+      "input": "lora.B",
+      "gradient": "lora.B_cotangent",
+      "shape": [
+        4,
+        24
+      ],
+      "dtype": "float32"
+    }
+  ],
+  "first_mismatch_diagnostic": {
+    "prediction_mismatch_reproduced": true,
+    "index": [
+      50,
+      7
+    ],
+    "bf16_operands_identical": true,
+    "native_prediction": -0.1865234375,
+    "reference_prediction": -0.1875,
+    "fp64_operand_dot": -0.1870117038488388,
+    "numpy_fp32_operand_dot": -0.18701171875,
+    "rounded_fp64_dot": -0.1865234375,
+    "rounded_numpy_fp32_dot": -0.1875
+  },
+  "recorded_date": "2026-10-30",
+  "hardware": "Apple M1 Max",
+  "comparison_summary": {
+    "same_parameter": {
+      "steps_with_mismatch": 2,
+      "max_abs": {
+        "prediction": 0.0009765625,
+        "loss": 3.768946044147015e-09,
+        "lora.A": 9.2959453468211e-08,
+        "lora.B": 9.781570042832755e-08
+      }
+    },
+    "independent_trajectory": {
+      "steps_with_mismatch": 128,
+      "max_abs": {
+        "prediction": 0.01171875,
+        "loss": 8.180977602023631e-07,
+        "lora.A": 7.791071584506426e-05,
+        "lora.B": 0.00013858919555786997
+      }
+    },
+    "trajectory_parameters": {
+      "steps_with_mismatch": 131,
+      "max_abs": {
+        "lora.A": 0.008395075798034668,
+        "lora.B": 0.00437028706073761
+      }
+    }
+  },
+  "first_mismatch_comparisons": {
+    "step": 68,
+    "native_loss": 8.713656279724091e-05,
+    "independent_loss": 8.713279385119677e-05,
+    "same_parameter": {
+      "prediction": {
+        "mismatched": 1,
+        "max_abs": 0.0009765625,
+        "first": {
+          "index": [
+            50,
+            7
+          ],
+          "actual": -0.1865234375,
+          "expected": -0.1875
+        }
+      },
+      "loss": {
+        "mismatched": 0,
+        "max_abs": 3.768946044147015e-09
+      },
+      "lora.A": {
+        "mismatched": 0,
+        "max_abs": 9.2959453468211e-08
+      },
+      "lora.B": {
+        "mismatched": 0,
+        "max_abs": 9.781570042832755e-08
+      }
+    },
+    "independent_trajectory": {
+      "prediction": {
+        "mismatched": 1,
+        "max_abs": 0.0009765625,
+        "first": {
+          "index": [
+            50,
+            7
+          ],
+          "actual": -0.1865234375,
+          "expected": -0.1875
+        }
+      },
+      "loss": {
+        "mismatched": 0,
+        "max_abs": 3.768946044147015e-09
+      },
+      "lora.A": {
+        "mismatched": 0,
+        "max_abs": 9.2959453468211e-08
+      },
+      "lora.B": {
+        "mismatched": 0,
+        "max_abs": 9.781570042832755e-08
+      }
+    },
+    "trajectory_parameters": {
+      "lora.A": {
+        "mismatched": 0,
+        "max_abs": 1.3113021850585938e-06
+      },
+      "lora.B": {
+        "mismatched": 0,
+        "max_abs": 1.691281795501709e-06
+      }
+    }
+  }
+}
