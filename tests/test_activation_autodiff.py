@@ -7,7 +7,7 @@ from __future__ import annotations
 import numpy as np
 import onnx_ir as ir
 import pytest
-from _testing import runtime_session
+from _testing import evaluator, runtime_session
 from test_autodiff import _model, _products, _value
 from test_higher_order import _hvp_check
 
@@ -76,3 +76,100 @@ def test_activation_extreme_inputs_and_batched_gradients(op):
     batch = np.stack([values, values[::-1]])
     result = runtime_session(batched).run(None, {"x": batch})[-1]
     np.testing.assert_allclose(result, np.stack([expected, expected[::-1]]), rtol=2e-6, atol=0)
+
+
+@pytest.mark.parametrize(
+    "op,attributes",
+    [
+        ("HardSigmoid", {}),
+        ("HardSigmoid", {"alpha": -0.4, "beta": 0.3}),
+        ("HardSigmoid", {"alpha": 0.0, "beta": 0.6}),
+        ("HardSwish", {}),
+    ],
+)
+@pytest.mark.parametrize("curvature", [False, True])
+def test_hard_activation_products_and_curvature(op, attributes, curvature):
+    x = _value("x", ["n", 3])
+    tape = ir.tape.Tape()
+    y = tape.op(op, [x], attributes)
+    values = np.array([[-7.0, -1.2, 0.2], [0.7, 1.8, 7.0]])
+    if curvature:
+        loss = tape.op("ReduceSum", [tape.op("Mul", [y, y])], {"keepdims": 0})
+        _hvp_check(_model([x], tape, [loss]), {"x": values})
+    else:
+        _products(_model([x], tape, [y]), {"x": values})
+
+
+@pytest.mark.parametrize("op", ["HardSigmoid", "HardSwish"])
+@pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
+@pytest.mark.parametrize("opset", [18, 22, 28])
+def test_hard_activation_runtime_and_batched_hvp(op, dtype, opset):
+    np_dtype = np.float32 if dtype == ir.DataType.FLOAT else np.float64
+    values = np.array([-1000.0, -4.0, -1.0, 0.0, 1.0, 4.0, 1000.0], dtype=np_dtype)
+    alpha = np_dtype(np.float32(0.2 if op == "HardSigmoid" else 1 / 6))
+    affine = alpha * values + np_dtype(0.5)
+    interior = (affine > 0) & (affine < 1)
+    slope = (
+        np.where(interior, alpha, 0)
+        if op == "HardSigmoid"
+        else np.where(interior, 2 * alpha * values + 0.5, np.where(affine >= 1, 1, 0))
+    )
+    curvature = (
+        np.zeros_like(values) if op == "HardSigmoid" else np.where(interior, 2 * alpha, 0)
+    )
+    x = _value("x", ["n"], dtype=dtype)
+    tape = ir.tape.Tape()
+    y = tape.op(op, [x])
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    model = _model([x], tape, [loss], opset=opset)
+    before = ir.to_proto(model).SerializeToString()
+    gradient = grad(model)
+    product = jvp(gradient)
+    executor = (
+        runtime_session
+        if opset == 18 or (opset == 22 and dtype == ir.DataType.FLOAT)
+        else evaluator
+    )
+    actual = executor(product).run(
+        None, {"x": values, product.graph.inputs[-1].name: np.ones_like(values)}
+    )
+    np.testing.assert_allclose(actual[-2], slope, rtol=2e-6, atol=1e-7)
+    np.testing.assert_allclose(actual[-1], curvature, rtol=2e-6, atol=1e-7)
+    mapped = vmap(product, in_axes=(0, 0))
+    batch = np.stack([values, values[::-1]])
+    actual = executor(mapped).run(
+        None, {"x": batch, mapped.graph.inputs[-1].name: np.ones_like(batch)}
+    )
+    np.testing.assert_allclose(
+        actual[-1], np.stack([curvature, curvature[::-1]]), rtol=2e-6, atol=1e-7
+    )
+    assert ir.to_proto(model).SerializeToString() == before
+
+
+def test_hard_sigmoid_exact_clipping_boundaries():
+    # Power-of-two alpha makes both breakpoints exactly representable.
+    x = _value("x", [5])
+    tape = ir.tape.Tape()
+    y = tape.op("HardSigmoid", [x], {"alpha": 0.25, "beta": 0.5})
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    product = jvp(grad(_model([x], tape, [loss])))
+    values = np.array([-3.0, -2.0, 0.0, 2.0, 3.0])
+    actual = runtime_session(product).run(
+        None, {"x": values, product.graph.inputs[-1].name: np.ones(5)}
+    )
+    np.testing.assert_array_equal(actual[-2], [0, 0, 0.25, 0, 0])
+    np.testing.assert_array_equal(actual[-1], np.zeros(5))
+
+
+def test_hard_swish_float_clipping_boundaries():
+    x = _value("x", [5], dtype=ir.DataType.FLOAT)
+    tape = ir.tape.Tape()
+    y = tape.op("HardSwish", [x])
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    product = jvp(grad(_model([x], tape, [loss])))
+    values = np.array([-4.0, -3.0, 0.0, 3.0, 4.0], dtype=np.float32)
+    actual = runtime_session(product).run(
+        None, {"x": values, product.graph.inputs[-1].name: np.ones_like(values)}
+    )
+    np.testing.assert_allclose(actual[-2], [0, 0, 0.5, 1, 1])
+    np.testing.assert_allclose(actual[-1], [0, 0, np.float32(1 / 3), 0, 0])
