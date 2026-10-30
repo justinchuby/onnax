@@ -195,7 +195,7 @@ def test_saturated_float_gradients_and_hvp_retain_small_tails(op):
     assert np.all(actual[-2] > 0)
 
 
-@pytest.mark.parametrize("op", ["Asin", "Acos"])
+@pytest.mark.parametrize("op", ["Asin", "Acos", "Atan"])
 def test_inverse_trigonometric_products_and_hvp(op):
     x = _value("x", ["n", 3])
     tape = ir.tape.Tape()
@@ -234,3 +234,27 @@ def test_inverse_trigonometric_batched_curvature(op, dtype, opset):
         actual[-1], sign * reference / (1 - reference**2) ** 1.5, rtol=4e-6, atol=1e-7
     )
     assert ir.to_proto(source).SerializeToString() == before
+
+
+@pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
+def test_atan_large_inputs_and_branch_boundary_hvp(dtype):
+    x = _value("x", [7], dtype=dtype)
+    tape = ir.tape.Tape()
+    y = tape.op("Atan", [x])
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    product = jvp(grad(_model([x], tape, [loss])))
+    np_dtype = np.float32 if dtype == ir.DataType.FLOAT else np.float64
+    large = 1e10 if dtype == ir.DataType.FLOAT else 1e100
+    values = np.array([-large, -2.0, -1.0, 0.0, 1.0, 2.0, large], dtype=np_dtype)
+    executor = runtime_session if dtype == ir.DataType.FLOAT else evaluator
+    mapped = vmap(product, in_axes=(0, 0))
+    batch = np.stack([values, -values])
+    actual = executor(mapped).run(
+        None, {"x": batch, mapped.graph.inputs[-1].name: np.ones_like(batch)}
+    )
+    reference = batch.astype(np.float64)
+    slope = 1 / (1 + reference**2)
+    curvature = -2 * (reference / (1 + reference**2)) * slope
+    np.testing.assert_allclose(actual[-2], slope.astype(np_dtype), rtol=3e-6, atol=0)
+    np.testing.assert_allclose(actual[-1], curvature.astype(np_dtype), rtol=3e-6, atol=0)
+    assert all(np.isfinite(value).all() for value in actual)

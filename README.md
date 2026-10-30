@@ -103,6 +103,8 @@ Abs now supports HVPs through its Sign pullback. Sign has a zero-derivative
 convention everywhere, including at zero, and Abs retains its zero slope at zero.
 These conventions permit piecewise differentiation; they do not claim classical
 derivatives at discontinuities or second derivatives at nonsmooth points.
+Atan supports JVP, VJP, HVPs and batching, using a bounded reciprocal
+expression to avoid squaring large inputs in its derivative.
 Asin and Acos support JVP, VJP, HVPs, and batching for inputs strictly inside
 (-1, 1); their derivatives are singular at the endpoints.
 Sigmoid and Tanh derivatives use stable exponential tails to retain small
