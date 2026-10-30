@@ -113,3 +113,31 @@ The JSON report records per-phase times, CPU array-view costs and versions.
 Process RSS includes imports, model construction and runtime. A sample of the
 real CPU run identifies codebook Gather as a decoding hotspot; backend fusion
 and decoding lifetime are the next performance targets.
+
+## Run forward and VJP on Apple GPUs
+
+The native MLX validation uses the same two-layer NF4 Qwen and independently
+updates its ONNX and Transformers adapters for four AdamW steps. It compares
+logits, token loss, all adapter gradients and parameters at every step. ONNX
+forward and VJP sessions require complete MLX assignment and disable ORT graph
+optimization. PyTorch computes loss and AdamW on the CPU; NumPy arrays cross the
+session boundary.
+
+Use an MLX EP build containing [dynamic Range and ScatterElements support](
+https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/90):
+
+```bash
+uv run python -m examples.huggingface.mlx_validation \
+  --library /path/to/libonnxruntime_mlx_ep.dylib --output mlx-qwen.json
+```
+
+Omit `--library` to use the installed plugin. The report records the library,
+package versions, execution boundary and numerical tolerances. The checked-in
+M1 Max report has loss decreasing from 5.50393 to 5.49281 across four steps.
+Run the native regression with `ONNAX_TEST_MLX_EP=1` and set
+`ONNAX_MLX_EP_LIBRARY` for a development dylib:
+
+```bash
+ONNAX_TEST_MLX_EP=1 ONNAX_MLX_EP_LIBRARY=/path/to/libonnxruntime_mlx_ep.dylib \
+  uv run pytest tests/test_qwen_mlx.py -q
+```
