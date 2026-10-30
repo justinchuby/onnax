@@ -294,3 +294,23 @@ def test_mean_pushforward_shares_scale_without_overflowing_sum():
     actual = evaluator(derivative).run(None, feeds)[-1]
     assert np.isfinite(actual).all()
     np.testing.assert_allclose(actual, np.full(2, 1e308))
+
+
+@pytest.mark.parametrize("op", ["Sum", "Mean"])
+@pytest.mark.parametrize("shape", [[], [0, 3], [2, 3]])
+def test_single_operand_variadic_derivative_is_direct(op, shape):
+    x = _value("x", [None] * len(shape))
+    tape = ir.tape.Tape()
+    source = _model([x], tape, [tape.op(op, [x])])
+    for transform in (jvp, vjp):
+        derivative = transform(source)
+        assert not {"Mul", "Expand", "Shape", "ReduceSum"}.intersection(
+            node.op_type for node in derivative.graph
+        )
+        direction = np.full(shape, -0.0)
+        actual = evaluator(derivative).run(
+            None,
+            {"x": np.full(shape, 0.7), derivative.graph.inputs[-1].name: direction},
+        )[-1]
+        np.testing.assert_array_equal(actual, direction)
+        np.testing.assert_array_equal(np.signbit(actual), np.signbit(direction))

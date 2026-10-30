@@ -305,7 +305,7 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
 @_builtin("jvp", OPS)
 def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Value]:
     op = node.op_type
-    if op == "Identity":
+    if op == "Identity" or (op in {"Sum", "Mean"} and len(node.inputs) == 1):
         return [d[0]]
     if op == "Neg":
         return [ctx.op("Neg", d[0])]
@@ -341,8 +341,10 @@ def vjp(
     ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
 ) -> dict[int, ir.Value]:
     op, g = node.op_type, gs[0]
-    if op in {"Identity", "Neg"}:
-        return {0: g if op == "Identity" else ctx.op("Neg", g)}
+    if op == "Identity" or (op in {"Sum", "Mean"} and len(node.inputs) == 1):
+        return {0: g}
+    if op == "Neg":
+        return {0: ctx.op("Neg", g)}
     if op in {"Add", "Sub", "Sum", "Mean"}:
         # Share the cotangent (and Mean scaling) before undoing broadcasting.
         # Sub only negates the second input's contribution.
