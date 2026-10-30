@@ -67,10 +67,15 @@ def test_invalid_batch(batch):
 def test_native_bf16_training_and_checkpoint_report(tmp_path):
     from examples.lora.mlx_bf16 import run
 
-    report = run(tmp_path, inspect_products=True)
+    report = run(tmp_path, inspect_products=True, inspect_graph=True)
     assert report["executed_providers"] == ["MLXExecutionProvider"]
     assert report["steps"] == 200
     assert report["product_bounds"]["all_observed_products_pass"]
+    assert report["composed_bounds"]["all_pass"]
+    assert all(row["composed_bounds"]["normal_or_zero_operands"] for row in report["history"])
+    assert all(
+        len(row["composed_bounds"]["reference_outputs"]) == 4 for row in report["history"]
+    )
     assert all(len(row["product_bounds"]["products"]) == 4 for row in report["history"])
     assert (tmp_path / "checkpoint.npz").is_file()
     assert report["final_validation_loss"] < report["initial_validation_loss"] * 0.5

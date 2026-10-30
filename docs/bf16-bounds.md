@@ -98,8 +98,8 @@ outside its interval.
 
 These checks cover local forward matrix arithmetic. The existing same-parameter
 and independent-training-trajectory comparisons continue to cover predictions,
-loss, gradients and parameter updates. Composing local error bounds through
-nonlinearities and backward arithmetic is the next numerical-contract step.
+loss, gradients and parameter updates. The [composed-bound example](composed-bounds.md) propagates intervals through
+nonlinearities and backward arithmetic.
 
 ## Check the FP32 backward products
 
@@ -133,5 +133,5 @@ comparisons. The strict comparison still first differs at step 68.
 Tests cover exact FP32 encoding, signed and subnormal endpoints, all
 summation orders of a cancellation example, overflow rejection, deliberate
 output corruption and every matrix product in the exported gradient graph.
-The next step is to compose these arithmetic intervals through the FP32
-nonlinearities, loss and chain rule.
+The [composed-bound example](composed-bounds.md) carries these arithmetic
+intervals through the FP32 nonlinearities, loss and chain rule.
