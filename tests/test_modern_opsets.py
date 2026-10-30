@@ -314,8 +314,8 @@ def test_new_opsets_do_not_enable_unsupported_derivative_types_or_operators(opse
     with pytest.raises((TypeError, ValueError), match=r"FLOAT|DOUBLE"):
         jvp(source, inputs=["x0"])
     source = _model("Sin", [[2]], opset=opset)
-    source.graph[0].op_type = "Sign"
-    with pytest.raises(NotImplementedError, match="Sign"):
+    source.graph[0].op_type = "Floor"
+    with pytest.raises(NotImplementedError, match="Floor"):
         jvp(source)
 
 

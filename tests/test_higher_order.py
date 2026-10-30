@@ -88,6 +88,8 @@ def _hvp_check(model, feeds, inputs=None, *, rtol=3e-5, atol=3e-6, epsilon=1e-5)
     "op",
     [
         "Identity",
+        "Abs",
+        "Sign",
         "Neg",
         "Exp",
         "Log",
@@ -457,7 +459,9 @@ def test_unsupported_active_generated_path_fails_precisely():
     tape = ir.tape.Tape()
     loss = tape.op("ReduceSum", [tape.op("Abs", [x])], {"keepdims": 0})
     gradient = GradPass(inputs=["x", "z"])(_model([x, z], tape, [loss])).model
-    with pytest.raises(NotImplementedError, match="active operator 'Sign'"):
+    # A deliberately unsupported generated operator still fails precisely.
+    next(node for node in gradient.graph if node.op_type == "Sign").op_type = "Floor"
+    with pytest.raises(NotImplementedError, match="active operator 'Floor'"):
         JvpPass(inputs=["x"])(gradient)
     disconnected = JvpPass(inputs=["z"])(gradient).model
     actual = _evaluator(disconnected).run(
@@ -492,3 +496,40 @@ def test_additive_scatter_jvp_data_updates_and_repeated_indices(inputs):
     if "updates" in inputs:
         expected[0] += direction.sum()
     np.testing.assert_allclose(_evaluator(jvp).run(None, feeds)[-1], expected)
+
+
+@pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
+@pytest.mark.parametrize("op", ["Abs", "Sign"])
+@pytest.mark.parametrize("opset", [18, 28])
+def test_piecewise_zero_curvature_and_batched_hvp(dtype, op, opset, tmp_path):
+    from onnax import grad, jvp, vmap
+
+    np_dtype = np.float32 if dtype == ir.DataType.FLOAT else np.float64
+    x = _value("x", ["n"], dtype=dtype)
+    tape = ir.tape.Tape()
+    y = tape.op(op, [x])
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    source = _model([x], tape, [loss], opset=opset)
+    before = ir.to_proto(source).SerializeToString()
+    values = np.array([-100.0, -1.0, -0.0, 0.0, 0.2, 100.0], dtype=np_dtype)
+    expected = np.sign(values) if op == "Abs" else np.zeros_like(values)
+    gradient = grad(source)
+    ir.save(gradient, tmp_path / "gradient.onnx")
+    product = jvp(ir.load(tmp_path / "gradient.onnx"))
+    feeds = {"x": values, product.graph.inputs[-1].name: np.ones_like(values)}
+    executors = (_evaluator, runtime_session) if opset == 18 else (_evaluator,)
+    for executor in executors:
+        actual = executor(product).run(None, feeds)
+        np.testing.assert_array_equal(actual[-2], expected)
+        np.testing.assert_array_equal(actual[-1], np.zeros_like(values))
+    batched = vmap(product, in_axes=(0, 0))
+    batch = np.stack([values, -values])
+    executor = runtime_session if opset == 18 else _evaluator
+    actual = executor(batched).run(
+        None, {"x": batch, batched.graph.inputs[-1].name: np.ones_like(batch)}
+    )
+    np.testing.assert_array_equal(
+        actual[-2], np.stack([expected, -expected]) if op == "Abs" else np.zeros_like(batch)
+    )
+    np.testing.assert_array_equal(actual[-1], np.zeros_like(batch))
+    assert ir.to_proto(source).SerializeToString() == before
