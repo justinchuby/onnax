@@ -92,3 +92,26 @@ def test_onnxscript_preserves_tail_gradient():
     )[-1]
     tail = math.exp(-40)
     np.testing.assert_allclose(values, [-2 * tail, tail, tail], rtol=2e-5, atol=0)
+
+
+@pytest.mark.parametrize("op", ["Softmax", "LogSoftmax"])
+def test_batched_derivative_composition(op):
+    derivative = onnax.vjp(model(op))
+    batched = onnax.vmap(derivative, in_axes=(0, 0))
+    x = np.array([[0, -18, -40], [0, -40, -80]], np.float32)
+    seed = np.array([[1, 0, 0], [1, 0, 0]], np.float32)
+    actual = runtime_session(batched).run(
+        None,
+        {
+            batched.graph.inputs[0].name: x,
+            batched.graph.inputs[1].name: seed,
+        },
+    )[-1]
+    executor = runtime_session(derivative)
+    expected = np.stack(
+        [
+            executor.run(None, {"x": a, derivative.graph.inputs[-1].name: b})[-1]
+            for a, b in zip(x, seed, strict=True)
+        ]
+    )
+    np.testing.assert_allclose(actual, expected, rtol=1e-4, atol=0)

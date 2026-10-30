@@ -108,3 +108,13 @@ def test_rounded_compute_logits_with_fp32_loss(compute_dtype):
     assert value.dtype == gradient.dtype == np.float32
     assert gradient[0, 0] != 0
     np.testing.assert_allclose(gradient, expected, rtol=1e-4, atol=0)
+
+
+def test_distillation_batching_composes_with_gradient():
+    model = onnax.grad(loss_model("soft"), inputs=["x"], output="loss")
+    batched = onnax.vmap(model, in_axes=(0, 0))
+    x = np.array([[[0, -18, -40], [1, 2, 3]], [[1, 1, 1], [0, -40, -80]]], np.float32)
+    feeds = {"x": x, "other": x.copy()}
+    np.testing.assert_array_equal(
+        runtime_session(batched).run(None, feeds)[-1], np.zeros_like(x)
+    )
