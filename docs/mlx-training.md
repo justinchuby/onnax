@@ -50,6 +50,38 @@ with mx.stream(mx.gpu):
     synchronize(params, state)
 ```
 
+## Compile the GPU update
+
+Add `--compiled-adam` to run the same external Array API arithmetic through
+`mx.compile`:
+
+```bash
+uv run --no-sync python -m examples.lora.mlx_training \
+  --compiled-adam --output-dir compiled_mlx_models
+```
+
+The wrapper validates names, shapes and state before calling a pure array
+kernel. Parameters and both moments are explicit arguments. Each step passes
+two FP32 bias-correction values as data, so the Python step counter can advance
+while the compiled graph is reused. Hyperparameters are fixed when creating
+the wrapper; checkpoint state stays in the existing `AdamState` format.
+
+```python
+from examples.lora.mlx_adam import CompiledAdam
+
+update = CompiledAdam()
+with mx.stream(mx.gpu):
+    params, state = update(params, grads, state)
+    synchronize(params, state)
+```
+
+[MLX compilation](https://ml-explore.github.io/mlx/build/html/usage/compile.html)
+traces pure functions and specializes them for input structure and shapes.
+The tests verify one trace across 80 updates, a new specialization after a
+shape change, independent moment/parameter values, preserved inputs and
+checkpoint replay with a newly created wrapper. The ONNX model hash is the
+same for eager and compiled updates.
+
 ## Share storage across the boundary
 
 MLX arrays report a Metal DLPack device. The adapter explicitly requests a
@@ -97,19 +129,30 @@ Both run GPU Adam. `numpy_adam` keeps parameter updates and state in NumPy on CP
 Benchmark steps fetch only loss and gradients. The correctness CLI checks
 predictions with a separate forward session.
 
-| Batch | Path | Session creation (ms) | Step median (ms) | Step P95 (ms) | Peak process RSS (MiB) |
-| --- | --- | ---: | ---: | ---: | ---: |
-| 256 | dlpack | 27.36 | 0.973 | 1.002 | 157.2 |
-| 256 | numpy_view | 29.24 | 0.940 | 0.987 | 157.0 |
-| 256 | numpy_adam | 27.52 | 0.552 | 0.580 | 155.4 |
-| 16384 | dlpack | 27.56 | 1.102 | 1.438 | 162.3 |
-| 16384 | numpy_view | 27.32 | 1.185 | 1.415 | 161.7 |
-| 16384 | numpy_adam | 27.35 | 0.830 | 1.014 | 160.2 |
+| Batch | Path | First Adam (ms) | Adam median (ms) | Step median (ms) | Step P95 (ms) | Peak process RSS (MiB) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 256 | dlpack eager | 1.896 | 0.365 | 0.952 | 1.042 | 156.3 |
+| 256 | dlpack compiled | 3.731 | 0.290 | 0.884 | 0.992 | 157.9 |
+| 256 | numpy_view eager | 1.914 | 0.367 | 0.936 | 0.993 | 156.5 |
+| 256 | numpy_view compiled | 3.146 | 0.275 | 0.808 | 0.923 | 157.5 |
+| 256 | numpy_adam | 0.083 | 0.017 | 0.551 | 0.575 | 155.7 |
+| 16384 | dlpack eager | 2.473 | 0.391 | 1.453 | 1.740 | 161.6 |
+| 16384 | dlpack compiled | 3.176 | 0.273 | 1.032 | 1.132 | 162.2 |
+| 16384 | numpy_view eager | 2.001 | 0.392 | 1.405 | 1.547 | 163.0 |
+| 16384 | numpy_view compiled | 3.252 | 0.277 | 1.044 | 1.331 | 161.9 |
+| 16384 | numpy_adam | 0.079 | 0.019 | 1.024 | 1.374 | 160.9 |
 
-For these 160 adapter parameters, CPU Adam gives the shortest complete steps.
-At batch 256, the Adam phase takes about 0.37 ms on GPU and 0.017 ms on CPU.
-The report separates preparation, execution/exchange, output import and
-synchronized Adam. Benchmark workers omit independent-reference checks.
+At batch 256, compilation reduces the DLPack path's Adam median from
+0.365 to 0.290 ms and its full-step median from 0.952 to 0.884 ms. The first
+update increases from 1.90 to 3.73 ms. First-update time includes state
+initialization and, for compiled paths, tracing and compilation.
+
+CPU Adam gives the shortest steps for these 160 parameters at batch 256.
+At batch 16,384, recorded CPU and compiled DLPack medians are both about
+1.03 ms. The report separates preparation, execution/exchange, output import
+and synchronized Adam. Benchmark workers omit independent-reference checks.
+Session creation, versions and model hashes are recorded separately.
+
 RSS includes imports, graph generation, runtime and allocators. Python MLX
 allocator counters include the active initialization baseline and subsequent
 allocation maximum; plugin allocations have their own runtime.
@@ -121,12 +164,13 @@ records input-wrapper alignment and sampled process Metal allocations.
 
 ```bash
 uv run --no-sync python -m examples.lora.mlx_benchmark \
-  --mode dlpack --batch 256 --output dlpack.json
+  --mode dlpack --compiled-adam --batch 256 --output dlpack.json
 uv run --no-sync python -m examples.lora.mlx_benchmark \
   --mode numpy_adam --batch 256 --output numpy_adam.json
 ```
 
-The [recorded report](https://github.com/justinchuby/onnax/blob/main/examples/measurements/mlx-gpu-updates-apple-arm64.json)
-contains model hashes, versions, memory scopes, trace summaries and parameter
-comparisons across all benchmark paths. These measurements motivate evaluating
-compiled array updates and larger adapters next.
+The [compiled-update report](https://github.com/justinchuby/onnax/blob/main/examples/measurements/compiled-mlx-updates-apple-arm64.json)
+contains eager/compiled training endpoints, all benchmark variants, first-update
+costs and parameter comparisons. The [shared-buffer report](https://github.com/justinchuby/onnax/blob/main/examples/measurements/mlx-gpu-updates-apple-arm64.json)
+records input alignment and sampled Metal memory. Larger adapters are the next
+workload for evaluating GPU update placement.
