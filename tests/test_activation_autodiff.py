@@ -195,7 +195,7 @@ def test_saturated_float_gradients_and_hvp_retain_small_tails(op):
     assert np.all(actual[-2] > 0)
 
 
-@pytest.mark.parametrize("op", ["Asin", "Acos", "Atan"])
+@pytest.mark.parametrize("op", ["Asin", "Acos", "Atan", "Asinh"])
 def test_inverse_trigonometric_products_and_hvp(op):
     x = _value("x", ["n", 3])
     tape = ir.tape.Tape()
@@ -301,3 +301,37 @@ def test_erf_saturated_finite_inputs_do_not_produce_nan_hvp(dtype):
     np.testing.assert_allclose(actual[-2], [0, 0, 2 / np.sqrt(np.pi), 0, 0], rtol=1e-6)
     np.testing.assert_array_equal(actual[-1], np.zeros_like(values))
     assert all(np.isfinite(value).all() for value in actual)
+
+
+@pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
+@pytest.mark.parametrize("opset", [18, 28])
+def test_asinh_extremes_serialized_batched_hvp(dtype, opset, tmp_path):
+    np_dtype = np.float32 if dtype == ir.DataType.FLOAT else np.float64
+    large = 1e30 if dtype == ir.DataType.FLOAT else 1e200
+    curved = 1e18 if dtype == ir.DataType.FLOAT else 1e150
+    tiny = 1e-18 if dtype == ir.DataType.FLOAT else 1e-150
+    values = np.array(
+        [-large, -curved, -2, -1, -tiny, 0, tiny, 1, 2, curved, large], dtype=np_dtype
+    )
+    x = _value("x", ["n"], dtype=dtype)
+    tape = ir.tape.Tape()
+    y = tape.op("Asinh", [x])
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    source = _model([x], tape, [loss], opset=opset)
+    before = ir.to_proto(source).SerializeToString()
+    ir.save(grad(source), tmp_path / "gradient.onnx")
+    product = jvp(ir.load(tmp_path / "gradient.onnx"))
+    mapped = vmap(product, in_axes=(0, 0))
+    batch = np.stack([values, -values])
+    executor = runtime_session if opset == 18 and dtype == ir.DataType.FLOAT else evaluator
+    actual = executor(mapped).run(
+        None, {"x": batch, mapped.graph.inputs[-1].name: np.ones_like(batch)}
+    )
+    reference = batch.astype(np.float64)
+    norm = np.hypot(1, reference)
+    slope = 1 / norm
+    curvature = -(reference / norm) / norm / norm
+    np.testing.assert_allclose(actual[-2], slope.astype(np_dtype), rtol=3e-6, atol=0)
+    np.testing.assert_allclose(actual[-1], curvature.astype(np_dtype), rtol=3e-6, atol=0)
+    assert all(np.isfinite(value).all() for value in actual)
+    assert ir.to_proto(source).SerializeToString() == before
