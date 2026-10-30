@@ -1,0 +1,1444 @@
+{
+  "hardware": "Apple M1 Max",
+  "python": "3.11.17",
+  "onnx_ir": "1.1.0",
+  "protocol": "Four complete 150-step evaluations; sequential isolated benchmark workers, ten warmup and 100 measured full updates. CPU Array API Adam; same serialized graph for both runtimes at each precision.",
+  "source_sha256": {
+    "examples/mlp_bf16.py": "13786654fb95752e92c47571ecb739706f4179cfdf59bbdf1927836709bdfb75",
+    "examples/lora/bf16_rules.py": "8dd93a3f160ce7cf7a9db57be94664e04aa8859faf81a67e9302cca351964400",
+    "src/onnax/_autodiff/_context.py": "9bff1cdfe2652d7ab3bf8e8213388871f4f5b9f5750153fbb12283109e8da878",
+    "src/onnax/_autodiff/_reductions.py": "1548a8f2d0bcdfa11e72ed45d51fb5ace582c4398c2fed22b74a7719854c4f2b"
+  },
+  "reports": {
+    "reference": {
+      "bf16": {
+        "trajectory_diagnostic": {
+          "step": 14,
+          "index": [
+            87,
+            2
+          ],
+          "observed_logit": -0.9559900760650635,
+          "same_parameter_reference_logit": -0.9559900760650635,
+          "independent_reference_logit": -0.959896445274353,
+          "parameter_max_abs": {
+            "layer1.weight": 5.960464477539063e-08,
+            "layer1.bias": 1.4901161193847656e-07,
+            "layer2.weight": 1.1920928955078125e-07,
+            "layer2.bias": 1.1175870895385742e-07
+          },
+          "rounded_weight_differences": {
+            "layer1.weight": 0,
+            "layer2.weight": 0
+          },
+          "rounded_hidden_differences": 2
+        },
+        "dynamic_reference_reload_batches": [
+          1,
+          7,
+          192
+        ],
+        "executed_providers": [],
+        "backend": "reference",
+        "precision": "bf16",
+        "steps": 150,
+        "strict_numerical_acceptance": false,
+        "same_parameter_acceptance": true,
+        "independent_trajectory_acceptance": false,
+        "shared_gradient_update_acceptance": true,
+        "comparison_tolerance": {
+          "rtol": 0.0001,
+          "atol": 1e-06
+        },
+        "initial_train_loss": 1.0829359292984009,
+        "final_train_loss": 0.0012478036805987358,
+        "initial_validation_loss": 1.0763531923294067,
+        "final_validation_loss": 0.0021003636065870523,
+        "validation_accuracy": 1.0,
+        "checkpoint_resume_verified": true,
+        "parameter_bytes": 396,
+        "state_bytes": 792,
+        "comparisons": {
+          "same_parameter.logits": {
+            "checks": 150,
+            "max_abs": 0.0,
+            "max_mismatched": 0
+          },
+          "same_parameter.loss": {
+            "checks": 150,
+            "max_abs": 0.0,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 7.450580596923828e-09,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 7.450580596923828e-09,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.logits": {
+            "checks": 150,
+            "max_abs": 0.0078125,
+            "max_mismatched": 1
+          },
+          "independent_trajectory.loss": {
+            "checks": 150,
+            "max_abs": 5.774199962615967e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.weight": {
+            "checks": 150,
+            "max_abs": 1.0826624929904938e-07,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.bias": {
+            "checks": 150,
+            "max_abs": 4.3612089939415455e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer2.weight": {
+            "checks": 150,
+            "max_abs": 5.178153514862061e-07,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer2.bias": {
+            "checks": 150,
+            "max_abs": 5.7945726439356804e-08,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer1.weight": {
+            "checks": 150,
+            "max_abs": 5.960464477539063e-08,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer1.bias": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer2.weight": {
+            "checks": 150,
+            "max_abs": 1.1920928955078125e-07,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer2.bias": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 1.7881393432617188e-07,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.341104507446289e-06,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 4.76837158203125e-07,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 3.5762786865234375e-07,
+            "max_mismatched": 0
+          }
+        },
+        "errors": {
+          "independent_trajectory.logits": {
+            "first_step": 14,
+            "steps": 4,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 0.003906369209289551,
+              "first": {
+                "index": [
+                  87,
+                  2
+                ],
+                "actual": -0.9559900760650635,
+                "expected": -0.959896445274353
+              }
+            }
+          }
+        },
+        "loss_history": [
+          1.0829359292984009,
+          0.8288629651069641,
+          0.6210935115814209,
+          0.4564724862575531,
+          0.3308957517147064,
+          0.23876535892486572,
+          0.17194044589996338,
+          0.12437020987272263,
+          0.09084241837263107,
+          0.06752196699380875,
+          0.05094904825091362,
+          0.039222974330186844,
+          0.03082282282412052,
+          0.024616621434688568,
+          0.020010773092508316,
+          0.016632847487926483,
+          0.014021125622093678,
+          0.011963878758251667,
+          0.010406582616269588,
+          0.009172439575195312,
+          0.00813658069819212,
+          0.007313515990972519,
+          0.00664861174300313,
+          0.006103414576500654,
+          0.005640683230012655,
+          0.005216002464294434,
+          0.004886353854089975,
+          0.004601572174578905,
+          0.004343610722571611,
+          0.00411848584190011,
+          0.003913406282663345,
+          0.003778851358219981,
+          0.003604609752073884,
+          0.003492955816909671,
+          0.0033586500212550163,
+          0.003259702818468213,
+          0.003170173615217209,
+          0.003070484148338437,
+          0.0030026521999388933,
+          0.0029302809853106737,
+          0.0028736914973706007,
+          0.0027949875220656395,
+          0.0027485962491482496,
+          0.002690877066925168,
+          0.0026320863980799913,
+          0.0026189517229795456,
+          0.002578909508883953,
+          0.002523615723475814,
+          0.002503335475921631,
+          0.0024611731059849262,
+          0.002442313125357032,
+          0.002400061348453164,
+          0.002364420797675848,
+          0.002350602298974991,
+          0.0023226665798574686,
+          0.0023063633125275373,
+          0.002276189625263214,
+          0.0022630600724369287,
+          0.002230087062343955,
+          0.0022212781477719545,
+          0.002196287037804723,
+          0.0021661706268787384,
+          0.0021450775675475597,
+          0.002142200944945216,
+          0.0021350320894271135,
+          0.0021052085794508457,
+          0.0020913914777338505,
+          0.0020676369313150644,
+          0.0020676387939602137,
+          0.002037039026618004,
+          0.002020888263359666,
+          0.0020152509678155184,
+          0.002007030649110675,
+          0.001987250754609704,
+          0.0019811128731817007,
+          0.0019686403684318066,
+          0.0019525313982740045,
+          0.0019404044141992927,
+          0.001915886066854,
+          0.0019148476421833038,
+          0.0019032146083191037,
+          0.0018796520307660103,
+          0.0018758500227704644,
+          0.0018622417701408267,
+          0.0018483934691175818,
+          0.001850672415457666,
+          0.0018280654912814498,
+          0.0018091253004968166,
+          0.0018072337843477726,
+          0.0018010508501902223,
+          0.0017886795103549957,
+          0.0017842972883954644,
+          0.001770088798366487,
+          0.0017577152466401458,
+          0.001738546066917479,
+          0.0017203204333782196,
+          0.0017138413386419415,
+          0.0017130356281995773,
+          0.0017082764534279704,
+          0.0016756649129092693,
+          0.0016692749923095107,
+          0.0016651322366669774,
+          0.0016592448810115457,
+          0.0016533551970496774,
+          0.0016418932937085629,
+          0.0016391311073675752,
+          0.0016309065977111459,
+          0.0015987521037459373,
+          0.0015957042342051864,
+          0.0015923753380775452,
+          0.0015886592445895076,
+          0.0015685918042436242,
+          0.0015459874412044883,
+          0.001537261065095663,
+          0.0015391031047329307,
+          0.0015319635858759284,
+          0.001532751484774053,
+          0.001525610568933189,
+          0.0015087253414094448,
+          0.001495162956416607,
+          0.001487957895733416,
+          0.001481170766055584,
+          0.001468170084990561,
+          0.001457578968256712,
+          0.0014562933938577771,
+          0.0014534828951582313,
+          0.0014326861128211021,
+          0.0014311311533674598,
+          0.0014227633364498615,
+          0.0014192494563758373,
+          0.0014093114295974374,
+          0.0013970577856525779,
+          0.0013883770443499088,
+          0.0013804039917886257,
+          0.0013710701605305076,
+          0.001356446067802608,
+          0.0013547261478379369,
+          0.001352257444523275,
+          0.0013437246670946479,
+          0.001330857165157795,
+          0.0013264784356579185,
+          0.0013222474372014403,
+          0.0013170363381505013,
+          0.0013149880105629563,
+          0.0012962404871359468,
+          0.0012766232248395681,
+          0.0012784191640093923,
+          0.0012734892079606652,
+          0.0012687689159065485,
+          0.0012504940386861563
+        ],
+        "nodes": 49,
+        "model_sha256": "a1ed01ff785049a449cc79e430db96ea77414a305e8df5586119608f8e98f160",
+        "model_bytes": 9712,
+        "versions": {
+          "numpy": "2.4.6",
+          "onnx": "1.23.2",
+          "onnxscript": "0.7.2",
+          "onnxruntime": "1.31.1"
+        },
+        "scope": "Offline three-class dataset; external CPU Adam; explicit FP32 host exchange for MLX; ORT optimization disabled",
+        "measurement": {
+          "backend": "reference",
+          "precision": "bf16",
+          "first_step_ms": 0.7994580082595348,
+          "model_read_ms": 1.062750001437962,
+          "session_creation_ms": 2.3150420165620744,
+          "timings_ms": {
+            "prepare": {
+              "median": 0.00033300602808594704,
+              "p95": 0.00037500285543501377
+            },
+            "execute_exchange": {
+              "median": 0.4324375040596351,
+              "p95": 0.4460628144443035
+            },
+            "adam": {
+              "median": 0.028541995561681688,
+              "p95": 0.030097599665168673
+            },
+            "step": {
+              "median": 0.46137550089042634,
+              "p95": 0.4760851166793145
+            }
+          },
+          "peak_process_rss_bytes": 125779968,
+          "scope": "Independent worker process; same 384 samples and initial parameters; 10 warmup and 100 measured complete updates. Fetch logits/loss/all gradients. Execution includes synchronous host exchange, MLX internal copies and result allocation. Adam runs on CPU. RSS includes imports, loaded model, runtime and allocator overhead.",
+          "threads": null,
+          "array_thread_environment": {
+            "OPENBLAS_NUM_THREADS": null,
+            "MKL_NUM_THREADS": null,
+            "VECLIB_MAXIMUM_THREADS": null
+          },
+          "platform": "macOS-27.0.1-arm64-arm-64bit"
+        }
+      },
+      "fp32": {
+        "trajectory_diagnostic": {},
+        "dynamic_reference_reload_batches": [
+          1,
+          7,
+          192
+        ],
+        "executed_providers": [],
+        "backend": "reference",
+        "precision": "fp32",
+        "steps": 150,
+        "strict_numerical_acceptance": true,
+        "same_parameter_acceptance": true,
+        "independent_trajectory_acceptance": true,
+        "shared_gradient_update_acceptance": true,
+        "comparison_tolerance": {
+          "rtol": 0.0001,
+          "atol": 1e-06
+        },
+        "initial_train_loss": 1.0827006101608276,
+        "final_train_loss": 0.0012506458442658186,
+        "initial_validation_loss": 1.0760844945907593,
+        "final_validation_loss": 0.0020997195970267057,
+        "validation_accuracy": 1.0,
+        "checkpoint_resume_verified": true,
+        "parameter_bytes": 396,
+        "state_bytes": 792,
+        "comparisons": {
+          "same_parameter.logits": {
+            "checks": 150,
+            "max_abs": 0.0,
+            "max_mismatched": 0
+          },
+          "same_parameter.loss": {
+            "checks": 150,
+            "max_abs": 0.0,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 5.960464477539063e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 6.05359673500061e-09,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 1.4901161193847656e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 1.0244548320770264e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.logits": {
+            "checks": 150,
+            "max_abs": 2.384185791015625e-06,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.loss": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.weight": {
+            "checks": 150,
+            "max_abs": 5.960464477539063e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.bias": {
+            "checks": 150,
+            "max_abs": 6.05359673500061e-09,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer2.weight": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer2.bias": {
+            "checks": 150,
+            "max_abs": 1.4435499906539917e-08,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer1.weight": {
+            "checks": 150,
+            "max_abs": 5.960464477539063e-08,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer1.bias": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer2.weight": {
+            "checks": 150,
+            "max_abs": 1.7881393432617188e-07,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer2.bias": {
+            "checks": 150,
+            "max_abs": 5.960464477539063e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 1.7881393432617188e-07,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 5.662441253662109e-07,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 2.384185791015625e-07,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 1.7136335372924805e-07,
+            "max_mismatched": 0
+          }
+        },
+        "errors": {},
+        "loss_history": [
+          1.0827006101608276,
+          0.8290205001831055,
+          0.6208462119102478,
+          0.4563194811344147,
+          0.3311392068862915,
+          0.238650843501091,
+          0.17181207239627838,
+          0.1243165135383606,
+          0.09090900421142578,
+          0.06746664643287659,
+          0.050943274050951004,
+          0.03919154033064842,
+          0.03073556162416935,
+          0.02457023598253727,
+          0.0200111772865057,
+          0.016590310260653496,
+          0.01398537028580904,
+          0.011972649954259396,
+          0.010395410470664501,
+          0.009142730385065079,
+          0.008135256357491016,
+          0.00731549272313714,
+          0.006641274783760309,
+          0.006081262603402138,
+          0.005611855071038008,
+          0.005215046927332878,
+          0.0048769693821668625,
+          0.004586772993206978,
+          0.004335955251008272,
+          0.004117744509130716,
+          0.003926751669496298,
+          0.0037586211692541838,
+          0.0036098388954997063,
+          0.0034775519743561745,
+          0.0033593897242099047,
+          0.0032534159254282713,
+          0.0031580000650137663,
+          0.0030717782210558653,
+          0.002993582980707288,
+          0.002922413870692253,
+          0.0028574273455888033,
+          0.002797875553369522,
+          0.0027431324124336243,
+          0.0026926312129944563,
+          0.0026459144428372383,
+          0.0026025688275694847,
+          0.0025622264947742224,
+          0.002524580108001828,
+          0.0024893616791814566,
+          0.002456330694258213,
+          0.0024252652656286955,
+          0.0023959772661328316,
+          0.002368299523368478,
+          0.002342068590223789,
+          0.0023171475622802973,
+          0.0022934081498533487,
+          0.0022707402240484953,
+          0.0022490445990115404,
+          0.0022282309364527464,
+          0.002208222635090351,
+          0.002188950777053833,
+          0.0021703478414565325,
+          0.0021523672621697187,
+          0.002134946407750249,
+          0.0021180540788918734,
+          0.0021016430109739304,
+          0.002085670828819275,
+          0.002070100512355566,
+          0.002054906217381358,
+          0.0020400604698807,
+          0.002025527646765113,
+          0.0020112935453653336,
+          0.0019973318558186293,
+          0.0019836239516735077,
+          0.001970153534784913,
+          0.001956905936822295,
+          0.0019438709132373333,
+          0.0019310294883325696,
+          0.0019183745607733727,
+          0.0019058912293985486,
+          0.0018935700645670295,
+          0.0018814100185409188,
+          0.0018693929305300117,
+          0.0018575178692117333,
+          0.0018457710975781083,
+          0.001834165770560503,
+          0.0018226667307317257,
+          0.001811299822293222,
+          0.0018000336131080985,
+          0.0017888811416924,
+          0.001777832512743771,
+          0.0017668904038146138,
+          0.0017560441046953201,
+          0.0017452930333092809,
+          0.0017346380045637488,
+          0.0017240665620192885,
+          0.001713588833808899,
+          0.0017031988827511668,
+          0.0016928911209106445,
+          0.0016826664796099067,
+          0.0016725272871553898,
+          0.0016624577110633254,
+          0.0016524774255231023,
+          0.001642569899559021,
+          0.0016327410703524947,
+          0.0016229819739237428,
+          0.0016133018070831895,
+          0.001603692420758307,
+          0.001594152650795877,
+          0.0015846887836232781,
+          0.0015753008192405105,
+          0.0015659717610105872,
+          0.0015567125519737601,
+          0.0015475257532671094,
+          0.0015384092694148421,
+          0.0015293535543605685,
+          0.0015203732764348388,
+          0.0015114491106942296,
+          0.0015025902539491653,
+          0.0014937970554456115,
+          0.0014850711449980736,
+          0.00147640414070338,
+          0.0014678016304969788,
+          0.001459263265132904,
+          0.001450784387998283,
+          0.0014423743123188615,
+          0.0014340137131512165,
+          0.001425715978257358,
+          0.0014174882089719176,
+          0.0014093141071498394,
+          0.0014011968160048127,
+          0.0013931415742263198,
+          0.001385142095386982,
+          0.0013772024540230632,
+          0.0013693167129531503,
+          0.0013614940689876676,
+          0.0013537229970097542,
+          0.001346008968539536,
+          0.0013383518671616912,
+          0.0013307499466463923,
+          0.0013232022756710649,
+          0.0013157041976228356,
+          0.00130826560780406,
+          0.0013008808018639684,
+          0.0012935479171574116,
+          0.0012862705625593662,
+          0.0012790393084287643,
+          0.0012718592770397663,
+          0.0012647421099245548,
+          0.0012576730223372579
+        ],
+        "nodes": 40,
+        "model_sha256": "0055a6fbbe86c7fa70677a7d7847827eb42534b49fbae66683316e896c0a0e1c",
+        "model_bytes": 9016,
+        "versions": {
+          "numpy": "2.4.6",
+          "onnx": "1.23.2",
+          "onnxscript": "0.7.2",
+          "onnxruntime": "1.31.1"
+        },
+        "scope": "Offline three-class dataset; external CPU Adam; explicit FP32 host exchange for MLX; ORT optimization disabled",
+        "measurement": {
+          "backend": "reference",
+          "precision": "fp32",
+          "first_step_ms": 0.6986249936744571,
+          "model_read_ms": 0.9340000106021762,
+          "session_creation_ms": 2.117291995091364,
+          "timings_ms": {
+            "prepare": {
+              "median": 0.00033300602808594704,
+              "p95": 0.00037500285543501377
+            },
+            "execute_exchange": {
+              "median": 0.3580630000215024,
+              "p95": 0.367556897981558
+            },
+            "adam": {
+              "median": 0.02824998227879405,
+              "p95": 0.02900413965107873
+            },
+            "step": {
+              "median": 0.3867084888042882,
+              "p95": 0.3966124917496927
+            }
+          },
+          "peak_process_rss_bytes": 125616128,
+          "scope": "Independent worker process; same 384 samples and initial parameters; 10 warmup and 100 measured complete updates. Fetch logits/loss/all gradients. Execution includes synchronous host exchange, MLX internal copies and result allocation. Adam runs on CPU. RSS includes imports, loaded model, runtime and allocator overhead.",
+          "threads": null,
+          "array_thread_environment": {
+            "OPENBLAS_NUM_THREADS": null,
+            "MKL_NUM_THREADS": null,
+            "VECLIB_MAXIMUM_THREADS": null
+          },
+          "platform": "macOS-27.0.1-arm64-arm-64bit"
+        }
+      }
+    },
+    "mlx": {
+      "bf16": {
+        "trajectory_diagnostic": {
+          "step": 6,
+          "index": [
+            285,
+            0
+          ],
+          "observed_logit": -0.6930785775184631,
+          "same_parameter_reference_logit": -0.6930785775184631,
+          "independent_reference_logit": -0.6891722679138184,
+          "parameter_max_abs": {
+            "layer1.weight": 2.9802322387695312e-08,
+            "layer1.bias": 3.688037395477295e-07,
+            "layer2.weight": 8.940696716308594e-08,
+            "layer2.bias": 4.470348358154297e-08
+          },
+          "rounded_weight_differences": {
+            "layer1.weight": 0,
+            "layer2.weight": 0
+          },
+          "rounded_hidden_differences": 1
+        },
+        "dynamic_reference_reload_batches": [
+          1,
+          7,
+          192
+        ],
+        "executed_providers": [
+          "MLXExecutionProvider"
+        ],
+        "backend": "mlx",
+        "precision": "bf16",
+        "steps": 150,
+        "strict_numerical_acceptance": false,
+        "same_parameter_acceptance": true,
+        "independent_trajectory_acceptance": false,
+        "shared_gradient_update_acceptance": true,
+        "comparison_tolerance": {
+          "rtol": 0.0001,
+          "atol": 1e-06
+        },
+        "initial_train_loss": 1.0829360485076904,
+        "final_train_loss": 0.0012478041462600231,
+        "initial_validation_loss": 1.0763531923294067,
+        "final_validation_loss": 0.002100421581417322,
+        "validation_accuracy": 1.0,
+        "checkpoint_resume_verified": true,
+        "parameter_bytes": 396,
+        "state_bytes": 792,
+        "comparisons": {
+          "same_parameter.logits": {
+            "checks": 150,
+            "max_abs": 0.0,
+            "max_mismatched": 0
+          },
+          "same_parameter.loss": {
+            "checks": 150,
+            "max_abs": 1.1920928955078125e-07,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 2.1420419216156006e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 1.7695128917694092e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.logits": {
+            "checks": 150,
+            "max_abs": 0.03125572204589844,
+            "max_mismatched": 30
+          },
+          "independent_trajectory.loss": {
+            "checks": 150,
+            "max_abs": 4.470348358154297e-07,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.weight": {
+            "checks": 150,
+            "max_abs": 7.46018486097455e-07,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.bias": {
+            "checks": 150,
+            "max_abs": 4.7372486733365804e-07,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer2.weight": {
+            "checks": 150,
+            "max_abs": 5.16185536980629e-07,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer2.bias": {
+            "checks": 150,
+            "max_abs": 4.540197551250458e-07,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer1.weight": {
+            "checks": 150,
+            "max_abs": 1.1920928955078125e-07,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.7881393432617188e-07,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer2.weight": {
+            "checks": 150,
+            "max_abs": 1.1920928955078125e-07,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer2.bias": {
+            "checks": 150,
+            "max_abs": 7.450580596923828e-09,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 3.4570693969726562e-06,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 5.257129669189453e-05,
+            "max_mismatched": 2
+          },
+          "parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 3.5762786865234375e-06,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 5.793757736682892e-06,
+            "max_mismatched": 1
+          }
+        },
+        "errors": {
+          "independent_trajectory.logits": {
+            "first_step": 6,
+            "steps": 84,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 0.003906309604644775,
+              "first": {
+                "index": [
+                  285,
+                  0
+                ],
+                "actual": -0.6930785775184631,
+                "expected": -0.6891722679138184
+              }
+            }
+          },
+          "parameter.layer1.bias": {
+            "first_step": 65,
+            "steps": 35,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 3.635883331298828e-05,
+              "first": {
+                "index": [
+                  0
+                ],
+                "actual": 0.34698745608329773,
+                "expected": 0.34695109724998474
+              }
+            }
+          },
+          "parameter.layer2.bias": {
+            "first_step": 69,
+            "steps": 30,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 3.159046173095703e-06,
+              "first": {
+                "index": [
+                  2
+                ],
+                "actual": 0.015997089445590973,
+                "expected": 0.01599982939660549
+              }
+            }
+          }
+        },
+        "loss_history": [
+          1.0829360485076904,
+          0.8288630247116089,
+          0.6210935115814209,
+          0.4564725160598755,
+          0.3308957815170288,
+          0.2387653887271881,
+          0.17193999886512756,
+          0.12437021732330322,
+          0.09084241092205048,
+          0.06752197444438934,
+          0.05094904825091362,
+          0.039222970604896545,
+          0.03082282468676567,
+          0.024616621434688568,
+          0.020010771229863167,
+          0.016632849350571632,
+          0.014021127484738827,
+          0.011963881552219391,
+          0.010406583547592163,
+          0.009172309190034866,
+          0.008136581629514694,
+          0.007313503883779049,
+          0.006648611277341843,
+          0.006103414576500654,
+          0.005640682764351368,
+          0.005216002464294434,
+          0.004886355251073837,
+          0.00460157310590148,
+          0.004343611188232899,
+          0.0041184863075613976,
+          0.003913406282663345,
+          0.003778852056711912,
+          0.0036046102177351713,
+          0.0034929560497403145,
+          0.0033586504869163036,
+          0.0032597030512988567,
+          0.003170173615217209,
+          0.0030704836826771498,
+          0.003002651734277606,
+          0.002930375514551997,
+          0.0028736914973706007,
+          0.002794987289234996,
+          0.002748596016317606,
+          0.0026908772997558117,
+          0.0026320870965719223,
+          0.0026189531199634075,
+          0.002578909508883953,
+          0.002523615723475814,
+          0.0025033350102603436,
+          0.0024611735716462135,
+          0.002442315686494112,
+          0.0024000615812838078,
+          0.002364404033869505,
+          0.0023506018333137035,
+          0.0023226668126881123,
+          0.0023063630796968937,
+          0.002276189625263214,
+          0.002263059373944998,
+          0.0022300879936665297,
+          0.002221277914941311,
+          0.0021962865721434355,
+          0.002166509162634611,
+          0.0021452833898365498,
+          0.002142200944945216,
+          0.0021351247560232878,
+          0.0021052220836281776,
+          0.0020917770452797413,
+          0.0020676434505730867,
+          0.0020676390267908573,
+          0.002037046942859888,
+          0.002020700369030237,
+          0.0020152514334768057,
+          0.0020070308819413185,
+          0.001987244002521038,
+          0.0019810928497463465,
+          0.0019686396699398756,
+          0.0019525311654433608,
+          0.001940390095114708,
+          0.0019158845534548163,
+          0.0019148837309330702,
+          0.0019032135605812073,
+          0.0018796561053022742,
+          0.0018758471123874187,
+          0.0018622431671246886,
+          0.0018483934691175818,
+          0.0018506522756069899,
+          0.001828071428462863,
+          0.0018090729136019945,
+          0.001807233551517129,
+          0.001801032922230661,
+          0.0017886802088469267,
+          0.0017842981033027172,
+          0.0017700893804430962,
+          0.0017577155958861113,
+          0.0017385552637279034,
+          0.001720324158668518,
+          0.0017138232942670584,
+          0.0017130356281995773,
+          0.001708275987766683,
+          0.0016756830736994743,
+          0.0016692804638296366,
+          0.0016651451587677002,
+          0.0016592452302575111,
+          0.0016533555462956429,
+          0.0016418939922004938,
+          0.001639133202843368,
+          0.001630926039069891,
+          0.0015987561782822013,
+          0.0015957042342051864,
+          0.0015923751052469015,
+          0.001588658895343542,
+          0.001568591920658946,
+          0.0015459874412044883,
+          0.0015372619964182377,
+          0.0015391018241643906,
+          0.0015319635858759284,
+          0.0015327518340200186,
+          0.001525635365396738,
+          0.0015087132342159748,
+          0.001495162257924676,
+          0.0014879577793180943,
+          0.001481174025684595,
+          0.0014681704342365265,
+          0.001457578269764781,
+          0.001456293510273099,
+          0.0014535378431901336,
+          0.0014326861128211021,
+          0.0014311302220448852,
+          0.0014227740466594696,
+          0.0014192493399605155,
+          0.001409320393577218,
+          0.0013970574364066124,
+          0.0013883775100111961,
+          0.0013804038753733039,
+          0.0013712722575291991,
+          0.0013564465334638953,
+          0.0013547259150072932,
+          0.001352258725091815,
+          0.0013437233865261078,
+          0.0013308895286172628,
+          0.001326478784903884,
+          0.001322244992479682,
+          0.0013170796446502209,
+          0.001314990222454071,
+          0.0012962401378899813,
+          0.0012765962164849043,
+          0.0012784190475940704,
+          0.001273490022867918,
+          0.0012687696143984795,
+          0.0012504843762144446
+        ],
+        "nodes": 49,
+        "model_sha256": "a1ed01ff785049a449cc79e430db96ea77414a305e8df5586119608f8e98f160",
+        "model_bytes": 9712,
+        "versions": {
+          "numpy": "2.4.6",
+          "onnx": "1.23.2",
+          "onnxscript": "0.7.2",
+          "onnxruntime": "1.31.1",
+          "mlx": "0.32.4",
+          "onnxruntime-ep-mlx": "0.31.0"
+        },
+        "scope": "Offline three-class dataset; external CPU Adam; explicit FP32 host exchange for MLX; ORT optimization disabled",
+        "measurement": {
+          "backend": "mlx",
+          "precision": "bf16",
+          "first_step_ms": 53.569375013466924,
+          "model_read_ms": 1.0924169910140336,
+          "session_creation_ms": 39.19370801304467,
+          "timings_ms": {
+            "prepare": {
+              "median": 0.00033300602808594704,
+              "p95": 0.0004580069798976183
+            },
+            "execute_exchange": {
+              "median": 0.5293959839036688,
+              "p95": 0.7446544841513968
+            },
+            "adam": {
+              "median": 0.029791990527883172,
+              "p95": 0.0322086300002411
+            },
+            "step": {
+              "median": 0.559437001356855,
+              "p95": 0.7755041384370996
+            }
+          },
+          "peak_process_rss_bytes": 154238976,
+          "scope": "Independent worker process; same 384 samples and initial parameters; 10 warmup and 100 measured complete updates. Fetch logits/loss/all gradients. Execution includes synchronous host exchange, MLX internal copies and result allocation. Adam runs on CPU. RSS includes imports, loaded model, runtime and allocator overhead.",
+          "threads": {
+            "ort_intra_op": 1,
+            "ort_inter_op": 1
+          },
+          "array_thread_environment": {
+            "OPENBLAS_NUM_THREADS": null,
+            "MKL_NUM_THREADS": null,
+            "VECLIB_MAXIMUM_THREADS": null
+          },
+          "platform": "macOS-27.0.1-arm64-arm-64bit"
+        }
+      },
+      "fp32": {
+        "trajectory_diagnostic": {},
+        "dynamic_reference_reload_batches": [
+          1,
+          7,
+          192
+        ],
+        "executed_providers": [
+          "MLXExecutionProvider"
+        ],
+        "backend": "mlx",
+        "precision": "fp32",
+        "steps": 150,
+        "strict_numerical_acceptance": true,
+        "same_parameter_acceptance": true,
+        "independent_trajectory_acceptance": true,
+        "shared_gradient_update_acceptance": true,
+        "comparison_tolerance": {
+          "rtol": 0.0001,
+          "atol": 1e-06
+        },
+        "initial_train_loss": 1.0827006101608276,
+        "final_train_loss": 0.001250646309927106,
+        "initial_validation_loss": 1.0760846138000488,
+        "final_validation_loss": 0.0020997188985347748,
+        "validation_accuracy": 1.0,
+        "checkpoint_resume_verified": true,
+        "parameter_bytes": 396,
+        "state_bytes": 792,
+        "comparisons": {
+          "same_parameter.logits": {
+            "checks": 150,
+            "max_abs": 1.9073486328125e-06,
+            "max_mismatched": 0
+          },
+          "same_parameter.loss": {
+            "checks": 150,
+            "max_abs": 4.470348358154297e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 4.470348358154297e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.862645149230957e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 9.778887033462524e-09,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.logits": {
+            "checks": 150,
+            "max_abs": 2.86102294921875e-06,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.loss": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.weight": {
+            "checks": 150,
+            "max_abs": 4.470348358154297e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.862645149230957e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer2.weight": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer2.bias": {
+            "checks": 150,
+            "max_abs": 1.1525116860866547e-08,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer1.weight": {
+            "checks": 150,
+            "max_abs": 1.1920928955078125e-07,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer1.bias": {
+            "checks": 150,
+            "max_abs": 5.960464477539063e-08,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer2.weight": {
+            "checks": 150,
+            "max_abs": 5.960464477539063e-08,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer2.bias": {
+            "checks": 150,
+            "max_abs": 5.960464477539063e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 1.1920928955078125e-07,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 5.960464477539062e-07,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 3.5762786865234375e-07,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 6.444752216339111e-07,
+            "max_mismatched": 0
+          }
+        },
+        "errors": {},
+        "loss_history": [
+          1.0827006101608276,
+          0.8290205001831055,
+          0.6208462119102478,
+          0.45631951093673706,
+          0.3311392664909363,
+          0.2386508584022522,
+          0.17181210219860077,
+          0.12431652843952179,
+          0.09090901911258698,
+          0.06746664643287659,
+          0.0509432852268219,
+          0.039191536605358124,
+          0.0307355634868145,
+          0.024570239707827568,
+          0.0200111772865057,
+          0.016590304672718048,
+          0.013985369354486465,
+          0.011972649022936821,
+          0.010395410470664501,
+          0.009142731316387653,
+          0.008135257288813591,
+          0.007315493188798428,
+          0.0066412752494215965,
+          0.006081263534724712,
+          0.005611855536699295,
+          0.005215047858655453,
+          0.004876970313489437,
+          0.0045867725275456905,
+          0.0043359543196856976,
+          0.004117744509130716,
+          0.0039267526008188725,
+          0.003758620470762253,
+          0.0036098388954997063,
+          0.0034775533713400364,
+          0.0033593892585486174,
+          0.0032534166239202023,
+          0.0031579998321831226,
+          0.0030717789195477962,
+          0.0029935832135379314,
+          0.002922415267676115,
+          0.0028574280440807343,
+          0.002797875553369522,
+          0.0027431331109255552,
+          0.0026926314458251,
+          0.002645913977175951,
+          0.0026025688275694847,
+          0.0025622255634516478,
+          0.002524580340832472,
+          0.0024893619120121002,
+          0.002456330694258213,
+          0.0024252652656286955,
+          0.002395977731794119,
+          0.002368299290537834,
+          0.002342068124562502,
+          0.0023171473294496536,
+          0.002293407917022705,
+          0.002270740456879139,
+          0.0022490457631647587,
+          0.0022282307036221027,
+          0.0022082224022597075,
+          0.0021889503113925457,
+          0.002170348772779107,
+          0.0021523674950003624,
+          0.00213494710624218,
+          0.0021180538460612297,
+          0.002101643243804574,
+          0.0020856710616499186,
+          0.0020700995810329914,
+          0.0020549066830426455,
+          0.0020400607027113438,
+          0.0020255278795957565,
+          0.0020112935453653336,
+          0.0019973316229879856,
+          0.001983624417334795,
+          0.0019701540004462004,
+          0.0019569057039916515,
+          0.0019438707968220115,
+          0.0019310296047478914,
+          0.0019183752592653036,
+          0.0019058908801525831,
+          0.001893570413812995,
+          0.0018814107170328498,
+          0.0018693929305300117,
+          0.0018575172871351242,
+          0.0018457705155014992,
+          0.001834165770560503,
+          0.0018226674292236567,
+          0.0018112999387085438,
+          0.001800033962354064,
+          0.001788880443200469,
+          0.0017778318142518401,
+          0.0017668898217380047,
+          0.0017560443375259638,
+          0.0017452932661399245,
+          0.0017346384702250361,
+          0.0017240671440958977,
+          0.0017135891830548644,
+          0.0017031992319971323,
+          0.0016928908880800009,
+          0.0016826661303639412,
+          0.0016725268214941025,
+          0.00166245736181736,
+          0.001652477658353746,
+          0.0016425702488049865,
+          0.0016327414195984602,
+          0.0016229834873229265,
+          0.0016133016906678677,
+          0.0016036926535889506,
+          0.0015941532328724861,
+          0.0015846884343773127,
+          0.0015753008192405105,
+          0.0015659714117646217,
+          0.001556712668389082,
+          0.001547525986097753,
+          0.001538408687338233,
+          0.001529353205114603,
+          0.0015203726943582296,
+          0.0015114498091861606,
+          0.0015025907196104527,
+          0.0014937975211068988,
+          0.0014850710285827518,
+          0.001476403558626771,
+          0.0014678016304969788,
+          0.0014592631487175822,
+          0.001450784271582961,
+          0.0014423737302422523,
+          0.001434014062397182,
+          0.001425715978257358,
+          0.0014174883253872395,
+          0.0014093144563958049,
+          0.001401196583174169,
+          0.0013931419234722853,
+          0.0013851415133103728,
+          0.001377202570438385,
+          0.0013693174114450812,
+          0.001361493719741702,
+          0.0013537228805944324,
+          0.0013460100162774324,
+          0.0013383524492383003,
+          0.0013307500630617142,
+          0.0013232026249170303,
+          0.0013157040812075138,
+          0.00130826560780406,
+          0.0013008809182792902,
+          0.001293547684326768,
+          0.0012862705625593662,
+          0.0012790396576747298,
+          0.0012718590442091227,
+          0.0012647428084164858,
+          0.0012576727895066142
+        ],
+        "nodes": 40,
+        "model_sha256": "0055a6fbbe86c7fa70677a7d7847827eb42534b49fbae66683316e896c0a0e1c",
+        "model_bytes": 9016,
+        "versions": {
+          "numpy": "2.4.6",
+          "onnx": "1.23.2",
+          "onnxscript": "0.7.2",
+          "onnxruntime": "1.31.1",
+          "mlx": "0.32.4",
+          "onnxruntime-ep-mlx": "0.31.0"
+        },
+        "scope": "Offline three-class dataset; external CPU Adam; explicit FP32 host exchange for MLX; ORT optimization disabled",
+        "measurement": {
+          "backend": "mlx",
+          "precision": "fp32",
+          "first_step_ms": 23.203207994811237,
+          "model_read_ms": 0.9365419973619282,
+          "session_creation_ms": 38.43812498962507,
+          "timings_ms": {
+            "prepare": {
+              "median": 0.00033300602808594704,
+              "p95": 0.0006690519512630998
+            },
+            "execute_exchange": {
+              "median": 0.4801459872396663,
+              "p95": 0.7391291612293571
+            },
+            "adam": {
+              "median": 0.03002100856974721,
+              "p95": 0.03986046067439019
+            },
+            "step": {
+              "median": 0.5112499929964542,
+              "p95": 0.7716579988482408
+            }
+          },
+          "peak_process_rss_bytes": 153468928,
+          "scope": "Independent worker process; same 384 samples and initial parameters; 10 warmup and 100 measured complete updates. Fetch logits/loss/all gradients. Execution includes synchronous host exchange, MLX internal copies and result allocation. Adam runs on CPU. RSS includes imports, loaded model, runtime and allocator overhead.",
+          "threads": {
+            "ort_intra_op": 1,
+            "ort_inter_op": 1
+          },
+          "array_thread_environment": {
+            "OPENBLAS_NUM_THREADS": null,
+            "MKL_NUM_THREADS": null,
+            "VECLIB_MAXIMUM_THREADS": null
+          },
+          "platform": "macOS-27.0.1-arm64-arm-64bit"
+        }
+      }
+    }
+  }
+}

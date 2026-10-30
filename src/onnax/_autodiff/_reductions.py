@@ -38,18 +38,9 @@ def reduction_vjp(ctx: _Context, node: ir.Node, g: ir.Value) -> ir.Value:
     )
     # Empty axes reduce all dimensions or none; either result broadcasts directly.
     if not _int(node, "keepdims", 1) and axes is not None and axes_count != 0:
-        if not _int(node, "noop_with_empty_axes", 0) and not isinstance(axes_count, int):
-            rank = ctx.op("Size", shape)
-            zero = ctx.constant(0)
-            stop = ctx.op("Where", ctx.op("Equal", ctx.op("Size", axes), zero), rank, zero)
-            axes = ctx.op("Concat", axes, ctx.op("Range", zero, stop, ctx.constant(1)), axis=0)
-        ones = ctx.op(
-            "ConstantOfShape",
-            ctx.op("Shape", axes),
-            value=ir.tensor([1], dtype=ir.DataType.INT64),
-        )
-        keep_shape = ctx.op("ScatterElements", shape, axes, ones, axis=0)
-        g = ctx.reshape(g, keep_shape)
+        # Restore removed axes directly. Empty runtime axes leave a scalar or
+        # identity reduction, either of which still expands to the primal shape.
+        g = ctx.op("Unsqueeze", g, axes)
     result = ctx.op("Expand", g, shape)
     if node.op_type == "ReduceMean":
         output_dtype = node.outputs[0].dtype

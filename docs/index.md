@@ -13,6 +13,7 @@ ndonnx
 onnxscript
 lora
 mlp
+mlp-bf16
 fitting
 precision
 iobinding

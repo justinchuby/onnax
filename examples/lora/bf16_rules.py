@@ -60,11 +60,20 @@ def lower_matmuls(model):
     result = model.clone()
     if any(node.domain or node.op_type in ("Gemm",) for node in result.graph):
         raise ValueError("Expected the example's standard-domain MatMul graph.")
-    if any(
+    if any(value.dtype != ir.DataType.FLOAT for value in result.graph.inputs) or any(
         value.dtype != ir.DataType.FLOAT
-        for value in (*result.graph.inputs, *result.graph.initializers.values())
+        and value.dtype != ir.DataType.BOOL
+        and (value.dtype is None or not value.dtype.is_integer())
+        for value in result.graph.initializers.values()
     ):
-        raise TypeError("Expected FP32 model inputs and frozen initializers.")
+        raise TypeError("Expected FP32 model inputs and floating initializers.")
+    if any(
+        value is None or value.dtype not in (None, ir.DataType.FLOAT)
+        for node in result.graph
+        if node.op_type == "MatMul"
+        for value in node.inputs
+    ):
+        raise TypeError("Expected FP32 matrix operands.")
     args = [ir.val(n) for n in ("a", "b")]
     tape = ir.tape.Tape()
     reduced = [tape.op("Cast", [arg], {"to": int(ir.DataType.BFLOAT16)}) for arg in args]
