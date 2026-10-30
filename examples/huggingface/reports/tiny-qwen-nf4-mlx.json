@@ -1,0 +1,72 @@
+{
+  "model": "tiny-qwen3-nf4",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "versions": {
+    "onnxruntime": "1.31.1",
+    "onnxruntime-ep-mlx": "0.31.0",
+    "torch": "2.15.0",
+    "mlx": "0.32.4"
+  },
+  "library": "/tmp/onnax-ep-mlx-final-target/release/libonnxruntime_mlx_ep.dylib",
+  "library_sha256": "2df89925b2cee6bf52e73e34cf04b5daa59e76947f222b0fd45b598c7322bb99",
+  "checks": [
+    {
+      "strict_logit_check_passed": true,
+      "logit_violations": 0,
+      "logits_relative_l2": 3.179051191182225e-07,
+      "logits_max_abs": 2.086162567138672e-07,
+      "gradients_max_abs": 4.540197551250458e-09,
+      "strict_gradient_check_passed": true,
+      "gradient_failures": {},
+      "loss": 5.503930568695068
+    },
+    {
+      "strict_logit_check_passed": true,
+      "logit_violations": 0,
+      "logits_relative_l2": 3.1717385695628764e-07,
+      "logits_max_abs": 2.384185791015625e-07,
+      "gradients_max_abs": 5.587935447692871e-09,
+      "strict_gradient_check_passed": true,
+      "gradient_failures": {},
+      "loss": 5.502254962921143
+    },
+    {
+      "strict_logit_check_passed": true,
+      "logit_violations": 0,
+      "logits_relative_l2": 3.2999980703607434e-07,
+      "logits_max_abs": 2.086162567138672e-07,
+      "gradients_max_abs": 6.984919309616089e-09,
+      "strict_gradient_check_passed": true,
+      "gradient_failures": {},
+      "loss": 5.498638153076172
+    },
+    {
+      "strict_logit_check_passed": true,
+      "logit_violations": 0,
+      "logits_relative_l2": 2.990187510931719e-07,
+      "logits_max_abs": 1.7881393432617188e-07,
+      "gradients_max_abs": 9.313225746154785e-09,
+      "strict_gradient_check_passed": true,
+      "gradient_failures": {},
+      "loss": 5.4928059577941895
+    }
+  ],
+  "provider": "MLXExecutionProvider",
+  "cpu_fallback_disabled": true,
+  "ort_graph_optimization": "disabled",
+  "runtime_dtype": "float32",
+  "boundary": "CPU PyTorch loss, parameters and AdamW; NumPy session exchange",
+  "adapter_tensors": 8,
+  "steps": 4,
+  "losses": [
+    5.503930568695068,
+    5.502254962921143,
+    5.498638153076172,
+    5.4928059577941895
+  ],
+  "gradient_and_update_tolerance": {
+    "rtol": 0.0001,
+    "atol": 1e-06
+  },
+  "frozen_buffers_unchanged": true
+}
