@@ -1,12 +1,20 @@
 # onnax
 
-JAX-inspired transformations for ONNX graphs.
+JAX-inspired transformations for ONNX graphs. Batch models with **vmap**,
+differentiate with **grad**, **jvp**, and **vjp**, then save ordinary ONNX models.
+
+## Get started
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 1
 
 guide
 api
 ```
+
+## Interactive example
+
+Explore generated gradients and Hessian-vector products in a WebGPU spring-sheet
+simulation.
 
 <a href="jelly/">Open the WebGPU Jelly playground</a>.
