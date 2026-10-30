@@ -21,6 +21,7 @@ coreml
 mlx-training
 mlx-bf16
 bf16-bounds
+composed-bounds
 bf16
 roadmap
 api

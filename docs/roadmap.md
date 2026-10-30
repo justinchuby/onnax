@@ -54,8 +54,9 @@ provider copy-out alongside CPU/GPU update paths. Its compiled update path
 reuses the same Array API arithmetic, preserves checkpoint state and records
 first-update and steady-state costs. Larger adapter profiles now compare CPU/GPU
 update placement and separate same-parameter accuracy from independent trajectory
-drift. Next compose the native BF16 error contract
-through nonlinearities/backward arithmetic, and broaden precision transforms. The recorded CPU
+drift. The [composed BF16 checks](composed-bounds.md) now carry arithmetic intervals
+through nonlinearities, loss and both parameter gradients, with observed local
+budgets and independent same-parameter references. Next broaden precision transforms. The recorded CPU
 ORT provider lacks BF16 MatMul. Device memory/transfer measurements will guide
 DLPack, recomputation and structured-operator work.
 

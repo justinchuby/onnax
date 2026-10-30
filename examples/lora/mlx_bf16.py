@@ -45,7 +45,7 @@ def gradient_model(w, c, *, batch):
     return optimizer.optimize(graph, input_size_limit=0, output_size_limit=0)
 
 
-def run(output_dir, *, inspect_products=False, inspect_fp32=False):
+def run(output_dir, *, inspect_products=False, inspect_fp32=False, inspect_graph=False):
     """Train and report both same-parameter and independent-trajectory comparisons.
 
     A mismatch remains visible in the report and CLI status; it is never hidden
@@ -80,6 +80,11 @@ def run(output_dir, *, inspect_products=False, inspect_fp32=False):
         inspector = ProductInspector(
             graphs["gradient"], session_factory=session, include_fp32=inspect_fp32
         )
+    graph_inspector = None
+    if inspect_graph:
+        from examples.lora.bf16_composed import GraphInspector
+
+        graph_inspector = GraphInspector(graphs["gradient"], session_factory=session)
     initial_validation = float(
         validation.run(None, {"features": vx, "target": vy, **params})[1]
     )
@@ -96,6 +101,13 @@ def run(output_dir, *, inspect_products=False, inspect_fp32=False):
         if inspector is not None:
             product_checks = inspector.check({"features": x, "target": y, **params}, actual)
         same = reference(x, y, params, w, c)
+        graph_checks = None
+        if graph_inspector is not None:
+            graph_checks = graph_inspector.check(
+                {"features": x, "target": y, **params},
+                actual,
+                reference=[*same[:2], *same[2].values()],
+            )
         separate = reference(x, y, independent, w, c)
         metrics = {
             name: discrepancy(a, b)
@@ -126,6 +138,7 @@ def run(output_dir, *, inspect_products=False, inspect_fp32=False):
             {
                 "step": step,
                 "product_bounds": product_checks,
+                "composed_bounds": graph_checks,
                 "native_loss": float(actual[1]),
                 "independent_loss": float(separate[1]),
                 "same_parameter": metrics,
@@ -212,6 +225,23 @@ def run(output_dir, *, inspect_products=False, inspect_fp32=False):
             if inspect_products
             else None,
             "scope": "Local matrix products at observed inputs. FP32 accumulation model, normal/zero operands; BF16 forward products and optional FP32 backward products. Original graph outputs compared byte-for-byte.",
+        },
+        "composed_bounds": {
+            "enabled": inspect_graph,
+            "all_pass": all(row["composed_bounds"]["all_pass"] for row in rows)
+            if inspect_graph
+            else None,
+            "arithmetic_model": {
+                "fp32_unit_roundoff": 2**-24,
+                "absolute_underflow": 2**-126,
+                "matmul_operations": "2*k",
+                "mean_operations": "2*N+2",
+                "nonlinear_ulps": 4,
+                "nonlinear_reference": "outward FP64 Taylor enclosure: degree 24, geometric remainder, eight reconstruction steps",
+                "reference_arithmetic": "IEEE FP64 elementary operations and bounded dot products, outward endpoints",
+                "operand_policy": "Normal FP32/BF16 operands or zero; checked at all observed floating values, feeds and constants",
+                "scope": "Inputs and initializers propagated through the exported forward/loss/gradient graph at fixed parameters. Local nonlinear budgets and original-output byte equality checked at every step.",
+            },
         },
         "models": {
             name: {
@@ -326,10 +356,14 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", default="mlx_bf16_models")
     parser.add_argument("--inspect-products", action="store_true")
     parser.add_argument("--inspect-fp32", action="store_true")
+    parser.add_argument("--inspect-graph", action="store_true")
     args = parser.parse_args()
     inspect_products = args.inspect_products or args.inspect_fp32
     result = run(
-        args.output_dir, inspect_products=inspect_products, inspect_fp32=args.inspect_fp32
+        args.output_dir,
+        inspect_products=inspect_products,
+        inspect_fp32=args.inspect_fp32,
+        inspect_graph=args.inspect_graph,
     )
     print(f"Loss: {result['initial_loss']:.6g} -> {result['final_loss']:.6g}")
     print(f"Strict numerical acceptance: {result['strict_numerical_acceptance']}")
@@ -337,7 +371,10 @@ if __name__ == "__main__":
         print(
             f"Local matrix product bounds: {result['product_bounds']['all_observed_products_pass']}"
         )
+    if args.inspect_graph:
+        print(f"Composed graph bounds: {result['composed_bounds']['all_pass']}")
     accepted = result["strict_numerical_acceptance"] and (
         not inspect_products or result["product_bounds"]["all_observed_products_pass"]
     )
+    accepted = accepted and (not args.inspect_graph or result["composed_bounds"]["all_pass"])
     raise SystemExit(0 if accepted else 1)
