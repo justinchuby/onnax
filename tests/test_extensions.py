@@ -130,17 +130,47 @@ def test_existing_pass_reads_global_rules_at_invocation():
     assert transform(square_model()).model.graph.outputs[-1].name
 
 
-def test_conflicts_are_atomic_and_decorators_preserve_callables():
-    original = register_square()
-    with pytest.raises(ValueError, match="Overlapping"):
-        register_jvp("demo", "Square", since_version=2, until_version=3)(original)
-    with pytest.raises(ValueError, match="Overlapping"):
-        register_jvp("ai.onnx", "Mul", since_version=18, until_version=18)(original)
-    graph = jvp(square_model())
-    values = runtime_session(graph).run(
-        None, {"x": np.array([2.0, 3.0]), graph.graph.inputs[-1].name: np.ones(2)}
+@pytest.mark.parametrize(
+    "decorator,mode",
+    [(register_jvp, "jvp"), (register_vjp, "vjp"), (register_batching, "batching")],
+)
+def test_later_registration_overrides_extensions_and_builtins(decorator, mode):
+    register_square()
+
+    def replacement(*args):
+        raise RuntimeError("replacement called")
+
+    assert (
+        decorator("demo", "Square", since_version=2, until_version=3)(replacement)
+        is replacement
     )
-    np.testing.assert_allclose(values[-1], [4.0, 6.0])
+    snapshot = _rules._snapshot()
+    registry = getattr(snapshot, "_" + mode)
+    assert registry.lookup(ir.node("Square", [], domain="demo"), {"demo": 2}) is replacement
+    assert (
+        registry.lookup(ir.node("Square", [], domain="demo"), {"demo": 1}) is not replacement
+    )
+    decorator("ai.onnx", "Mul", since_version=18, until_version=18)(replacement)
+    source = square_model()
+    source.graph.node(0).domain = ""
+    source.graph.node(0).op_type = "Mul"
+    source.graph.node(0).resize_inputs(2)
+    source.graph.node(0).replace_input_with(1, source.graph.inputs[0])
+    transform = {"jvp": jvp, "vjp": vjp, "batching": lambda m: vmap(m, in_axes=(0,))}[mode]
+    with pytest.raises(RuntimeError, match="replacement called"):
+        transform(source)
+    decorator("demo", "Square", since_version=1, until_version=3)(lambda *args: None)
+    assert registry.lookup(ir.node("Square", [], domain="demo"), {"demo": 2}) is replacement
+    assert (
+        getattr(_rules._snapshot(), "_" + mode).lookup(
+            ir.node("Square", [], domain="demo"), {"demo": 2}
+        )
+        is not replacement
+    )
+    # Invalid updates leave both prior registrations and earlier snapshots intact.
+    with pytest.raises(ValueError):
+        decorator("demo", "Square", since_version=3, until_version=2)(replacement)
+    assert registry.lookup(ir.node("Square", [], domain="demo"), {"demo": 2}) is replacement
 
 
 def test_version_intervals_and_modes_are_independent():

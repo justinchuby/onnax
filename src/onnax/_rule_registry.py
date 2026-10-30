@@ -4,8 +4,8 @@
 
 Registrations use inclusive, finite version intervals. Both ends are required:
 a new opset must not silently acquire a rule validated only for older opsets.
-Overlapping registrations (including duplicates) are errors, even when they use
-the same callable. There is deliberately no override. Public decorators combine
+Later registrations replace overlapping versions, preserving earlier rules outside
+the new interval. Public decorators combine
 these instance-local registries into a process-global extension registry.
 
 Dispatch uses the explicit ``Node.version`` when present, as elsewhere in the
@@ -86,7 +86,7 @@ class _RuleRegistry(Generic[_RuleT]):
     """Typed, instance-local registry; use the mode-specific subclasses.
 
     ``register`` installs a callable directly; ``rule`` is its decorator form. It rejects
-    invalid ranges and any overlap atomically. Adjacent ranges are allowed.
+    invalid ranges atomically. Later rules replace overlapping versions.
     ``lookup`` returns a rule or raises ``NotImplementedError`` for missing or
     unsupported registrations; invalid version/import information raises
     ``ValueError``. Nonempty node overloads are rejected because a plain operator
@@ -139,21 +139,24 @@ class _RuleRegistry(Generic[_RuleT]):
             )
         key = (_normalize_domain(domain), op_type)
         registrations = self._rules.get(key, [])
+        updated = []
         for existing in registrations:
             if (
-                since_version <= existing.until_version
-                and existing.since_version <= until_version
+                existing.until_version < since_version
+                or existing.since_version > until_version
             ):
-                raise ValueError(
-                    f"Overlapping {self._kind} rules for {_argument_context(key)}: "
-                    f"[{since_version}, {until_version}] overlaps "
-                    f"[{existing.since_version}, {existing.until_version}]. "
-                    "Overrides are not supported; remove the duplicate registration or use non-overlapping version intervals."
+                updated.append(existing)
+                continue
+            if existing.since_version < since_version:
+                updated.append(
+                    _Registration(existing.since_version, since_version - 1, existing.rule)
                 )
-        self._rules.setdefault(key, []).append(
-            _Registration(since_version, until_version, rule)
-        )
-        self._rules[key].sort(key=lambda entry: entry.since_version)
+            if existing.until_version > until_version:
+                updated.append(
+                    _Registration(until_version + 1, existing.until_version, existing.rule)
+                )
+        updated.append(_Registration(since_version, until_version, rule))
+        self._rules[key] = sorted(updated, key=lambda entry: entry.since_version)
 
     def rule(
         self, domain: str, op_type: str, *, since_version: int, until_version: int
