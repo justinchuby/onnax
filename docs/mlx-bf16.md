@@ -83,6 +83,13 @@ from examples.lora.mlx_bf16 import diagnose
 print(diagnose("mlx_bf16_models"))
 ```
 
+## Inspect matrix-accumulation intervals
+
+Add `--inspect-products` to check all forward BF16 products with exact-integer
+accumulation bounds. The [bound derivation and recorded results](bf16-bounds.md)
+explain the arithmetic model and midpoint handling. The report keeps these
+local checks alongside the original strict numerical comparisons.
+
 ## Artifacts and measurements
 
 The output directory contains checked `gradient.onnx` and `validation.onnx`,
@@ -94,6 +101,6 @@ validation/replay sessions and executes the references. RSS includes all of
 that process's imports, compilation and allocators.
 
 The [recorded summary](https://github.com/justinchuby/onnax/blob/main/examples/measurements/mlx-bf16-apple-arm64.json)
-contains aggregate errors and the first mismatch diagnostic. The next step is
-to define a BF16 matrix-accumulation error contract and validate it across
-backends, alongside device-resident updates.
+contains aggregate errors and the first mismatch diagnostic. The [matrix-accumulation checks](bf16-bounds.md) now validate a local error
+contract at observed inputs. Next compose error propagation through the
+nonlinearities and backward graph, alongside device-resident updates.

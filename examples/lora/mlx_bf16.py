@@ -85,7 +85,7 @@ def discrepancy(actual, expected):
     return result
 
 
-def run(output_dir):
+def run(output_dir, *, inspect_products=False):
     """Train and report both same-parameter and independent-trajectory comparisons.
 
     A mismatch remains visible in the report and CLI status; it is never hidden
@@ -112,6 +112,11 @@ def run(output_dir):
     )
     creation = time.perf_counter() - started
     validation = session(graphs["validation"])
+    inspector = None
+    if inspect_products:
+        from examples.lora.bf16_inspector import ProductInspector
+
+        inspector = ProductInspector(graphs["gradient"], session_factory=session)
     initial_validation = float(
         validation.run(None, {"features": vx, "target": vy, **params})[1]
     )
@@ -124,6 +129,9 @@ def run(output_dir):
         started = time.perf_counter()
         actual = executor.run(None, {"features": x, "target": y, **params})
         timings.append((time.perf_counter() - started) * 1000)
+        product_checks = None
+        if inspector is not None:
+            product_checks = inspector.check({"features": x, "target": y, **params}, actual)
         same = reference(x, y, params, w, c)
         separate = reference(x, y, independent, w, c)
         metrics = {
@@ -154,6 +162,7 @@ def run(output_dir):
         rows.append(
             {
                 "step": step,
+                "product_bounds": product_checks,
                 "native_loss": float(actual[1]),
                 "independent_loss": float(separate[1]),
                 "same_parameter": metrics,
@@ -220,6 +229,26 @@ def run(output_dir):
     )
     report = {
         "version": 1,
+        "product_bounds": {
+            "enabled": inspect_products,
+            "arithmetic_model": {
+                "unit_roundoff": 2**-24,
+                "absolute_underflow_per_operation": 2**-126,
+                "operation_budget": "2*k",
+                "final_rounding": "nearest-even BF16",
+                "reference": "exact integer products/sums and rational endpoints",
+            },
+            "all_observed_products_pass": all(
+                row["product_bounds"]["original_outputs_equal"]
+                and all(
+                    not p["violations"] for p in row["product_bounds"]["products"].values()
+                )
+                for row in rows
+            )
+            if inspect_products
+            else None,
+            "scope": "Local BF16 products at observed inputs, FP32 accumulation model with normal/zero BF16 operands, final nearest-even BF16 rounding. Separate from strict end-to-end/trajectory comparisons.",
+        },
         "models": {
             name: {
                 "nodes": len(graph.graph),
@@ -246,7 +275,7 @@ def run(output_dir):
             "median": float(np.median(timings[10:110])),
             "p95": float(np.percentile(timings[10:110], 95)),
         },
-        "timing_scope": "Execution/exchange only, first 10 steps warmup and next 100 measured; same process also runs independent references and validation sessions. Excludes Adam/reference/export. Use isolated benchmarks for provider comparisons.",
+        "timing_scope": "Original-graph execution/exchange only, first 10 steps warmup and next 100 measured. References, validation/replay and optional product inspection execute between measurements in this process; Adam, references, export and inspection are excluded from timings. Use isolated benchmarks for provider comparisons.",
         "versions": {
             name: version(name)
             for name in ("onnxruntime", "onnxruntime-ep-mlx", "onnx", "onnxscript", "numpy")
@@ -254,7 +283,7 @@ def run(output_dir):
         "platform": platform.platform(),
         "peak_process_rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         * (1 if sys.platform == "darwin" else 1024),
-        "rss_scope": "Isolated CLI process including imports, graph generation, three native sessions, references, checkpoint replay and allocators.",
+        "rss_scope": "Isolated CLI process including imports, graph generation, training/validation/replay sessions, optional product inspection, references, checkpoint replay and allocators.",
         "frozen_master": frozen,
         "parameters": [
             {
@@ -331,8 +360,16 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", default="mlx_bf16_models")
+    parser.add_argument("--inspect-products", action="store_true")
     args = parser.parse_args()
-    result = run(args.output_dir)
+    result = run(args.output_dir, inspect_products=args.inspect_products)
     print(f"Loss: {result['initial_loss']:.6g} -> {result['final_loss']:.6g}")
     print(f"Strict numerical acceptance: {result['strict_numerical_acceptance']}")
-    raise SystemExit(0 if result["strict_numerical_acceptance"] else 1)
+    if args.inspect_products:
+        print(
+            f"Local BF16 product bounds: {result['product_bounds']['all_observed_products_pass']}"
+        )
+    accepted = result["strict_numerical_acceptance"] and (
+        not args.inspect_products or result["product_bounds"]["all_observed_products_pass"]
+    )
+    raise SystemExit(0 if accepted else 1)
