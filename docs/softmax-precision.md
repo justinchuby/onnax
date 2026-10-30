@@ -129,6 +129,7 @@ node names, local metrics and selected dot-product oracles. The next comparison
 is adapter-gradient propagation at fixed activations, followed by the independent
 optimizer trajectories.
 
+(qwen-stable-recovery)=
 ### Real-model training and recovery
 
 The stable-Swish Qwen3-0.6B run completed 30 updates in FP32. Validation loss

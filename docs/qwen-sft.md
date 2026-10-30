@@ -72,7 +72,7 @@ weight data are saved alongside the tokenizer.
 
 ## Recorded baseline Qwen3-0.6B run
 
-The [FP32 audit](softmax-precision.md#real-model-training-and-recovery) records
+The [FP32 audit](softmax-precision.md#qwen-stable-recovery) records
 the current stable-Swish run and its checkpoint recovery verification.
 
 On an Apple M1 Max with 32 GiB RAM, 30 CPU FP32 updates reduced validation
