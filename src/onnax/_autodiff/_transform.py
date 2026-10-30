@@ -481,6 +481,13 @@ class VjpPass(ir.passes.FunctionalPass):
                 raise TypeError(
                     f"{_node_context(node, result.graph.opset_imports, mode)}: rule must return a mapping of input indices to IR Values, got {type(contributions).__name__}. Return exactly the requested input contributions."
                 )
+            if any(
+                isinstance(index, bool) or not isinstance(index, int)
+                for index in contributions
+            ):
+                raise TypeError(
+                    f"{_node_context(node, result.graph.opset_imports, mode)}: VJP rule input indices must be integers, excluding bool; got {_argument_context(list(contributions))}. Return exactly the requested integer input indices."
+                )
             if set(contributions) != set(indices):
                 raise ValueError(
                     f"{_node_context(node, result.graph.opset_imports, mode)}: "

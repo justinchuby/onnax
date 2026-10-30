@@ -399,3 +399,20 @@ def test_partial_batching_override_preserves_other_versions_schema_checks():
     with pytest.raises(ir.passes.PreconditionError, match="different schema"):
         vmap(model(25, 24), in_axes=(0,))
     assert calls == [18]
+
+
+@pytest.mark.parametrize("keys", [[False], [0.0], ["0"], [0, "other"]])
+def test_vjp_rejects_noninteger_contribution_keys_with_context(keys):
+    @register_vjp("demo", "Square", since_version=1, until_version=2)
+    def bad_keys(ctx, node, cotangents, indices):
+        return {key: ctx.input(node) for key in keys}
+
+    source = square_model()
+    before = ir.to_proto(source).SerializeToString()
+    with pytest.raises(
+        TypeError, match="input indices must be integers, excluding bool"
+    ) as caught:
+        vjp(source)
+    assert "Square" in str(caught.value)
+    assert "requested integer input indices" in str(caught.value)
+    assert ir.to_proto(source).SerializeToString() == before
