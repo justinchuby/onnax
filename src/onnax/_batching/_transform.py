@@ -11,11 +11,11 @@ import onnx_ir as ir
 from onnx_shape_inference import OpUsageError, ShapeInferenceError
 
 from onnax import _rule_registry
-from onnax._batching import _elementwise, _indexing, _layout, _linalg, _nn, _reductions
 from onnax._batching._context import _axis, _Context
 from onnax._batching._registry import _RANDOM, _BatchingRegistry
 from onnax._diagnostics import _argument_context, _node_context, _value_context
 from onnax._inference import _infer_shapes
+from onnax._rules import _load_builtin_rules, _RuleSet, _snapshot
 
 
 class VmapPass(ir.passes.FunctionalPass):
@@ -153,7 +153,7 @@ class VmapPass(ir.passes.FunctionalPass):
       scales/zero points must be shared; GridSample's data and grid may each
       be mapped or shared. Clip bounds must be shared scalars. Dropout's
       training mode must be omitted or a constant false scalar.
-    * Control flow, custom/local function calls, random/training Dropout,
+    * Control flow, unregistered custom/local function calls, random/training Dropout,
       mapped sequences/optionals, ragged outputs, and operators without a
       mapped rule raise :class:`onnx_ir.passes.PreconditionError`. Inline
       supported local functions first; unused function definitions remain
@@ -216,6 +216,7 @@ class VmapPass(ir.passes.FunctionalPass):
         self.axis_size = axis_size
 
     def call(self, model: ir.Model) -> ir.passes.PassResult:
+        rules = _snapshot()
         version = model.graph.opset_imports.get("", 0)
         try:
             supported = bool(18 <= version <= 28)
@@ -267,7 +268,10 @@ class VmapPass(ir.passes.FunctionalPass):
             )
         available = set(model.graph.inputs) | set(model.graph.initializers.values())
         for node in model.graph:
-            if node.op_identifier() in model.functions:
+            if (
+                node.op_identifier() in model.functions
+                and (node.domain, node.op_type) not in rules._batching._rules
+            ):
                 raise ir.passes.PreconditionError(
                     f"{_node_context(node, model.graph.opset_imports, 'vmap')}: "
                     "VmapPass does not support local function calls. Inline functions first "
@@ -298,25 +302,44 @@ class VmapPass(ir.passes.FunctionalPass):
                 "Correct the reported operator inputs/attributes or incompatible source "
                 "shape annotations, then retry."
             ) from e
-        _Batcher(result.graph, self.axis_size).run(self.in_axes, out_axes)
+        _Batcher(result.graph, self.axis_size, rules).run(self.in_axes, out_axes)
         return ir.passes.PassResult(result, modified=True)
 
 
 class _Batcher(_Context):
-    def __init__(self, graph: ir.Graph, axis_size: int | None) -> None:
+    def __init__(
+        self, graph: ir.Graph, axis_size: int | None, rules: _RuleSet | None = None
+    ) -> None:
         super().__init__(graph, axis_size)
-        self.registry = _BatchingRegistry[_Batcher]()
-        for family in (_elementwise, _linalg, _nn, _indexing, _layout, _reductions):
-            for op in sorted(family.OPS):
-                self.registry.register(
-                    "",
-                    op,
-                    family.apply,
-                    since_version=20 if op == "Gelu" else 18,
-                    until_version=28,
-                )
+        self.registry = _BatchingRegistry[_Context]()
+        self.registry.extend(_load_builtin_rules()._batching)
+        if rules is not None:
+            self.registry.extend(rules._batching)
+        self.external = set() if rules is None else set(rules._batching._rules)
 
     def _node(self, node: ir.Node) -> None:
+        if (node.domain, node.op_type) in self.external and not node.overload:
+            if not node.domain and node.op_type in _RANDOM:
+                raise ir.passes.PreconditionError(
+                    "External rules cannot bypass random-operator restrictions. Supply independent samples as mapped inputs."
+                )
+            if any(
+                a.is_ref() or a.type in (ir.AttributeType.GRAPH, ir.AttributeType.GRAPHS)
+                for a in node.attributes.values()
+            ):
+                raise ir.passes.PreconditionError(
+                    "Extension batching rules cannot bypass subgraph restrictions. Inline the body first."
+                )
+            returned = self.registry.lookup(node, self.graph.opset_imports)(self, node)
+            if returned is not None:
+                raise TypeError(
+                    "External batching rule must return None after registering outputs. Use ctx.register or ctx.register_outputs."
+                )
+            if any(value not in self.values for value in node.outputs):
+                raise ValueError(
+                    "External batching rule did not register every output. Call ctx.register_outputs with each output's example rank and mapping status."
+                )
+            return
         if (
             node.domain != ""
             or node.overload
@@ -439,6 +462,9 @@ class _Batcher(_Context):
                 self._node(node)
             except ir.passes.PreconditionError as error:
                 raise ir.passes.PreconditionError(f"{context}: {error}") from error
+            except (ValueError, TypeError, NotImplementedError) as error:
+                error.add_note(context)
+                raise
         self.before = None
         for i, (output, axis) in enumerate(zip(tuple(self.graph.outputs), out_axes)):
             rank = self.ranks[output]

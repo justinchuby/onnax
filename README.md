@@ -15,7 +15,7 @@ python -m pip install onnax==0.1.0
 ```
 
 This README describes `main`. Recent additions, including
-`HoistLinearCoefficientsPass` and GELU/PReLU autodiff, are not included in the
+global rule decorators, `HoistLinearCoefficientsPass`, and GELU/PReLU autodiff, are not included in the
 `v0.1.0` release tag. Install from source below to use these development features.
 
 To develop from source:
@@ -186,3 +186,52 @@ the actual version and supported interval. Keep remedies specific.
 ## License
 
 [MIT](https://github.com/justinchuby/onnax/blob/main/LICENSE).
+
+## Extend transformation rules
+
+Import a plugin once to register rules globally. Calls stay `onnax.jvp(model)`,
+`onnax.grad(model)`, and `onnax.vmap(model, ...)`; pass objects also read the latest
+registrations when invoked.
+
+```python
+from collections.abc import Mapping, Sequence
+
+import onnx_ir as ir
+
+import onnax
+
+
+@onnax.register_jvp("example", "Square", since_version=1, until_version=1)
+def square_jvp(
+    ctx: onnax.AutodiffContext, node: ir.Node, tangents: Mapping[int, ir.Value]
+) -> Sequence[ir.Value]:
+    x = ctx.input(node)
+    return [ctx.op("Mul", ctx.op("Mul", ctx.scalar(x, 2), x), tangents[0])]
+```
+
+Use `register_vjp` for reverse rules shared by `vjp` and `grad`, and
+`register_batching` for `vmap`. The complete runnable
+[custom rules example](examples/custom_rules.py) registers all three and validates
+JVP, VJP, gradients, HVPs, and per-example gradients. Extensions use public
+`AutodiffContext` and `BatchingContext` helpers; no private imports are needed.
+
+Registrations are keyed by domain, operator name, and an explicit inclusive
+opset interval. Overlaps with builtins or another extension raise `ValueError`
+without changing existing registrations; disjoint intervals are allowed.
+Each transform takes a stable snapshot, including during concurrent registration.
+Import plugins before invoking transforms. Registration is process-local and is
+not serialized into exported models.
+
+A JVP callback returns one tangent per output; a VJP callback returns exactly the
+requested input-index contributions. Batching callbacks update the cloned node
+and register each output's example rank and mapped state. `ctx.elementwise(node)`
+handles operators with ordinary elementwise broadcasting; use
+`prepare`, `align`, and `register` for other batching contracts. Example ranks
+exclude the leading batch axis.
+
+Rules supply transformation semantics, not runtime kernels or inference schemas.
+Provide an ONNX function or runtime implementation for custom primal operators,
+and annotate tensor dtypes/ranks when inference cannot determine them. Select
+floating inputs explicitly when custom operands include nondifferentiable data.
+Callbacks should build new values through the context and treat existing tensor
+payloads as read-only. Randomness, subgraphs, and overloaded calls remain restricted.

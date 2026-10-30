@@ -27,7 +27,9 @@ def _axis(axis: int, rank: int, *, what: str = "Axis") -> int:
     return axis % rank
 
 
-class _Context:
+class BatchingContext:
+    """Graph construction state supplied to external transformation rules."""
+
     def __init__(self, graph: ir.Graph, axis_size: int | None) -> None:
         self.graph = graph
         self.axis_size = axis_size
@@ -235,6 +237,88 @@ class _Context:
             )
         return shape[0]
 
+    def prepare(self, node: ir.Node) -> tuple[list[ir.Value], bool]:
+        """Bind node inputs to transformed values; return originals and mapping status."""
+        inputs = [value for value in node.inputs if value is not None]
+        mapped = any(self.mapped[value] for value in inputs)
+        for i, value in enumerate(node.inputs):
+            if value is not None:
+                node.replace_input_with(i, self.values[value])
+        return inputs, mapped
+
+    def rank(self, value: ir.Value) -> int:
+        """Return a source value's example rank, excluding the batch axis."""
+        return self.ranks[value]
+
+    def is_mapped(self, value: ir.Value) -> bool:
+        """Return whether a source value varies across examples."""
+        return self.mapped[value]
+
+    def mapped_value(self, value: ir.Value) -> ir.Value:
+        """Return the transformed value, with any batch axis leading."""
+        return self.values[value]
+
+    def align(self, value: ir.Value, target_rank: int) -> ir.Value:
+        """Align an original value for elementwise broadcasting after its batch axis."""
+        return self._align(
+            self.values[value], self.ranks[value], self.mapped[value], target_rank
+        )
+
+    def register(self, value: ir.Value, *, rank: int, mapped: bool) -> None:
+        """Register one original output's example rank and mapping status."""
+        if (
+            isinstance(rank, bool)
+            or not isinstance(rank, int)
+            or rank < 0
+            or not isinstance(mapped, bool)
+        ):
+            raise ValueError(
+                f"Output rank must be an integer >= 0 and mapped must be bool; got rank={_argument_context(rank)}, mapped={_argument_context(mapped)}. Use the example rank, excluding the batch axis."
+            )
+        self._register(value, rank, mapped)
+
+    def op(
+        self,
+        op_type: str,
+        *inputs: ir.Value | None,
+        domain: str = "",
+        version: int | None = None,
+        **attributes: ir.Attr | int | float | str | Sequence[int] | ir.TensorProtocol,
+    ) -> ir.Value:
+        """Emit an ONNX node before the current node; imports remain caller-owned."""
+        if not domain and version is None:
+            return self._emit(op_type, inputs, attributes)
+        node = ir.node(
+            op_type, inputs, attributes, domain=domain, num_outputs=1, version=version
+        )
+        if self.before is None:
+            self.graph.append(node)
+        else:
+            self.graph.insert_before(self.before, node)
+        return node.outputs[0]
+
+    def register_outputs(self, node: ir.Node, *, rank: int, mapped: bool) -> None:
+        """Register equal-rank tensor outputs after updating the cloned node."""
+        for output in node.outputs:
+            self.register(output, rank=rank, mapped=mapped)
+
+    def elementwise(self, node: ir.Node) -> None:
+        """Batch an extension whose inputs/outputs obey elementwise broadcasting.
+
+        All inputs must be required tensors. The callback author guarantees
+        that this operator applies independently at every tensor coordinate.
+        """
+        if not node.inputs or any(v is None for v in node.inputs):
+            raise ValueError(
+                "elementwise requires nonempty tensor inputs without optional slots. Use prepare/align/register_outputs for another contract."
+            )
+        inputs, mapped = self.prepare(node)
+        rank = max(self.rank(value) for value in inputs)
+        if mapped:
+            for i, value in enumerate(inputs):
+                node.replace_input_with(i, self.align(value, rank))
+        self.register_outputs(node, rank=rank, mapped=mapped)
+
     def _prepare_node(self, node: ir.Node) -> tuple[list[ir.Value], bool]:
         inputs = [value for value in node.inputs if value is not None]
         mapped = any(self.mapped[value] for value in inputs)
@@ -250,3 +334,7 @@ class _Context:
             if value is not None:
                 node.replace_input_with(i, self.values[value])
         return inputs, mapped
+
+
+# Internal compatibility name; external rules import the public name from onnax.
+_Context = BatchingContext

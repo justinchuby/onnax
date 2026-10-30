@@ -11,6 +11,7 @@ import onnx_ir as ir
 
 from onnax._autodiff._common import _FLOATS, _input, _int, _rank
 from onnax._autodiff._context import _Context
+from onnax._rules import _builtin
 
 OPS = frozenset(
     (
@@ -54,6 +55,7 @@ def gather_vjp(ctx: _Context, node: ir.Node, g: ir.Value) -> ir.Value:
     return ctx.op("Transpose", result, perm=np.argsort(perm).tolist())
 
 
+@_builtin("jvp", OPS)
 def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Value]:
     op = node.op_type
     if op in (
@@ -124,6 +126,7 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
     )
 
 
+@_builtin("vjp", OPS - {"ScatterND"})
 def vjp(
     ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
 ) -> dict[int, ir.Value]:

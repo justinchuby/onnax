@@ -29,10 +29,12 @@ jobs:
           uv venv "$RUNNER_TEMP/onnax-smoke"
           python="$RUNNER_TEMP/onnax-smoke/bin/python"
           cp tools/check_distribution.py "$RUNNER_TEMP/check_distribution.py"
+          cp examples/custom_rules.py "$RUNNER_TEMP/custom_rules.py"
           for artifact in "$GITHUB_WORKSPACE"/dist/*.whl "$GITHUB_WORKSPACE"/dist/*.tar.gz; do
             uv pip install --python "$python" --reinstall "$artifact"
             uv pip check --python "$python"
             (cd "$RUNNER_TEMP" && "$python" -I check_distribution.py)
+            (cd "$RUNNER_TEMP" && "$python" -I custom_rules.py)
           done
 
   jelly-web:

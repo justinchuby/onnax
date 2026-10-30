@@ -7,6 +7,7 @@ from __future__ import annotations
 import onnx_ir as ir
 
 from onnax._batching._context import _axis, _Context
+from onnax._rules import _builtin
 
 OPS = frozenset(
     (
@@ -126,6 +127,7 @@ def _shape(ctx: _Context, node: ir.Node, value: ir.Value) -> None:
         node.outputs[0].shape = ir.Shape([max(end - start, 0)])
 
 
+@_builtin("batching", OPS)
 def apply(ctx: _Context, node: ir.Node) -> None:
     inputs, mapped = ctx._prepare_node(node)
     op = node.op_type

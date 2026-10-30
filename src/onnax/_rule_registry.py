@@ -5,8 +5,8 @@
 Registrations use inclusive, finite version intervals. Both ends are required:
 a new opset must not silently acquire a rule validated only for older opsets.
 Overlapping registrations (including duplicates) are errors, even when they use
-the same callable. There is deliberately no override or process-global registry.
-Create a separate registry when experimenting with alternative rules.
+the same callable. There is deliberately no override. Public decorators combine
+these instance-local registries into a process-global extension registry.
 
 Dispatch uses the explicit ``Node.version`` when present, as elsewhere in the
 IR; otherwise it requires the caller's enclosing graph/function opset imports.
@@ -85,7 +85,7 @@ class _Registration(Generic[_RuleT]):
 class _RuleRegistry(Generic[_RuleT]):
     """Typed, instance-local registry; use the mode-specific subclasses.
 
-    ``register`` is a direct registration operation, not a decorator. It rejects
+    ``register`` installs a callable directly; ``rule`` is its decorator form. It rejects
     invalid ranges and any overlap atomically. Adjacent ranges are allowed.
     ``lookup`` returns a rule or raises ``NotImplementedError`` for missing or
     unsupported registrations; invalid version/import information raises
@@ -122,6 +122,10 @@ class _RuleRegistry(Generic[_RuleT]):
                 f"for {_argument_context(domain)}::{_argument_context(op_type)}. "
                 "Supply an inclusive range in ascending order."
             )
+        if not isinstance(domain, str) or not isinstance(op_type, str):
+            raise TypeError(
+                f"Rule domain and operator name must be strings; got {type(domain).__name__}/{type(op_type).__name__}. Use a domain string and an ONNX operator name."
+            )
         if not op_type:
             raise ValueError(
                 f"Operator name must not be empty (domain={_argument_context(domain)}). "
@@ -144,12 +148,41 @@ class _RuleRegistry(Generic[_RuleT]):
                     f"Overlapping {self._kind} rules for {_argument_context(key)}: "
                     f"[{since_version}, {until_version}] overlaps "
                     f"[{existing.since_version}, {existing.until_version}]. "
-                    "Overrides are not supported; use a separate registry."
+                    "Overrides are not supported; remove the duplicate registration or use non-overlapping version intervals."
                 )
         self._rules.setdefault(key, []).append(
             _Registration(since_version, until_version, rule)
         )
         self._rules[key].sort(key=lambda entry: entry.since_version)
+
+    def rule(
+        self, domain: str, op_type: str, *, since_version: int, until_version: int
+    ) -> Callable[[_RuleT], _RuleT]:
+        """Decorate a rule without replacing the decorated function."""
+
+        def decorate(rule: _RuleT) -> _RuleT:
+            self.register(
+                domain, op_type, rule, since_version=since_version, until_version=until_version
+            )
+            return rule
+
+        return decorate
+
+    def extend(self, other: _RuleRegistry[_RuleT]) -> None:
+        """Atomically merge rules; registrations are immutable snapshots."""
+        merged = type(self)()
+        merged._kind = self._kind
+        merged._rules = {key: list(entries) for key, entries in self._rules.items()}
+        for (domain, op), entries in other._rules.items():
+            for entry in entries:
+                merged.register(
+                    domain,
+                    op,
+                    entry.rule,
+                    since_version=entry.since_version,
+                    until_version=entry.until_version,
+                )
+        self._rules = merged._rules
 
     def lookup(self, node: ir.Node, opset_imports: Mapping[str, int]) -> _RuleT:
         """Resolve a rule using the imports of the node's enclosing scope."""

@@ -9,14 +9,20 @@ from collections.abc import Sequence
 import numpy as np
 import onnx_ir as ir
 
-from onnax._autodiff._common import _FLOATS
+from onnax._autodiff._common import _FLOATS, _input
 
 
-class _Context:
+class AutodiffContext:
+    """Graph construction state supplied to external transformation rules."""
+
     def __init__(self, graph: ir.Graph) -> None:
         self.graph = graph
         self.tape = ir.tape.Tape(graph)
         self.names = set(ir.convenience.create_value_mapping(graph, include_subgraphs=False))
+
+    def input(self, node: ir.Node, index: int = 0) -> ir.Value:
+        """Return a required primal operand with an actionable missing-slot error."""
+        return _input(node, index)
 
     def name(self, stem: str) -> str:
         name = stem
@@ -31,9 +37,11 @@ class _Context:
         self,
         op: str,
         *inputs: ir.Value | None,
+        domain: str = "",
+        version: int | None = None,
         **attrs: ir.Attr | int | float | str | Sequence[int] | ir.TensorProtocol,
     ) -> ir.Value:
-        return self.tape.op(op, inputs, attrs)
+        return self.tape.op(op, inputs, attrs, domain=domain, version=version)
 
     def constant(
         self, value: float | int | Sequence[int], dtype: ir.DataType = ir.DataType.INT64
@@ -133,3 +141,7 @@ class _Context:
         perm = list(range(rank))
         perm[-2], perm[-1] = perm[-1], perm[-2]
         return self.op("Transpose", value, perm=perm)
+
+
+# Internal compatibility name; external rules import the public name from onnax.
+_Context = AutodiffContext
