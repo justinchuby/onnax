@@ -365,3 +365,37 @@ def test_multi_output_batching_and_autodiff():
     )
     np.testing.assert_allclose(actual[-2], data[1])
     np.testing.assert_allclose(actual[-1], 2 * data[0] * data[1])
+
+
+def test_partial_batching_override_preserves_other_versions_schema_checks():
+    calls = []
+
+    @register_batching("", "Identity", since_version=18, until_version=18)
+    def identity(ctx, node):
+        calls.append(node.version)
+        ctx.elementwise(node)
+
+    def model(graph_version, node_version):
+        x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[2])
+        node = ir.node("Identity", [x], version=node_version)
+        node.outputs[0].name = "y"
+        return ir.Model(
+            ir.Graph(
+                [x],
+                node.outputs,
+                nodes=[node],
+                opset_imports={"": graph_version},
+                name="identity",
+            ),
+            ir_version=10,
+        )
+
+    vmap(model(18, 18), in_axes=(0,))
+    assert calls == [18]
+    vmap(model(24, 24), in_axes=(0,))
+    assert calls == [18]
+    # Identity changes schema at opset 25. The uncovered version must still
+    # reject a per-node override that cannot survive ONNX serialization.
+    with pytest.raises(ir.passes.PreconditionError, match="different schema"):
+        vmap(model(25, 24), in_axes=(0,))
+    assert calls == [18]
