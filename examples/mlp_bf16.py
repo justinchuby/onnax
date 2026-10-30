@@ -56,7 +56,13 @@ def reference(x, targets, params, *, precision="bf16"):
     shifted = logits - logits.max(axis=-1, keepdims=True)
     logp = shifted - np.log(np.exp(shifted).sum(axis=-1, keepdims=True))
     loss = -np.mean(np.sum(targets * logp, axis=-1))
-    dz = (np.exp(logp) - targets) / np.float32(len(x))
+    # Compute non-pivot entries first, then enforce logit-shift invariance.
+    # This avoids subtracting one from a rounded unit probability.
+    scale = np.float32(1) / np.float32(len(x))
+    dz = np.exp(logp) * scale - targets * scale
+    pivot = logits.argmax(axis=-1)
+    dz[np.arange(len(x)), pivot] = 0
+    dz[np.arange(len(x)), pivot] = -dz.sum(axis=-1)
     exponential = np.exp(np.float32(-2) * np.abs(z))
     denominator = np.float32(1) + exponential
     slope = (np.float32(4) * exponential) / (denominator * denominator)

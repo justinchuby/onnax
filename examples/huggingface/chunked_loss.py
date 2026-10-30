@@ -13,6 +13,7 @@ from torch.autograd.function import once_differentiable
 import onnax
 from examples.huggingface.bridge import graph_session
 from examples.huggingface.optimization import optimize_training_graph
+from examples.huggingface.stable_losses import hard_cross_entropy
 
 
 def head_graph(weight):
@@ -21,38 +22,23 @@ def head_graph(weight):
     labels = ir.val("labels", dtype=ir.DataType.INT64, shape=["tokens"])
     tape = ir.tape.Tape()
 
-    def constant(array):
-        return tape.op("Constant", [], {"value": ir.tensor(np.asarray(array))})
-
     w = tape.initializer(ir.tensor(weight, name="head.weight"))
     logits = tape.op("MatMul", [hidden, w])
-    valid = tape.op("GreaterOrEqual", [labels, constant(np.int64(0))])
-    safe = tape.op("Max", [labels, constant(np.int64(0))])
-    count = tape.op("Gather", [tape.op("Shape", [labels]), constant(np.int64(0))], {"axis": 0})
-    offsets = tape.op(
-        "Mul",
-        [
-            tape.op("Range", [constant(np.int64(0)), count, constant(np.int64(1))]),
-            constant(np.int64(vocab)),
-        ],
+    logits.dtype, logits.shape = hidden.dtype, ir.Shape(["tokens", vocab])
+    graph = ir.Graph(
+        [hidden, labels],
+        [],
+        nodes=tape.nodes,
+        initializers=tape.initializers,
+        opset_imports={"": 24},
+        name="head_loss",
     )
-    indices = tape.op("Add", [offsets, safe])
-    logprobs = tape.op("LogSoftmax", [logits], {"axis": -1})
-    flat = tape.op("Reshape", [logprobs, constant(np.array([-1], np.int64))])
-    selected = tape.op("Gather", [flat, indices], {"axis": 0})
-    losses = tape.op("Where", [valid, tape.op("Neg", [selected]), constant(np.float32(0))])
-    total = tape.op("ReduceSum", [losses], {"keepdims": 0})
+    ctx = onnax.AutodiffContext(graph)
+    losses = hard_cross_entropy(ctx, logits, labels)
+    total = ctx.op("ReduceSum", losses, keepdims=0)
     total.name, total.dtype, total.shape = "loss_sum", ir.DataType.FLOAT, ir.Shape([])
-    model = ir.Model(
-        ir.Graph(
-            [hidden, labels],
-            [total],
-            nodes=tape.nodes,
-            initializers=tape.initializers,
-            opset_imports={"": 24},
-        ),
-        ir_version=12,
-    )
+    graph.outputs.append(total)
+    model = ir.Model(graph, ir_version=12)
     ShapeInferencePass()(model)
     return model
 
@@ -65,12 +51,12 @@ class _ChunkLoss(torch.autograd.Function):
         rows = array[:, :-1].reshape(-1, array.shape[-1])
         targets = labels[:, 1:].contiguous().numpy().reshape(-1)
         gradient = np.zeros_like(rows)
-        total = np.float64(0)
+        total = np.float32(0)
         for start in range(0, len(rows), runtime.chunk_size):
             stop = min(start + runtime.chunk_size, len(rows))
             feeds = {"hidden": rows[start:stop], "labels": targets[start:stop]}
             value, derivative = runtime.executor.run(None, feeds)
-            total += np.float64(value)
+            total += np.float32(value)
             gradient[start:stop] = derivative
         full = np.zeros_like(array)
         full[:, :-1] = gradient.reshape(array.shape[0], array.shape[1] - 1, array.shape[2])

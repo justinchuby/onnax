@@ -303,7 +303,18 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
                 slope = ctx.op("Mul", ctx.scalar(x, coefficient), ctx.op("Exp", negative_x))
             p = ctx.op("Where", positive, ctx.scalar(x, gamma), slope)
         elif op == "Softplus":
-            p = ctx.op("Sigmoid", x)
+            # Some runtime Sigmoid kernels round small negative-tail values to
+            # zero. Keep exp(-abs(x)) in the numerator instead.
+            positive = ctx.op("GreaterOrEqual", x, ctx.scalar(x, 0))
+            magnitude = ctx.op("Where", positive, x, ctx.op("Neg", x))
+            tail = ctx.op("Exp", ctx.op("Neg", magnitude))
+            denominator = ctx.op("Add", one, tail)
+            p = ctx.op(
+                "Where",
+                positive,
+                ctx.op("Div", one, denominator),
+                ctx.op("Div", tail, denominator),
+            )
         elif op == "Softsign":
             denom = ctx.op("Add", one, ctx.op("Abs", x))
             # Squaring the reciprocal avoids overflow in both the slope and
