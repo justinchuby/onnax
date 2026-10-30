@@ -148,12 +148,11 @@
           </aside>
         </div>
         <p id="force-legend" class="control-note">
-          <strong>ONNX force field: −grad E<sub>physical</sub>.</strong>
-          Arrows point along spring + gravity + pointer-tether force at free nodes. Mint → gold and
-          longer arrows mean larger magnitude (nonlinear display scale). Maximum node force:
-          <output id="force-max">waiting for first step</output>. Illustrative force units; no
-          inertia, viscous drag, or pinned reaction forces. Values are from the last completed step.
-          Use “Show me” to hide arrows.
+          <strong>Force = −∇U.</strong>
+          Arrows show spring, gravity and pointer forces at free nodes. Longer, gold arrows mean
+          stronger force (nonlinear scale). Maximum:
+          <output id="force-max">waiting for first step</output>. Last completed step; excludes
+          inertia, damping and support reactions. Hide arrows with “Show me”.
         </p>
         <section id="error" class="error" role="alert" hidden></section>
         <section class="telemetry" aria-label="Live physics and performance">
@@ -182,22 +181,30 @@
             <p class="eyebrow">THE INTERESTING PART</p>
             <h2>One energy.<br><em>Two derivatives.</em></h2>
             <p>
-              No hand-coded spring forces. No dense Hessian. Python authors a scalar energy in ONNX
-              IR; onnax turns it into executable derivative graphs.
+              The sheet is 36 moving points joined by 110 springs. Let <em>x</em> collect their
+              positions. Stretching or compressing a spring stores energy:
+            </p>
+            <p class="math-formula">
+              E<sub>spring</sub>(x) = ½k ∑<sub>(i,j)</sub>
+              (ℓ<sub>ij</sub>(x) − ℓ<sub>ij</sub><sup>0</sup>)²
+            </p>
+            <p>
+              Here <em>k</em> is stiffness, ℓ is a smoothed spring length, and ℓ⁰ is its rest
+              length. Add gravity and the pointer's spring to get physical energy <em>U(x)</em>.
+              Differentiating this model gives forces and guides the next simulation step.
             </p>
             <p class="footnote">
-              *Illustrative units and a coarse spring sheet, not a calibrated material model. Canvas
-              rendering; ONNX physics on WebGPU.
+              *Illustrative units; a coarse spring sheet, not a calibrated material model.
             </p>
           </div>
           <div class="graph-story">
             <div class="graph-row">
               <span class="graph-index">01</span>
               <div>
-                <h3>Describe the energy <code>E(x)</code></h3>
+                <h3>Choose the next position <code>Φ(x)</code></h3>
                 <p>
-                  Regularized spring lengths + gravity + pointer tether. In implicit mode, add mass,
-                  inertia, and viscous damping.
+                  Each timestep minimizes physical energy plus inertia and damping terms. Inertia
+                  keeps the sheet moving; damping resists motion. Pinned points stay fixed.
                 </p>
               </div>
               <span class="graph-file">energy.onnx</span>
@@ -205,10 +212,11 @@
             <div class="graph-row">
               <span class="graph-index">02</span>
               <div>
-                <h3>Find the force <code>−grad(E)</code></h3>
+                <h3>Differentiate once <code>g = ∇Φ(x)</code></h3>
                 <p>
-                  Reverse-mode differentiation gives the gradient used by the implicit solve and
-                  force overlays.
+                  The gradient tells the solver how to lower the step objective; a small gradient
+                  means the step is nearly solved. For the arrows, −∇U points toward decreasing
+                  physical energy: this is force.
                 </p>
               </div>
               <span class="graph-file">gradient.onnx</span>
@@ -216,10 +224,12 @@
             <div class="graph-row">
               <span class="graph-index">03</span>
               <div>
-                <h3>Ask about curvature <code>jvp(grad(E))</code></h3>
+                <h3>Differentiate again <code>Hw = jvp(grad(Φ), w)</code></h3>
                 <p>
-                  Generated H·v products power damped Newton-CG, with curvature checks and a
-                  safeguarded line search.
+                  For a trial direction w, Hw predicts how the gradient changes as points move.
+                  Newton-CG uses these products to choose a better update for stiff springs, without
+                  building a full Hessian matrix. A line search checks that each accepted update
+                  lowers Φ.
                 </p>
               </div>
               <span class="graph-file">hvp.onnx</span>
@@ -227,44 +237,35 @@
           </div>
         </section>
         <details class="device-details" id="computation">
-          <summary>How the computation works · inspect the real ONNX graphs</summary>
+          <summary>The timestep equation & ONNX graphs</summary>
           <div class="computation-content">
             <p>
-              <strong>Browser compatibility: ONNX opset 22.</strong>
-              ORT Web 1.31.1's JSEP WebGPU provider is missing the newer Reshape/Unsqueeze
-              registrations needed by these derivative graphs at opset 23/24. This demo is genuinely
-              exported at 22, not relabeled while loading. Other Python examples use opset 24. CPU
-              physics fallback remains disabled.
+              Given current position x<sub>t</sub>
+              and velocity v<sub>t</sub>, solve for x<sub>t+1</sub>
+              by minimizing:
+            </p>
+            <div class="step-equation">
+              <span>Φ(x) = U(x)</span>
+              <span>+ m/(2h²) ‖x − x<sub>t</sub> − h v<sub>t</sub>‖²</span>
+              <span>+ mc/(2h) ‖x − x<sub>t</sub>‖²</span>
+            </div>
+            <p>
+              <em>m</em>
+              is mass per point, <em>h</em> is the timestep, and <em>c</em> is the damping setting.
+              The quadratic terms encode inertia and viscous damping. Then v<sub>t+1</sub>
+              = (x<sub>t+1</sub>
+              − x<sub>t</sub>)/h. This is an implicit step: forces depend on the position being
+              solved for.
             </p>
             <p>
-              Python authors spring energy in ONNX IR. <code>onnax.grad(E)</code> produces its
-              gradient; <code>onnax.jvp(grad(E))</code> produces a Hessian-vector product for a
-              supplied direction. No handwritten runtime derivatives or full Hessian are used.
+              Newton-CG approximately solves (H + λI)p = −g, with H = ∇²Φ and a positive regularizer
+              λ, then tries x + αp. Conjugate gradient only needs products Hw, generated by
+              <code>onnax.jvp(onnax.grad(...))</code>. The residual above measures ‖∇Φ‖ over free
+              coordinates; smaller means closer to the step's equilibrium.
             </p>
             <p>
-              The implicit objective adds backward-Euler inertia and viscous terms to physical
-              energy (springs, gravity, pointer tether). Safeguarded Newton-CG uses the objective
-              gradient and HVP to find the next position. The force arrows instead use the negative
-              <em>physical</em>
-              gradient: the runtime gradient graph returns this separately in its packed output,
-              without inertia or viscous drag. Pinned coordinates are projected out, so arrows are
-              not support reactions.
-            </p>
-            <p>
-              ORT WebGPU executes the generated FLOAT32 graphs with CPU execution-provider fallback
-              disabled. Optimized graphs keep buffers and captured commands on GPU; the solver reads
-              back packed positions and physical forces for Canvas 2D rendering. Arrow length is
-              <code>6 + 30 tanh(|F| / 6)</code>
-              CSS pixels for
-              <code>|F| ≥ 0.02</code>; color uses the same relative magnitude scale. These are
-              illustrative units in a coarse 2D spring model, not calibrated elasticity.
-            </p>
-            <p>
-              Below are Netron diagrams of the checked-in models. Original means the canonical
-              onnax-generated graph after static-shape folding; optimized means its packed browser
-              runtime graph. Open any diagram in Netron to explore it. The HVP is a directional
-              curvature response, not a dense Hessian. Opening this panel performs no additional
-              inference.
+              Original graphs come from onnax; optimized graphs are packed for the browser. Click a
+              Netron diagram to explore the model.
             </p>
             <div id="model-graphs"></div>
           </div>
@@ -273,16 +274,10 @@
           <summary>Execution details & limitations</summary>
           <p id="device-info">Waiting for a WebGPU adapter.</p>
           <p>
-            CPU execution-provider fallback is disabled. Generated H·v graphs and eight CG slots
-            stay on the GPU. Two speculative Newton proposals share one packed readback; the CPU
-            checks every accepted step with an Armijo line search. Rejected speculation is
-            discarded. Small position readbacks feed Canvas 2D rendering. Timings are end-to-end
-            wall time, not GPU-only kernel time. Simulation time does not catch up to wall time on
-            slower devices.
-          </p>
-          <p>
-            The automated browser smoke test also counts actual WebGPU compute dispatches. Adapter
-            identity and live timings above describe this browser, not a promised framerate.
+            ONNX Runtime runs the FLOAT32 physics graphs on WebGPU (opset 22), with CPU fallback
+            disabled. Canvas 2D draws the results. Timings include graph execution and readback;
+            slower devices advance simulation time more slowly. If a solve fails, the demo pauses
+            and keeps the last valid state.
           </p>
         </details>
       </main>
