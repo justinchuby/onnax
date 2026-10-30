@@ -492,3 +492,20 @@ def test_celu_rejects_invalid_shape_parameter(alpha, transform):
     source = _model([x], tape, [tape.op("Celu", [x], {"alpha": alpha})])
     with pytest.raises(ValueError, match="Celu differentiation requires finite alpha > 0"):
         transform(source)
+
+
+def test_celu_underflowed_tail_has_zero_hvp_with_small_alpha():
+    x = _value("x", [2], dtype=ir.DataType.FLOAT)
+    tape = ir.tape.Tape()
+    loss = tape.op("ReduceSum", [tape.op("Celu", [x], {"alpha": 1e-40})], {"keepdims": 0})
+    product = jvp(grad(_model([x], tape, [loss])))
+    with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+        actual = evaluator(product).run(
+            None,
+            {
+                "x": np.array([-1, 1], dtype=np.float32),
+                product.graph.inputs[-1].name: np.ones(2, dtype=np.float32),
+            },
+        )
+    np.testing.assert_array_equal(actual[-2], [0, 1])
+    np.testing.assert_array_equal(actual[-1], [0, 0])
