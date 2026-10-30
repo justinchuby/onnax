@@ -109,6 +109,8 @@ Asin and Acos support JVP, VJP, HVPs, and batching for inputs strictly inside
 (-1, 1); their derivatives are singular at the endpoints.
 Sigmoid and Tanh derivatives use stable exponential tails to retain small
 FLOAT gradients and HVPs even when primal outputs round to saturation.
+Variadic Sum and Mean support differentiation with broadcasting and repeated
+operands; Mean always divides by the total input count, including inactive inputs.
 ReduceSumSquare and ReduceL1 support direct differentiation, HVPs, and batching,
 including runtime axes and `noop_with_empty_axes`. Their non-reduction steps
 (square or absolute value) still apply when the reduction itself is a no-op.
