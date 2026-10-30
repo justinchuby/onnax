@@ -78,11 +78,22 @@ def _gelu_partial(ctx: _Context, node: ir.Node, x: ir.Value) -> ir.Value:
             scale,
             ctx.op("Add", x, ctx.op("Mul", ctx.scalar(x, 0.044715), ctx.op("Mul", square, x))),
         )
-        t = ctx.op("Tanh", argument)
         # Avoid cancellation in 1 - tanh(argument)**2 near saturation. This
         # equivalent sech-squared form retains small FLOAT derivatives.
-        tail = ctx.op("Exp", ctx.op("Mul", ctx.scalar(x, -2), ctx.op("Abs", argument)))
+        positive = ctx.op("GreaterOrEqual", argument, zero)
+        magnitude = ctx.op("Where", positive, argument, ctx.op("Neg", argument))
+        tail = ctx.op("Exp", ctx.op("Mul", ctx.scalar(x, -2), magnitude))
         denominator = ctx.op("Add", one, tail)
+        # (1 + tanh(u))/2 = sigmoid(2u). Use the same stable tail rather
+        # than a rounded Tanh output so HVPs retain its small derivative too.
+        # The magnitude's positive branch at zero preserves the CDF slope;
+        # Abs would assign a zero slope there and lose half the curvature.
+        cdf = ctx.op(
+            "Where",
+            positive,
+            ctx.op("Div", one, denominator),
+            ctx.op("Div", tail, denominator),
+        )
         tanh_partial = ctx.op(
             "Div",
             ctx.op("Mul", ctx.scalar(x, 4), tail),
@@ -104,7 +115,7 @@ def _gelu_partial(ctx: _Context, node: ir.Node, x: ir.Value) -> ir.Value:
             "Where",
             ctx.op("Equal", tail, zero),
             limit,
-            ctx.op("Mul", half, ctx.op("Add", ctx.op("Add", one, t), correction)),
+            ctx.op("Add", cdf, ctx.op("Mul", half, correction)),
         )
     raise ValueError(
         f"Gelu approximate={approximation!r}; expected 'none' or 'tanh'. "

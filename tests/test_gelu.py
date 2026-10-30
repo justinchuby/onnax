@@ -94,6 +94,25 @@ def test_gelu_runtime_and_batched_gradients(approximation):
     )
 
 
+@pytest.mark.parametrize("magnitude", [5.0, 6.0, 8.0])
+def test_tanh_gelu_retains_small_tail_curvature(magnitude):
+    model = _gelu_model("tanh", scalar=True, dtype=ir.DataType.FLOAT)
+    product = jvp(grad(model))
+    values = np.array([-magnitude, magnitude], dtype=np.float32)
+    actual = runtime_session(product).run(
+        None, {"x": values, product.graph.inputs[-1].name: np.ones_like(values)}
+    )[-1]
+    x = values.astype(np.float64)
+    scale, cubic = math.sqrt(2 / math.pi), 0.044715
+    u = scale * (x + cubic * x**3)
+    first, second = scale * (1 + 3 * cubic * x**2), scale * 6 * cubic * x
+    tail = np.exp(-2 * np.abs(u))
+    sech_squared = 4 * tail / (1 + tail) ** 2
+    expected = sech_squared * (first + 0.5 * x * (second - 2 * np.tanh(u) * first**2))
+    # Absolute tolerances can hide percent-level errors for these small HVPs.
+    np.testing.assert_allclose(actual, expected, rtol=2e-5, atol=0)
+
+
 @pytest.mark.parametrize("transform", [JvpPass, VjpPass])
 def test_gelu_invalid_approximation_is_actionable(transform):
     with pytest.raises(
