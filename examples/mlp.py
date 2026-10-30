@@ -194,11 +194,14 @@ def run(output_dir):
         result = execute.run(
             ["logits", "loss", *mapping.values()], {"features": x, "targets": y, **params}
         )
-        expected = reference(x, y, independent)
-        close(result[0], expected[0])
-        close(result[1], expected[1])
+        # Isolate graph semantics at identical parameters from trajectory drift.
+        at_same_parameters = reference(x, y, params)
+        close(result[0], at_same_parameters[0])
+        close(result[1], at_same_parameters[1])
         for n, value in zip(NAMES, result[2:], strict=True):
-            close(value, expected[2][n])
+            close(value, at_same_parameters[2][n])
+        expected = reference(x, y, independent)
+        close(result[1], expected[1])
         grads = dict(zip(NAMES, result[2:], strict=True))
         params, state = adam_step(params, grads, state, xp=xp)
         independent, ref_state = reference_update(independent, expected[2], ref_state)

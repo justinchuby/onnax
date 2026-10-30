@@ -26,9 +26,11 @@ reduction is a mean. A regression verifies finite loss and gradients for logits
 
 The independent NumPy reference subtracts each row's maximum before computing
 log-sum-exp and implements analytic backpropagation. Central finite differences
-check a coordinate of every parameter. During 150 full-batch updates, the ONNX
-prediction, loss, all four gradients and evolving parameters must agree with an
-independently evolving reference at rtol=1e-4, atol=1e-6. The external Array API
+check a coordinate of every parameter. During 150 full-batch updates, ONNX prediction, loss and all four gradients are
+checked against NumPy at identical parameter values. Separately, every updated
+parameter and loss are checked against an independently evolving reference
+trajectory. Both checks use rtol=1e-4, atol=1e-6, separating graph errors from
+accumulated trajectory drift near cancelling logits. The external Array API
 Adam is reused from the LoRA milestone; the reference update is a separately
 written flattened NumPy calculation.
 
