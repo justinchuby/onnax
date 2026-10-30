@@ -280,7 +280,10 @@ class JvpPass(ir.passes.FunctionalPass):
         * Shape, size, axes, indices, split sizes, and boolean conditions are
           structural, not differentiable tensor values. Comparisons are treated
           as fixed branch predicates. Where differentiates only its chosen data
-          branch; it does not differentiate the condition.
+          branch; it does not differentiate the condition. Max/Min split a tied
+          extremum's derivative equally across all operand occurrences, including
+          inactive and repeated operands; their equality predicates remain fixed
+          under higher-order differentiation.
         * Every unsupported operator on an active path from selected inputs to
           selected outputs raises NotImplementedError, rather than silently
           returning zero. Inactive paths can contain unsupported/custom operators.
@@ -317,11 +320,15 @@ class JvpPass(ir.passes.FunctionalPass):
           differentiation are not supported.
         * Derivatives assume finite inputs within the operators' differentiable
           real domains: in particular, positive bases for Pow, positive inputs
-          for Log/Sqrt, inputs strictly between -1 and 1 for Asin/Acos, nonzero divisors, and nonempty ReduceMean groups.
+          for Log/Sqrt, inputs strictly between -1 and 1 for Asin/Acos/Atanh,
+          inputs greater than 1 for Acosh, positive reduced sums for ReduceLogSum,
+          nonzero divisors, and nonempty ReduceMean groups.
           Inactive integral Pow exponents also support negative bases and, for
           nonnegative exponents, zero bases (including the ONNX ``0**0 == 1``).
           No domain checks are inserted. At zero, Abs and Relu use derivative
-          zero and LeakyRelu uses alpha. Sign uses zero derivative everywhere,
+          zero and LeakyRelu uses alpha. ReduceL1 follows Abs at zero.
+          Max/Min's equal-share rule at ties is a convention, not a claim of
+          classical differentiability. Sign uses zero derivative everywhere,
           including its discontinuity at zero; no classical derivative is claimed there. PRelu uses its slope tensor for the data
           partial and zero for the slope partial. HardSigmoid uses zero at both
           clipping boundaries; HardSwish uses zero at the lower boundary and one
