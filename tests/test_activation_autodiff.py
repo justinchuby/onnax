@@ -509,3 +509,25 @@ def test_celu_underflowed_tail_has_zero_hvp_with_small_alpha():
         )
     np.testing.assert_array_equal(actual[-2], [0, 1])
     np.testing.assert_array_equal(actual[-1], [0, 0])
+
+
+@pytest.mark.parametrize(
+    "op,attributes,gamma",
+    [
+        ("Elu", {"alpha": 0.0}, 1.0),
+        ("Selu", {"alpha": 0.0}, float(np.float32(1.050701))),
+        ("Selu", {"gamma": 0.0}, 0.0),
+    ],
+)
+def test_zero_exponential_coefficient_eliminates_derivative_exp(op, attributes, gamma):
+    x = _value("x", [3])
+    tape = ir.tape.Tape()
+    source = _model([x], tape, [tape.op(op, [x], attributes)])
+    values = np.array([-1000.0, 0.0, 1000.0])
+    for transform in (jvp, vjp):
+        derivative = transform(source)
+        assert all(node.op_type != "Exp" for node in derivative.graph)
+        actual = evaluator(derivative).run(
+            None, {"x": values, derivative.graph.inputs[-1].name: np.ones(3)}
+        )[-1]
+        np.testing.assert_array_equal(actual, [0, 0, gamma])
