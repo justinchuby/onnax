@@ -682,13 +682,22 @@ input[type="range"] {
   color: #65566e;
   font-size: 13px;
 }
-.computation-content pre {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  background: #eee8f0;
-  padding: 14px;
+.model-graph-preview {
+  display: block;
+  height: 360px;
+  overflow: auto;
+  margin: 12px 0 24px;
+  border: 1px solid var(--line);
   border-radius: 8px;
-  font-size: 11px;
+  background: white;
+}
+.model-graph-preview img {
+  display: block;
+  max-width: none;
+}
+.model-graph-preview:focus-visible {
+  outline: 2px solid #9e87bc;
+  outline-offset: 3px;
 }
 footer {
   border-top: 1px solid var(--line);

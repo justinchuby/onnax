@@ -320,24 +320,32 @@ async function initialize(): Promise<void> {
       ['Optimized runtime', mesh.runtime[kind], 'runtime/'],
     ] as const) {
       const description = document.createElement('p');
-      description.textContent = `${label}: ${info.nodes} nodes · operators: ${info.operators.join(', ')}`;
+      description.textContent = `${label}: ${info.nodes} nodes · ONNX opset ${mesh.opset}`;
       const link = document.createElement('a');
-      link.href = `${import.meta.env.BASE_URL}models/${folder}${kind}.onnx?v=${__JELLY_MODEL_VERSION__}`;
-      link.textContent = `Open ${label.toLowerCase()} ${kind}.onnx`;
-      const pre = document.createElement('pre');
-      pre.textContent = [
-        'Inputs:',
-        ...info.graph.inputs,
-        '',
-        'Outputs:',
-        ...info.graph.outputs,
-        '',
-        'Selected nodes (omissions marked):',
-        ...info.graph.excerpt,
-      ].join('\n');
-      section.append(description, link, pre);
+      const modelUrl = new URL(
+        `models/${folder}${kind}.onnx`,
+        'https://www.justinchuby.com/onnax/jelly/',
+      );
+      const netronUrl = new URL('https://netron.app/');
+      netronUrl.searchParams.set('url', modelUrl.href);
+      link.href = netronUrl.href;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = `Open ${label.toLowerCase()} ${kind}.onnx in Netron`;
+      const preview = document.createElement('a');
+      preview.className = 'model-graph-preview';
+      preview.href = link.href;
+      preview.target = link.target;
+      preview.rel = link.rel;
+      preview.setAttribute('aria-label', link.textContent);
+      const image = document.createElement('img');
+      image.src = `${import.meta.env.BASE_URL}models/${folder}${kind}.svg?v=${__JELLY_MODEL_VERSION__}`;
+      image.alt = `${label} ${kind} computation graph exported from Netron`;
+      image.loading = 'lazy';
+      preview.append(image);
+      section.append(description, link, preview);
     }
-    element('graph-excerpts').append(section);
+    element('model-graphs').append(section);
   }
   graphs = new Graphs(mesh);
   simulation = new Simulation(mesh, graphs);
