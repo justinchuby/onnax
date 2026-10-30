@@ -105,3 +105,34 @@ def test_directly_broadcastable_pullback_avoids_axis_reconstruction(keepdims, ax
     np.testing.assert_array_equal(
         runtime_session(derivative).run(None, {"x": values})[-1], 2 * values
     )
+
+
+@pytest.mark.parametrize("count", [0, 1, None])
+@pytest.mark.parametrize("noop", [0, 1])
+def test_axes_length_specialization_preserves_runtime_values(count, noop):
+    from onnax import vjp
+
+    x = _value("x", [2, 3])
+    axes = _value("axes", [count], dtype=ir.DataType.INT64)
+    tape = ir.tape.Tape()
+    y = tape.op("ReduceSumSquare", [x, axes], {"keepdims": 0, "noop_with_empty_axes": noop})
+    # keepdims=0 with unknown axes length has a runtime-dependent rank. A
+    # scalar outer loss provides a fixed derivative interface in that case.
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    loss.shape = ir.Shape([])
+    source = _model([x, axes], tape, [loss])
+    derivative = vjp(source, inputs=["x"])
+    nodes = {node.op_type for node in derivative.graph}
+    assert ("Range" in nodes) == (count is None and not noop)
+    values = np.arange(6.0, dtype=np.float64).reshape(2, 3)
+    choices = [[], [0], [-1]] if count is None else ([[]] if count == 0 else [[0], [-1]])
+    for selected in choices:
+        actual = runtime_session(derivative).run(
+            None,
+            {
+                "x": values,
+                "axes": np.array(selected, dtype=np.int64),
+                derivative.graph.inputs[-1].name: np.array(1.0, dtype=np.float64),
+            },
+        )
+        np.testing.assert_array_equal(actual[-1], 2 * values)
