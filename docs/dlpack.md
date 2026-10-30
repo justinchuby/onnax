@@ -12,7 +12,8 @@ uv run --no-sync python -m examples.lora.jax_training --output-dir dlpack_models
 ```
 
 The example uses JAX 0.10.2 or newer and ORT 1.31.1 or newer, FP32 arrays, one
-local JAX CPU device and CPUExecutionProvider. The ONNX graph and parameter names
+local JAX CPU device and CPUExecutionProvider. Inputs, outputs and optimizer state
+use `jax.devices("cpu")[0]`. The ONNX graph and parameter names
 are the same as in the NumPy LoRA example.
 
 ## Share inputs and own each output
@@ -37,7 +38,7 @@ with `copy=False`:
 ```python
 import jax
 
-gradient = jax.dlpack.from_dlpack(ort_gradient, copy=False)
+gradient = jax.dlpack.from_dlpack(ort_gradient, device=jax.devices("cpu")[0], copy=False)
 assert gradient.unsafe_buffer_pointer() == ort_gradient.data_ptr()
 ```
 
@@ -104,7 +105,7 @@ before its explicit boundary wait. A microbatch test combines sizes 63, 63, 63,
 The benchmark runs each mode in a separate process with the same model, data,
 JAX CPU parameters and Array API Adam. DLPack mode exports inputs and imports
 fresh ORT outputs directly. NumPy mode uses `np.asarray` feeds, `session.run`
-and `jnp.asarray` outputs.
+and `jax.device_put` outputs on the selected CPU.
 
 After 10 warmups, 100 updates record median/P95 input exchange, execution,
 output exchange, Adam and complete-step times. Imported arrays and optimizer
@@ -116,8 +117,8 @@ Recorded Apple M1 Max results (milliseconds):
 
 | Boundary | Input median | Output median | Adam median | Step median | Step P95 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| DLPack | 0.0359 | 0.1450 | 0.1638 | 0.4386 | 0.4927 |
-| NumPy API | 0.0041 | 0.0395 | 0.1578 | 0.2899 | 0.3024 |
+| DLPack | 0.0395 | 0.1522 | 0.1690 | 0.4583 | 0.4710 |
+| NumPy API | 0.0046 | 0.0564 | 0.1671 | 0.3199 | 0.3372 |
 
 The NumPy API boundary costs less on this small CPU workload. Input checks and
 DLPack output import account for most of the difference. The fetched loss and

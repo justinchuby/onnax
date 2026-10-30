@@ -222,30 +222,30 @@
   "measurement": {
     "dlpack": {
       "mode": "dlpack",
-      "session_creation_ms": 3.4699169918894768,
+      "session_creation_ms": 3.562249999959022,
       "timings_ms": {
         "input_exchange": {
-          "median": 0.03593748260755092,
-          "p95": 0.04111874295631423
+          "median": 0.03949998063035309,
+          "p95": 0.04165624704910442
         },
         "execute": {
-          "median": 0.09291700553148985,
-          "p95": 0.10139343939954415
+          "median": 0.09681200026534498,
+          "p95": 0.10058298503281549
         },
         "output_exchange": {
-          "median": 0.14495800132863224,
-          "p95": 0.16061460046330464
+          "median": 0.15216699102893472,
+          "p95": 0.15622114297002554
         },
         "adam": {
-          "median": 0.16381301975343376,
-          "p95": 0.1796773969545029
+          "median": 0.16900000628083944,
+          "p95": 0.1749621966155246
         },
         "step": {
-          "median": 0.4385625070426613,
-          "p95": 0.4926979425363242
+          "median": 0.4582919937092811,
+          "p95": 0.4710104054538533
         }
       },
-      "peak_process_rss_bytes": 295305216,
+      "peak_process_rss_bytes": 295714816,
       "scope": "Separate process per mode; CPUExecutionProvider/JAX CPU, batch 256, FP32, same model and external Array API Adam; 10 warmup/100 measured updates. Input exchange includes readiness and binding/feed preparation; execution includes fresh output allocation; output exchange imports and waits; Adam includes parameter and moment synchronization. Correctness-reference and checkpoint conversions are outside timing. RSS includes imports, JAX compilation/runtime and allocator.",
       "jax": "0.10.2",
       "onnxruntime": "1.31.1",
@@ -271,30 +271,30 @@
     },
     "numpy": {
       "mode": "numpy",
-      "session_creation_ms": 3.4115000162273645,
+      "session_creation_ms": 3.6960830038879067,
       "timings_ms": {
         "input_exchange": {
-          "median": 0.004125002305954695,
-          "p95": 0.0043360472773201755
+          "median": 0.004583998816087842,
+          "p95": 0.00491601531393826
         },
         "execute": {
-          "median": 0.0882915046531707,
-          "p95": 0.09197465551551431
+          "median": 0.09160451008938253,
+          "p95": 0.09513959666946903
         },
         "output_exchange": {
-          "median": 0.03949998063035309,
-          "p95": 0.04309439973440021
+          "median": 0.05639599112328142,
+          "p95": 0.06172438297653571
         },
         "adam": {
-          "median": 0.15783299750182778,
-          "p95": 0.16463335196021944
+          "median": 0.16712499200366437,
+          "p95": 0.17385803803335872
         },
         "step": {
-          "median": 0.2898545062635094,
-          "p95": 0.30238574981922284
+          "median": 0.3199165075784549,
+          "p95": 0.3372181628947146
         }
       },
-      "peak_process_rss_bytes": 302055424,
+      "peak_process_rss_bytes": 296255488,
       "scope": "Separate process per mode; CPUExecutionProvider/JAX CPU, batch 256, FP32, same model and external Array API Adam; 10 warmup/100 measured updates. Input exchange includes readiness and binding/feed preparation; execution includes fresh output allocation; output exchange imports and waits; Adam includes parameter and moment synchronization. Correctness-reference and checkpoint conversions are outside timing. RSS includes imports, JAX compilation/runtime and allocator.",
       "jax": "0.10.2",
       "onnxruntime": "1.31.1",

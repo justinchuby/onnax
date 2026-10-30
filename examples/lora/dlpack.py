@@ -27,6 +27,7 @@ class JaxCpuDLPack:
     def __init__(self, executor, interface):
         if executor.get_providers() != ["CPUExecutionProvider"]:
             raise ValueError("This adapter requires a CPUExecutionProvider session.")
+        self.device = jax.devices("cpu")[0]
         self.shapes, self.output_shapes = gradient_shapes(executor, interface)
         self.executor = executor
         self.binding = executor.io_binding()
@@ -59,8 +60,11 @@ class JaxCpuDLPack:
                 not array.is_fully_addressable
                 or len(array.devices()) != 1
                 or array.__dlpack_device__() != (1, 0)
+                or array.device != self.device
             ):
-                raise ValueError(f"Expected one locally addressable CPU device for {name}.")
+                raise ValueError(
+                    f"Expected the selected locally addressable CPU device for {name}."
+                )
         if len(features) == 0 or len(features) != len(target):
             raise ValueError("Features and target need matching nonempty batches.")
         synchronize(feeds)
@@ -94,7 +98,7 @@ class JaxCpuDLPack:
             raise RuntimeError("Execute the gradient graph before importing outputs.")
         arrays = {}
         for name, value in self.output_values.items():
-            array = jax.dlpack.from_dlpack(value, copy=False)
+            array = jax.dlpack.from_dlpack(value, device=self.device, copy=False)
             if array.unsafe_buffer_pointer() != value.data_ptr():
                 raise RuntimeError(f"DLPack output import copied storage for {name}.")
             arrays[name] = array

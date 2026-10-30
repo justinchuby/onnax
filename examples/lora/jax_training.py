@@ -38,7 +38,7 @@ def names(interface):
 
 
 def import_numpy(values):
-    loss, *gradients = [jnp.asarray(value) for value in values]
+    loss, *gradients = cpu(values)
     return loss, dict(zip(PARAMETERS, gradients, strict=True))
 
 

@@ -3,6 +3,9 @@
 """Shared CPU buffers, immutable gradient ownership and complete JAX update parity."""
 
 import gc
+import os
+import subprocess
+import sys
 import weakref
 
 import jax
@@ -162,3 +165,54 @@ def test_owned_dlpack_gradients_feed_streaming_jax_accumulation(dlpack_problem):
     close(np.asarray(loss), expected[1])
     for n in PARAMETERS:
         close(np.asarray(grads[n]), expected[2][n])
+
+
+def test_cpu_bridge_placement_with_another_default_device(dlpack_problem, tmp_path):
+    code = """
+import json
+import sys
+import jax
+import numpy as np
+from examples.lora.adam import adam_step
+from examples.lora.dlpack import JaxCpuDLPack, synchronize
+from examples.lora.jax_training import cpu as place, import_numpy
+import jax.numpy as jnp
+from examples.lora.model import PARAMETERS
+from examples.lora.train import problem, session
+cpu = jax.devices("cpu")[0]
+with jax.default_device(jax.devices("cpu")[1]):
+    loss, grads = import_numpy([np.array(1, np.float32), np.zeros((16, 4), np.float32), np.zeros((4, 24), np.float32)])
+    assert loss.device == cpu
+    assert all(value.device == cpu for value in grads.values())
+    _, _, x, y, *_, params = problem()
+    x, y, params = place((x, y, params))
+    interface = json.load(open(sys.argv[2]))
+    bound = JaxCpuDLPack(session(sys.argv[1]), interface)
+    bound.bind(x, y, params)
+    loss, grads = bound.run()
+    assert loss.device == cpu
+    assert all(value.device == cpu for value in grads.values())
+    updated, state = adam_step(params, grads, xp=jnp)
+    synchronize(updated, state)
+    assert all(value.device == cpu for value in (*updated.values(), *state.first.values(), *state.second.values()))
+    params[PARAMETERS[0]] = jax.device_put(params[PARAMETERS[0]], jax.devices("cpu")[1])
+    try:
+        bound.bind(x, y, params)
+    except ValueError as error:
+        assert "selected" in str(error)
+    else:
+        raise AssertionError("Expected a selected-CPU validation error")
+"""
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            code,
+            str(tmp_path / "gradient.optimized.onnx"),
+            str(tmp_path / "interface.json"),
+        ],
+        env={**os.environ, "XLA_FLAGS": "--xla_force_host_platform_device_count=2"},
+        check=True,
+        capture_output=True,
+        text=True,
+    )
