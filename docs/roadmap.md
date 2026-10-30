@@ -66,8 +66,12 @@ moments on Metal, and compares CPU/uncompiled/compiled updates on 74K/1.1M
 parameter models. All update modes restore byte-identical checkpoints; the
 report retains the strict NumPy precision differences. An observed-forward
 inspector now replays the first BF16 output-layer gradient failures and checks
-independent head backpropagation at native forward values. Next evaluate Metal
-microbatch accumulation and extend the diagnosis through the hidden layer. The recorded CPU
+independent head backpropagation at native forward values. The
+[Metal microbatch example](metal-microbatch.md) now accumulates weighted FP32
+gradients on device, executes complete 150-step FP32/BF16 classifier training and
+checkpoint replay, and measures full/microbatch paths in isolated processes.
+Next extend precision diagnosis through the hidden layer and evaluate memory
+scaling with larger activation workloads. The recorded CPU
 ORT provider lacks BF16 MatMul. Device memory/transfer measurements will guide
 DLPack, recomputation and structured-operator work.
 

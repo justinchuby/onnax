@@ -5,12 +5,13 @@
 from __future__ import annotations
 
 
-def accumulate_gradients(chunks, *, xp):
+def accumulate_gradients(chunks, *, xp, evaluate=None):
     """Combine (sample_count, mean_loss, mean_gradients) without host array reads.
 
     Gradients must be independent sample means with the same output reduction.
     All chunks must use the same parameter point, names, shapes, dtype and device.
     Only running sums survive each iteration; input arrays are never mutated.
+    Supply a backend evaluation function to materialize lazy sums per chunk.
     """
     total = 0
     loss_sum = None
@@ -35,6 +36,8 @@ def accumulate_gradients(chunks, *, xp):
                 raise ValueError(f"Microbatch gradient/loss device mismatch for {name}.")
             sums[name] = sums[name] + count * value
         loss_sum = loss_sum + count * loss
+        if evaluate is not None:
+            evaluate(loss_sum, *sums.values())
         total += count
     if sums is None:
         raise ValueError("At least one microbatch is required.")
