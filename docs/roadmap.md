@@ -27,13 +27,17 @@ trajectories, reloads, failure paths and scoped measurements are covered. The
 [Jelly Newton-CG example](https://www.justinchuby.com/onnax/jelly/) remains the
 interactive exact-HVP workload.
 
-## P3 — Memory, precision and device execution
+## P3 — Memory, precision and device execution (in progress)
 
-Define BF16 compute, FP32 gradient accumulation and external optimizer-state
-policies before enabling mixed precision. Measure memory and runtime behavior
-before choosing device-resident bindings, DLPack exchange, recomputation,
-batched directions or structured operators. Array API update portability alone
-does not establish zero-copy ONNX execution.
+The [precision and memory experiment](precision.md) delivers external FP32
+weighted microbatch accumulation, a defined BF16/master-state policy, runtime
+capability probes and isolated full/microbatch RSS/time measurements. BF16
+differentiation and training are still incomplete: the recorded CPU provider
+lacks BF16 MatMul and the core rejects active BF16 paths. Next validate an
+executing provider, explicit autocast semantics and mixed-precision update
+accuracy before enabling it. Device-resident bindings, DLPack, recomputation and
+structured operators remain separate measured decisions; Array API portability
+alone does not establish zero-copy ONNX execution.
 
 ## Engineering boundaries
 
