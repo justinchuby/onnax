@@ -58,10 +58,13 @@ last uses and peak live sets, validates a preactivation-recomputation candidate
 through 150 updates and recovery, and compares repeated native allocations.
 [Trainer integration](huggingface.md), [Mobius Qwen3 SFT](qwen-sft.md), and
 [PEFT/chunked-loss experiments](qwen-adapters.md) now connect external training
-tools to exported ONNX derivatives. NF4 also runs through the Trainer bridge.
+tools to exported ONNX derivatives. [NF4 Qwen fine-tuning](qwen-nf4.md) extends
+the same bridge to packed decoder weights, independent adapter updates and
+fresh-process checkpoint recovery.
 
-Next, qualify the real model's FP32 comparisons against the FP64 oracle with
-layer-level error analysis, then connect a fused NF4 runtime kernel. Use the
+Next, qualify the real model's FP32 gradients at observed activations and its
+independent update trajectories. Measure NF4 decoding lifetimes and connect a
+fused runtime kernel. Use the
 measured save/recompute boundary and output-head memory curve to guide deeper
 activation checkpointing and device execution.
 

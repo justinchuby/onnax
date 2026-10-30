@@ -95,7 +95,7 @@ def dequantize(packed, scales, shape, *, block_size=64):
     return values.reshape(-1)[:size].reshape(shape)
 
 
-def _function(k, n, block_size, *, transpose=False):
+def _function(k, n, block_size, *, transpose=False, opset=18):
     blocks = math.ceil(k * n / block_size)
     x = ir.val("x", dtype=ir.DataType.FLOAT)
     p = ir.val("packed", dtype=ir.DataType.UINT8, shape=[blocks * block_size // 2])
@@ -133,7 +133,7 @@ def _function(k, n, block_size, *, transpose=False):
         DOMAIN,
         name,
         graph=ir.Graph(
-            [x, p, s], [output], nodes=tape.nodes, opset_imports={"": 18}, name=name
+            [x, p, s], [output], nodes=tape.nodes, opset_imports={"": opset}, name=name
         ),
         attributes=[],
     )
@@ -198,8 +198,9 @@ def lower(model, *, names=("base.W", "base.C"), block_size=64):
         array = weight.const_value.numpy()
         packed, scales = quantize(array, block_size=block_size)
         k, n = array.shape
-        forward = _function(k, n, block_size)
-        backward = _function(k, n, block_size, transpose=True)
+        opset = result.graph.opset_imports[""]
+        forward = _function(k, n, block_size, opset=opset)
+        backward = _function(k, n, block_size, transpose=True, opset=opset)
         result.functions[forward.identifier()] = forward
         result.functions[backward.identifier()] = backward
         _rules(forward.name, backward.name)
@@ -224,6 +225,7 @@ def lower(model, *, names=("base.W", "base.C"), block_size=64):
                 raise ValueError("Expected rank-one or higher FP32 activations for NF4 MatMul")
             node.domain = DOMAIN
             node.op_type = forward.name
+            node.version = 1
             node.resize_inputs(3)
             node.replace_input_with(1, q)
             node.replace_input_with(2, s)

@@ -35,6 +35,7 @@ def export_adapter(model, directory):
                 "base_model": config.base_model_name_or_path,
                 "revision": config.revision,
                 "projections": rows,
+                "base_quantization": getattr(model, "quantization", None),
             },
             stream,
             indent=2,

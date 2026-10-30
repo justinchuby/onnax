@@ -158,12 +158,25 @@ class OnnxQwen3(PreTrainedModel):
         return CausalLMOutput(loss=loss, logits=logits)
 
 
-def prepare(real=False, *, mode="full", chunk_size=128, optimize=True, save_activations=False):
+def prepare(
+    real=False,
+    *,
+    mode="full",
+    chunk_size=128,
+    optimize=True,
+    save_activations=False,
+    nf4=False,
+):
     reference = reference_model(real)
     base = build_base(reference)
     adapted, params, mapping = inject(base)
     graph = decompose(adapted)
-    return OnnxQwen3(
+    quantization = None
+    if nf4:
+        from examples.huggingface.nf4 import lower_decoder
+
+        graph, quantization = lower_decoder(graph, reference)
+    model = OnnxQwen3(
         reference.config,
         graph,
         params,
@@ -172,7 +185,9 @@ def prepare(real=False, *, mode="full", chunk_size=128, optimize=True, save_acti
         chunk_size=chunk_size,
         optimize=optimize,
         save_activations=save_activations,
-    ), reference
+    )
+    model.quantization = quantization
+    return model, reference
 
 
 class OnnxSFTTrainer(SFTTrainer):
@@ -235,8 +250,13 @@ def run(
     diagnose_rounding=False,
     save_activations=False,
     fp64_audit=False,
+    nf4=False,
     peft_roundtrip=False,
 ):
+    if fp64_audit and nf4:
+        raise ValueError(
+            "FP64 oracle expects an FP32 base; use the dequantized FP32 NF4 reference"
+        )
     torch.set_num_threads(4 if real else 1)
     model, reference = prepare(
         real,
@@ -244,6 +264,7 @@ def run(
         chunk_size=chunk_size,
         optimize=optimize,
         save_activations=save_activations,
+        nf4=nf4,
     )
     tok = tokenizer(real)
     from examples.huggingface.validation import add_reference_adapters, audit
@@ -264,18 +285,26 @@ def run(
 
     export_adapter(model, os.path.join(directory, "adapter"))
     tok.save_pretrained(os.path.join(directory, "export"))
+    if model.quantization is not None:
+        with open(os.path.join(directory, "export", "quantization.json"), "w") as stream:
+            json.dump(model.quantization, stream, indent=2)
     report = {
         "model": MODEL_ID if real else "tiny-qwen3",
         "revision": REVISION if real else None,
         "steps": trainer.state.global_step,
         "validation_loss": [before, after],
         "audits": [initial_audit, final_audit],
+        "quantization": model.quantization,
     }
     final_params = model.onnx.arrays()
     report["artifact_bytes"] = {
         name: os.path.getsize(os.path.join(directory, "export", name))
         for name in ("forward.onnx", "forward.data", "adapter.npz", "interface.json")
     }
+    if model.quantization is not None:
+        report["artifact_bytes"]["quantization.json"] = os.path.getsize(
+            os.path.join(directory, "export", "quantization.json")
+        )
     report["forward_nodes"] = len(model.forward_graph.graph)
     report["adapter_parameter_bytes"] = sum(value.nbytes for value in final_params.values())
 
@@ -326,6 +355,7 @@ if __name__ == "__main__":
     parser.add_argument("--diagnose-rounding", action="store_true")
     parser.add_argument("--save-activations", action="store_true")
     parser.add_argument("--fp64-audit", action="store_true")
+    parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--peft-roundtrip", action="store_true")
     args = parser.parse_args()
     print(
@@ -340,6 +370,7 @@ if __name__ == "__main__":
                 diagnose_rounding=args.diagnose_rounding,
                 save_activations=args.save_activations,
                 fp64_audit=args.fp64_audit,
+                nf4=args.nf4,
                 peft_roundtrip=args.peft_roundtrip,
             ),
             indent=2,
