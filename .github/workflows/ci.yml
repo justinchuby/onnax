@@ -56,10 +56,13 @@ jobs:
 
   huggingface:
     runs-on: ubuntu-latest
+    env:
+      HF_HUB_OFFLINE: "1"
+      HF_DATASETS_OFFLINE: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.11"
       - run: uv sync --group dev --group training --group huggingface
-      - run: uv run --no-sync pytest -q tests/test_huggingface_bridge.py tests/test_qwen_sft.py
+      - run: uv run --no-sync pytest -q tests/test_huggingface_bridge.py tests/test_qwen_sft.py tests/test_qwen_adapters.py

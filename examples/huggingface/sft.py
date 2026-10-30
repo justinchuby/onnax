@@ -75,10 +75,57 @@ class OnnxQwen3(PreTrainedModel):
     base_model_prefix = "onnx"
     accepts_loss_kwargs = True
 
-    def __init__(self, config, model, params, mapping):
+    def __init__(
+        self,
+        config,
+        model,
+        params,
+        mapping,
+        *,
+        mode="full",
+        chunk_size=128,
+        optimize=True,
+        save_activations=False,
+    ):
         super().__init__(config)
         self.loss_type = "ForCausalLM"
-        self.onnx = OnnxModule(model, params, output="logits")
+        if mode not in ("full", "chunked"):
+            raise ValueError("Expected full or chunked training")
+        self.mode = mode
+        self.forward_graph = model
+        if mode == "chunked":
+            from onnxscript import optimizer
+
+            from examples.huggingface.chunked_loss import ChunkedHead
+
+            rhs = model.graph.outputs[0].producer().inputs[1]
+            if rhs.const_value is not None:
+                weight = rhs.const_value.numpy()
+            elif rhs.producer().op_type == "Transpose":
+                weight = rhs.producer().inputs[0].const_value.numpy().T
+            else:
+                raise ValueError("Expected a frozen output projection")
+            self.head = ChunkedHead(weight, chunk_size=chunk_size)
+            body = model.clone()
+            hidden = body.graph.outputs[1]
+            body.graph.outputs.clear()
+            body.graph.outputs.append(hidden)
+            optimizer.remove_unused_nodes(body)
+            self.onnx = OnnxModule(
+                body,
+                params,
+                output=hidden.name,
+                optimize=optimize,
+                save_activations=save_activations,
+            )
+        else:
+            self.onnx = OnnxModule(
+                model,
+                params,
+                output="logits",
+                optimize=optimize,
+                save_activations=save_activations,
+            )
         self.mapping = mapping
         self.config.use_cache = False
 
@@ -98,19 +145,45 @@ class OnnxQwen3(PreTrainedModel):
             attention_mask = torch.ones_like(input_ids)
         if position_ids is None:
             position_ids = (attention_mask.cumsum(-1) - 1).clamp(min=0)
-        logits = self.onnx(
+        value = self.onnx(
             input_ids=input_ids, attention_mask=attention_mask, position_ids=position_ids
         )
+        if self.mode == "chunked":
+            if labels is not None:
+                return CausalLMOutput(loss=self.head(value, labels, num_items_in_batch))
+            logits = self.head.forward(value)
+        else:
+            logits = value
         loss = None if labels is None else token_loss(logits, labels, num_items_in_batch)
         return CausalLMOutput(loss=loss, logits=logits)
 
 
-def prepare(real=False):
+def prepare(real=False, *, mode="full", chunk_size=128, optimize=True, save_activations=False):
     reference = reference_model(real)
     base = build_base(reference)
     adapted, params, mapping = inject(base)
     graph = decompose(adapted)
-    return OnnxQwen3(reference.config, graph, params, mapping), reference
+    return OnnxQwen3(
+        reference.config,
+        graph,
+        params,
+        mapping,
+        mode=mode,
+        chunk_size=chunk_size,
+        optimize=optimize,
+        save_activations=save_activations,
+    ), reference
+
+
+class OnnxSFTTrainer(SFTTrainer):
+    """Use the ONNX chunked loss without recomputing logits for TRL metrics."""
+
+    def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
+        if model.mode == "full":
+            return super().compute_loss(model, inputs, return_outputs, num_items_in_batch)
+        from transformers import Trainer
+
+        return Trainer.compute_loss(self, model, inputs, return_outputs, num_items_in_batch)
 
 
 def make_trainer(model, tok, directory, *, real=False, steps=None, callbacks=None):
@@ -127,6 +200,7 @@ def make_trainer(model, tok, directory, *, real=False, steps=None, callbacks=Non
         weight_decay=0,
         max_grad_norm=0,
         lr_scheduler_type="constant",
+        prediction_loss_only=True,
         max_length=64,
         packing=False,
         gradient_checkpointing=False,
@@ -139,7 +213,7 @@ def make_trainer(model, tok, directory, *, real=False, steps=None, callbacks=Non
         dataloader_pin_memory=False,
         seed=20261029,
     )
-    return SFTTrainer(
+    return OnnxSFTTrainer(
         model=model,
         args=args,
         processing_class=tok,
@@ -149,9 +223,28 @@ def make_trainer(model, tok, directory, *, real=False, steps=None, callbacks=Non
     )
 
 
-def run(directory, *, real=False, steps=None, resume=None):
+def run(
+    directory,
+    *,
+    real=False,
+    steps=None,
+    resume=None,
+    mode="full",
+    chunk_size=128,
+    optimize=True,
+    diagnose_rounding=False,
+    save_activations=False,
+    fp64_audit=False,
+    peft_roundtrip=False,
+):
     torch.set_num_threads(4 if real else 1)
-    model, reference = prepare(real)
+    model, reference = prepare(
+        real,
+        mode=mode,
+        chunk_size=chunk_size,
+        optimize=optimize,
+        save_activations=save_activations,
+    )
     tok = tokenizer(real)
     from examples.huggingface.validation import add_reference_adapters, audit
 
@@ -159,13 +252,17 @@ def run(directory, *, real=False, steps=None, resume=None):
     sample = tok(texts()[0], return_tensors="pt")
     sample = {k: v for k, v in sample.items() if k in ("input_ids", "attention_mask")}
     sample["labels"] = sample["input_ids"].clone()
-    initial_audit = audit(model, reference, sample)
+    initial_params = model.onnx.arrays()
+    initial_audit = audit(model, reference, sample, diagnose_rounding=diagnose_rounding)
     trainer = make_trainer(model, tok, directory, real=real, steps=steps)
     before = trainer.evaluate()["eval_loss"]
     trainer.train(resume_from_checkpoint=resume)
     after = trainer.evaluate()["eval_loss"]
-    final_audit = audit(model, reference, sample)
-    model.onnx.export(os.path.join(directory, "export"))
+    final_audit = audit(model, reference, sample, diagnose_rounding=diagnose_rounding)
+    model.onnx.export(os.path.join(directory, "export"), forward_model=model.forward_graph)
+    from examples.huggingface.peft_adapter import export_adapter
+
+    export_adapter(model, os.path.join(directory, "adapter"))
     tok.save_pretrained(os.path.join(directory, "export"))
     report = {
         "model": MODEL_ID if real else "tiny-qwen3",
@@ -174,6 +271,30 @@ def run(directory, *, real=False, steps=None, resume=None):
         "validation_loss": [before, after],
         "audits": [initial_audit, final_audit],
     }
+    final_params = model.onnx.arrays()
+    if peft_roundtrip:
+        from examples.huggingface.peft_adapter import roundtrip
+
+        for row in model.mapping:
+            parent, name = row["module"].rsplit(".", 1)
+            module = reference.get_submodule(parent)
+            setattr(module, name, getattr(module, name).base)
+        report["peft"] = roundtrip(
+            model,
+            reference,
+            sample,
+            os.path.join(directory, "peft_roundtrip"),
+            diagnose_rounding=diagnose_rounding,
+        )
+        with torch.no_grad():
+            for name, parameter in zip(model.onnx.names, model.onnx.adapters, strict=True):
+                parameter.copy_(torch.from_numpy(final_params[name]))
+    if fp64_audit:
+        from examples.huggingface.precision import audit64
+
+        model.onnx.forward_session = model.onnx.backward_session = None
+        model.onnx.runtime_directory.cleanup()
+        report["fp64"] = audit64(model, reference, sample, [initial_params, final_params])
     with open(os.path.join(directory, "report.json"), "w") as stream:
         json.dump(report, stream, indent=2)
     return report
@@ -185,10 +306,27 @@ if __name__ == "__main__":
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--steps", type=int)
     parser.add_argument("--resume")
+    parser.add_argument("--mode", choices=["full", "chunked"], default="full")
+    parser.add_argument("--chunk-size", type=int, default=128)
+    parser.add_argument("--diagnose-rounding", action="store_true")
+    parser.add_argument("--save-activations", action="store_true")
+    parser.add_argument("--fp64-audit", action="store_true")
+    parser.add_argument("--peft-roundtrip", action="store_true")
     args = parser.parse_args()
     print(
         json.dumps(
-            run(args.output_dir, real=args.real, steps=args.steps, resume=args.resume),
+            run(
+                args.output_dir,
+                real=args.real,
+                steps=args.steps,
+                resume=args.resume,
+                mode=args.mode,
+                chunk_size=args.chunk_size,
+                diagnose_rounding=args.diagnose_rounding,
+                save_activations=args.save_activations,
+                fp64_audit=args.fp64_audit,
+                peft_roundtrip=args.peft_roundtrip,
+            ),
             indent=2,
         )
     )

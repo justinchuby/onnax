@@ -103,3 +103,52 @@ def test_independent_multi_step_updates():
                 np.testing.assert_allclose(
                     value, getattr(layer, key).detach(), rtol=1e-4, atol=1e-6
                 )
+
+
+def test_sft_fresh_process_checkpoint_resume(tmp_path):
+    import os
+    import subprocess
+    import sys
+
+    run(str(tmp_path))
+    with np.load(tmp_path / "export" / "adapter.npz") as data:
+        expected = {n: data[n].copy() for n in data.files}
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "examples.huggingface.sft",
+            "--output-dir",
+            str(tmp_path),
+            "--resume",
+            os.fspath(tmp_path / "checkpoint-50"),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    with np.load(tmp_path / "export" / "adapter.npz") as data:
+        for n, value in expected.items():
+            np.testing.assert_array_equal(data[n], value)
+
+
+def test_noncontiguous_position_ids(workload):
+    model, reference = workload
+    inputs = batch()
+    inputs["position_ids"] = 2 * inputs["position_ids"] + 3
+    audit(model, reference, inputs)
+
+
+def test_fused_mobius_and_decomposed_graphs():
+    import onnx_ir as ir
+
+    from examples.huggingface.qwen import build_base, decompose, reference_model
+    from examples.lora.train import session
+
+    source = build_base(reference_model())
+    lowered = decompose(source)
+    feeds = {n: v.numpy() for n, v in batch().items() if n != "labels"}
+    expected = session(ir.to_proto(source).SerializeToString()).run(None, feeds)
+    actual = session(ir.to_proto(lowered).SerializeToString()).run(None, feeds)
+    for a, b in zip(actual, expected, strict=True):
+        np.testing.assert_allclose(a, b, rtol=1e-4, atol=1e-6)

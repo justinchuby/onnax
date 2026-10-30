@@ -19,10 +19,15 @@ from examples.lora.train import problem, reference, session
 
 
 class RegressionModel(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, *, nf4=False):
         super().__init__()
         w, c, _, _, _, _, params = problem()
-        self.onnx = OnnxModule(adapt(base_model(w, c)), params)
+        graph = adapt(base_model(w, c))
+        if nf4:
+            from examples.lora.nf4 import lower
+
+            graph, _ = lower(graph)
+        self.onnx = OnnxModule(graph, params)
 
     def forward(self, features, labels=None):
         prediction = self.onnx(features=features)
@@ -39,7 +44,7 @@ class StopAt(TrainerCallback):
             control.should_save = control.should_training_stop = True
 
 
-def make_trainer(directory, *, stop=None):
+def make_trainer(directory, *, stop=None, nf4=False):
     _, _, x, y, vx, vy, _ = problem()
     args = TrainingArguments(
         output_dir=directory,
@@ -61,7 +66,7 @@ def make_trainer(directory, *, stop=None):
         seed=20261029,
     )
     return Trainer(
-        model=RegressionModel(),
+        model=RegressionModel(nf4=nf4),
         args=args,
         train_dataset=Dataset.from_dict({"features": x, "labels": y}),
         eval_dataset=Dataset.from_dict({"features": vx, "labels": vy}),
@@ -69,19 +74,19 @@ def make_trainer(directory, *, stop=None):
     )
 
 
-def worker(directory, *, resume=None, stop=None):
+def worker(directory, *, resume=None, stop=None, nf4=False):
     torch.set_num_threads(1)
-    trainer = make_trainer(directory, stop=stop)
+    trainer = make_trainer(directory, stop=stop, nf4=nf4)
     trainer.train(resume_from_checkpoint=resume)
     trainer.model.onnx.export(os.path.join(directory, "export"))
     return trainer
 
 
-def run(directory):
+def run(directory, *, nf4=False):
     torch.set_num_threads(1)
-    full = worker(os.path.join(directory, "continuous"))
+    full = worker(os.path.join(directory, "continuous"), nf4=nf4)
     interrupted = os.path.join(directory, "resumed")
-    worker(interrupted, stop=100)
+    worker(interrupted, stop=100, nf4=nf4)
     subprocess.run(
         [
             sys.executable,
@@ -92,6 +97,7 @@ def run(directory):
             interrupted,
             "--resume",
             os.path.join(interrupted, "checkpoint-100"),
+            *(["--nf4"] if nf4 else []),
         ],
         check=True,
     )
@@ -99,6 +105,11 @@ def run(directory):
         for name, array in full.model.onnx.arrays().items():
             np.testing.assert_array_equal(array, saved[name])
     w, c, x, y, vx, vy, initial = problem()
+    if nf4:
+        from examples.lora.nf4 import dequantize, quantize
+
+        w = dequantize(*quantize(w), w.shape)
+        c = dequantize(*quantize(c), c.shape)
     final = full.model.onnx.arrays()
     report = {
         "steps": 200,
@@ -124,8 +135,9 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", default="trainer_models")
     parser.add_argument("--worker", action="store_true")
     parser.add_argument("--resume")
+    parser.add_argument("--nf4", action="store_true")
     args = parser.parse_args()
     if args.worker:
-        worker(args.output_dir, resume=args.resume)
+        worker(args.output_dir, resume=args.resume, nf4=args.nf4)
     else:
-        print(json.dumps(run(args.output_dir), indent=2))
+        print(json.dumps(run(args.output_dir, nf4=args.nf4), indent=2))

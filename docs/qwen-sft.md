@@ -7,7 +7,7 @@ provides tokenization, batches, AdamW, scheduling and checkpoints.
 ```bash
 uv sync --group dev --group training --group huggingface
 uv run python -m examples.huggingface.sft --output-dir qwen_tiny
-uv run python -m examples.huggingface.sft --real --output-dir qwen_real
+uv run python -m examples.huggingface.sft --real --diagnose-rounding --output-dir qwen_real
 ```
 
 ## Model and training graph
@@ -22,7 +22,10 @@ Both use the same Mobius Qwen3 module and cache-free training task. The task
 returns every token's logits and final hidden state. Its inputs are token IDs,
 attention mask and position IDs; it has no past/present KV buffers. Mobius's
 Attention decomposition and explicit RMSNorm, rotary and Swish decompositions
-provide standard operations for differentiation. The source projection names
+provide standard operations for differentiation. Boolean attention masks are
+converted to zero/negative additive biases before the pinned Mobius pass.
+A regression compares every fused/decomposed output with padded batches.
+The source projection names
 survive graph construction and are recorded in the adapter mapping.
 
 Each decoder layer trains rank-four adapters on `q_proj` and `v_proj`:
@@ -81,3 +84,21 @@ gradients passed that threshold; some near-zero logits still exceeded it.
 The checked-in `examples/huggingface/reports/qwen3-0.6b.json` retains those
 failures, per-parameter counts and the recovery timing scope. FP64 diagnosis
 separates arithmetic rounding from the graph and derivative semantics.
+
+## Independent precision diagnosis
+
+The real model also passes a separate FP64 functional Qwen3 oracle at both
+initial and final adapter states. Maximum logit error is 1.99e-13 and maximum
+adapter-gradient error is 3.79e-15. This comparison uses the same stored RoPE
+and scalar constants, and evaluates the transformer independently in PyTorch.
+
+The FP32 report retains its original elementwise failures. `--diagnose-rounding`
+records logits and per-parameter gradient violations and continues training;
+it keeps the loss comparison and all original tolerances. Without this flag,
+the first failed comparison raises. FP64 results qualify graph/derivative
+semantics; FP32 elementwise agreement remains a separate acceptance result.
+
+The real PEFT comparison passes loss and final-gradient checks. Its first
+independent AdamW update exceeds the parameter tolerance for some entries;
+the report preserves the per-parameter failures. The offline tiny model passes the
+full bidirectional adapter, gradient and update regression.
