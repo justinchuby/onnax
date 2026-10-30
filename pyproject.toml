@@ -36,6 +36,7 @@ Documentation = "https://github.com/justinchuby/onnax/blob/main/src/onnax/_funct
 Examples = "https://github.com/justinchuby/onnax/tree/main/examples"
 
 [dependency-groups]
+docs = ["sphinx>=8", "furo", "myst-nb", "sphinx-copybutton", "sphinx-exec-code", "linkify-it-py"]
 dev = [
     "pytest>=8",
     "onnxruntime>=1.31.1",

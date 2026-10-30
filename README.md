@@ -273,3 +273,10 @@ and annotate tensor dtypes/ranks when inference cannot determine them. Select
 floating inputs explicitly when custom operands include nondifferentiable data.
 Callbacks should build new values through the context and treat existing tensor
 payloads as read-only. Randomness, subgraphs, and overloaded calls remain restricted.
+
+### Build the documentation
+
+The Sphinx site follows onnx-ir: Furo, MyST-NB, MathJax, autodoc and Napoleon.
+Run `uv sync --group docs`, then
+`uv run sphinx-build -W --keep-going -b html docs docs/_build/html`.
+The deployment workflow builds Jelly separately and assembles both into `_site/`.
