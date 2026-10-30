@@ -23,8 +23,14 @@ def reduction_vjp(ctx: _Context, node: ir.Node, g: ir.Value) -> ir.Value:
     axes = node.inputs[1] if len(node.inputs) > 1 else None
     # Kept dimensions already broadcast. Omitted axes either reduce everything
     # to a scalar or preserve the input shape (noop), both directly expandable.
-    if not _int(node, "keepdims", 1) and axes is not None:
-        if not _int(node, "noop_with_empty_axes", 0):
+    axes_count = (
+        axes.shape[0]
+        if axes is not None and axes.shape is not None and len(axes.shape) == 1
+        else None
+    )
+    # Empty axes reduce all dimensions or none; either result broadcasts directly.
+    if not _int(node, "keepdims", 1) and axes is not None and axes_count != 0:
+        if not _int(node, "noop_with_empty_axes", 0) and not isinstance(axes_count, int):
             rank = ctx.op("Size", shape)
             zero = ctx.constant(0)
             stop = ctx.op("Where", ctx.op("Equal", ctx.op("Size", axes), zero), rank, zero)
