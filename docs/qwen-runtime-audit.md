@@ -80,6 +80,41 @@ reproduces expensive reusable-tensor searches on graphs with many distinct
 symbolic shapes. Session construction, execution time and execution memory are
 separate measurements.
 
+## Replay local pullbacks
+
+For an operation $y=f(x)$ on the training path, the local audit captures its
+actual ONNX input $x$ and its incoming loss cotangent $\bar y$. It compares the
+generated input contribution with PyTorch's independent calculation of
+$J_f(x)^T\bar y$. Multi-input operations are checked one input at a time; Split
+uses the cotangents of all its outputs.
+
+```bash
+uv run python -m examples.huggingface.local_vjp_audit --real --nf4 \
+  --b-values 0 0.01 --output local-vjp.json
+```
+
+The command builds one derivative graph and reuses its forward and reverse
+sessions for both adapter states. B starts at zero in the first state; the
+second fills B with 0.01, activating gradients for A as well. The upstream
+cotangent comes from shifted token cross-entropy on the fixed 64-token sequence.
+Packed weights are decoded independently with NumPy before the PyTorch matrix
+product. The audit also covers elementwise operations, reductions and layouts.
+
+The {download}`real-model local report <../examples/huggingface/reports/qwen3-nf4-local-vjp.json>`
+records each operator's node count, checked input contributions and worst error,
+plus every failing contribution. `unchecked_active_nodes` lists active rule
+calls with no local oracle. Nonfinite gradients and interface mismatches raise
+an error. The offline test injects a deliberately incorrect pullback to verify
+that the oracle detects it.
+
+Both real-model states cover all 2,552 active operations, including 193 NF4
+matrix products. Each state checks 3,298 input contributions with zero failures
+at `rtol=1e-4, atol=1e-6`; `unchecked_active_nodes` is empty. The largest local
+absolute difference is `9.71e-7` for zero B and `9.55e-7` for nonzero B.
+
+This report checks operation pullbacks at observed activations. The paired audit
+above tracks the complete-model gradient comparison with Transformers.
+
 ## Reuse smaller ONNX sessions
 
 `examples.huggingface.segmented.SegmentedSession` cuts a flat tensor graph into
