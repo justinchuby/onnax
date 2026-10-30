@@ -23,6 +23,7 @@ OPS = frozenset(
         "Atan",
         "Atanh",
         "Add",
+        "Celu",
         "Cos",
         "Cosh",
         "Div",
@@ -266,6 +267,17 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
                 one,
                 ctx.scalar(x, negative),
             )
+        elif op == "Celu":
+            alpha = _float(node, "alpha", 1.0)
+            if not math.isfinite(alpha) or alpha <= 0:
+                raise ValueError(
+                    f"Celu differentiation requires finite alpha > 0; got {alpha}. "
+                    "Use a positive shape parameter."
+                )
+            positive = ctx.op("Greater", x, ctx.scalar(x, 0))
+            negative_x = ctx.op("Where", positive, ctx.scalar(x, 0), x)
+            slope = ctx.op("Exp", ctx.op("Div", negative_x, ctx.scalar(x, alpha)))
+            p = ctx.op("Where", positive, one, slope)
         elif op in ("Elu", "Selu"):
             # ONNX stores attribute defaults as float32, even for DOUBLE inputs.
             alpha = _float(node, "alpha", 1.0 if op == "Elu" else 1.6732631921768188)

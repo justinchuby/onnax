@@ -99,6 +99,9 @@ HardSigmoid (including custom alpha/beta) and HardSwish support JVP, VJP,
 HVPs, and batched gradients across opsets 18 through 28. At clipping boundaries,
 HardSigmoid selects zero slope; HardSwish selects zero at the lower boundary and
 one at the upper boundary. Both select zero curvature at the boundaries.
+Celu supports JVP, VJP, HVPs, and batching with finite alpha > 0.
+At zero it selects the nonpositive branch curvature 1/alpha; a classical second
+derivative need not exist there. DOUBLE Celu models require ONNX opset 28.
 ThresholdedRelu supports JVP, VJP, HVPs, and batching. It selects zero slope
 and curvature at its threshold, a convention at this nonsmooth boundary.
 Abs now supports HVPs through its Sign pullback. Sign has a zero-derivative
