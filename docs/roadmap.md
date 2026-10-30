@@ -6,41 +6,38 @@ scheduling, data loading and checkpoint storage.
 
 ## P0 — Frozen-base LoRA fine-tuning (delivered)
 
-The [LoRA tutorial](lora.md) is the first acceptance workload: load a frozen ONNX
-base, inject adapters, export selected parameter gradients, and train using an
-external Array API Adam update. Independent reference trajectories, reloaded
-artifacts, frozen-weight checks and bounded performance measurements are required.
+The [LoRA tutorial](lora.md) is the first acceptance workload: load a frozen ONNX base,
+inject adapters, export selected parameter gradients, and train using an external Array
+API Adam update. Independent reference trajectories, reloaded artifacts, frozen-weight
+checks and bounded performance measurements are required.
 
 ## P1 — Small-model training (delivered)
 
-The [MLP classifier](mlp.md) trains all four weight/bias tensors through exported
-ONNX gradients and an external Array API Adam. Stable LogSoftmax cross-entropy,
-independent gradients and update trajectories, reloads and dynamic batches are
-validated. Further operators must be justified by actual training workloads.
+The [MLP classifier](mlp.md) trains all four weight/bias tensors through exported ONNX
+gradients and an external Array API Adam. Stable LogSoftmax cross-entropy, independent
+gradients and update trajectories, reloads and dynamic batches are validated. Further
+operators must be justified by actual training workloads.
 
 ## P2 — Matrix-free scientific computing (delivered)
 
-The [nonlinear decay fit](fitting.md) composes JVP/VJP products with external
-damped Gauss–Newton CG. Exact HVPs and vmap direction batches are also validated;
-only the independent small-problem oracle materializes derivatives. Solver
-trajectories, reloads, failure paths and scoped measurements are covered. The
-[Jelly Newton-CG example](https://www.justinchuby.com/onnax/jelly/) remains the
-interactive exact-HVP workload.
+The [nonlinear decay fit](fitting.md) composes JVP/VJP products with external damped
+Gauss–Newton CG. Exact HVPs and vmap direction batches are also validated; only the
+independent small-problem oracle materializes derivatives. Solver trajectories, reloads,
+failure paths and scoped measurements are covered. The [Jelly Newton-CG
+example](https://www.justinchuby.com/onnax/jelly/) remains the interactive exact-HVP
+workload.
 
 ## P3 — Memory, precision and device execution (in progress)
 
-The [precision and memory experiment](precision.md) delivers external FP32
-weighted microbatch accumulation, a defined BF16/master-state policy, runtime
-capability probes and isolated full/microbatch RSS/time measurements. The
-[BF16 LoRA experiment](bf16.md) now executes explicit BF16 MatMul functions on
-CPU ReferenceEvaluator, with declared FP32 straight-through derivatives, an
-independent 200-update reference, FP32 accuracy baseline and master-state reload.
-Generic raw BF16 differentiation and native/device-resident training remain
-incomplete; the recorded CPU ORT provider lacks BF16 MatMul. Next validate a
-native backend and device bindings before making performance claims or extending
-the precision API. Device-resident bindings, DLPack, recomputation and
-structured operators remain separate measured decisions; Array API portability
-alone does not establish zero-copy ONNX execution.
+The [precision and memory experiment](precision.md) delivers external FP32 weighted
+microbatch accumulation, a defined BF16/master-state policy, runtime capability probes
+and isolated full/microbatch RSS/time measurements. The [BF16 LoRA experiment](bf16.md)
+now executes explicit BF16 MatMul functions on CPU ReferenceEvaluator, with declared
+FP32 straight-through derivatives, an independent 200-update reference, FP32 accuracy
+baseline and master-state reload. Next implement and measure runtime bindings, then
+validate native BF16 execution and broaden precision transforms. The recorded CPU ORT
+provider lacks BF16 MatMul. Device memory/transfer measurements will guide DLPack,
+recomputation and structured-operator work.
 
 ## Engineering boundaries
 
