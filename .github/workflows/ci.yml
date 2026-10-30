@@ -53,3 +53,13 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  huggingface:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+      - run: uv sync --group dev --group training --group huggingface
+      - run: uv run --no-sync pytest -q tests/test_huggingface_bridge.py
