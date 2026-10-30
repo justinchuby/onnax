@@ -4,19 +4,19 @@ onnax generates, composes and optimizes ONNX differentiation graphs for fine-tun
 small-model training and scientific computing. External programs own optimization,
 scheduling, data loading and checkpoint storage.
 
-## P0 — Frozen-base LoRA fine-tuning
+## P0 — Frozen-base LoRA fine-tuning (delivered)
 
 The [LoRA tutorial](lora.md) is the first acceptance workload: load a frozen ONNX
 base, inject adapters, export selected parameter gradients, and train using an
 external Array API Adam update. Independent reference trajectories, reloaded
 artifacts, frozen-weight checks and bounded performance measurements are required.
 
-## P1 — Small-model training
+## P1 — Small-model training (delivered)
 
-Build a complete MLP classification example using the same explicit parameter
-and named-gradient boundary. Prioritize stable classification losses, batch
-reductions and operators demonstrated necessary by that model. Export loss and
-gradient modules; keep the training loop external. Operator count is not a goal.
+The [MLP classifier](mlp.md) trains all four weight/bias tensors through exported
+ONNX gradients and an external Array API Adam. Stable LogSoftmax cross-entropy,
+independent gradients and update trajectories, reloads and dynamic batches are
+validated. Further operators must be justified by actual training workloads.
 
 ## P2 — Matrix-free scientific computing
 

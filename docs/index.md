@@ -10,6 +10,7 @@ differentiate with **grad**, **jvp**, and **vjp**, then save ordinary ONNX model
 
 guide
 lora
+mlp
 roadmap
 api
 Jelly playground <https://www.justinchuby.com/onnax/jelly/>
