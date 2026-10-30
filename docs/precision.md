@@ -3,7 +3,11 @@
 The first P3 experiment extends the [LoRA workload](lora.md) with streaming
 microbatch gradients. It defines a mixed-precision policy before enabling BF16
 execution. Current production derivative graphs still require FP32 or FP64;
-this experiment does **not** enable BF16 differentiation.
+this experiment does **not** enable BF16 differentiation. The subsequent
+[BF16 LoRA experiment](bf16.md) executes an explicitly declared mixed-precision
+local function on CPU ReferenceEvaluator, with FP32 straight-through derivatives
+and an independent multi-update reference; it does not enable generic raw BF16
+active paths or native accelerated training.
 
 ```bash
 uv sync --group dev --group training
@@ -59,7 +63,7 @@ identity with a monolithic reduction is promised.
 
 ## Dtype policy
 
-| Quantity | Executed today | BF16 target policy (not enabled) |
+| Quantity | Executed today | BF16 target policy (reference prototype linked above) |
 | --- | --- | --- |
 | Trainable parameters used by the optimizer | FP32 | FP32 master parameters |
 | Frozen weights and matrix operands | FP32 | BF16 compute copies for selected matrix operations |
@@ -81,9 +85,9 @@ FP32 gradient accumulation between microbatches is distinct from a matrix
 kernel's internal arithmetic. A BF16 tensor type alone does not establish the
 backend's internal accumulation dtype or numerical accuracy. Those need backend
 capability evidence and forward/gradient/update tests on the actual workload.
-The initial BF16 experiment will keep loss and master state FP32 and separately
-measure errors against the FP32 baseline; it must not silently fall back to FP32
-matrix operations while reporting BF16 compute.
+The BF16 reference experiment keeps loss and master state FP32 and separately
+measures errors against the FP32 baseline; it does not replace BF16 matrix nodes
+with FP32 matrix nodes while reporting BF16 compute.
 
 ## Capability probe and remaining gates
 
@@ -100,11 +104,12 @@ measured limitation of that configuration, not a claim about every provider.
 A backend failure is reported as an unsupported capability, while invalid graphs
 and unrelated errors still fail the example.
 
-Remaining P3 gates are an executing BF16-capable provider, explicit autocast and
-derivative semantics, independent forward/gradient/multi-update validation,
-serialized dtype/master mappings and memory/error measurements. Device-resident
+The [BF16 reference experiment](bf16.md) now covers explicit local-function
+derivative semantics, independent forward/gradient/multi-update checks and
+serialized master mappings. Remaining P3 gates include a native BF16-capable
+backend, broader precision transforms and device memory/error measurements. Device-resident
 bindings, DLPack, recomputation and preconditioned/batched products are subsequent
-choices driven by workload measurements. BF16 training remains incomplete.
+choices driven by workload measurements. Native/device-resident BF16 training remains incomplete.
 
 ## Memory/time measurement
 

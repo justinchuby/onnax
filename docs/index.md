@@ -13,6 +13,7 @@ lora
 mlp
 fitting
 precision
+bf16
 roadmap
 api
 Jelly playground <https://www.justinchuby.com/onnax/jelly/>

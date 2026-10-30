@@ -31,11 +31,14 @@ interactive exact-HVP workload.
 
 The [precision and memory experiment](precision.md) delivers external FP32
 weighted microbatch accumulation, a defined BF16/master-state policy, runtime
-capability probes and isolated full/microbatch RSS/time measurements. BF16
-differentiation and training are still incomplete: the recorded CPU provider
-lacks BF16 MatMul and the core rejects active BF16 paths. Next validate an
-executing provider, explicit autocast semantics and mixed-precision update
-accuracy before enabling it. Device-resident bindings, DLPack, recomputation and
+capability probes and isolated full/microbatch RSS/time measurements. The
+[BF16 LoRA experiment](bf16.md) now executes explicit BF16 MatMul functions on
+CPU ReferenceEvaluator, with declared FP32 straight-through derivatives, an
+independent 200-update reference, FP32 accuracy baseline and master-state reload.
+Generic raw BF16 differentiation and native/device-resident training remain
+incomplete; the recorded CPU ORT provider lacks BF16 MatMul. Next validate a
+native backend and device bindings before making performance claims or extending
+the precision API. Device-resident bindings, DLPack, recomputation and
 structured operators remain separate measured decisions; Array API portability
 alone does not establish zero-copy ONNX execution.
 
