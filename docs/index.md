@@ -11,6 +11,7 @@ differentiate with **grad**, **jvp**, and **vjp**, then save ordinary ONNX model
 guide
 lora
 mlp
+fitting
 roadmap
 api
 Jelly playground <https://www.justinchuby.com/onnax/jelly/>

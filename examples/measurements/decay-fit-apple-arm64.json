@@ -1,0 +1,92 @@
+{
+  "parameters": [
+    2.000363531701054,
+    1.2971012312616226,
+    0.39868539431187694
+  ],
+  "truth": [
+    2.0,
+    1.3,
+    0.4
+  ],
+  "loss_history": [
+    6.786807058439907,
+    0.379981181196424,
+    0.009967136935140179,
+    0.0009976894521461625,
+    0.0009969460263318168,
+    0.000996946026327647,
+    0.000996946026327647
+  ],
+  "observations": 128,
+  "dtype": "float64",
+  "method": "damped Gauss-Newton with matrix-free CG",
+  "ort_graph_optimization": "disabled",
+  "artifacts": {
+    "batched_jvp.onnx": {
+      "bytes": 5678,
+      "nodes": 65
+    },
+    "batched_jvp.optimized.onnx": {
+      "bytes": 4666,
+      "nodes": 46
+    },
+    "hvp.onnx": {
+      "bytes": 27439,
+      "nodes": 317
+    },
+    "hvp.optimized.onnx": {
+      "bytes": 12940,
+      "nodes": 130
+    },
+    "jvp.onnx": {
+      "bytes": 2699,
+      "nodes": 34
+    },
+    "jvp.optimized.onnx": {
+      "bytes": 2363,
+      "nodes": 22
+    },
+    "residual.onnx": {
+      "bytes": 907,
+      "nodes": 12
+    },
+    "residual.optimized.onnx": {
+      "bytes": 1173,
+      "nodes": 12
+    },
+    "vjp.onnx": {
+      "bytes": 10732,
+      "nodes": 167
+    },
+    "vjp.optimized.onnx": {
+      "bytes": 6295,
+      "nodes": 60
+    }
+  },
+  "measurement": {
+    "session_creation_ms": 4.022042005090043,
+    "timings_ms": {
+      "gauss_newton_product": {
+        "median": 0.03116598236374557,
+        "p95": 0.034379150019958615
+      },
+      "complete_solve": {
+        "median": 0.806791998911649,
+        "p95": 0.9611559537006541
+      }
+    },
+    "peak_process_rss_bytes": 132087808,
+    "scope": "Isolated process; 10 warmup/100 measured repetitions; CPU FP64; product includes two sessions and host intermediate; solve includes Python CG and line search; RSS includes imports/runtime. No dense reference or export inside measurement. No acceleration comparison.",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "processor": "arm",
+    "onnx": "1.23.2",
+    "onnxscript": "0.7.2",
+    "numpy": "2.4.6",
+    "onnxruntime": "1.31.1",
+    "threads": {
+      "intra_op": 1,
+      "inter_op": 1
+    }
+  }
+}
