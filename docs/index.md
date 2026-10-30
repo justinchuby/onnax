@@ -12,6 +12,7 @@ guide
 lora
 mlp
 fitting
+precision
 roadmap
 api
 Jelly playground <https://www.justinchuby.com/onnax/jelly/>
