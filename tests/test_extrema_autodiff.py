@@ -42,6 +42,9 @@ def test_extrema_ties_count_inactive_and_repeated_operands(op, selected):
     weights = np.array([0, 2 / 3, 1]) if op == "Max" else np.array([1, 2 / 3, 0])
     active = selected or ["a", "b"]
     forward = jvp(source, inputs=selected)
+    for derivative in (forward, vjp(source, inputs=selected)):
+        assert sum(node.op_type == "Equal" for node in derivative.graph) == 2
+        assert sum(node.op_type == "Cast" for node in derivative.graph) == 2
     seeds = [np.full(3, 3.0) if name == "a" else np.array(6.0) for name in active]
     feeds = {"a": values, "b": np.array(2.0)}
     feeds.update({value.name: seed for value, seed in zip(forward.graph.inputs[2:], seeds)})
