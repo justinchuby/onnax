@@ -140,6 +140,36 @@ def main() -> None:
     )
     assert ir.to_proto(model).SerializeToString() == before
 
+    # Exercise the separately registered extrema family from the installed package.
+    for operator, slope in (
+        ("Max", np.array([0.0, 0.5, 1.0])),
+        ("Min", np.array([1.0, 0.5, 0.0])),
+    ):
+        value = ir.val("x", dtype=ir.DataType.DOUBLE, shape=[3])
+        extrema_tape = ir.tape.Tape()
+        zero = extrema_tape.initializer(ir.tensor(np.zeros(3), name="zero"))
+        selected = extrema_tape.op(operator, [value, zero])
+        square = extrema_tape.op("Mul", [selected, selected])
+        total = extrema_tape.op("ReduceSum", [square], {"keepdims": 0})
+        total.name = "loss"
+        extrema = ir.Model(
+            ir.Graph(
+                [value],
+                [total],
+                nodes=extrema_tape.nodes,
+                initializers=extrema_tape.initializers,
+                opset_imports={"": 18},
+                name="installed_extrema",
+            ),
+            ir_version=10,
+        )
+        product = jvp(grad(extrema))
+        sample = np.array([-1.0, 0.0, 1.0])
+        values = run(product, {"x": sample, product.graph.inputs[-1].name: np.ones(3)})
+        chosen = np.maximum(sample, 0) if operator == "Max" else np.minimum(sample, 0)
+        np.testing.assert_allclose(values[-2], 2 * chosen * slope)
+        np.testing.assert_allclose(values[-1], 2 * slope**2)
+
     readme = distribution.metadata.get_payload()
     example = readme.split("```python\n", 1)[1].split("```", 1)[0]
     namespace: dict = {}
