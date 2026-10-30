@@ -136,3 +136,60 @@ def test_axes_length_specialization_preserves_runtime_values(count, noop):
             },
         )
         np.testing.assert_array_equal(actual[-1], 2 * values)
+
+
+@pytest.mark.parametrize("op", ["Sum", "Mean"])
+@pytest.mark.parametrize("selected", [None, ["c"]])
+def test_variadic_broadcast_products_and_hvp(op, selected):
+    inputs = [_value("a", [2, 3]), _value("b", [1, 3]), _value("c", [])]
+    tape = ir.tape.Tape()
+    y = tape.op(op, inputs)
+    source = _model(inputs, tape, [y])
+    feeds = {
+        "a": np.array([[0.2, 0.1, 0.5], [-0.3, 0.7, -0.2]]),
+        "b": np.array([[0.4, -0.5, 0.8]]),
+        "c": np.array(0.7),
+    }
+    _products(source, feeds, inputs=selected)
+    loss_tape = ir.tape.Tape(source.graph)
+    loss = loss_tape.op("ReduceSum", [loss_tape.op("Mul", [y, y])], {"keepdims": 0})
+    source.graph.outputs.clear()
+    source.graph.outputs.append(loss)
+    loss.name = "loss"
+    _hvp_check(source, feeds, inputs=selected)
+
+
+@pytest.mark.parametrize("op", ["Sum", "Mean"])
+def test_variadic_repeated_operands_and_batched_gradient(op):
+    a, b = _value("a", [2], dtype=ir.DataType.FLOAT), _value("b", [], dtype=ir.DataType.FLOAT)
+    tape = ir.tape.Tape()
+    y = tape.op(op, [a, a, b])
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    derivative = grad(_model([a, b], tape, [loss]))
+    mapped = vmap(derivative, in_axes=(0, None))
+    actual = runtime_session(mapped).run(
+        None,
+        {
+            "a": np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32),
+            "b": np.array(0.5, dtype=np.float32),
+        },
+    )
+    scale = 1 if op == "Sum" else 1 / 3
+    np.testing.assert_allclose(actual[-2], np.full((2, 2), 2 * scale))
+    np.testing.assert_allclose(actual[-1], np.full(2, 2 * scale))
+
+
+@pytest.mark.parametrize("op", ["Sum", "Mean"])
+def test_variadic_first_operand_expands_at_runtime(op):
+    a = _value("a", [2, 1], dtype=ir.DataType.FLOAT)
+    b = _value("b", [1, 3], dtype=ir.DataType.FLOAT)
+    tape = ir.tape.Tape()
+    y = tape.op(op, [a, b])
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    derivative = grad(_model([a, b], tape, [loss]))
+    actual = runtime_session(derivative).run(
+        None, {"a": np.ones((2, 1), dtype=np.float32), "b": np.ones((1, 3), dtype=np.float32)}
+    )
+    scale = 1 if op == "Sum" else 0.5
+    np.testing.assert_allclose(actual[-2], np.full((2, 1), 3 * scale))
+    np.testing.assert_allclose(actual[-1], np.full((1, 3), 2 * scale))

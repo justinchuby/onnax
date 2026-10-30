@@ -32,6 +32,7 @@ OPS = frozenset(
         "Identity",
         "LeakyRelu",
         "Log",
+        "Mean",
         "Mul",
         "Neg",
         "Pow",
@@ -47,6 +48,7 @@ OPS = frozenset(
         "Softsign",
         "Sqrt",
         "Sub",
+        "Sum",
         "Tan",
         "Tanh",
     )
@@ -140,8 +142,10 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
     one = ctx.scalar(x, 1)
     result = {}
     for index in indices:
-        if op in ("Identity", "Add"):
+        if op in ("Identity", "Add", "Sum"):
             p = one
+        elif op == "Mean":
+            p = ctx.scalar(x, 1 / len(node.inputs))
         elif op == "Sub":
             p = one if index == 0 else ctx.scalar(x, -1)
         elif op == "Mul":
@@ -295,7 +299,7 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
         result = ctx.sum([ctx.op("Mul", d[i], partials[i]) for i in d])
         return [
             ctx.op("Expand", result, ctx.op("Shape", node.outputs[0]))
-            if op in _BINARY
+            if op in _BINARY | {"Sum", "Mean"}
             else result
         ]
     raise NotImplementedError(
@@ -319,7 +323,7 @@ def vjp(
             # has the exact input shape, even when dimension sizes are unknown.
             result[i] = (
                 ctx.unbroadcast(contribution, _input(node, i), broadcasted=node.outputs[0])
-                if op in _BINARY or (op == "PRelu" and i == 1)
+                if op in _BINARY | {"Sum", "Mean"} or (op == "PRelu" and i == 1)
                 else contribution
             )
         return result
