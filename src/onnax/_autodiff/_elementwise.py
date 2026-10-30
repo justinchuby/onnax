@@ -145,9 +145,7 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
     one = ctx.scalar(x, 1)
     result = {}
     for index in indices:
-        if op == "Mean":
-            p = ctx.scalar(x, 1 / len(node.inputs))
-        elif op == "Mul":
+        if op == "Mul":
             p = _input(node, 1 - index)
         elif op == "Div":
             b = _input(node, 1)
@@ -319,6 +317,10 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
                 result = d[0] if 0 in d else ctx.op("Neg", d[1])
         elif op in {"Add", "Sum"}:
             result = ctx.sum(list(d.values()))
+        elif op == "Mean":
+            scale = ctx.scalar(_input(node), 1 / len(node.inputs))
+            # Scale before summing to avoid overflowing a finite mean tangent.
+            result = ctx.sum([ctx.op("Mul", tangent, scale) for tangent in d.values()])
         else:
             partials = _partials(ctx, node, tuple(d))
             result = ctx.sum([ctx.op("Mul", d[i], partials[i]) for i in d])

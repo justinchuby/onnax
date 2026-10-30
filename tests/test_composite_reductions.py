@@ -279,3 +279,18 @@ def test_log_sum_reuses_primal_with_signed_inputs(scale):
     np.testing.assert_allclose(
         actual[-1], -direction.sum() / values.sum() ** 2, rtol=1e-13, atol=0
     )
+
+
+def test_mean_pushforward_shares_scale_without_overflowing_sum():
+    inputs = [_value(name, [2]) for name in ("a", "b", "c")]
+    tape = ir.tape.Tape()
+    source = _model(inputs, tape, [tape.op("Mean", inputs)])
+    derivative = jvp(source)
+    multiplies = [node for node in derivative.graph if node.op_type == "Mul"]
+    assert len(multiplies) == 3
+    assert all(node.inputs[1] is multiplies[0].inputs[1] for node in multiplies)
+    feeds = {value.name: np.zeros(2) for value in inputs}
+    feeds.update({value.name: np.full(2, 1e308) for value in derivative.graph.inputs[3:]})
+    actual = evaluator(derivative).run(None, feeds)[-1]
+    assert np.isfinite(actual).all()
+    np.testing.assert_allclose(actual, np.full(2, 1e308))
