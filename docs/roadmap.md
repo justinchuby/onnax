@@ -70,8 +70,11 @@ independent head backpropagation at native forward values. The
 [Metal microbatch example](metal-microbatch.md) now accumulates weighted FP32
 gradients on device, executes complete 150-step FP32/BF16 classifier training and
 checkpoint replay, and measures full/microbatch paths in isolated processes.
-Next extend precision diagnosis through the hidden layer and evaluate memory
-scaling with larger activation workloads. The recorded CPU
+The classifier inspector now audits all four analytic gradients at observed
+forward values across both 150-step BF16 runs, including hidden-layer
+backpropagation and original-output preservation. Next evaluate memory scaling
+with larger activation workloads and use those measurements to select
+recomputation or buffer-lifetime work. The recorded CPU
 ORT provider lacks BF16 MatMul. Device memory/transfer measurements will guide
 DLPack, recomputation and structured-operator work.
 
