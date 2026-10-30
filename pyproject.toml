@@ -55,6 +55,16 @@ authoring = [
     "ndonnx>=0.23.0",
     "onnxscript>=0.7",
 ]
+huggingface = [
+    "accelerate==1.15.0",
+    "datasets==5.1.0",
+    "mobius-onnx",
+    "peft==0.21.2",
+    "safetensors==0.8.0",
+    "torch==2.15.0",
+    "transformers==5.22.1",
+    "trl==1.17.1",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -125,3 +135,6 @@ files = ["src", "tests/typing"]
 check_untyped_defs = true
 show_error_codes = true
 disable_error_code = ["import-untyped"]
+
+[tool.uv.sources]
+mobius-onnx = { git = "https://github.com/onnxruntime/mobius", rev = "304622181f6418520b332de4f5de0694f2ab576f" }

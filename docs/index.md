@@ -13,6 +13,7 @@ ndonnx
 onnxscript
 lora
 nf4-lora
+huggingface
 mlp
 mlp-bf16
 classifier-device
