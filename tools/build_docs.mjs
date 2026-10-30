@@ -73,7 +73,7 @@ for (const match of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
 const output = join(root, '_site');
 rmSync(output, { recursive: true, force: true });
 mkdirSync(output);
-cpSync(join(root, 'docs'), output, { recursive: true });
+cpSync(join(root, 'docs', '_build', 'html'), output, { recursive: true });
 cpSync(dist, join(output, 'jelly'), { recursive: true });
 writeFileSync(join(output, '.nojekyll'), '');
 console.log(
