@@ -15,10 +15,16 @@ class ProductBounds:
     lower: np.ndarray
     upper: np.ndarray
     inner_dimension: int
+    bf16_result: bool = True
 
     def check(self, actual):
-        """Compare BF16-expanded FP32 results with the rounded interval."""
-        _integers(actual, allow_subnormals=True)
+        """Compare observed results with the product interval."""
+        if self.bf16_result:
+            _integers(actual, allow_subnormals=True)
+        elif not isinstance(actual, np.ndarray) or actual.dtype != np.float32:
+            raise TypeError("Expected NumPy FP32 output")
+        elif not np.all(np.isfinite(actual)):
+            raise ValueError("Expected finite FP32 output")
         if actual.shape != self.lower.shape:
             raise ValueError("Product output shape mismatch")
         bad = (actual < self.lower) | (actual > self.upper)

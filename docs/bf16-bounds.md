@@ -100,3 +100,38 @@ These checks cover local forward matrix arithmetic. The existing same-parameter
 and independent-training-trajectory comparisons continue to cover predictions,
 loss, gradients and parameter updates. Composing local error bounds through
 nonlinearities and backward arithmetic is the next numerical-contract step.
+
+## Check the FP32 backward products
+
+The straight-through derivatives use FP32 matrix products. Add `--inspect-fp32`
+to inspect those products alongside the BF16 forward products:
+
+```bash
+uv run --no-sync python -m examples.lora.mlx_bf16 \
+  --inspect-fp32 --output-dir mlx_backward_bounds
+```
+
+FP32 values are integer multiples of $2^{-149}$, so exact dot products use
+units of $2^{-298}$. The checker computes the same $s$, $S$ and $E$ with
+Python integers. It converts the rational endpoints $s-E$ and $s+E$ outward
+to FP32, checking each conversion against its exact fraction. This retains
+endpoint offsets smaller than FP64 resolution.
+
+Both BF16 and FP32 checks use $m=2k$, $u=2^{-24}$ and $\tau=2^{-126}$.
+The FP32 check accepts finite normal operands and zero, includes result
+underflow and rejects an absolute-product bound that reaches overflow.
+Its endpoints enclose FP32 accumulation results directly.
+
+On the Apple M1 Max 200-step run, all **800 backward products and 1,465,600
+FP32 output elements** fit their intervals. The widest FP32 interval is
+$2.136\times10^{-7}$. All 800 BF16 forward products also pass, and the
+instrumented graph preserves every original output byte for byte.
+The [backward-product report](https://github.com/justinchuby/onnax/blob/main/examples/measurements/mlx-backward-bounds-apple-arm64.json)
+records totals by dtype, runtime versions and the existing end-to-end
+comparisons. The strict comparison still first differs at step 68.
+
+Tests cover exact FP32 encoding, signed and subnormal endpoints, all
+summation orders of a cancellation example, overflow rejection, deliberate
+output corruption and every matrix product in the exported gradient graph.
+The next step is to compose these arithmetic intervals through the FP32
+nonlinearities, loss and chain rule.

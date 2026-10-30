@@ -46,6 +46,8 @@ executes the full gradient graph and checkpoint replay and records strict
 numerical comparisons, including a reproduced rounding-boundary difference.
 The [BF16 accumulation bounds](bf16-bounds.md) check all 800 native forward
 products with exact integer references and data-dependent rounding intervals.
+The same inspector now checks all 800 FP32 backward matrix products with
+outward rational endpoints and verifies original-output preservation.
 The [MLX GPU training example](mlx-training.md) keeps adapter masters and Adam
 moments in Metal arrays, verifies shared Python/runtime storage, and measures
 provider copy-out alongside CPU/GPU update paths. Its compiled update path
