@@ -14,8 +14,17 @@ import pytest
 from _testing import runtime_session
 from onnx_shape_inference import infer_symbolic_shapes
 
-from onnax import GradPass, JvpPass, VjpPass, VmapPass, _autodiff, _batching
-from onnax._autodiff import _elementwise
+from onnax import (
+    GradPass,
+    JvpPass,
+    VjpPass,
+    VmapPass,
+    _autodiff,
+    _batching,
+    _rules,
+    register_jvp,
+    register_vjp,
+)
 
 
 def _square(opset=18):
@@ -198,15 +207,23 @@ def test_batching_a_derivative_preserves_composition_contract(mode, tmp_path):
 
 
 def test_jvp_rule_arity_is_checked(monkeypatch):
-    monkeypatch.setattr(_elementwise, "jvp", lambda *args: [])
+    monkeypatch.setattr(_rules, "_EXTENSIONS", _rules._snapshot())
+    register_jvp("", "Sign", since_version=18, until_version=28)(lambda *args: [])
+    model = _square()
+    model.graph[0].op_type = "Sign"
+    model.graph[0].resize_inputs(1)
     with pytest.raises(ValueError, match="output arity"):
-        JvpPass()(_square())
+        JvpPass()(model)
 
 
 def test_vjp_rule_contribution_keys_are_checked(monkeypatch):
-    monkeypatch.setattr(_elementwise, "vjp", lambda *args: {})
+    monkeypatch.setattr(_rules, "_EXTENSIONS", _rules._snapshot())
+    register_vjp("", "Sign", since_version=18, until_version=28)(lambda *args: {})
+    model = _square()
+    model.graph[0].op_type = "Sign"
+    model.graph[0].resize_inputs(1)
     with pytest.raises(ValueError, match="input contributions"):
-        VjpPass()(_square())
+        VjpPass()(model)
 
 
 def test_autodiff_example_executes_saved_models(tmp_path):

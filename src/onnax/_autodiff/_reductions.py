@@ -10,6 +10,7 @@ import onnx_ir as ir
 
 from onnax._autodiff._common import _FLOATS, _input, _int
 from onnax._autodiff._context import _Context
+from onnax._rules import _builtin
 
 OPS = frozenset(("LogSoftmax", "ReduceMean", "ReduceSum", "Softmax"))
 
@@ -22,7 +23,13 @@ def reduction_vjp(ctx: _Context, node: ir.Node, g: ir.Value) -> ir.Value:
     axes = node.inputs[1] if len(node.inputs) > 1 else None
     noop = _int(node, "noop_with_empty_axes", 0)
     if axes is None:
-        axes = ctx.constant([]) if noop else ctx.op("Range", zero, rank, one)
+        if noop:
+            axes = ctx.constant([])
+        elif x.shape is not None:
+            # Known rank fixes the axes even when dimension sizes are symbolic.
+            axes = ctx.constant(list(range(len(x.shape))))
+        else:
+            axes = ctx.op("Range", zero, rank, one)
     elif not noop:
         stop = ctx.op("Where", ctx.op("Equal", ctx.op("Size", axes), zero), rank, zero)
         axes = ctx.op("Concat", axes, ctx.op("Range", zero, stop, one), axis=0)
@@ -47,6 +54,7 @@ def reduction_vjp(ctx: _Context, node: ir.Node, g: ir.Value) -> ir.Value:
     return result
 
 
+@_builtin("jvp", OPS)
 def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Value]:
     op = node.op_type
     if op in ("ReduceMean", "ReduceSum"):
@@ -66,6 +74,7 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
     )
 
 
+@_builtin("vjp", OPS)
 def vjp(
     ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
 ) -> dict[int, ir.Value]:

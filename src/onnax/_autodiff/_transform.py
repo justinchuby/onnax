@@ -4,21 +4,40 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import onnx
 import onnx_ir as ir
 
 from onnax import _rule_registry
-from onnax._autodiff import _elementwise, _layout, _linalg, _reductions
 from onnax._autodiff._common import _FLOATS, _data_indices, _input
 from onnax._autodiff._context import _Context
 from onnax._autodiff._interface import _composition_defaults, _record_interface, _select
 from onnax._autodiff._registry import _JvpRegistry, _VjpRegistry
 from onnax._diagnostics import _argument_context, _node_context, _value_context
 from onnax._inference import _infer_shapes
+from onnax._rules import _load_builtin_rules, _snapshot
 
 _OPSET_MIN = {"Gelu": 20}
+
+
+def _validate_rule_value(
+    value: ir.Value, reference: ir.Value, graph: ir.Graph, mode: str, node: ir.Node
+) -> None:
+    context = _node_context(node, graph.opset_imports, mode)
+    producer = value.producer()
+    if not (
+        (producer is not None and producer.graph is graph)
+        or value in graph.inputs
+        or (value.name is not None and graph.initializers.get(value.name) is value)
+    ):
+        raise ValueError(
+            f"{context}: rule returned {_value_context(value)} from outside the transformed graph. Build values with ctx.op/ctx.constant or use ctx.input and the supplied seeds."
+        )
+    if value.dtype is not None and value.dtype != reference.dtype:
+        raise TypeError(
+            f"{context}: rule returned dtype {value.dtype}, expected {reference.dtype} for {_value_context(reference)}. Return a derivative with the primal dtype; use ctx.scalar for typed constants."
+        )
 
 
 def _prepare(
@@ -120,7 +139,14 @@ def _prepare(
         if not indices or not any(y in needed for y in node.outputs):
             continue
         context = _node_context(node, graph.opset_imports, mode)
-        if node.domain or node.overload or node.op_identifier() in result.functions:
+        if (
+            node.overload
+            or (
+                node.op_identifier() in result.functions
+                and (node.domain, node.op_type) not in registry._rules
+            )
+            or (node.domain and (node.domain, node.op_type) not in registry._rules)
+        ):
             raise NotImplementedError(
                 f"{context}: No autodiff rule for active operator "
                 f"{node.domain!r}::{node.op_type}. "
@@ -129,13 +155,17 @@ def _prepare(
                     "onnx_ir.passes.common.InlinePass and ensure the body uses supported rules."
                     if node.op_identifier() in result.functions or node.overload
                     else "Express the custom computation with semantics-equivalent supported "
-                    "standard ONNX operators; public transforms do not dispatch custom-domain rules."
+                    "standard ONNX operators, or register a matching rule with register_jvp/register_vjp."
                 )
             )
         version = _rule_registry._effective_opset(node, graph.opset_imports)
         try:
             registry.lookup(node, graph.opset_imports)
         except NotImplementedError as e:
+            if node.domain:
+                raise NotImplementedError(
+                    f"{context}: {e} Register the matching domain/operator/version for this mode; do not relabel imports."
+                ) from e
             minimum = _OPSET_MIN.get(node.op_type)
             if minimum is not None and not minimum <= version <= 28:
                 raise NotImplementedError(
@@ -156,17 +186,18 @@ def _prepare(
                 "implementation for this operator; unsupported active paths cannot be "
                 "treated as zero. See JvpPass's operator/support contract."
             ) from e
-        schema = onnx.defs.get_schema(node.op_type, version, "")
-        graph_schema = onnx.defs.get_schema(node.op_type, graph.opset_imports[""], "")
-        if schema.since_version != graph_schema.since_version:
-            raise NotImplementedError(
-                f"{context}: Node version for {node.op_type} (schema {schema.since_version}) "
-                f"selects a different schema than the graph opset {graph.opset_imports['']} "
-                f"(schema {graph_schema.since_version}). Rewrite/convert the node to the "
-                "graph's schema and validate it; serialization cannot preserve per-node "
-                "schema overrides."
-            )
-        if node.op_type == "Pow":
+        if not node.domain and node.op_identifier() not in result.functions:
+            schema = onnx.defs.get_schema(node.op_type, version, "")
+            graph_schema = onnx.defs.get_schema(node.op_type, graph.opset_imports[""], "")
+            if schema.since_version != graph_schema.since_version:
+                raise NotImplementedError(
+                    f"{context}: Node version for {node.op_type} (schema {schema.since_version}) "
+                    f"selects a different schema than the graph opset {graph.opset_imports['']} "
+                    f"(schema {graph_schema.since_version}). Rewrite/convert the node to the "
+                    "graph's schema and validate it; serialization cannot preserve per-node "
+                    "schema overrides."
+                )
+        if not node.domain and node.op_type == "Pow":
             base, exponent = _input(node), _input(node, 1)
             if exponent.dtype in _FLOATS and exponent.dtype != base.dtype:
                 raise TypeError(
@@ -252,7 +283,8 @@ class JvpPass(ir.passes.FunctionalPass):
           selected outputs raises NotImplementedError, rather than silently
           returning zero. Inactive paths can contain unsupported/custom operators.
           Control flow/subgraphs and random operators (including Dropout) are
-          rejected. Inline active local-function calls with InlinePass first.
+          rejected. Custom/local-function calls need a globally registered rule
+          for this mode, or must be inlined with InlinePass first.
         * One forward-over-reverse composition is supported: apply JvpPass to a
           GradPass or VjpPass model, including after serialization. By default
           differentiate the original non-initializer FLOAT/DOUBLE inputs and
@@ -317,18 +349,17 @@ class JvpPass(ir.passes.FunctionalPass):
     """
 
     def __init__(
-        self, inputs: Sequence[str] | None = None, outputs: Sequence[str] | None = None
+        self,
+        inputs: Sequence[str] | None = None,
+        outputs: Sequence[str] | None = None,
     ) -> None:
         self.inputs = inputs
         self.outputs = outputs
 
     def call(self, model: ir.Model) -> ir.passes.PassResult:
         registry = _JvpRegistry[_Context]()
-        for family in (_elementwise, _linalg, _layout, _reductions):
-            for op in sorted(family.OPS):
-                registry.register(
-                    "", op, family.jvp, since_version=_OPSET_MIN.get(op, 18), until_version=28
-                )
+        registry.extend(_load_builtin_rules()._jvp)
+        registry.extend(_snapshot()._jvp)
         result, xs, ys, nodes, _ = _prepare(
             model, self.inputs, self.outputs, registry, mode="JVP"
         )
@@ -345,13 +376,21 @@ class JvpPass(ir.passes.FunctionalPass):
             except (ValueError, TypeError, NotImplementedError) as error:
                 error.add_note(_node_context(node, result.graph.opset_imports, "JVP"))
                 raise
+            if not isinstance(values, Sequence) or any(
+                not isinstance(value, ir.Value) for value in values
+            ):
+                raise TypeError(
+                    f"{_node_context(node, result.graph.opset_imports, 'JVP')}: rule must return a sequence of IR Values, got {type(values).__name__}. Return one tangent per output."
+                )
             if len(values) != len(node.outputs):
                 raise ValueError(
                     f"{_node_context(node, result.graph.opset_imports, 'JVP')}: "
                     f"JVP rule for {node.op_type} returned an invalid output arity: "
                     f"got {len(values)}, expected {len(node.outputs)}. "
-                    "Fix the private rule to return one tangent per primal node output."
+                    "Fix the registered rule to return one tangent per primal node output."
                 )
+            for reference, value in zip(node.outputs, values):
+                _validate_rule_value(value, reference, result.graph, "JVP", node)
             tangents.update(zip(node.outputs, values))
         for y in ys:
             b.output(tangents[y] if y in tangents else b.like(y), y, "tangent")
@@ -391,18 +430,17 @@ class VjpPass(ir.passes.FunctionalPass):
     """
 
     def __init__(
-        self, inputs: Sequence[str] | None = None, outputs: Sequence[str] | None = None
+        self,
+        inputs: Sequence[str] | None = None,
+        outputs: Sequence[str] | None = None,
     ) -> None:
         self.inputs = inputs
         self.outputs = outputs
 
     def _transform(self, model: ir.Model, scalar: bool = False) -> ir.passes.PassResult:
         registry = _VjpRegistry[_Context]()
-        for family in (_elementwise, _linalg, _layout, _reductions):
-            for op in sorted(family.OPS - {"ScatterND"}):
-                registry.register(
-                    "", op, family.vjp, since_version=_OPSET_MIN.get(op, 18), until_version=28
-                )
+        registry.extend(_load_builtin_rules()._vjp)
+        registry.extend(_snapshot()._vjp)
         mode = "grad (VJP)" if scalar else "VJP"
         result, xs, ys, nodes, active = _prepare(
             model, self.inputs, self.outputs, registry, mode=mode
@@ -431,16 +469,23 @@ class VjpPass(ir.passes.FunctionalPass):
             except (ValueError, TypeError, NotImplementedError) as error:
                 error.add_note(_node_context(node, result.graph.opset_imports, mode))
                 raise
+            if not isinstance(contributions, Mapping) or any(
+                not isinstance(value, ir.Value) for value in contributions.values()
+            ):
+                raise TypeError(
+                    f"{_node_context(node, result.graph.opset_imports, mode)}: rule must return a mapping of input indices to IR Values, got {type(contributions).__name__}. Return exactly the requested input contributions."
+                )
             if set(contributions) != set(indices):
                 raise ValueError(
                     f"{_node_context(node, result.graph.opset_imports, mode)}: "
                     f"VJP rule for {node.op_type} returned invalid input contributions: "
                     f"got indices {sorted(contributions)!r}, expected {sorted(indices)!r}. "
-                    "Fix the private rule to return one contribution for each active data "
+                    "Fix the registered rule to return one contribution for each active data "
                     "input index, excluding structural/inactive inputs."
                 )
             for i in indices:
                 x, contribution = _input(node, i), contributions[i]
+                _validate_rule_value(contribution, x, result.graph, mode, node)
                 cotangents[x] = (
                     b.op("Add", cotangents[x], contribution)
                     if x in cotangents
@@ -494,7 +539,11 @@ class GradPass(VjpPass):
         print(hvp)
     """
 
-    def __init__(self, inputs: Sequence[str] | None = None, output: str | None = None) -> None:
+    def __init__(
+        self,
+        inputs: Sequence[str] | None = None,
+        output: str | None = None,
+    ) -> None:
         super().__init__(inputs=inputs, outputs=None if output is None else [output])
 
     def call(self, model: ir.Model) -> ir.passes.PassResult:

@@ -8,6 +8,7 @@ import onnx_ir as ir
 
 from onnax._batching._context import _Context
 from onnax._batching._registry import _BINARY, _UNARY, _VARIADIC
+from onnax._rules import _builtin
 
 OPS = (
     _UNARY
@@ -17,6 +18,7 @@ OPS = (
 )
 
 
+@_builtin("batching", OPS)
 def apply(ctx: _Context, node: ir.Node) -> None:
     inputs, mapped = ctx._prepare_node(node)
     op = node.op_type

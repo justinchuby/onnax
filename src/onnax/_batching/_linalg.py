@@ -10,6 +10,7 @@ import string
 import onnx_ir as ir
 
 from onnax._batching._context import _Context
+from onnax._rules import _builtin
 
 OPS = frozenset(("Det", "Einsum", "Gemm", "MatMul", "MatMulInteger", "QLinearMatMul"))
 
@@ -147,6 +148,7 @@ def _matmul(
     return rank
 
 
+@_builtin("batching", OPS)
 def apply(ctx: _Context, node: ir.Node) -> None:
     inputs, mapped = ctx._prepare_node(node)
     op = node.op_type

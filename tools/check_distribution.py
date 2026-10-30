@@ -55,6 +55,14 @@ def main() -> None:
         "VjpPass",
         "VmapPass",
         "HoistLinearCoefficientsPass",
+        "register_jvp",
+        "register_vjp",
+        "register_batching",
+        "JvpRule",
+        "VjpRule",
+        "BatchingRule",
+        "AutodiffContext",
+        "BatchingContext",
     }
 
     input_x = ir.val("x", dtype=ir.DataType.DOUBLE, shape=[2])
@@ -161,7 +169,9 @@ def main() -> None:
     np.testing.assert_allclose(
         run(hvp, {**feeds, hvp.graph.inputs[-1].name: seed})[-1], 2 * sample**2 * seed
     )
-    print(f"Installed onnax {distribution.version}: all nine exports and compositions passed.")
+    print(
+        f"Installed onnax {distribution.version}: all public exports and compositions passed."
+    )
 
 
 if __name__ == "__main__":

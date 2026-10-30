@@ -552,7 +552,7 @@ def test_registry_conflict_and_missing_import_diagnostics_are_actionable():
     registry.register("example", "Scale", rule, since_version=3, until_version=5)
     with pytest.raises(ValueError) as caught:
         registry.register("example", "Scale", rule, since_version=5, until_version=6)
-    _contains(caught.value, "example", "Scale", "[5, 6]", "[3, 5]", "separate registry")
+    _contains(caught.value, "example", "Scale", "[5, 6]", "[3, 5]", "duplicate registration")
     node = ir.Node("example", "Scale", [], num_outputs=1, name="custom")
     with pytest.raises(ValueError) as caught:
         registry.lookup(node, {"": 18})
