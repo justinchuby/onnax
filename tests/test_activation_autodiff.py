@@ -531,3 +531,15 @@ def test_zero_exponential_coefficient_eliminates_derivative_exp(op, attributes, 
             None, {"x": values, derivative.graph.inputs[-1].name: np.ones(3)}
         )[-1]
         np.testing.assert_array_equal(actual, [0, 0, gamma])
+
+
+@pytest.mark.parametrize("transform", [jvp, vjp])
+def test_celu_double_old_opset_has_actionable_error(transform):
+    x = _value("x", [1])
+    tape = ir.tape.Tape()
+    source = _model([x], tape, [tape.op("Celu", [x])], opset=18)
+    with pytest.raises(
+        NotImplementedError,
+        match="Celu DOUBLE differentiation requires opset >= 28; got opset 18",
+    ):
+        transform(source)
