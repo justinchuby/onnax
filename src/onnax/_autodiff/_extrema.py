@@ -17,10 +17,20 @@ OPS = frozenset(("Max", "Min"))
 
 def _winners(ctx: _Context, node: ir.Node) -> tuple[list[ir.Value], ir.Value]:
     y = node.outputs[0]
-    masks = [ctx.op("Equal", _input(node, i), y) for i in range(len(node.inputs))]
     assert y.dtype is not None
-    # Count all operand occurrences, even inactive or repeated inputs.
-    count = ctx.sum([ctx.op("Cast", mask, to=y.dtype) for mask in masks])
+    masks = []
+    weights = []
+    cached: dict[ir.Value, tuple[ir.Value, ir.Value]] = {}
+    for i in range(len(node.inputs)):
+        value = _input(node, i)
+        if value not in cached:
+            mask = ctx.op("Equal", value, y)
+            cached[value] = (mask, ctx.op("Cast", mask, to=y.dtype))
+        mask, weight = cached[value]
+        masks.append(mask)
+        weights.append(weight)
+    # Reuse comparisons, but count every occurrence, including inactive inputs.
+    count = ctx.sum(weights)
     return masks, count
 
 
