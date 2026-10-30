@@ -258,3 +258,26 @@ def test_atan_large_inputs_and_branch_boundary_hvp(dtype):
     np.testing.assert_allclose(actual[-2], slope.astype(np_dtype), rtol=3e-6, atol=0)
     np.testing.assert_allclose(actual[-1], curvature.astype(np_dtype), rtol=3e-6, atol=0)
     assert all(np.isfinite(value).all() for value in actual)
+
+
+@pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
+def test_softsign_large_input_gradient_and_curvature(dtype):
+    np_dtype = np.float32 if dtype == ir.DataType.FLOAT else np.float64
+    magnitude = 1e10 if dtype == ir.DataType.FLOAT else 1e100
+    values = np.array([-magnitude, -1.0, 0.0, 1.0, magnitude], dtype=np_dtype)
+    x = _value("x", [5], dtype=dtype)
+    tape = ir.tape.Tape()
+    y = tape.op("Softsign", [x])
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    product = jvp(grad(_model([x], tape, [loss])))
+    executor = runtime_session if dtype == ir.DataType.FLOAT else evaluator
+    actual = executor(product).run(
+        None, {"x": values, product.graph.inputs[-1].name: np.ones_like(values)}
+    )
+    inverse = 1 / (1 + np.abs(values.astype(np.float64)))
+    np.testing.assert_allclose(
+        actual[-2], (inverse * inverse).astype(np_dtype), rtol=3e-6, atol=0
+    )
+    curvature = -2 * np.sign(values) * inverse * inverse * inverse
+    np.testing.assert_allclose(actual[-1], curvature.astype(np_dtype), rtol=3e-6, atol=0)
+    assert np.all(actual[-2] > 0)
