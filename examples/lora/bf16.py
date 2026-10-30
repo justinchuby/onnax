@@ -235,6 +235,10 @@ def run(output_dir):
         baseline_values = execute(baseline, interface, x, y, fp32_params)
         fp32_params, fp32_state = adam_step(fp32_params, baseline_values[2], fp32_state, xp=xp)
     np.savez(output_dir / "adapter.fp32.npz", **fp32_params)
+    baseline_train = execute(baseline, interface, x, y, fp32_params)[1]
+    baseline_validation = execute(baseline, interface, vx, vy, fp32_params)[1]
+    close(baseline_train, fp32_reference(x, y, fp32_params, w, c)[1])
+    close(baseline_validation, fp32_reference(vx, vy, fp32_params, w, c)[1])
     final_prediction = reference(vx, vy, params, w, c)[0]
     fp32_prediction = fp32_reference(vx, vy, params, w, c)[0]
     report = {
@@ -247,8 +251,8 @@ def run(output_dir):
         "steps": 200,
         "fp32_training_baseline": {
             "initial_train_loss": float(fp32_reference(x, y, initial, w, c)[1]),
-            "final_train_loss": float(fp32_reference(x, y, fp32_params, w, c)[1]),
-            "final_validation_loss": float(fp32_reference(vx, vy, fp32_params, w, c)[1]),
+            "final_train_loss": float(baseline_train),
+            "final_validation_loss": float(baseline_validation),
         },
         "loss_history": history,
         "validation_loss": {"initial": initial_validation, "final": validation},
@@ -377,7 +381,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path, default=Path("bf16_models"))
     parser.add_argument("--benchmark-worker", type=Path, help=argparse.SUPPRESS)
-    parser.add_argument("--precision", choices=("bf16", "fp32"), default="bf16")
+    parser.add_argument(
+        "--precision", choices=("bf16", "fp32"), default="bf16", help=argparse.SUPPRESS
+    )
     args = parser.parse_args()
     result = (
         benchmark(args.benchmark_worker, args.precision)

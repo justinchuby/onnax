@@ -278,23 +278,23 @@
   "measurement": {
     "bf16": {
       "precision": "bf16",
-      "model_read_ms": 0.26041700039058924,
-      "session_creation_ms": 2.2210000024642795,
+      "model_read_ms": 0.21237501641735435,
+      "session_creation_ms": 1.9641669932752848,
       "timings_ms": {
         "gradient": {
-          "median": 0.8000000088941306,
-          "p95": 1.0008860626840033
+          "median": 0.7994370098458603,
+          "p95": 1.030778544372879
         },
         "adam": {
-          "median": 0.01770850212778896,
-          "p95": 0.02342050574952736
+          "median": 0.017437501810491085,
+          "p95": 0.023811863502487537
         },
         "step": {
-          "median": 0.8181250013876706,
-          "p95": 1.0240604227874426
+          "median": 0.816416519228369,
+          "p95": 1.0538205417105928
         }
       },
-      "peak_process_rss_bytes": 136658944,
+      "peak_process_rss_bytes": 137101312,
       "scope": "Separate process per precision; same CPU ONNX ReferenceEvaluator backend, batch 256; 10 warmup/100 measured updates; gradient includes feeds/outputs and reference casts/matmul; Adam uses FP32 state; RSS includes imports/runtime/allocator; not native BF16 acceleration or a GPU memory measurement",
       "platform": "macOS-27.0.1-arm64-arm-64bit",
       "processor": "arm",
@@ -315,23 +315,23 @@
     },
     "fp32": {
       "precision": "fp32",
-      "model_read_ms": 0.225124997086823,
-      "session_creation_ms": 2.1629589900840074,
+      "model_read_ms": 0.22679197718389332,
+      "session_creation_ms": 2.0637920242734253,
       "timings_ms": {
         "gradient": {
-          "median": 0.7801869942341,
-          "p95": 0.9078020972083322
+          "median": 0.774583502789028,
+          "p95": 0.9384027041960508
         },
         "adam": {
-          "median": 0.017313010175712407,
-          "p95": 0.02351842995267361
+          "median": 0.017395999748259783,
+          "p95": 0.026512498152442276
         },
         "step": {
-          "median": 0.7991250022314489,
-          "p95": 0.9309041983215137
+          "median": 0.7925000099930912,
+          "p95": 0.9650527033954859
         }
       },
-      "peak_process_rss_bytes": 136953856,
+      "peak_process_rss_bytes": 136806400,
       "scope": "Separate process per precision; same CPU ONNX ReferenceEvaluator backend, batch 256; 10 warmup/100 measured updates; gradient includes feeds/outputs and reference casts/matmul; Adam uses FP32 state; RSS includes imports/runtime/allocator; not native BF16 acceleration or a GPU memory measurement",
       "platform": "macOS-27.0.1-arm64-arm-64bit",
       "processor": "arm",

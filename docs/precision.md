@@ -107,9 +107,10 @@ and unrelated errors still fail the example.
 The [BF16 reference experiment](bf16.md) now covers explicit local-function
 derivative semantics, independent forward/gradient/multi-update checks and
 serialized master mappings. Remaining P3 gates include a native BF16-capable
-backend, broader precision transforms and device memory/error measurements. Device-resident
-bindings, DLPack, recomputation and preconditioned/batched products are subsequent
-choices driven by workload measurements. Native/device-resident BF16 training remains incomplete.
+backend, broader precision transforms and device memory/error measurements.
+Device-resident bindings, DLPack, recomputation and preconditioned/batched products
+are subsequent choices driven by workload measurements. Native/device-resident
+BF16 training remains incomplete.
 
 ## Memory/time measurement
 
