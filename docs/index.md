@@ -24,6 +24,7 @@ memory-lifecycle
 activation-liveness
 fitting
 precision
+softmax-precision
 iobinding
 dlpack
 coreml

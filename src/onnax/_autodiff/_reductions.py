@@ -25,6 +25,33 @@ OPS = frozenset(
 )
 
 
+def _pivot_mask(ctx: _Context, node: ir.Node) -> ir.Value:
+    """Select one maximum, including for ties and symbolic axis lengths."""
+    x = _input(node)
+    axis = _int(node, "axis", -1)
+    index = ctx.op("ArgMax", x, axis=axis, keepdims=1)
+    updates = ctx.op(
+        "ConstantOfShape", ctx.op("Shape", index), value=ir.tensor([1], dtype=x.dtype)
+    )
+    mask = ctx.op("ScatterElements", ctx.like(x), index, updates, axis=axis)
+    return ctx.op("Cast", mask, to=ir.DataType.BOOL)
+
+
+def _centered(
+    ctx: _Context, value: ir.Value, mask: ir.Value, axis: ir.Value, zero: ir.Value
+) -> ir.Value:
+    pivot = ctx.op("ReduceSum", ctx.op("Where", mask, value, zero), axis, keepdims=1)
+    return ctx.op("Where", mask, zero, ctx.op("Sub", value, pivot))
+
+
+def _conserve(
+    ctx: _Context, value: ir.Value, mask: ir.Value, axis: ir.Value, zero: ir.Value
+) -> ir.Value:
+    others = ctx.op("Where", mask, zero, value)
+    pivot = ctx.op("Neg", ctx.op("ReduceSum", others, axis, keepdims=1))
+    return ctx.op("Where", mask, pivot, others)
+
+
 def reduction_vjp(ctx: _Context, node: ir.Node, g: ir.Value) -> ir.Value:
     x = _input(node)
     shape = ctx.op("Shape", x)
@@ -77,10 +104,17 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
         y = node.outputs[0]
         axis = ctx.constant([_int(node, "axis", -1)])
         probability = y if op == "Softmax" else ctx.op("Exp", y)
-        weighted = ctx.op("Mul", d[0], probability)
-        mean = ctx.op("ReduceSum", weighted, axis, keepdims=1)
-        centered = ctx.op("Sub", d[0], mean)
-        return [ctx.op("Mul", y, centered) if op == "Softmax" else centered]
+        mask = _pivot_mask(ctx, node)
+        differences = _centered(ctx, d[0], mask, axis, ctx.scalar(_input(node), 0))
+        mean = ctx.op("ReduceSum", ctx.op("Mul", differences, probability), axis, keepdims=1)
+        centered = ctx.op("Sub", differences, mean)
+        if op == "Softmax":
+            return [
+                _conserve(
+                    ctx, ctx.op("Mul", y, centered), mask, axis, ctx.scalar(_input(node), 0)
+                )
+            ]
+        return [centered]
     raise NotImplementedError(
         f"No JVP rule for {op} in the reductions family. "
         "Correct the private registry dispatch or implement and validate the missing rule; "
@@ -107,12 +141,16 @@ def vjp(
     elif op in ("LogSoftmax", "Softmax"):
         y = node.outputs[0]
         axis_tensor = ctx.constant([_int(node, "axis", -1)])
+        mask = _pivot_mask(ctx, node)
         if op == "Softmax":
-            weighted = ctx.op("Mul", g, y)
+            differences = _centered(ctx, g, mask, axis_tensor, ctx.scalar(_input(node), 0))
+            weighted = ctx.op("Mul", differences, y)
             mean = ctx.op("ReduceSum", weighted, axis_tensor, keepdims=1)
-            return {0: ctx.op("Mul", y, ctx.op("Sub", g, mean))}
-        total = ctx.op("ReduceSum", g, axis_tensor, keepdims=1)
-        return {0: ctx.op("Sub", g, ctx.op("Mul", ctx.op("Exp", y), total))}
+            derivative = ctx.op("Mul", y, ctx.op("Sub", differences, mean))
+        else:
+            total = ctx.op("ReduceSum", g, axis_tensor, keepdims=1)
+            derivative = ctx.op("Sub", g, ctx.op("Mul", ctx.op("Exp", y), total))
+        return {0: _conserve(ctx, derivative, mask, axis_tensor, ctx.scalar(_input(node), 0))}
     raise NotImplementedError(
         f"No VJP rule for {op} in the reductions family. "
         "Correct the private registry dispatch or implement and validate the missing rule; "

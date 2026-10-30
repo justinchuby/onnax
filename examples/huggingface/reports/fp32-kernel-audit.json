@@ -1,0 +1,52 @@
+{
+  "versions": {
+    "numpy": "2.4.6",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.31.1",
+    "platform": "macOS-27.0.1-arm64-arm-64bit"
+  },
+  "dtype": "float32",
+  "ort_graph_optimization": "disabled",
+  "operators": {
+    "Sigmoid": {
+      "inputs_fp32": [
+        -18,
+        -40,
+        18
+      ],
+      "scalar_math_oracle": [
+        1.522997951276035e-08,
+        4.248354255291589e-18,
+        0.9999999847700205
+      ],
+      "onnx_reference": [
+        1.5229979055675358e-08,
+        4.24835413113866e-18,
+        1.0
+      ],
+      "ort_cpu": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "LogSoftmax": {
+      "inputs_fp32": [
+        0,
+        -200
+      ],
+      "scalar_math_oracle": [
+        -1.3838965267367376e-87,
+        -200.0
+      ],
+      "onnx_reference": [
+        0.0,
+        "-inf"
+      ],
+      "ort_cpu": [
+        0.0,
+        -200.0
+      ]
+    }
+  }
+}

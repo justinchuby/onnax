@@ -77,7 +77,13 @@ def reference(x, targets, p):
     shifted = logits - np.max(logits, axis=-1, keepdims=True)
     logp = shifted - np.log(np.sum(np.exp(shifted), axis=-1, keepdims=True))
     loss = -np.mean(np.sum(targets * logp, axis=-1))
-    dz = (np.exp(logp) - targets) / x.shape[0]
+    # Compute non-pivot entries first, then enforce logit-shift invariance.
+    # This avoids subtracting one from a rounded unit probability.
+    scale = np.float32(1) / np.float32(len(x))
+    dz = np.exp(logp) * scale - targets * scale
+    pivot = logits.argmax(axis=-1)
+    dz[np.arange(len(x)), pivot] = 0
+    dz[np.arange(len(x)), pivot] = -dz.sum(axis=-1)
     dh = (dz @ w2.T) * (1 - h * h)
     grads = dict(zip(NAMES, [x.T @ dh, dh.sum(axis=0), h.T @ dz, dz.sum(axis=0)], strict=True))
     return logits, loss, grads
