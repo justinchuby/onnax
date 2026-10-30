@@ -17,6 +17,7 @@ fitting
 precision
 iobinding
 dlpack
+coreml
 bf16
 roadmap
 api
