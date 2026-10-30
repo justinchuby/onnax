@@ -60,7 +60,12 @@ budgets and independent same-parameter references. The [BF16 MLP classifier](mlp
 now applies the same precision policy to four trainable parameters and stable
 cross-entropy, with complete CPU/native training, checkpoint recovery and
 isolated FP32/BF16 measurements. Its workload also simplifies reduction/broadcast
-adjoints. Next evaluate memory and precision policies on larger classification workloads. The recorded CPU
+adjoints. The [larger-classifier experiment](classifier-device.md) now shares
+named model buffers through a common adapter, keeps all four masters and Adam
+moments on Metal, and compares CPU/uncompiled/compiled updates on 74K/1.1M
+parameter models. All update modes restore byte-identical checkpoints; the
+report retains the strict NumPy precision differences. Next evaluate Metal
+microbatch accumulation and extend the precision diagnosis for larger classifiers. The recorded CPU
 ORT provider lacks BF16 MatMul. Device memory/transfer measurements will guide
 DLPack, recomputation and structured-operator work.
 

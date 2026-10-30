@@ -166,3 +166,6 @@ one intra-op and one inter-op thread.
 The [measurement and correctness report](https://github.com/justinchuby/onnax/blob/main/examples/measurements/mlp-mixed-precision-apple-arm64.json)
 contains software versions, graph hashes, numerical comparisons and the
 first BF16 trajectory diagnosis.
+
+The [larger-classifier experiment](classifier-device.md) compares CPU updates
+with shared-buffer Metal parameters and optimizer state.

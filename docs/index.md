@@ -14,6 +14,7 @@ onnxscript
 lora
 mlp
 mlp-bf16
+classifier-device
 fitting
 precision
 iobinding
