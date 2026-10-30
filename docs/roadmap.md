@@ -56,8 +56,10 @@ Delivered experiments cover four areas:
 The [activation-lifetime experiment](activation-liveness.md) now reports tensor
 last uses and peak live sets, validates a preactivation-recomputation candidate
 through 150 updates and recovery, and compares repeated native allocations.
-Next, add a deeper activation-chain workload and use the peak live set to choose
-a checkpoint boundary with a measurable memory/time tradeoff.
+The next priority is QLoRA: the [NF4 LoRA reference](nf4-lora.md) validates packed
+frozen weights, input gradients and adapter training. Next, connect a fused NF4
+runtime kernel and a PyTorch training bridge for external Trainer integration.
+Deeper activation-chain checkpointing follows this integration.
 
 ## Engineering boundaries
 
@@ -69,4 +71,4 @@ a checkpoint boundary with a measurable memory/time tradeoff.
 - Require workload evidence for new operators or local graph rewrites.
 - Separate measured execution, exchange and update costs; never infer acceleration
   from executability or a smaller graph.
-- FP8, QLoRA and distributed execution are outside the first milestone.
+- FP8 and distributed execution follow the quantized fine-tuning work.

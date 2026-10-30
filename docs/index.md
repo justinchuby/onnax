@@ -12,6 +12,7 @@ guide
 ndonnx
 onnxscript
 lora
+nf4-lora
 mlp
 mlp-bf16
 classifier-device
