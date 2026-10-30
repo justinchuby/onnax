@@ -68,7 +68,7 @@ def test_invalid_model_dimensions(kwargs):
 def test_invalid_profile():
     with pytest.raises(ValueError, match="profile"):
         problem("missing")
-    assert set(PROFILES) == {"tiny", "medium", "large"}
+    assert set(PROFILES) == {"tiny", "medium", "large", "activation"}
 
 
 @pytest.mark.skipif(os.environ.get("ONNAX_TEST_MLX_EP") != "1", reason="Native MLX opt-in")
@@ -111,3 +111,21 @@ def test_independent_update_honors_serialized_adam_configuration():
             rtol=1e-5,
             atol=1e-12,
         )
+
+
+def test_activation_profile_scales_samples_and_preserves_analytic_gradients():
+    from examples.mlp_bf16 import graph
+
+    x, y, vx, vy, params = problem("activation")
+    assert x.shape == (16384, 128) and y.shape == (16384, 16)
+    assert vx.shape == (512, 128) and vy.shape == (512, 16)
+    assert sum(p.size for p in params.values()) == 296976
+    assert PROFILES["activation"][3] * PROFILES["activation"][1] * 4 == 128 * 2**20
+    model = graph(precision="fp32", batch=3, input_width=128, hidden_width=2048, classes=16)
+    onnx.checker.check_model(ir.to_proto(model), full_check=True)
+    actual = ReferenceEvaluator(ir.to_proto(model)).run(
+        None, {"features": x[:3], "targets": y[:3], **params}
+    )
+    logits, loss, grads = reference(x[:3], y[:3], params, precision="fp32")
+    for a, b in zip(actual, [logits, loss, *grads.values()], strict=True):
+        np.testing.assert_allclose(a, b, rtol=1e-4, atol=1e-6)

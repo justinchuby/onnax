@@ -1,0 +1,557 @@
+{
+  "version": 1,
+  "hardware": "Apple M1 Max",
+  "date": "2026-10-30",
+  "initialization_seed": 20261030,
+  "training": {
+    "profile": "activation",
+    "precision": "fp32",
+    "microbatch": 4096,
+    "batch_sizes": [
+      4096,
+      4096,
+      4096,
+      4096
+    ],
+    "steps": 150,
+    "rtol": 0.0001,
+    "atol": 1e-06,
+    "errors": {
+      "trajectory.layer2.weight": {
+        "first_step": 0,
+        "mismatched": 1,
+        "max_abs": 2.077315002679825e-06,
+        "first": {
+          "index": [
+            632,
+            14
+          ],
+          "actual": -0.0026040510274469852,
+          "expected": -0.0026019737124443054
+        }
+      },
+      "trajectory.layer1.weight": {
+        "first_step": 18,
+        "mismatched": 1,
+        "max_abs": 1.7955899238586426e-06,
+        "first": {
+          "index": [
+            37,
+            632
+          ],
+          "actual": 1.0847114026546478e-05,
+          "expected": 9.772134944796562e-06
+        }
+      },
+      "trajectory.layer1.bias": {
+        "first_step": 30,
+        "mismatched": 1,
+        "max_abs": 1.7210841178894043e-06,
+        "first": {
+          "index": [
+            278
+          ],
+          "actual": 0.00032572075724601746,
+          "expected": 0.00032463972456753254
+        }
+      },
+      "trajectory.layer2.bias": {
+        "first_step": 32,
+        "mismatched": 1,
+        "max_abs": 2.0265579223632812e-06,
+        "first": {
+          "index": [
+            12
+          ],
+          "actual": 0.0011430388549342752,
+          "expected": 0.0011441962560638785
+        }
+      }
+    },
+    "history": [
+      2.7699756622314453,
+      0.7201099395751953,
+      0.8918741941452026,
+      1.060186743736267,
+      1.5674049854278564,
+      1.5646535158157349,
+      1.9025626182556152,
+      1.9737262725830078,
+      1.9438164234161377,
+      1.8634127378463745,
+      1.6083335876464844,
+      1.9475562572479248,
+      1.4009840488433838,
+      1.4552686214447021,
+      1.215433120727539,
+      1.290718674659729,
+      1.191225290298462,
+      1.1015205383300781,
+      1.1082340478897095,
+      1.1317734718322754,
+      1.0427417755126953,
+      1.0235395431518555,
+      0.9951478242874146,
+      0.9849758744239807,
+      0.9468448162078857,
+      0.9196881055831909,
+      0.9122927784919739,
+      0.8777870535850525,
+      0.8644764423370361,
+      0.8501299023628235,
+      0.8318173885345459,
+      0.8131313920021057,
+      0.8091835975646973,
+      0.7880422472953796,
+      0.7833619713783264,
+      0.7704737782478333,
+      0.7656258344650269,
+      0.7584479451179504,
+      0.7489651441574097,
+      0.7375897169113159,
+      0.7308352589607239,
+      0.7250816226005554,
+      0.7168929576873779,
+      0.7157581448554993,
+      0.7109869718551636,
+      0.7098560333251953,
+      0.7063674926757812,
+      0.7057095170021057,
+      0.7049679756164551,
+      0.7044821381568909,
+      0.7035348415374756,
+      0.7030595541000366,
+      0.6995397806167603,
+      0.6986864805221558,
+      0.6962414383888245,
+      0.6946261525154114,
+      0.6942487955093384,
+      0.6932949423789978,
+      0.6920790672302246,
+      0.6914006471633911,
+      0.6903631091117859,
+      0.6899279356002808,
+      0.689552903175354,
+      0.6889150142669678,
+      0.6883062124252319,
+      0.6878722906112671,
+      0.6873617768287659,
+      0.6872000098228455,
+      0.6868499517440796,
+      0.6866455078125,
+      0.686393678188324,
+      0.6860283017158508,
+      0.685973048210144,
+      0.6855884194374084,
+      0.6853650808334351,
+      0.6851286292076111,
+      0.6848424673080444,
+      0.6847525835037231,
+      0.6845552325248718,
+      0.6843939423561096,
+      0.6842825412750244,
+      0.6841432452201843,
+      0.684090256690979,
+      0.6839901208877563,
+      0.6838908195495605,
+      0.6837866902351379,
+      0.683693528175354,
+      0.6836568713188171,
+      0.6835882663726807,
+      0.6835407018661499,
+      0.6834558248519897,
+      0.6833662390708923,
+      0.6833052039146423,
+      0.6832180619239807,
+      0.6831768155097961,
+      0.6831076145172119,
+      0.6830629110336304,
+      0.6830120086669922,
+      0.6829715967178345,
+      0.6829321980476379,
+      0.6828912496566772,
+      0.6828508973121643,
+      0.6828106641769409,
+      0.6827719211578369,
+      0.6827374696731567,
+      0.6826924681663513,
+      0.6826579570770264,
+      0.6826136112213135,
+      0.6825829744338989,
+      0.6825485825538635,
+      0.6825153827667236,
+      0.6824839115142822,
+      0.682448148727417,
+      0.6824155449867249,
+      0.682381808757782,
+      0.6823503375053406,
+      0.6823207139968872,
+      0.6822925806045532,
+      0.6822625398635864,
+      0.6822342872619629,
+      0.6822042465209961,
+      0.6821757555007935,
+      0.6821462512016296,
+      0.682117223739624,
+      0.6820882558822632,
+      0.6820602416992188,
+      0.6820324659347534,
+      0.6820045113563538,
+      0.681977391242981,
+      0.6819496154785156,
+      0.6819228529930115,
+      0.6818957924842834,
+      0.681869387626648,
+      0.681842565536499,
+      0.6818164587020874,
+      0.6817896366119385,
+      0.6817635297775269,
+      0.6817374229431152,
+      0.6817114353179932,
+      0.6816854476928711,
+      0.6816597580909729,
+      0.681634247303009,
+      0.6816085577011108,
+      0.6815831661224365,
+      0.681557834148407,
+      0.6815326809883118,
+      0.6815077066421509,
+      0.6814827919006348,
+      0.6814579367637634,
+      0.6814330816268921
+    ],
+    "initial_train_loss": 2.7699756622314453,
+    "final_train_loss": 0.6814084649085999,
+    "initial_validation_loss": 2.7687840461730957,
+    "final_validation_loss": 0.6819223165512085,
+    "native_final_validation_loss": 0.6819223165512085,
+    "native_final_train_loss": 0.6814085245132446,
+    "checkpoint_replay": true,
+    "masters_moments_on_metal": true,
+    "shared_gradient_update_acceptance": true,
+    "pointer_identity_checked": true,
+    "parameter_bytes": 1187904,
+    "graphs": {
+      "4096": {
+        "nodes": 40,
+        "bytes": 266582
+      }
+    },
+    "threads": {
+      "intra_op": 1,
+      "inter_op": 1
+    },
+    "same_parameter_acceptance": true,
+    "independent_trajectory_acceptance": false,
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "versions": {
+      "numpy": "2.4.6",
+      "mlx": "0.32.4",
+      "onnxruntime": "1.31.1",
+      "onnxruntime-ep-mlx": "0.31.0",
+      "onnxscript": "0.7.2"
+    }
+  },
+  "benchmarks": {
+    "16384": {
+      "profile": "activation",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "numpy": "2.4.6",
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "parameter_bytes": 1187904,
+      "precision": "fp32",
+      "microbatch": 16384,
+      "effective_batch": 16384,
+      "batch_sizes": [
+        16384
+      ],
+      "single_hidden_tensor_bytes": 134217728,
+      "hidden_tensor_scope": "Size of one FP32 batch-by-hidden tensor; analytical size, not measured peak",
+      "graphs": {
+        "16384": {
+          "nodes": 44,
+          "bytes": 70402
+        }
+      },
+      "session_creation_ms": 27.211874985368922,
+      "first_step_ms": {
+        "execute_exchange": 41.01458299555816,
+        "accumulate_sync": 0.0,
+        "adam_sync": 17.38845801446587,
+        "step": 58.414333005202934
+      },
+      "warmup": 10,
+      "samples": 100,
+      "timings_ms": {
+        "execute_exchange": {
+          "median": 7.311770998057909,
+          "p95": 7.476164246327244
+        },
+        "accumulate_sync": {
+          "median": 0.0,
+          "p95": 0.0
+        },
+        "adam_sync": {
+          "median": 0.39970799116417766,
+          "p95": 0.48801634402479976
+        },
+        "step": {
+          "median": 7.705958501901478,
+          "p95": 7.939266045286786
+        }
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 598361072,
+        "lifetime_peak_bytes": 598361072,
+        "current_resident_bytes": 223723520,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "peak_process_rss_bytes": 223723520,
+      "rss_scope": "Independent macOS process including Python, graph construction and runtime"
+    },
+    "4096": {
+      "profile": "activation",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "numpy": "2.4.6",
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "parameter_bytes": 1187904,
+      "precision": "fp32",
+      "microbatch": 4096,
+      "effective_batch": 16384,
+      "batch_sizes": [
+        4096,
+        4096,
+        4096,
+        4096
+      ],
+      "single_hidden_tensor_bytes": 33554432,
+      "hidden_tensor_scope": "Size of one FP32 batch-by-hidden tensor; analytical size, not measured peak",
+      "graphs": {
+        "4096": {
+          "nodes": 40,
+          "bytes": 266582
+        }
+      },
+      "session_creation_ms": 27.186332998098806,
+      "first_step_ms": {
+        "execute_exchange": 41.9116260309238,
+        "accumulate_sync": 15.854124038014561,
+        "adam_sync": 2.2444579808507115,
+        "step": 60.43237500125542
+      },
+      "warmup": 10,
+      "samples": 100,
+      "timings_ms": {
+        "execute_exchange": {
+          "median": 9.456812505959533,
+          "p95": 9.676783335453365
+        },
+        "accumulate_sync": {
+          "median": 1.5555839927401394,
+          "p95": 1.6641038062516598
+        },
+        "adam_sync": {
+          "median": 0.32439600909128785,
+          "p95": 0.36154201079625636
+        },
+        "step": {
+          "median": 11.439374982728623,
+          "p95": 11.797685749479568
+        }
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 287540208,
+        "lifetime_peak_bytes": 287540208,
+        "current_resident_bytes": 223723520,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "peak_process_rss_bytes": 223723520,
+      "rss_scope": "Independent macOS process including Python, graph construction and runtime"
+    },
+    "2048": {
+      "profile": "activation",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "numpy": "2.4.6",
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "parameter_bytes": 1187904,
+      "precision": "fp32",
+      "microbatch": 2048,
+      "effective_batch": 16384,
+      "batch_sizes": [
+        2048,
+        2048,
+        2048,
+        2048,
+        2048,
+        2048,
+        2048,
+        2048
+      ],
+      "single_hidden_tensor_bytes": 16777216,
+      "hidden_tensor_scope": "Size of one FP32 batch-by-hidden tensor; analytical size, not measured peak",
+      "graphs": {
+        "2048": {
+          "nodes": 40,
+          "bytes": 135510
+        }
+      },
+      "session_creation_ms": 29.009125020820647,
+      "first_step_ms": {
+        "execute_exchange": 42.70374996121973,
+        "accumulate_sync": 18.259123025927693,
+        "adam_sync": 2.6447499985806644,
+        "step": 64.24612499540672
+      },
+      "warmup": 10,
+      "samples": 100,
+      "timings_ms": {
+        "execute_exchange": {
+          "median": 10.934000980341807,
+          "p95": 11.224555826629512
+        },
+        "accumulate_sync": {
+          "median": 2.8074589936295524,
+          "p95": 3.0004555519553833
+        },
+        "adam_sync": {
+          "median": 0.3343750140629709,
+          "p95": 0.38812886341474945
+        },
+        "step": {
+          "median": 14.282458505476825,
+          "p95": 14.802993737976065
+        }
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 238797832,
+        "lifetime_peak_bytes": 238797832,
+        "current_resident_bytes": 225214464,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "peak_process_rss_bytes": 225214464,
+      "rss_scope": "Independent macOS process including Python, graph construction and runtime"
+    },
+    "1000": {
+      "profile": "activation",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "numpy": "2.4.6",
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "parameter_bytes": 1187904,
+      "precision": "fp32",
+      "microbatch": 1000,
+      "effective_batch": 16384,
+      "batch_sizes": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        384
+      ],
+      "single_hidden_tensor_bytes": 8192000,
+      "hidden_tensor_scope": "Size of one FP32 batch-by-hidden tensor; analytical size, not measured peak",
+      "graphs": {
+        "1000": {
+          "nodes": 40,
+          "bytes": 68438
+        },
+        "384": {
+          "nodes": 40,
+          "bytes": 29014
+        }
+      },
+      "session_creation_ms": 28.396458976203576,
+      "first_step_ms": {
+        "execute_exchange": 47.57512410287745,
+        "accumulate_sync": 19.684121041791514,
+        "adam_sync": 2.2877909941598773,
+        "step": 70.23870799457654
+      },
+      "warmup": 10,
+      "samples": 100,
+      "timings_ms": {
+        "execute_exchange": {
+          "median": 16.674146987497807,
+          "p95": 16.920119707356207
+        },
+        "accumulate_sync": {
+          "median": 5.490750016178936,
+          "p95": 5.709964031120762
+        },
+        "adam_sync": {
+          "median": 0.3265629929956049,
+          "p95": 0.36877354868920514
+        },
+        "step": {
+          "median": 22.881291995872743,
+          "p95": 23.23251107300166
+        }
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 220152840,
+        "lifetime_peak_bytes": 220152840,
+        "current_resident_bytes": 225034240,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "peak_process_rss_bytes": 225034240,
+      "rss_scope": "Independent macOS process including Python, graph construction and runtime"
+    }
+  },
+  "footprint_abi_check": {
+    "source": "macOS SDK sys/resource.h, rusage_info_v4; sizeof and offsetof independently compiled in C",
+    "struct_bytes": 296,
+    "phys_footprint_offset": 72,
+    "lifetime_peak_offset": 240
+  }
+}

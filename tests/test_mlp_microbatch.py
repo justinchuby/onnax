@@ -51,3 +51,14 @@ def test_medium_metal_accumulation_training_and_reload(tmp_path):
     assert report["checkpoint_replay"] and report["masters_moments_on_metal"]
     assert report["steps"] == 150
     assert report["final_validation_loss"] < report["initial_validation_loss"] * 0.5
+
+
+@pytest.mark.skipif(os.environ.get("ONNAX_TEST_MLX_EP") != "1", reason="Native MLX opt-in")
+def test_activation_scale_training_and_recovery(tmp_path):
+    report = run(tmp_path, profile="activation", microbatch=4096, measure=False)
+    assert report["batch_sizes"] == [4096] * 4
+    assert report["same_parameter_acceptance"]
+    assert report["shared_gradient_update_acceptance"]
+    assert report["checkpoint_replay"] and report["masters_moments_on_metal"]
+    assert report["native_final_train_loss"] < report["initial_train_loss"] * 0.5
+    assert report["native_final_validation_loss"] < report["initial_validation_loss"] * 0.5
