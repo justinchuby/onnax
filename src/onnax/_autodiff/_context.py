@@ -114,8 +114,9 @@ class AutodiffContext:
                     "ReduceSum", gradient, self.constant(reduction_axes), keepdims=1
                 )
             if leading_count:
-                dimensions = [d for d in primal.shape if isinstance(d, int)]
-                gradient = self.reshape(gradient, self.constant(dimensions))
+                gradient = self.op(
+                    "Squeeze", gradient, self.constant(list(range(leading_count)))
+                )
             return gradient
         shape = self.op("Shape", primal)
         grad_shape = self.op("Shape", gradient)

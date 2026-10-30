@@ -127,7 +127,7 @@ def test_axes_length_specialization_preserves_runtime_values(count, noop):
     source = _model([x, axes], tape, [loss])
     derivative = vjp(source, inputs=["x"])
     nodes = {node.op_type for node in derivative.graph}
-    assert ("Range" in nodes) == (count is None and not noop)
+    assert not {"Range", "ScatterElements"} & nodes
     values = np.arange(6.0, dtype=np.float64).reshape(2, 3)
     choices = [[], [0], [-1]] if count is None else ([[]] if count == 0 else [[0], [-1]])
     for selected in choices:

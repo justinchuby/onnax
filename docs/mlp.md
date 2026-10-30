@@ -60,3 +60,6 @@ API is used for RSS, as in the LoRA example.
 
 External code handles data loading, optimizer state and parameter storage. Continue with
 [matrix-free parameter fitting](fitting.md) or the [development roadmap](roadmap.md).
+
+The [mixed-precision classifier](mlp-bf16.md) keeps the loss, gradients and
+master state in FP32 while executing the two forward matrix products in BF16.

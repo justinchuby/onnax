@@ -56,7 +56,11 @@ first-update and steady-state costs. Larger adapter profiles now compare CPU/GPU
 update placement and separate same-parameter accuracy from independent trajectory
 drift. The [composed BF16 checks](composed-bounds.md) now carry arithmetic intervals
 through nonlinearities, loss and both parameter gradients, with observed local
-budgets and independent same-parameter references. Next broaden precision transforms. The recorded CPU
+budgets and independent same-parameter references. The [BF16 MLP classifier](mlp-bf16.md)
+now applies the same precision policy to four trainable parameters and stable
+cross-entropy, with complete CPU/native training, checkpoint recovery and
+isolated FP32/BF16 measurements. Its workload also simplifies reduction/broadcast
+adjoints. Next evaluate memory and precision policies on larger classification workloads. The recorded CPU
 ORT provider lacks BF16 MatMul. Device memory/transfer measurements will guide
 DLPack, recomputation and structured-operator work.
 
