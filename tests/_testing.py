@@ -21,7 +21,8 @@ def evaluator(model: ir.Model) -> ReferenceEvaluator:
 def runtime_session(model: ir.Model | str | Path) -> ort.InferenceSession:
     options = ort.SessionOptions()
     options.intra_op_num_threads = 1
-    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+    # Validate the actual returned graph, without runtime optimizer cleanup.
+    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
     artifact = (
         ir.to_proto(model).SerializeToString() if isinstance(model, ir.Model) else str(model)
     )

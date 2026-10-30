@@ -206,7 +206,7 @@ def test_defaults_and_scalar_gradient_contract():
 
 
 @pytest.mark.parametrize("stored", [True, False])
-def test_public_per_example_gradient_composition_and_optimized_runtime(stored, tmp_path):
+def test_public_per_example_gradient_composition_and_serialized_runtime(stored, tmp_path):
     source = _loss(stored=stored)
     derivative = grad(source, inputs=["weight"], output="loss")
     mapped = vmap(derivative, in_axes=[-1, 0, *([] if stored else [None])], out_axes=-1)
@@ -216,7 +216,7 @@ def test_public_per_example_gradient_composition_and_optimized_runtime(stored, t
     CheckerPass(full_check=True)(ir.load(path))
     options = ort.SessionOptions()
     options.intra_op_num_threads = 1
-    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
     session = ort.InferenceSession(
         str(path), sess_options=options, providers=["CPUExecutionProvider"]
     )

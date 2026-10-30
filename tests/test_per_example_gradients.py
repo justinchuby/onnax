@@ -25,6 +25,7 @@ def _session(model, path):
     assert all(not n.domain for n in proto.graph.node)
     options = ort.SessionOptions()
     options.intra_op_num_threads = 1
+    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
     options.log_severity_level = 3
     return ort.InferenceSession(
         str(path), sess_options=options, providers=["CPUExecutionProvider"]

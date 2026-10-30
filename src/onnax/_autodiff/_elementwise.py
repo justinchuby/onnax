@@ -22,6 +22,7 @@ OPS = frozenset(
         "Elu",
         "Erf",
         "Exp",
+        "Gelu",
         "Identity",
         "LeakyRelu",
         "Log",
@@ -42,6 +43,74 @@ OPS = frozenset(
         "Tanh",
     )
 )
+
+
+def _gelu_partial(ctx: _Context, node: ir.Node, x: ir.Value) -> ir.Value:
+    """Differentiate the source GELU approximation, without changing its mode."""
+    approximation = node.attributes.get_string("approximate", "none")
+    one, half = ctx.scalar(x, 1), ctx.scalar(x, 0.5)
+    zero = ctx.scalar(x, 0)
+    limit = ctx.op("Where", ctx.op("Greater", x, zero), one, zero)
+    if approximation == "none":
+        cdf = ctx.op(
+            "Mul",
+            half,
+            ctx.op(
+                "Add", one, ctx.op("Erf", ctx.op("Mul", x, ctx.scalar(x, 1 / math.sqrt(2))))
+            ),
+        )
+        density = ctx.op(
+            "Mul",
+            ctx.scalar(x, 1 / math.sqrt(2 * math.pi)),
+            ctx.op("Exp", ctx.op("Mul", ctx.scalar(x, -0.5), ctx.op("Mul", x, x))),
+        )
+        return ctx.op(
+            "Where",
+            ctx.op("Equal", density, zero),
+            limit,
+            ctx.op("Add", cdf, ctx.op("Mul", x, density)),
+        )
+    if approximation == "tanh":
+        square = ctx.op("Mul", x, x)
+        scale = ctx.scalar(x, math.sqrt(2 / math.pi))
+        argument = ctx.op(
+            "Mul",
+            scale,
+            ctx.op("Add", x, ctx.op("Mul", ctx.scalar(x, 0.044715), ctx.op("Mul", square, x))),
+        )
+        t = ctx.op("Tanh", argument)
+        # Avoid cancellation in 1 - tanh(argument)**2 near saturation. This
+        # equivalent sech-squared form retains small FLOAT derivatives.
+        tail = ctx.op("Exp", ctx.op("Mul", ctx.scalar(x, -2), ctx.op("Abs", argument)))
+        denominator = ctx.op("Add", one, tail)
+        tanh_partial = ctx.op(
+            "Div",
+            ctx.op("Mul", ctx.scalar(x, 4), tail),
+            ctx.op("Mul", denominator, denominator),
+        )
+        argument_partial = ctx.op(
+            "Mul",
+            scale,
+            ctx.op("Add", one, ctx.op("Mul", ctx.scalar(x, 3 * 0.044715), square)),
+        )
+        correction = ctx.op(
+            "Mul",
+            ctx.op("Mul", x, tanh_partial),
+            argument_partial,
+        )
+        # Once the exponential underflows, select a constant asymptote. This
+        # also masks 0*inf intermediates when differentiating saturated tails.
+        return ctx.op(
+            "Where",
+            ctx.op("Equal", tail, zero),
+            limit,
+            ctx.op("Mul", half, ctx.op("Add", ctx.op("Add", one, t), correction)),
+        )
+    raise ValueError(
+        f"Gelu approximate={approximation!r}; expected 'none' or 'tanh'. "
+        "Set the source attribute to the intended supported GELU approximation; "
+        "the derivative must use the same mode as the primal computation."
+    )
 
 
 def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int, ir.Value]:
@@ -80,6 +149,8 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
             p = ctx.op("Sign", x)
         elif op == "Exp":
             p = y
+        elif op == "Gelu":
+            p = _gelu_partial(ctx, node, x)
         elif op == "Log":
             p = ctx.op("Div", one, x)
         elif op == "Sqrt":
@@ -150,6 +221,7 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
         "Elu",
         "Erf",
         "Exp",
+        "Gelu",
         "Identity",
         "LeakyRelu",
         "Log",
@@ -196,6 +268,7 @@ def vjp(
         "Elu",
         "Erf",
         "Exp",
+        "Gelu",
         "Identity",
         "LeakyRelu",
         "Log",

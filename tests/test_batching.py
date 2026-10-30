@@ -101,6 +101,7 @@ def _equivalent(model, in_axes, feeds, *, out_axes=0, size=3, dynamic=False, ort
         onnxruntime = pytest.importorskip("onnxruntime")
         options = onnxruntime.SessionOptions()
         options.intra_op_num_threads = 1
+        options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_DISABLE_ALL
 
         def evaluator_factory(proto):
             return onnxruntime.InferenceSession(
