@@ -89,3 +89,71 @@ further differentiation. Exported function bodies use standard ONNX operations.
 The real-model FP32 elementwise comparison remains open. FP64 diagnostics help
 locate arithmetic differences; the acceptance target is FP32 and lower precision
 compute with FP32 accumulation.
+
+## Locate Qwen3 differences at identical inputs
+
+```bash
+uv sync --group dev --group training --group huggingface
+HF_HUB_OFFLINE=1 uv run python -m examples.huggingface.layer_audit \
+  --real --output qwen3-fp32-layers.json
+```
+
+The audit exposes inputs and outputs of the source Mobius MatMul, RMSNorm and
+Swish operators. Each operator is replayed in PyTorch FP32 using the **observed
+ONNX input**, so upstream rounding is held fixed. The frozen Qwen3-0.6B run uses
+64 token IDs and the pinned model revision. Selected MatMul elements also have
+an independent scalar dot-product oracle using `math.fsum` over exact FP32
+products.
+
+The recorded 338-operator audit found:
+
+| Operator | Nodes | Elements exceeding the original tolerance before the Swish fix | After |
+| --- | --- | --- | --- |
+| RMSNorm | 113 | 0 | 0 |
+| Swish | 28 | 10 | 0 |
+| MatMul | 197 | 31,756 | 32,589 |
+
+Swish now uses a bounded exponential sigmoid, preserving small negative-tail
+activations and derivatives. Changing its output also changes downstream MatMul
+inputs, so the MatMul columns describe two different observed trajectories.
+Full-logit relative L2 error against PyTorch changed from 4.63e-6 to 4.29e-6;
+strict elementwise violations changed from 220,670 to 210,219 out of 9,723,904.
+
+The lm_head contains most local MatMul violations. At one of its largest scaled
+mismatches, the independent dot product was `-0.0009705360527334506`.
+ORT's absolute error was `4.12e-6`; PyTorch's was `7.07e-6`. This provides a
+concrete case where the FP32 reference contributes more error than ORT.
+
+The before/after JSON reports in `examples/huggingface/reports/` retain source
+node names, local metrics and selected dot-product oracles. The next comparison
+is adapter-gradient propagation at fixed activations, followed by the independent
+optimizer trajectories.
+
+(qwen-stable-recovery)=
+### Real-model training and recovery
+
+The stable-Swish Qwen3-0.6B run completed 30 updates in FP32. Validation loss
+went from **7.435994 to 6.264874**. A new process resumed checkpoint 15 and
+reproduced all 112 adapter tensors, all 113 checkpoint tensors, AdamW moments
+and scheduler state byte for byte. Both frozen ONNX exports were loaded and
+executed; logits and hidden states were byte-identical. Their 336 frozen
+initializer hashes also matched.
+
+Run and verify recovery with:
+
+```bash
+uv run python -m examples.huggingface.sft --real --steps 30 \
+  --diagnose-rounding --save-activations --peft-roundtrip --output-dir run
+uv run python -m examples.huggingface.sft --real --steps 30 \
+  --diagnose-rounding --save-activations --peft-roundtrip \
+  --resume run/checkpoint-15 --output-dir resumed
+uv run python -m examples.huggingface.replay \
+  --uninterrupted run --resumed resumed --step 30 --output replay.json
+```
+
+`qwen3-stable-swish-replay.json` records the training, recovery and original
+numerical comparisons. At the final PEFT comparison, two gradient elements
+in layer 20's q-projection B exceed `rtol=1e-4, atol=1e-6`; independent AdamW
+updates also exceed the threshold. Diagnostic mode records each failing
+parameter. Strict mode raises on the first failure. Completed training and
+export results are saved before optional audits run.

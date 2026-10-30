@@ -70,7 +70,10 @@ excluded from cross-model comparisons; padding keys and targets remain masked.
 loss. Final adapter arrays and a standalone `export/forward.onnx` with external
 weight data are saved alongside the tokenizer.
 
-## Recorded Qwen3-0.6B run
+## Recorded baseline Qwen3-0.6B run
+
+The {ref}`FP32 audit <qwen-stable-recovery>` records
+the current stable-Swish run and its checkpoint recovery verification.
 
 On an Apple M1 Max with 32 GiB RAM, 30 CPU FP32 updates reduced validation
 loss from 7.436 to 6.265. A separate process resumed update 15 and reproduced

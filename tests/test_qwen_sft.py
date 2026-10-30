@@ -152,3 +152,86 @@ def test_fused_mobius_and_decomposed_graphs():
     actual = session(ir.to_proto(lowered).SerializeToString()).run(None, feeds)
     for a, b in zip(actual, expected, strict=True):
         np.testing.assert_allclose(a, b, rtol=1e-4, atol=1e-6)
+
+
+def test_swish_decomposition_retains_negative_tail():
+    import math
+
+    import onnx_ir as ir
+
+    import onnax
+    from examples.huggingface.qwen import decompose
+    from examples.lora.train import session
+
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[5])
+    node = ir.node("Swish", [x])
+    y = node.outputs[0]
+    y.name, y.dtype, y.shape = "y", x.dtype, x.shape
+    graph = ir.Model(
+        ir.Graph([x], [y], nodes=[node], opset_imports={"": 24}, name="swish_tail"),
+        ir_version=12,
+    )
+    graph = decompose(graph)
+    derivative = onnax.vjp(graph)
+    values = np.array([-40, -18, 0, 18, 40], np.float32)
+    expected = np.array(
+        [
+            math.exp(-abs(float(v))) / (1 + math.exp(-abs(float(v))))
+            if v < 0
+            else 1 / (1 + math.exp(-float(v)))
+            for v in values
+        ]
+    )
+    actual, gradient = session(ir.to_proto(derivative).SerializeToString()).run(
+        None, {"x": values, derivative.graph.inputs[-1].name: np.ones_like(values)}
+    )
+    np.testing.assert_allclose(actual, values * expected, rtol=2e-5, atol=0)
+    np.testing.assert_allclose(
+        gradient, expected + values * expected * (1 - expected), rtol=2e-5, atol=0
+    )
+
+
+def test_same_input_layer_audit():
+    from examples.huggingface.layer_audit import run
+
+    report = run()
+    assert len(report["input_ids"][0]) == 64
+    assert {row["op"] for row in report["operators"]} == {
+        "MatMul",
+        "RMSNormalization",
+        "Swish",
+    }
+    dots = [row["worst_scaled_dot"] for row in report["operators"] if row["op"] == "MatMul"]
+    assert dots and all(np.isfinite(dot["scalar_fsum_oracle"]) for dot in dots)
+    assert report["logits"]["relative_l2"] < 1e-4
+
+
+def test_completed_training_report_survives_optional_audit_failure(tmp_path, monkeypatch):
+    import json
+
+    from examples.huggingface import peft_adapter
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("optional audit failed")
+
+    monkeypatch.setattr(peft_adapter, "roundtrip", fail)
+    with pytest.raises(RuntimeError, match="optional audit failed"):
+        run(str(tmp_path), steps=1, peft_roundtrip=True)
+    report = json.loads((tmp_path / "report.json").read_text())
+    assert report["steps"] == 1
+    assert report["requested_audits"]["peft"]
+    assert (tmp_path / "export" / "forward.onnx").is_file()
+    assert (tmp_path / "adapter" / "adapter_model.safetensors").is_file()
+
+
+def test_replay_verification_checks_state_bytes():
+    from examples.huggingface.replay import _equal_array, _equal_tree
+
+    state = {"optimizer": [torch.tensor([0.0, 1.0]), {"step": 3}]}
+    _equal_tree(state, {"optimizer": [torch.tensor([0.0, 1.0]), {"step": 3}]})
+    with pytest.raises(AssertionError):
+        _equal_array(np.array([0.0], np.float32), np.array([-0.0], np.float32))
+    with pytest.raises(AssertionError):
+        _equal_tree(state, {"optimizer": [torch.tensor([-0.0, 1.0]), {"step": 3}]})
+    with pytest.raises(AssertionError):
+        _equal_tree(state, {"optimizer": [torch.tensor([0.0, 1.0]), {"step": 4}]})
