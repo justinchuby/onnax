@@ -24,6 +24,8 @@ OPS = frozenset(
         "Erf",
         "Exp",
         "Gelu",
+        "HardSigmoid",
+        "HardSwish",
         "Identity",
         "LeakyRelu",
         "Log",
@@ -172,6 +174,28 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
             p = y
         elif op == "Gelu":
             p = _gelu_partial(ctx, node, x)
+        elif op in ("HardSigmoid", "HardSwish"):
+            # Attribute defaults and HardSwish's function-body alpha are FLOAT
+            # literals in ONNX, including when the input tensor is DOUBLE.
+            alpha = (
+                _float(node, "alpha", 0.20000000298023224)
+                if op == "HardSigmoid"
+                else 0.1666666716337204
+            )
+            beta = _float(node, "beta", 0.5) if op == "HardSigmoid" else 0.5
+            zero = ctx.scalar(x, 0)
+            affine = ctx.op("Add", ctx.op("Mul", ctx.scalar(x, alpha), x), ctx.scalar(x, beta))
+            interior = ctx.op(
+                "And", ctx.op("Greater", affine, zero), ctx.op("Less", affine, one)
+            )
+            if op == "HardSigmoid":
+                p = ctx.op("Where", interior, ctx.scalar(x, alpha), zero)
+            else:
+                middle = ctx.op(
+                    "Add", ctx.op("Mul", ctx.scalar(x, 2 * alpha), x), ctx.scalar(x, beta)
+                )
+                saturated = ctx.op("Where", ctx.op("GreaterOrEqual", affine, one), one, zero)
+                p = ctx.op("Where", interior, middle, saturated)
         elif op == "Log":
             p = ctx.op("Div", one, x)
         elif op == "Sqrt":
@@ -234,36 +258,7 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
 @_builtin("jvp", OPS)
 def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Value]:
     op = node.op_type
-    if op in (
-        "Abs",
-        "Add",
-        "Cos",
-        "Cosh",
-        "Div",
-        "Elu",
-        "Erf",
-        "Exp",
-        "Gelu",
-        "Identity",
-        "LeakyRelu",
-        "Log",
-        "Mul",
-        "Neg",
-        "Pow",
-        "PRelu",
-        "Reciprocal",
-        "Relu",
-        "Selu",
-        "Sigmoid",
-        "Sin",
-        "Sinh",
-        "Softplus",
-        "Softsign",
-        "Sqrt",
-        "Sub",
-        "Tan",
-        "Tanh",
-    ):
+    if op in OPS:
         partials = _partials(ctx, node, tuple(d))
         result = ctx.sum([ctx.op("Mul", d[i], partials[i]) for i in d])
         return [
@@ -283,36 +278,7 @@ def vjp(
     ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
 ) -> dict[int, ir.Value]:
     op, g = node.op_type, gs[0]
-    if op in (
-        "Abs",
-        "Add",
-        "Cos",
-        "Cosh",
-        "Div",
-        "Elu",
-        "Erf",
-        "Exp",
-        "Gelu",
-        "Identity",
-        "LeakyRelu",
-        "Log",
-        "Mul",
-        "Neg",
-        "Pow",
-        "PRelu",
-        "Reciprocal",
-        "Relu",
-        "Selu",
-        "Sigmoid",
-        "Sin",
-        "Sinh",
-        "Softplus",
-        "Softsign",
-        "Sqrt",
-        "Sub",
-        "Tan",
-        "Tanh",
-    ):
+    if op in OPS:
         partials = _partials(ctx, node, indices)
         result = {}
         for i in indices:

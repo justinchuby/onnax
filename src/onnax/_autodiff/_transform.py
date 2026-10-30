@@ -252,7 +252,8 @@ class JvpPass(ir.passes.FunctionalPass):
           interfaces are valid ONNX; all dimension sizes may be symbolic.
         * Elementwise: Identity, Add, Sub, Mul, Div, Pow, Neg, Abs, Exp, Log,
           Sqrt, Reciprocal, Sin, Cos, Tan, Sinh, Cosh, Tanh, Sigmoid, Relu,
-          LeakyRelu, PRelu, Elu, Selu, Softplus, Softsign, Erf. Elu and Selu use the
+          LeakyRelu, PRelu, Elu, Selu, HardSigmoid, HardSwish, Softplus, Softsign, Erf.
+          Elu and Selu use the
           nonpositive branch's slope at zero (alpha and alpha * gamma).
           Gelu is supported from opset 20 with approximate="none" (default)
           or approximate="tanh", including forward-over-reverse products.
@@ -320,7 +321,10 @@ class JvpPass(ir.passes.FunctionalPass):
           nonnegative exponents, zero bases (including the ONNX ``0**0 == 1``).
           No domain checks are inserted. At zero, Abs and Relu use derivative
           zero and LeakyRelu uses alpha. PRelu uses its slope tensor for the data
-          partial and zero for the slope partial. Where predicates are fixed, including
+          partial and zero for the slope partial. HardSigmoid uses zero at both
+          clipping boundaries; HardSwish uses zero at the lower boundary and one
+          at the upper boundary. Their HVP curvature is zero at those boundaries.
+          Where predicates are fixed, including
           at branch boundaries; no derivative of a discontinuous predicate is
           claimed. Floating Cast uses the usual real-valued identity derivative,
           not the derivative of rounding/overflow in finite-precision arithmetic.
