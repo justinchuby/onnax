@@ -29,58 +29,34 @@ workload.
 
 ## P3 — Memory, precision and device execution (in progress)
 
-The [precision and memory experiment](precision.md) delivers external FP32 weighted
-microbatch accumulation, a defined BF16/master-state policy, runtime capability probes
-and isolated full/microbatch RSS/time measurements. The [BF16 LoRA experiment](bf16.md)
-now executes explicit BF16 MatMul functions on CPU ReferenceEvaluator, with declared
-FP32 straight-through derivatives, an independent 200-update reference, FP32 accuracy
-baseline and master-state reload. The [CPU binding experiment](iobinding.md) adds
-shared output buffers, input ownership/rebinding checks, complete training parity
-and a measured comparison with ordinary execution. The [JAX DLPack example](dlpack.md)
-adds shared CPU parameter/gradient storage, immutable output ownership, synchronized
-Array API updates and checkpoint restoration. The [CoreML experiment](coreml.md)
-executes complete static-batch gradient graphs
-and 200 external updates through the native provider, with CPU/CoreML timing
-and process-memory comparisons. The [native MLX BF16 evaluation](mlx-bf16.md)
-executes the full gradient graph and checkpoint replay and records strict
-numerical comparisons, including a reproduced rounding-boundary difference.
-The [BF16 accumulation bounds](bf16-bounds.md) check all 800 native forward
-products with exact integer references and data-dependent rounding intervals.
-The same inspector now checks all 800 FP32 backward matrix products with
-outward rational endpoints and verifies original-output preservation.
-The [MLX GPU training example](mlx-training.md) keeps adapter masters and Adam
-moments in Metal arrays, verifies shared Python/runtime storage, and measures
-provider copy-out alongside CPU/GPU update paths. Its compiled update path
-reuses the same Array API arithmetic, preserves checkpoint state and records
-first-update and steady-state costs. Larger adapter profiles now compare CPU/GPU
-update placement and separate same-parameter accuracy from independent trajectory
-drift. The [composed BF16 checks](composed-bounds.md) now carry arithmetic intervals
-through nonlinearities, loss and both parameter gradients, with observed local
-budgets and independent same-parameter references. The [BF16 MLP classifier](mlp-bf16.md)
-now applies the same precision policy to four trainable parameters and stable
-cross-entropy, with complete CPU/native training, checkpoint recovery and
-isolated FP32/BF16 measurements. Its workload also simplifies reduction/broadcast
-adjoints. The [larger-classifier experiment](classifier-device.md) now shares
-named model buffers through a common adapter, keeps all four masters and Adam
-moments on Metal, and compares CPU/uncompiled/compiled updates on 74K/1.1M
-parameter models. All update modes restore byte-identical checkpoints; the
-report retains the strict NumPy precision differences. An observed-forward
-inspector now replays the first BF16 output-layer gradient failures and checks
-independent head backpropagation at native forward values. The
-[Metal microbatch example](metal-microbatch.md) now accumulates weighted FP32
-gradients on device, executes complete 150-step FP32/BF16 classifier training and
-checkpoint replay, and measures full/microbatch paths in isolated processes.
-The classifier inspector now audits all four analytic gradients at observed
-forward values across both 150-step BF16 runs, including hidden-layer
-backpropagation and original-output preservation. The activation-scale profile
-now trains on 16,384 samples, validates complete
-150-step updates and recovery, and sweeps batch size with isolated RSS and macOS
-physical-footprint measurements. The measured memory/time curve establishes
-microbatching as the first memory control for this classifier. Next inspect
-runtime allocation lifetimes to select recomputation or buffer-lifetime work.
-The recorded CPU
-ORT provider lacks BF16 MatMul. Device memory/transfer measurements will guide
-DLPack, recomputation and structured-operator work.
+The precision policy uses FP32 master parameters, gradients, accumulation and
+optimizer state, with explicit BF16 matrix computation. The [LoRA](bf16.md) and
+[classifier](mlp-bf16.md) workloads validate training, independent references and
+checkpoint recovery under this policy.
+
+Delivered experiments cover four areas:
+
+- **Runtime boundaries.** [CPU binding](iobinding.md), [JAX DLPack](dlpack.md),
+  [CoreML](coreml.md) and [MLX GPU updates](mlx-training.md) execute complete
+  exported training graphs. Shared storage, immutable outputs, compiled Adam and
+  checkpoint resumption are tested; reports separate execution, exchange and update costs.
+- **Precision diagnosis.** [Product bounds](bf16-bounds.md) and
+  [composed intervals](composed-bounds.md) check LoRA arithmetic. The
+  [classifier inspector](classifier-device.md) audits all four gradients at
+  observed forward values across both 150-state BF16 runs. Independent NumPy
+  differences retain their original tolerances and failure records.
+- **Batch-size scaling.** [Metal microbatch training](metal-microbatch.md)
+  combines weighted FP32 gradients on device and validates full/microbatch
+  parity. A 16,384-sample workload records the memory/time curve with isolated
+  process RSS and macOS physical footprint.
+- **Idle residency.** The [allocator-lifecycle diagnostic](memory-lifecycle.md)
+  observes provider and Python caches, samples delayed footprint changes after
+  idle release, and verifies exact FP32/BF16 update resumption.
+
+Next, analyze activation liveness within exported gradient graphs and compare
+it with runtime allocation peaks. Use that evidence to select a recomputation
+boundary, then validate its training trajectory, export/reload behavior and
+memory/time tradeoff on the activation-scale workload.
 
 ## Engineering boundaries
 

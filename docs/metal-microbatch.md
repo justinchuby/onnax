@@ -164,3 +164,6 @@ The [activation-scale record](https://github.com/justinchuby/onnax/blob/main/exa
 contains complete training validation, both memory counters, all phase timings,
 model sizes and software versions. For this model, microbatch size provides a
 measured memory control before adding graph recomputation.
+
+See [idle cache release](memory-lifecycle.md) for allocator counters, pause/resume
+checks and process-footprint changes between training bursts.
