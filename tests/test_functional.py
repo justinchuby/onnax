@@ -469,3 +469,38 @@ def test_container_composition_after_serialization(kind):
         },
     )
     np.testing.assert_allclose(result[-1], [1.6, -9.0])
+
+
+@pytest.mark.parametrize("kind", ["model", "graph", "view", "proto"])
+@pytest.mark.parametrize(
+    "function,kwargs",
+    [
+        (vmap, {"in_axes": [0], "axis_size": 3}),
+        (jvp, {"inputs": ["x"], "outputs": ["loss"]}),
+        (vjp, {"inputs": ["x"], "outputs": ["loss"]}),
+        (grad, {"inputs": ["x"], "output": "loss"}),
+    ],
+)
+def test_protobuf_backed_anonymous_constants_preserve_sources(kind, function, kwargs):
+    x = ir.val("x", dtype=ir.DataType.DOUBLE, shape=[2])
+    tape = ir.tape.Tape()
+    constant = tape.op("Constant", [], {"value": ir.tensor(np.ones(2))})
+    loss = tape.op("ReduceSum", [tape.op("Mul", [x, constant])], {"keepdims": 0})
+    loss.name = "loss"
+    source = ir.Model(
+        ir.Graph([x], [loss], nodes=tape.nodes, opset_imports={"": 18}, name="anonymous"),
+        ir_version=10,
+    )
+    proto = ir.to_proto(source)
+    before = proto.SerializeToString()
+    parsed = ir.from_proto(proto)
+    container = proto if kind == "proto" else _container(parsed, kind)
+    actual = function(container, **kwargs)
+    if isinstance(actual, onnx.ModelProto):
+        onnx.checker.check_model(actual, full_check=True)
+    else:
+        ir.to_proto(
+            actual if isinstance(actual, ir.Model) else ir.Model(actual, ir_version=10)
+        )
+    assert proto.SerializeToString() == before
+    assert ir.to_proto(parsed).SerializeToString() == before

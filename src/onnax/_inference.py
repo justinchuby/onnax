@@ -17,12 +17,24 @@ from onnx_shape_inference import (
 from onnax._diagnostics import _argument_context
 
 
+def _copy_tensor_metadata(tensor: ir.TensorProtocol) -> ir.TensorProtocol:
+    # TensorProtoTensor stores its name in the backing protobuf. A shallow copy
+    # still shares that mutable name; inference can name anonymous Constants.
+    # Named initializer payloads keep the existing storage-sharing behavior.
+    if isinstance(tensor, ir.serde.TensorProtoTensor) and not tensor.name:
+        result = ir.serde.TensorProtoTensor(ir.serde.serialize_tensor(tensor))
+        result.meta.update(tensor.meta)
+        return result
+    return copy.copy(tensor)
+
+
 def _infer_shapes(model: ir.Model, *, context: str = "shape inference") -> ir.Model:
     """Infer a clone without sharing mutable tensor names with the source.
 
     IR cloning shares tensor payload objects. Inference exposes Constant tensors
     as value.const_value; subsequent serialization can name those tensors.
-    Shallow copies isolate tensor metadata without duplicating array storage.
+    Shallow copies isolate tensor metadata while sharing array storage. Anonymous
+    protobuf-backed tensors receive independent protos before inference names them.
     The engine's refine policy preserves declared shapes and propagates errors.
     Known engine failures retain their type/cause and receive a graph-specific
     exception note naming the calling transform and the corrective action.
@@ -37,12 +49,14 @@ def _infer_shapes(model: ir.Model, *, context: str = "shape inference") -> ir.Mo
             for name, attr in tuple(node.attributes.items()):
                 if not attr.is_ref() and attr.type == ir.AttributeType.TENSOR:
                     node.attributes[name] = ir.AttrTensor(
-                        name, copy.copy(attr.as_tensor()), doc_string=attr.doc_string
+                        name,
+                        _copy_tensor_metadata(attr.as_tensor()),
+                        doc_string=attr.doc_string,
                     )
         for subgraph in (graph, *graph.subgraphs()):
             for value in (*subgraph.inputs, *subgraph.initializers.values()):
                 if value.const_value is not None:
-                    value.const_value = copy.copy(value.const_value)
+                    value.const_value = _copy_tensor_metadata(value.const_value)
             for value in subgraph.inputs:
                 value.meta.pop(SYM_DATA_KEY, None)
                 if value.const_value is not None:
