@@ -18,6 +18,7 @@ precision
 iobinding
 dlpack
 coreml
+mlx-training
 mlx-bf16
 bf16-bounds
 bf16

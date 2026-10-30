@@ -46,9 +46,11 @@ executes the full gradient graph and checkpoint replay and records strict
 numerical comparisons, including a reproduced rounding-boundary difference.
 The [BF16 accumulation bounds](bf16-bounds.md) check all 800 native forward
 products with exact integer references and data-dependent rounding intervals.
-Next compose the native BF16 error contract through nonlinearities and
-backward arithmetic, and validate device-resident
-GPU updates, then broaden precision transforms. The recorded CPU
+The [MLX GPU training example](mlx-training.md) keeps adapter masters and Adam
+moments in Metal arrays, verifies shared Python/runtime storage, and measures
+provider copy-out alongside CPU/GPU update paths. Next evaluate compiled
+array updates and larger adapters, compose the native BF16 error contract
+through nonlinearities/backward arithmetic, and broaden precision transforms. The recorded CPU
 ORT provider lacks BF16 MatMul. Device memory/transfer measurements will guide
 DLPack, recomputation and structured-operator work.
 
