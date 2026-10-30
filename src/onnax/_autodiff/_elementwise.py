@@ -259,12 +259,7 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
             p = ctx.op("Div", numerator, ctx.op("Mul", denominator, denominator))
         elif op in ("Relu", "LeakyRelu", "ThresholdedRelu"):
             negative = _float(node, "alpha", 0.01) if op == "LeakyRelu" else 0.0
-            # ONNX attributes are FLOAT32 even when the data is DOUBLE.
-            threshold = (
-                ir.tensor(_float(node, "alpha", 1.0), dtype=ir.DataType.FLOAT).numpy().item()
-                if op == "ThresholdedRelu"
-                else 0.0
-            )
+            threshold = _float(node, "alpha", 1.0) if op == "ThresholdedRelu" else 0.0
             p = ctx.op(
                 "Where",
                 ctx.op("Greater", x, ctx.scalar(x, threshold)),

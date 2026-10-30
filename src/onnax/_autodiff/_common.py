@@ -85,7 +85,9 @@ def _int(node: ir.Node, name: str, default: int) -> int:
 
 def _float(node: ir.Node, name: str, default: float) -> float:
     attr = node.attributes.get(name)
-    return default if attr is None else attr.as_float()
+    value = default if attr is None else attr.as_float()
+    # AttributeProto.FLOAT is binary32, independently of the tensor dtype.
+    return ir.tensor(value, dtype=ir.DataType.FLOAT).numpy().item()
 
 
 def _rank(value: ir.Value) -> int:

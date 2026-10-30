@@ -426,3 +426,24 @@ def test_thresholded_relu_products_away_from_boundary(alpha):
     tape = ir.tape.Tape()
     y = tape.op("ThresholdedRelu", [x], {} if alpha is None else {"alpha": alpha})
     _products(_model([x], tape, [y]), {"x": np.array([-0.5, 0.7, 1.5])})
+
+
+@pytest.mark.parametrize(
+    "op,attributes,expected",
+    [
+        ("LeakyRelu", {}, float(np.float32(0.01))),
+        ("LeakyRelu", {"alpha": 0.3}, float(np.float32(0.3))),
+        ("Elu", {"alpha": 0.3}, float(np.float32(0.3))),
+        ("HardSigmoid", {"alpha": 0.3}, float(np.float32(0.3))),
+    ],
+)
+def test_double_derivative_uses_serialized_float_attribute(op, attributes, expected):
+    x = _value("x", [1])
+    tape = ir.tape.Tape()
+    source = _model([x], tape, [tape.op(op, [x], attributes)])
+    for model in (source, ir.from_proto(ir.to_proto(source))):
+        derivative = jvp(model)
+        actual = evaluator(derivative).run(
+            None, {"x": np.zeros(1), derivative.graph.inputs[-1].name: np.ones(1)}
+        )[-1]
+        np.testing.assert_array_equal(actual, [expected])
