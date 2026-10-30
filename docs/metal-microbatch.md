@@ -109,3 +109,58 @@ workload to locate the useful batch-size tradeoff.
 Python expression construction is included in the complete step. The
 [measurement record](https://github.com/justinchuby/onnax/blob/main/examples/measurements/metal-microbatch-apple-arm64.json)
 contains phase timings, cold-step costs, numerical failures and software versions.
+
+## Scale the activation workload
+
+The `activation` profile keeps 296,976 trainable parameters and increases the
+batch to 16,384 samples with 2,048 hidden units. A single FP32 hidden tensor then
+occupies 128 MiB. Train it with four 4,096-sample microbatches:
+
+```bash
+python -m examples.mlp_microbatch --profile activation --microbatch 4096 \
+    --output-dir activation_models
+```
+
+The complete 150-update run checks all four gradients against the full native
+batch and an independent NumPy backward calculation at each parameter state.
+It also checks Adam moments and master parameters, then reloads the exported
+model and checkpoint to reproduce update 151. Training loss decreases from
+2.770 to 0.681; native validation loss decreases from 2.769 to 0.682.
+Same-parameter checks and actual-gradient Adam checks pass. Independent parameter
+trajectory differences remain in the report with their first failing coordinates.
+
+### Run a batch-size sweep
+
+Run each batch size in a fresh process to compare memory and synchronized step
+time. `--benchmark-only` performs 10 warmup and 100 measured updates:
+
+```bash
+for batch in 16384 4096 2048 1000; do
+    python -m examples.mlp_microbatch --profile activation --microbatch "$batch" \
+        --benchmark-only --output-dir "activation_bench_$batch" > "batch_$batch.json"
+done
+```
+
+Alongside peak RSS, macOS runs record current and lifetime-peak **physical
+footprint**, read with `proc_pid_rusage(RUSAGE_INFO_V4)`. This is the kernel's
+whole-process memory accounting. Both counters include setup, graphs, data and
+runtime allocations. They are sampled after synchronized training, outside the
+timed steps. The JSON report also records the analytical size of one FP32 hidden
+tensor, so tensor size, process footprint and RSS remain distinct quantities.
+
+| Microbatch | Step median / P95 (ms) | Peak physical footprint (MiB) | Peak RSS (MiB) |
+|---:|---:|---:|---:|
+| 16,384 (full) | 7.706 / 7.939 | 570.64 | 213.36 |
+| 4,096 | 11.439 / 11.798 | 274.22 | 213.36 |
+| 2,048 | 14.282 / 14.803 | 227.74 | 214.78 |
+| 1,000, plus 384-sample tail | 22.881 / 23.233 | 209.95 | 214.61 |
+
+On this M1 Max, four 4,096-sample microbatches reduce peak physical footprint by
+about 52% while increasing step time by about 48%. Smaller microbatches reduce
+footprint further and add runtime calls. RSS alone remains nearly constant
+across this sweep, while physical footprint reveals the batch-size tradeoff.
+
+The [activation-scale record](https://github.com/justinchuby/onnax/blob/main/examples/measurements/activation-memory-apple-arm64.json)
+contains complete training validation, both memory counters, all phase timings,
+model sizes and software versions. For this model, microbatch size provides a
+measured memory control before adding graph recomputation.

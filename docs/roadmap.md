@@ -72,9 +72,13 @@ gradients on device, executes complete 150-step FP32/BF16 classifier training an
 checkpoint replay, and measures full/microbatch paths in isolated processes.
 The classifier inspector now audits all four analytic gradients at observed
 forward values across both 150-step BF16 runs, including hidden-layer
-backpropagation and original-output preservation. Next evaluate memory scaling
-with larger activation workloads and use those measurements to select
-recomputation or buffer-lifetime work. The recorded CPU
+backpropagation and original-output preservation. The activation-scale profile
+now trains on 16,384 samples, validates complete
+150-step updates and recovery, and sweeps batch size with isolated RSS and macOS
+physical-footprint measurements. The measured memory/time curve establishes
+microbatching as the first memory control for this classifier. Next inspect
+runtime allocation lifetimes to select recomputation or buffer-lifetime work.
+The recorded CPU
 ORT provider lacks BF16 MatMul. Device memory/transfer measurements will guide
 DLPack, recomputation and structured-operator work.
 

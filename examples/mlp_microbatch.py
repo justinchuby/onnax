@@ -28,6 +28,7 @@ from examples.mlp import NAMES, reference_update
 from examples.mlp_bf16 import graph, reference
 from examples.mlp_device import PROFILES, problem
 from examples.mlx_binding import MlxBinding, synchronize
+from examples.process_memory import physical_footprint
 
 
 def slices(rows, size):
@@ -149,6 +150,23 @@ def benchmark(directory, *, profile, precision, microbatch):
         if i >= 10:
             samples.append(timings)
     return {
+        "profile": profile,
+        "platform": platform.platform(),
+        "versions": {
+            n: version(n)
+            for n in ("numpy", "mlx", "onnxruntime", "onnxruntime-ep-mlx", "onnxscript")
+        },
+        "threads": {"intra_op": 1, "inter_op": 1},
+        "parameter_bytes": sum(p.nbytes for p in workload.initial.values()),
+        "precision": precision,
+        "microbatch": microbatch,
+        "effective_batch": len(workload.x),
+        "batch_sizes": [p.stop - p.start for p in workload.parts],
+        "single_hidden_tensor_bytes": max(p.stop - p.start for p in workload.parts)
+        * PROFILES[profile][1]
+        * 4,
+        "hidden_tensor_scope": "Size of one FP32 batch-by-hidden tensor; analytical size, not measured peak",
+        "graphs": workload.graphs,
         "session_creation_ms": workload.session_ms,
         "first_step_ms": first_step,
         "warmup": 10,
@@ -160,6 +178,7 @@ def benchmark(directory, *, profile, precision, microbatch):
             }
             for n in samples[0]
         },
+        "physical_footprint": physical_footprint(),
         "peak_process_rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
         "rss_scope": "Independent macOS process including Python, graph construction and runtime",
     }
@@ -397,6 +416,12 @@ if __name__ == "__main__":
     parser.add_argument("--precision", choices=("fp32", "bf16"), default="fp32")
     parser.add_argument("--microbatch", type=int, default=300)
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--benchmark-only",
+        dest="worker",
+        action="store_true",
+        help="Measure 10 warmup and 100 synchronized training steps",
+    )
     args = parser.parse_args()
     function = benchmark if args.worker else run
     print(
