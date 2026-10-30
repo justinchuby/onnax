@@ -273,6 +273,10 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
                 ctx.scalar(x, 2 / math.sqrt(math.pi)),
                 ctx.op("Exp", ctx.op("Neg", ctx.op("Mul", x, x))),
             )
+            # The exponential can underflow after x*x overflows. Mask its
+            # differentiated inactive branch so 0*inf cannot poison the HVP.
+            zero = ctx.scalar(x, 0)
+            p = ctx.op("Where", ctx.op("Equal", p, zero), zero, p)
         else:
             raise NotImplementedError(
                 f"No elementwise derivative for {op}, input index {index}. "
