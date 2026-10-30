@@ -873,3 +873,14 @@ def test_gemm_float_attributes_are_consistent_before_and_after_serialization():
         np.testing.assert_array_equal(actual[-3], np.full((2, 2), 2 * alpha))
         np.testing.assert_array_equal(actual[-2], np.full((2, 2), 2 * alpha))
         np.testing.assert_array_equal(actual[-1], np.array(4 * beta))
+
+
+@pytest.mark.parametrize("attributes", [{}, {"alpha": 1.0, "beta": 1.0}])
+def test_gemm_unit_coefficients_need_no_derivative_multiplications(attributes):
+    a, b, c = _value("a", [2, 2]), _value("b", [2, 2]), _value("c", [])
+    tape = ir.tape.Tape()
+    source = _model([a, b, c], tape, [tape.op("Gemm", [a, b, c], attributes)])
+    for transform in (JvpPass(), VjpPass()):
+        derivative = transform(source).model
+        assert all(node.op_type != "Mul" for node in derivative.graph)
+    _products(source, {"a": np.ones((2, 2)), "b": np.ones((2, 2)), "c": np.array(0.3)})

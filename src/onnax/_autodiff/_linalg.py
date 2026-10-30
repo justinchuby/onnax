@@ -55,30 +55,39 @@ def gemm(
     ta, tb = _int(node, "transA", 0), _int(node, "transB", 0)
     av = ctx.transpose(a, 2) if ta else a
     bv = ctx.transpose(b, 2) if tb else b
-    alpha = ctx.scalar(a, _float(node, "alpha", 1))
-    beta = ctx.scalar(a, _float(node, "beta", 1))
+    alpha = _float(node, "alpha", 1)
+    beta = _float(node, "beta", 1)
+    scalars: dict[float, ir.Value] = {}
+
+    def scale(value: ir.Value, coefficient: float) -> ir.Value:
+        if coefficient == 1:
+            return value
+        if coefficient not in scalars:
+            scalars[coefficient] = ctx.scalar(a, coefficient)
+        return ctx.op("Mul", value, scalars[coefficient])
+
     if reverse:
         g = derivatives[0]
         ga = ctx.op("MatMul", g, ctx.transpose(bv, 2))
         gb = ctx.op("MatMul", ctx.transpose(av, 2), g)
         result = {
-            0: ctx.op("Mul", ctx.transpose(ga, 2) if ta else ga, alpha),
-            1: ctx.op("Mul", ctx.transpose(gb, 2) if tb else gb, alpha),
+            0: scale(ctx.transpose(ga, 2) if ta else ga, alpha),
+            1: scale(ctx.transpose(gb, 2) if tb else gb, alpha),
         }
         if len(node.inputs) > 2 and node.inputs[2] is not None:
             result[2] = ctx.unbroadcast(
-                ctx.op("Mul", g, beta), _input(node, 2), broadcasted=node.outputs[0]
+                scale(g, beta), _input(node, 2), broadcasted=node.outputs[0]
             )
         return result
     terms = []
     if 0 in derivatives:
         da = ctx.transpose(derivatives[0], 2) if ta else derivatives[0]
-        terms.append(ctx.op("Mul", ctx.op("MatMul", da, bv), alpha))
+        terms.append(scale(ctx.op("MatMul", da, bv), alpha))
     if 1 in derivatives:
         db = ctx.transpose(derivatives[1], 2) if tb else derivatives[1]
-        terms.append(ctx.op("Mul", ctx.op("MatMul", av, db), alpha))
+        terms.append(scale(ctx.op("MatMul", av, db), alpha))
     if 2 in derivatives:
-        terms.append(ctx.op("Mul", derivatives[2], beta))
+        terms.append(scale(derivatives[2], beta))
     # A bias-only direction still has the full Gemm output shape.
     return {0: ctx.op("Expand", ctx.sum(terms), ctx.op("Shape", node.outputs[0]))}
 
