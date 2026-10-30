@@ -193,3 +193,44 @@ def test_saturated_float_gradients_and_hvp_retain_small_tails(op):
     np.testing.assert_allclose(actual[-2], slope, rtol=3e-6, atol=0)
     np.testing.assert_allclose(actual[-1], curvature, rtol=3e-6, atol=0)
     assert np.all(actual[-2] > 0)
+
+
+@pytest.mark.parametrize("op", ["Asin", "Acos"])
+def test_inverse_trigonometric_products_and_hvp(op):
+    x = _value("x", ["n", 3])
+    tape = ir.tape.Tape()
+    y = tape.op(op, [x])
+    values = np.array([[-0.8, -0.3, 0.0], [0.2, 0.5, 0.9]])
+    _products(_model([x], tape, [y]).clone(), {"x": values})
+    x = _value("x", ["n", 3])
+    tape = ir.tape.Tape()
+    y = tape.op(op, [x])
+    loss = tape.op("ReduceSum", [tape.op("Mul", [y, y])], {"keepdims": 0})
+    _hvp_check(_model([x], tape, [loss]), {"x": values})
+
+
+@pytest.mark.parametrize("op", ["Asin", "Acos"])
+@pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
+@pytest.mark.parametrize("opset", [18, 28])
+def test_inverse_trigonometric_batched_curvature(op, dtype, opset):
+    x = _value("x", ["n"], dtype=dtype)
+    tape = ir.tape.Tape()
+    y = tape.op(op, [x])
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    source = _model([x], tape, [loss], opset=opset)
+    before = ir.to_proto(source).SerializeToString()
+    product = jvp(grad(source))
+    mapped = vmap(product, in_axes=(0, 0))
+    np_dtype = np.float32 if dtype == ir.DataType.FLOAT else np.float64
+    values = np.array([[-0.99, -0.5, 0.0], [0.1, 0.6, 0.99]], dtype=np_dtype)
+    executor = runtime_session if opset == 18 and dtype == ir.DataType.FLOAT else evaluator
+    actual = executor(mapped).run(
+        None, {"x": values, mapped.graph.inputs[-1].name: np.ones_like(values)}
+    )
+    sign = -1 if op == "Acos" else 1
+    reference = values.astype(np.float64)
+    np.testing.assert_allclose(actual[-2], sign / np.sqrt(1 - reference**2), rtol=3e-6)
+    np.testing.assert_allclose(
+        actual[-1], sign * reference / (1 - reference**2) ** 1.5, rtol=4e-6, atol=1e-7
+    )
+    assert ir.to_proto(source).SerializeToString() == before
