@@ -14,7 +14,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python }}
-      - run: uv sync --group dev --group training
+      - run: uv sync --group dev --group training --group authoring
       - run: uv run --no-sync pytest
       - run: uv pip install -r examples/jelly/requirements-export.txt
       - run: uv run --no-sync python -m pytest examples/jelly/tests/test_models.py

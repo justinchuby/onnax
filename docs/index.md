@@ -9,6 +9,8 @@ differentiate with **grad**, **jvp**, and **vjp**, then save ordinary ONNX model
 :maxdepth: 1
 
 guide
+ndonnx
+onnxscript
 lora
 mlp
 fitting
