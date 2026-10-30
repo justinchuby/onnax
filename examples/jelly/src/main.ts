@@ -367,9 +367,8 @@ async function initialize(): Promise<void> {
     ? 'WEBGPU · SOFTWARE ADAPTER'
     : 'WEBGPU · GPU-ONLY GRAPHS';
   element('device-info').textContent =
-    `${graphs.deviceLabel}. ${mesh.grid} × ${mesh.grid} nodes / ${mesh.edges.length} springs / FLOAT32 / ONNX opset ${mesh.opset} / ORT Web 1.31.1. ` +
-    `Fallback adapter: ${graphs.fallbackAdapter}. Timestamp queries: ${graphs.timestampQueries}. ` +
-    `Browser: ${navigator.userAgent}`;
+    `${graphs.deviceLabel} · ${graphs.fallbackAdapter ? 'software adapter' : 'hardware adapter'} · ` +
+    `FLOAT32 · ONNX opset ${mesh.opset} · ORT Web 1.31.1.`;
   for (const id of ['pause', 'reset', 'tug', 'stiff-preset'])
     element<HTMLButtonElement>(id).disabled = false;
   // Keep the logarithmic slider in agreement with the initial material setting.
