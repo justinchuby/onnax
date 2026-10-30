@@ -18,6 +18,7 @@ OPS = frozenset(
         "Abs",
         "Acos",
         "Asin",
+        "Asinh",
         "Atan",
         "Add",
         "Cos",
@@ -216,15 +217,21 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
         elif op in ("Asin", "Acos"):
             denominator = ctx.op("Sqrt", ctx.op("Sub", one, ctx.op("Mul", x, x)))
             p = ctx.op("Div", ctx.scalar(x, -1) if op == "Acos" else one, denominator)
-        elif op == "Atan":
-            # Evaluate 1/(1+x*x) with a bounded squared operand. Both Where
+        elif op in ("Atan", "Asinh"):
+            # Evaluate inverse quadratic norms with a bounded operand. Both Where
             # branches execute, so also protect the inactive reciprocal at zero.
             large = ctx.op("Greater", ctx.op("Abs", x), one)
             reciprocal = ctx.op("Reciprocal", ctx.op("Where", large, x, one))
             bounded = ctx.op("Where", large, reciprocal, x)
             square = ctx.op("Mul", bounded, bounded)
-            inverse = ctx.op("Reciprocal", ctx.op("Add", one, square))
-            p = ctx.op("Where", large, ctx.op("Mul", square, inverse), inverse)
+            denominator = ctx.op("Add", one, square)
+            if op == "Asinh":
+                inverse = ctx.op("Reciprocal", ctx.op("Sqrt", denominator))
+                norm_scale = ctx.op("Abs", reciprocal)
+            else:
+                inverse = ctx.op("Reciprocal", denominator)
+                norm_scale = square
+            p = ctx.op("Where", large, ctx.op("Mul", norm_scale, inverse), inverse)
         elif op == "Sin":
             p = ctx.op("Cos", x)
         elif op == "Cos":

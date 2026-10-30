@@ -251,7 +251,7 @@ class JvpPass(ir.passes.FunctionalPass):
           Selected graph inputs/outputs need known ranks so their derivative
           interfaces are valid ONNX; all dimension sizes may be symbolic.
         * Elementwise: Identity, Add, Sub, Mul, Div, Sum, Mean, Pow, Neg, Abs, Exp, Log,
-          Sqrt, Reciprocal, Sin, Cos, Tan, Asin, Acos, Atan, Sinh, Cosh, Tanh, Sigmoid, Sign, Relu,
+          Sqrt, Reciprocal, Sin, Cos, Tan, Asin, Acos, Atan, Asinh, Sinh, Cosh, Tanh, Sigmoid, Sign, Relu,
           LeakyRelu, PRelu, Elu, Selu, HardSigmoid, HardSwish, Softplus, Softsign, Erf.
           Elu and Selu use the
           nonpositive branch's slope at zero (alpha and alpha * gamma).
