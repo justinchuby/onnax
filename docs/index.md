@@ -17,6 +17,7 @@ huggingface
 qwen-sft
 qwen-adapters
 qwen-nf4
+qwen-runtime-audit
 mlp
 mlp-bf16
 classifier-device

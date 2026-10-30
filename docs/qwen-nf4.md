@@ -141,3 +141,6 @@ Run the native regression with `ONNAX_TEST_MLX_EP=1` and set
 ONNAX_TEST_MLX_EP=1 ONNAX_MLX_EP_LIBRARY=/path/to/libonnxruntime_mlx_ep.dylib \
   uv run pytest tests/test_qwen_mlx.py -q
 ```
+
+The [paired runtime audit](qwen-runtime-audit.md) compares CPU and MLX gradients
+with fixed forward residuals and provides reusable segmented ONNX execution.

@@ -16,6 +16,7 @@ from torch.autograd.function import once_differentiable
 
 import onnax
 from examples.huggingface.optimization import optimize_training_graph
+from examples.huggingface.serialization import save_graph
 from examples.lora.train import session
 
 
@@ -24,16 +25,6 @@ def frozen_hashes(model):
         name: hashlib.sha256(v.const_value.numpy().tobytes()).hexdigest()
         for name, v in model.graph.initializers.items()
     }
-
-
-def save_graph(model, path, *, data_name):
-    """Serialize lazy transpose views through contiguous buffers once per export."""
-    result = model.clone()
-    for name, value in result.graph.initializers.items():
-        tensor = value.const_value
-        if tensor.nbytes >= 64 * 1024:
-            value.const_value = ir.tensor(np.ascontiguousarray(tensor.numpy()), name=name)
-    ir.save(result, path, external_data=data_name)
 
 
 def graph_session(model, directory, name):

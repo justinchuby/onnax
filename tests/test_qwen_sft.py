@@ -235,3 +235,21 @@ def test_replay_verification_checks_state_bytes():
         _equal_tree(state, {"optimizer": [torch.tensor([-0.0, 1.0]), {"step": 3}]})
     with pytest.raises(AssertionError):
         _equal_tree(state, {"optimizer": [torch.tensor([0.0, 1.0]), {"step": 4}]})
+
+
+@pytest.mark.parametrize("side", ["onnx", "reference"])
+def test_diagnostic_gradient_audit_rejects_nonfinite_values(side):
+    from examples.huggingface.validation import add_reference_adapters, audit
+
+    model, reference = prepare()
+    reference = add_reference_adapters(reference, model)
+    parameter = (
+        model.onnx.adapters[0]
+        if side == "onnx"
+        else reference.get_submodule(model.mapping[0]["module"]).A
+    )
+    parameter.register_hook(lambda gradient: torch.full_like(gradient, float("nan")))
+    ids = torch.tensor([[1, 4, 5, 2]])
+    batch = {"input_ids": ids, "attention_mask": torch.ones_like(ids), "labels": ids}
+    with pytest.raises(AssertionError, match="Nonfinite gradient"):
+        audit(model, reference, batch, diagnose_rounding=True)
