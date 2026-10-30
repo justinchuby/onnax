@@ -13,7 +13,15 @@ from onnax._autodiff._context import _Context
 from onnax._rules import _builtin
 
 OPS = frozenset(
-    ("LogSoftmax", "ReduceL1", "ReduceMean", "ReduceSum", "ReduceSumSquare", "Softmax")
+    (
+        "LogSoftmax",
+        "ReduceL1",
+        "ReduceLogSum",
+        "ReduceMean",
+        "ReduceSum",
+        "ReduceSumSquare",
+        "Softmax",
+    )
 )
 
 
@@ -60,6 +68,11 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
     op = node.op_type
     if op in ("ReduceMean", "ReduceSum"):
         return [ctx.tape.op(op, [d[0], *node.inputs[1:]], attributes=dict(node.attributes))]
+    elif op == "ReduceLogSum":
+        reduced = ctx.tape.op(
+            "ReduceSum", [d[0], *node.inputs[1:]], attributes=dict(node.attributes)
+        )
+        return [ctx.op("Mul", reduced, ctx.op("Exp", ctx.op("Neg", node.outputs[0])))]
     elif op in ("ReduceL1", "ReduceSumSquare"):
         x = _input(node)
         slope = ctx.op("Sign", x) if op == "ReduceL1" else ctx.op("Mul", ctx.scalar(x, 2), x)
@@ -91,6 +104,11 @@ def vjp(
     op, g = node.op_type, gs[0]
     if op in ("ReduceMean", "ReduceSum"):
         return {0: reduction_vjp(ctx, node, g)}
+    elif op == "ReduceLogSum":
+        # exp(-log(sum(x))) reuses the primal reduction without reconstructing
+        # its potentially very large sum through exp(y).
+        scaled = ctx.op("Mul", g, ctx.op("Exp", ctx.op("Neg", node.outputs[0])))
+        return {0: reduction_vjp(ctx, node, scaled)}
     elif op in ("ReduceL1", "ReduceSumSquare"):
         x = _input(node)
         slope = ctx.op("Sign", x) if op == "ReduceL1" else ctx.op("Mul", ctx.scalar(x, 2), x)
