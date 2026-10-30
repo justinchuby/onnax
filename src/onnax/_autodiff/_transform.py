@@ -18,6 +18,8 @@ from onnax._autodiff._registry import _JvpRegistry, _VjpRegistry
 from onnax._diagnostics import _argument_context, _node_context, _value_context
 from onnax._inference import _infer_shapes
 
+_OPSET_MIN = {"Gelu": 20}
+
 
 def _prepare(
     model: ir.Model,
@@ -130,9 +132,18 @@ def _prepare(
                     "standard ONNX operators; public transforms do not dispatch custom-domain rules."
                 )
             )
+        version = _rule_registry._effective_opset(node, graph.opset_imports)
         try:
             registry.lookup(node, graph.opset_imports)
         except NotImplementedError as e:
+            minimum = _OPSET_MIN.get(node.op_type)
+            if minimum is not None and not minimum <= version <= 28:
+                raise NotImplementedError(
+                    f"{context}: {node.op_type} autodiff supports opsets {minimum} through 28; "
+                    f"got effective opset {version}. Author or re-export the model using "
+                    "a supported operator schema, or use a semantics-equivalent supported "
+                    "decomposition. Do not merely relabel the model's opset imports."
+                ) from e
             if node.version is not None and not 18 <= node.version <= 28:
                 raise NotImplementedError(
                     f"{context}: supported {mode} opsets are 18 through 28. "
@@ -145,7 +156,6 @@ def _prepare(
                 "implementation for this operator; unsupported active paths cannot be "
                 "treated as zero. See JvpPass's operator/support contract."
             ) from e
-        version = _rule_registry._effective_opset(node, graph.opset_imports)
         schema = onnx.defs.get_schema(node.op_type, version, "")
         graph_schema = onnx.defs.get_schema(node.op_type, graph.opset_imports[""], "")
         if schema.since_version != graph_schema.since_version:
@@ -213,6 +223,8 @@ class JvpPass(ir.passes.FunctionalPass):
           Sqrt, Reciprocal, Sin, Cos, Tan, Sinh, Cosh, Tanh, Sigmoid, Relu,
           LeakyRelu, Elu, Selu, Softplus, Softsign, Erf. Elu and Selu use the
           nonpositive branch's slope at zero (alpha and alpha * gamma).
+          Gelu is supported from opset 20 with approximate="none" (default)
+          or approximate="tanh", including forward-over-reverse products.
         * Linear algebra: MatMul (vectors, matrices, broadcast batches), Gemm
           (including transposes and broadcast bias).
         * Reductions: ReduceSum and ReduceMean, including negative/runtime axes,
@@ -311,7 +323,9 @@ class JvpPass(ir.passes.FunctionalPass):
         registry = _JvpRegistry[_Context]()
         for family in (_elementwise, _linalg, _layout, _reductions):
             for op in sorted(family.OPS):
-                registry.register("", op, family.jvp, since_version=18, until_version=28)
+                registry.register(
+                    "", op, family.jvp, since_version=_OPSET_MIN.get(op, 18), until_version=28
+                )
         result, xs, ys, nodes, _ = _prepare(
             model, self.inputs, self.outputs, registry, mode="JVP"
         )
@@ -383,7 +397,9 @@ class VjpPass(ir.passes.FunctionalPass):
         registry = _VjpRegistry[_Context]()
         for family in (_elementwise, _linalg, _layout, _reductions):
             for op in sorted(family.OPS - {"ScatterND"}):
-                registry.register("", op, family.vjp, since_version=18, until_version=28)
+                registry.register(
+                    "", op, family.vjp, since_version=_OPSET_MIN.get(op, 18), until_version=28
+                )
         mode = "grad (VJP)" if scalar else "VJP"
         result, xs, ys, nodes, active = _prepare(
             model, self.inputs, self.outputs, registry, mode=mode

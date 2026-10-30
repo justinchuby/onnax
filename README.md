@@ -86,6 +86,10 @@ Runnable examples cover [batching](https://github.com/justinchuby/onnax/blob/mai
 [autodiff and nonzero HVPs](https://github.com/justinchuby/onnax/blob/main/examples/autodiff.py),
 and [per-example parameter gradients](https://github.com/justinchuby/onnax/blob/main/examples/per_example_gradients.py).
 
+Autodiff includes standard GELU and its `approximate="tanh"` variant for ONNX
+opsets 20 through 28, including Hessian-vector products and batched gradients.
+The derivative uses the same approximation as the source operator.
+
 Try the [hosted WebGPU jelly playground](https://www.justinchuby.com/onnax/jelly/): drag a spring sheet
 with matrix-free Newton-CG, powered by exported
 `grad` and `jvp(grad(...))` ONNX graphs. See the [documentation site](https://www.justinchuby.com/onnax/)
@@ -153,6 +157,8 @@ are computed from the current runtime inputs, not cached across executions.
 ## Development
 
 Ruff lint and formatting are both required.
+Numerical ONNX Runtime tests disable graph optimization to validate the actual
+generated artifacts independently of runtime optimizer cleanup.
 Use absolute imports in library modules and native ONNX IR APIs for model and
 tensor construction, including README snippets and examples. Direct ONNX schema,
 checker, serialization, and reference-evaluator APIs are valid interoperability

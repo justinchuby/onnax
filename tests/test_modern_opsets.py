@@ -346,7 +346,7 @@ def test_serialized_jvp_over_vjp_keeps_existing_cotangent_fixed(opset, tmp_path)
 
 
 @pytest.mark.parametrize("opset", [25, 26, 27, 28])
-def test_optimized_runtime_capability_is_explicit_without_opset_downgrade(opset, tmp_path):
+def test_runtime_capability_is_explicit_without_opset_downgrade(opset, tmp_path):
     source = _model("Mul", [[2], [2]], opset=opset)
     transformed = vmap(source, [0, None])
     path = tmp_path / "runtime.onnx"
@@ -354,7 +354,7 @@ def test_optimized_runtime_capability_is_explicit_without_opset_downgrade(opset,
     CheckerPass(full_check=True)(ir.load(path))
     options = ort.SessionOptions()
     options.intra_op_num_threads = 1
-    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
     try:
         session = ort.InferenceSession(
             str(path), sess_options=options, providers=["CPUExecutionProvider"]
