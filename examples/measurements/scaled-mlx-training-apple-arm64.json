@@ -1,0 +1,1260 @@
+{
+  "hardware": "Apple M1 Max",
+  "training_scope": "200 native MLX training updates, same-parameter NumPy comparisons, independent trajectory and checkpoint replay",
+  "training": {
+    "medium": {
+      "steps": 200,
+      "strict_numerical_acceptance": true,
+      "same_parameter_acceptance": true,
+      "independent_trajectory_acceptance": true,
+      "comparison_rtol": 0.0001,
+      "prediction_parameter_loss_atol": 1e-06,
+      "comparison_errors": {
+        "same_parameter.prediction": {
+          "comparisons": 200,
+          "max_abs": 1.3113021850585938e-06,
+          "max_mismatched": 0
+        },
+        "same_parameter.loss": {
+          "comparisons": 200,
+          "max_abs": 1.4551915228366852e-11,
+          "max_mismatched": 0
+        },
+        "same_parameter.gradient.lora.A": {
+          "comparisons": 200,
+          "max_abs": 2.8194335754960775e-11,
+          "max_mismatched": 0
+        },
+        "same_parameter.gradient.lora.B": {
+          "comparisons": 200,
+          "max_abs": 2.6853186341213586e-11,
+          "max_mismatched": 0
+        },
+        "prediction": {
+          "comparisons": 200,
+          "max_abs": 1.3709068298339844e-06,
+          "max_mismatched": 0
+        },
+        "loss": {
+          "comparisons": 200,
+          "max_abs": 4.3655745685100555e-11,
+          "max_mismatched": 0
+        },
+        "gradient.lora.A": {
+          "comparisons": 200,
+          "max_abs": 5.4285465012071654e-11,
+          "max_mismatched": 0
+        },
+        "gradient.lora.B": {
+          "comparisons": 200,
+          "max_abs": 1.204796262754826e-10,
+          "max_mismatched": 0
+        },
+        "parameter.lora.A": {
+          "comparisons": 200,
+          "max_abs": 9.08970832824707e-07,
+          "max_mismatched": 0
+        },
+        "parameter.lora.B": {
+          "comparisons": 200,
+          "max_abs": 6.891787052154541e-07,
+          "max_mismatched": 0
+        },
+        "validation.prediction": {
+          "comparisons": 1,
+          "max_abs": 7.152557373046875e-07,
+          "max_mismatched": 0
+        },
+        "validation.loss": {
+          "comparisons": 1,
+          "max_abs": 7.958078640513122e-13,
+          "max_mismatched": 0
+        },
+        "validation.gradient.lora.A": {
+          "comparisons": 1,
+          "max_abs": 5.5329962833639e-11,
+          "max_mismatched": 0
+        },
+        "validation.gradient.lora.B": {
+          "comparisons": 1,
+          "max_abs": 1.0594547461550974e-10,
+          "max_mismatched": 0
+        }
+      },
+      "trajectory_errors": {},
+      "first_failure": {},
+      "compiled_adam": true,
+      "profile": "medium",
+      "optimizer_epsilon": 1e-06,
+      "gradient_comparison_atol": 1e-09,
+      "dimensions": {
+        "input": 256,
+        "hidden": 512,
+        "output": 64,
+        "rank": 16
+      },
+      "train_rows": 512,
+      "validation_rows": 128,
+      "parameter_bytes": 49152,
+      "forward_reload_batches": [
+        1,
+        7,
+        128,
+        512
+      ],
+      "training_fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "initial_loss": 0.00024436425883322954,
+      "final_loss": 3.4153689654203845e-08,
+      "initial_validation_loss": 0.00025993905728682876,
+      "final_validation_loss": 1.7298339116678108e-07,
+      "executed_providers": [
+        "MLXExecutionProvider"
+      ],
+      "parameter_and_state_dlpack_device": [
+        8,
+        0
+      ],
+      "boundary": "Shared CPU views of Metal inputs and fresh runtime outputs imported with copy=False; pointer identity checked both ways. Plugin internal wrapping/copy-out is separate.",
+      "loss_history": [
+        0.00024436425883322954,
+        0.00023891826276667416,
+        0.00018047451158054173,
+        0.00014340222696773708,
+        0.00010526996629778296,
+        8.423060353379697e-05,
+        7.676790119148791e-05,
+        6.925078923813999e-05,
+        5.45448056072928e-05,
+        4.6109562390483916e-05,
+        3.977062078774907e-05,
+        3.453852696111426e-05,
+        3.394558734726161e-05,
+        3.1225368729792535e-05,
+        2.751194915617816e-05,
+        2.404903352726251e-05,
+        2.1587438823189586e-05,
+        2.0105733710806817e-05,
+        1.803542545530945e-05,
+        1.586879079695791e-05,
+        1.430072370567359e-05,
+        1.3618905541079585e-05,
+        1.2568461897899397e-05,
+        1.13226160465274e-05,
+        1.0594347259029746e-05,
+        9.713513463793788e-06,
+        8.978986443253234e-06,
+        8.328965122927912e-06,
+        7.78912453824887e-06,
+        7.117069799278397e-06,
+        6.41256656308542e-06,
+        6.044343081157422e-06,
+        5.6807812143233605e-06,
+        5.17402349942131e-06,
+        4.76157947559841e-06,
+        4.512411578616593e-06,
+        4.243984676577384e-06,
+        3.933738753403304e-06,
+        3.576153176254593e-06,
+        3.4170348044426646e-06,
+        3.250247118558036e-06,
+        2.9914854167145677e-06,
+        2.785225660772994e-06,
+        2.652561761351535e-06,
+        2.509427758923266e-06,
+        2.339338607271202e-06,
+        2.1608916540571954e-06,
+        2.112780066454434e-06,
+        2.012607637880137e-06,
+        1.8778282537823543e-06,
+        1.7756267425284022e-06,
+        1.6875648043424007e-06,
+        1.604981434866204e-06,
+        1.5213430515359505e-06,
+        1.4623360584664624e-06,
+        1.3864100765204057e-06,
+        1.305439809584641e-06,
+        1.258733618669794e-06,
+        1.2200093806313816e-06,
+        1.1612082744250074e-06,
+        1.1001776556440745e-06,
+        1.0586422831693199e-06,
+        1.0208193543803645e-06,
+        9.783482255443232e-07,
+        9.367402071802644e-07,
+        9.053831035998883e-07,
+        8.727913609618554e-07,
+        8.363960546375893e-07,
+        8.067180488069425e-07,
+        7.836838449293282e-07,
+        7.515307061112253e-07,
+        7.24923950201628e-07,
+        7.018450673967891e-07,
+        6.779042678317637e-07,
+        6.541131938320177e-07,
+        6.35220146705251e-07,
+        6.137130412753322e-07,
+        5.930685347266262e-07,
+        5.762213959314977e-07,
+        5.573551788984332e-07,
+        5.394233539846027e-07,
+        5.240474365564296e-07,
+        5.081159315523109e-07,
+        4.927037480229046e-07,
+        4.779770961249596e-07,
+        4.637949189145729e-07,
+        4.5092815526004415e-07,
+        4.3750048916990636e-07,
+        4.2552471768431133e-07,
+        4.1357705526934296e-07,
+        4.0145732782548293e-07,
+        3.9070170032573515e-07,
+        3.7994212220837653e-07,
+        3.6927912105966243e-07,
+        3.592066093460744e-07,
+        3.4957241723532206e-07,
+        3.400942887310521e-07,
+        3.3120619491455727e-07,
+        3.2233052138508356e-07,
+        3.137474777759053e-07,
+        3.056238710996695e-07,
+        2.976901498641382e-07,
+        2.8993628120588255e-07,
+        2.824220928232535e-07,
+        2.7525720724952407e-07,
+        2.682140802789945e-07,
+        2.61372889553968e-07,
+        2.549092243953055e-07,
+        2.48445360284677e-07,
+        2.4221046146521985e-07,
+        2.362662883115263e-07,
+        2.304448116774438e-07,
+        2.2467894211786188e-07,
+        2.1922011228525662e-07,
+        2.1389996618381701e-07,
+        2.0866630734417413e-07,
+        2.0361056840556557e-07,
+        1.9876506485161372e-07,
+        1.9396958350625937e-07,
+        1.8933256740183424e-07,
+        1.8485610553398146e-07,
+        1.804757516765676e-07,
+        1.7621218262320326e-07,
+        1.7208191138706752e-07,
+        1.6806220060061605e-07,
+        1.6414631431871385e-07,
+        1.6033503413837025e-07,
+        1.5663226804463193e-07,
+        1.530252120574005e-07,
+        1.495152304187286e-07,
+        1.4609372556151357e-07,
+        1.427667086772999e-07,
+        1.395266906456527e-07,
+        1.3637142615152698e-07,
+        1.3329881198842486e-07,
+        1.3030677337155794e-07,
+        1.2739084809254564e-07,
+        1.245479950284789e-07,
+        1.2178136898910452e-07,
+        1.1908540642480148e-07,
+        1.1645371955637529e-07,
+        1.138934919708845e-07,
+        1.1139583477870474e-07,
+        1.089600800696644e-07,
+        1.0658533255991642e-07,
+        1.0427005747715157e-07,
+        1.020124997808125e-07,
+        9.981059179153817e-08,
+        9.766283426415612e-08,
+        9.556838875823814e-08,
+        9.352480390134588e-08,
+        9.153017543894748e-08,
+        8.958528496805229e-08,
+        8.76870842603239e-08,
+        8.583405275430778e-08,
+        8.402568596466153e-08,
+        8.226083281215324e-08,
+        8.053876854319242e-08,
+        7.885649466743416e-08,
+        7.721465067334066e-08,
+        7.561170889403002e-08,
+        7.404644009056938e-08,
+        7.251779265970981e-08,
+        7.1025183956408e-08,
+        6.956705078664527e-08,
+        6.814286734879715e-08,
+        6.675171704273453e-08,
+        6.539278274431126e-08,
+        6.406518338053502e-08,
+        6.276769681790029e-08,
+        6.15004864812363e-08,
+        6.026204601994323e-08,
+        5.9051579626157036e-08,
+        5.786866452694994e-08,
+        5.671258662687251e-08,
+        5.558282012430027e-08,
+        5.447773787636834e-08,
+        5.339780884128231e-08,
+        5.23424290577168e-08,
+        5.130990388124701e-08,
+        5.0300322129714914e-08,
+        4.9313818806240306e-08,
+        4.83488165059498e-08,
+        4.740491021948401e-08,
+        4.648184770417174e-08,
+        4.557894328627299e-08,
+        4.4695582346321316e-08,
+        4.383180751688087e-08,
+        4.298682654280128e-08,
+        4.21596588751072e-08,
+        4.135086939527355e-08,
+        4.055952018688913e-08,
+        3.97849149180729e-08,
+        3.902658818333293e-08,
+        3.828512973313991e-08,
+        3.755906874403081e-08,
+        3.684837324158252e-08,
+        3.615327415218417e-08,
+        3.54726061857491e-08,
+        3.480610288875141e-08
+      ],
+      "nodes": 32,
+      "model_bytes": 789898,
+      "model_sha256": "2cf34398b0b0130837acf1d515ec4be60d28a7e6260a80cb564c530fb1866c2f",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      }
+    },
+    "large": {
+      "steps": 200,
+      "strict_numerical_acceptance": false,
+      "same_parameter_acceptance": true,
+      "independent_trajectory_acceptance": false,
+      "comparison_rtol": 0.0001,
+      "prediction_parameter_loss_atol": 1e-06,
+      "comparison_errors": {
+        "same_parameter.prediction": {
+          "comparisons": 200,
+          "max_abs": 5.7220458984375e-06,
+          "max_mismatched": 0
+        },
+        "same_parameter.loss": {
+          "comparisons": 200,
+          "max_abs": 1.4901161193847656e-08,
+          "max_mismatched": 0
+        },
+        "same_parameter.gradient.lora.A": {
+          "comparisons": 200,
+          "max_abs": 2.0372681319713593e-09,
+          "max_mismatched": 0
+        },
+        "same_parameter.gradient.lora.B": {
+          "comparisons": 200,
+          "max_abs": 1.4551915228366852e-09,
+          "max_mismatched": 0
+        },
+        "prediction": {
+          "comparisons": 200,
+          "max_abs": 0.0012470334768295288,
+          "max_mismatched": 230076
+        },
+        "loss": {
+          "comparisons": 200,
+          "max_abs": 4.448741674423218e-05,
+          "max_mismatched": 1
+        },
+        "gradient.lora.A": {
+          "comparisons": 200,
+          "max_abs": 2.1484156604856253e-06,
+          "max_mismatched": 124822
+        },
+        "gradient.lora.B": {
+          "comparisons": 200,
+          "max_abs": 1.3345852494239807e-06,
+          "max_mismatched": 244787
+        },
+        "parameter.lora.A": {
+          "comparisons": 200,
+          "max_abs": 0.0008638985455036163,
+          "max_mismatched": 122448
+        },
+        "parameter.lora.B": {
+          "comparisons": 200,
+          "max_abs": 0.0004266006872057915,
+          "max_mismatched": 242090
+        },
+        "validation.prediction": {
+          "comparisons": 1,
+          "max_abs": 9.258091449737549e-05,
+          "max_mismatched": 23847
+        },
+        "validation.loss": {
+          "comparisons": 1,
+          "max_abs": 4.234607331454754e-09,
+          "max_mismatched": 0
+        },
+        "validation.gradient.lora.A": {
+          "comparisons": 1,
+          "max_abs": 1.690352746663848e-08,
+          "max_mismatched": 52127
+        },
+        "validation.gradient.lora.B": {
+          "comparisons": 1,
+          "max_abs": 7.054779871396022e-09,
+          "max_mismatched": 19695
+        }
+      },
+      "trajectory_errors": {
+        "prediction": {
+          "first_step": 7,
+          "steps": 193,
+          "max_abs": 0.0012470334768295288,
+          "max_mismatched": 230076
+        },
+        "parameter.lora.A": {
+          "first_step": 10,
+          "steps": 191,
+          "max_abs": 0.0008638985455036163,
+          "max_mismatched": 122448
+        },
+        "gradient.lora.A": {
+          "first_step": 10,
+          "steps": 190,
+          "max_abs": 2.1484156604856253e-06,
+          "max_mismatched": 124822
+        },
+        "parameter.lora.B": {
+          "first_step": 11,
+          "steps": 190,
+          "max_abs": 0.0004266006872057915,
+          "max_mismatched": 242090
+        },
+        "gradient.lora.B": {
+          "first_step": 11,
+          "steps": 162,
+          "max_abs": 1.3345852494239807e-06,
+          "max_mismatched": 244787
+        },
+        "loss": {
+          "first_step": 15,
+          "steps": 13,
+          "max_abs": 4.448741674423218e-05,
+          "max_mismatched": 1
+        },
+        "validation.prediction": {
+          "first_step": 200,
+          "steps": 1,
+          "max_abs": 9.258091449737549e-05,
+          "max_mismatched": 23847
+        },
+        "validation.gradient.lora.A": {
+          "first_step": 200,
+          "steps": 1,
+          "max_abs": 1.690352746663848e-08,
+          "max_mismatched": 52127
+        },
+        "validation.gradient.lora.B": {
+          "first_step": 200,
+          "steps": 1,
+          "max_abs": 7.054779871396022e-09,
+          "max_mismatched": 19695
+        }
+      },
+      "first_failure": {
+        "comparison": "prediction",
+        "step": 7,
+        "mismatched": 6,
+        "max_abs": 3.337860107421875e-06,
+        "first": {
+          "index": [
+            28,
+            70
+          ],
+          "actual": 0.008561484515666962,
+          "expected": 0.008563731797039509
+        },
+        "diagnostic": {
+          "native_vs_same_parameter_fp32": {
+            "mismatched": 0,
+            "max_abs": 1.7881393432617188e-06
+          },
+          "native_vs_same_parameter_fp64": {
+            "mismatched": 0,
+            "max_abs": 1.1193845125267998e-06
+          },
+          "same_parameter_fp32_vs_independent_trajectory": {
+            "mismatched": 9,
+            "max_abs": 2.7418136596679688e-06,
+            "first": {
+              "index": [
+                16,
+                78
+              ],
+              "actual": 0.007987640798091888,
+              "expected": 0.007989472709596157
+            }
+          }
+        }
+      },
+      "compiled_adam": true,
+      "profile": "large",
+      "optimizer_epsilon": 1e-06,
+      "gradient_comparison_atol": 1e-09,
+      "dimensions": {
+        "input": 1024,
+        "hidden": 2048,
+        "output": 128,
+        "rank": 128
+      },
+      "train_rows": 2048,
+      "validation_rows": 512,
+      "parameter_bytes": 1572864,
+      "forward_reload_batches": [
+        1,
+        7,
+        512,
+        2048
+      ],
+      "training_fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "initial_loss": 0.002049066824838519,
+      "final_loss": 2.8331574867479503e-05,
+      "initial_validation_loss": 0.002054117154330015,
+      "final_validation_loss": 0.00010651606135070324,
+      "executed_providers": [
+        "MLXExecutionProvider"
+      ],
+      "parameter_and_state_dlpack_device": [
+        8,
+        0
+      ],
+      "boundary": "Shared CPU views of Metal inputs and fresh runtime outputs imported with copy=False; pointer identity checked both ways. Plugin internal wrapping/copy-out is separate.",
+      "loss_history": [
+        0.002049066824838519,
+        0.0019957025069743395,
+        0.0013231614138931036,
+        0.0015303668333217502,
+        0.0012203934602439404,
+        0.001459531718865037,
+        0.001217632438056171,
+        0.0015048123896121979,
+        0.0019628459122031927,
+        0.005243707448244095,
+        0.002960419747978449,
+        0.06028994917869568,
+        0.00462324358522892,
+        0.1903877854347229,
+        0.036365434527397156,
+        0.03879111260175705,
+        0.06952498853206635,
+        0.061727724969387054,
+        0.021140391007065773,
+        0.03407345712184906,
+        0.016628393903374672,
+        0.018917681649327278,
+        0.024347752332687378,
+        0.010985561646521091,
+        0.007116224616765976,
+        0.009233380667865276,
+        0.007532603107392788,
+        0.007901874370872974,
+        0.009852186776697636,
+        0.006511902902275324,
+        0.0066421739757061005,
+        0.005149616859853268,
+        0.005746548064053059,
+        0.0048668961971998215,
+        0.004173561930656433,
+        0.0036701573990285397,
+        0.003047558944672346,
+        0.0032167183235287666,
+        0.002286067698150873,
+        0.0025769034400582314,
+        0.0017563516739755869,
+        0.0018703442765399814,
+        0.0015474578831344843,
+        0.0012510218657553196,
+        0.0013636080548167229,
+        0.0009552111150696874,
+        0.0010020551271736622,
+        0.0009043925674632192,
+        0.0006879044231027365,
+        0.0007813518168404698,
+        0.0006331061595119536,
+        0.0005042393459007144,
+        0.0005633673863485456,
+        0.0004455715825315565,
+        0.00039011219632811844,
+        0.00043051288230344653,
+        0.0003522417100612074,
+        0.0003061888855881989,
+        0.0003216448239982128,
+        0.00027634005527943373,
+        0.00023472943576052785,
+        0.00024731148732826114,
+        0.000233587488764897,
+        0.00019232121121603996,
+        0.00019248304306529462,
+        0.00019524362869560719,
+        0.0001666246389504522,
+        0.00015524293121416122,
+        0.0001593716733623296,
+        0.0001468784612370655,
+        0.0001314686523983255,
+        0.00013015394506510347,
+        0.00012889727076981217,
+        0.00011724068463081494,
+        0.00010931536962743849,
+        0.00011029586312361062,
+        0.00010573743202257901,
+        9.628524276195094e-05,
+        9.464069444220513e-05,
+        9.501616295892745e-05,
+        8.864980190992355e-05,
+        8.408616849919781e-05,
+        8.495918882545084e-05,
+        8.255596912931651e-05,
+        7.730211655143648e-05,
+        7.602728146594018e-05,
+        7.593310147058219e-05,
+        7.273303344845772e-05,
+        6.997484888415784e-05,
+        6.971286347834393e-05,
+        6.849601049907506e-05,
+        6.572726124431938e-05,
+        6.453307287301868e-05,
+        6.436670810217038e-05,
+        6.259604560909793e-05,
+        6.07722504355479e-05,
+        6.049529474694282e-05,
+        5.9672580391634256e-05,
+        5.7982375437859446e-05,
+        5.728891846956685e-05,
+        5.691061960533261e-05,
+        5.5704058468109e-05,
+        5.472577686305158e-05,
+        5.432408943306655e-05,
+        5.358722046366893e-05,
+        5.2662646339740604e-05,
+        5.212119503994472e-05,
+        5.162605884834193e-05,
+        5.087308818474412e-05,
+        5.022749974159524e-05,
+        4.980160156264901e-05,
+        4.925053508486599e-05,
+        4.860943590756506e-05,
+        4.817220542463474e-05,
+        4.7761364839971066e-05,
+        4.718189302366227e-05,
+        4.6711160393897444e-05,
+        4.6358731196960434e-05,
+        4.5875884097767994e-05,
+        4.5406883145915344e-05,
+        4.506143886828795e-05,
+        4.466641985345632e-05,
+        4.422931669978425e-05,
+        4.3874366383533925e-05,
+        4.353260374045931e-05,
+        4.314033139962703e-05,
+        4.278201959095895e-05,
+        4.246627213433385e-05,
+        4.212098428979516e-05,
+        4.177457594778389e-05,
+        4.147336585447192e-05,
+        4.1163337300531566e-05,
+        4.08365303883329e-05,
+        4.054513556184247e-05,
+        4.0259525121655315e-05,
+        3.995612860308029e-05,
+        3.967471275245771e-05,
+        3.9407012081937864e-05,
+        3.912548709195107e-05,
+        3.8855891034472734e-05,
+        3.860223660012707e-05,
+        3.83399092243053e-05,
+        3.808251494774595e-05,
+        3.783975989790633e-05,
+        3.759426181204617e-05,
+        3.734978963620961e-05,
+        3.7117439205758274e-05,
+        3.688648575916886e-05,
+        3.665436088340357e-05,
+        3.643166201072745e-05,
+        3.6212924896972254e-05,
+        3.5992627090308815e-05,
+        3.5779397876467556e-05,
+        3.557102172635496e-05,
+        3.53617433574982e-05,
+        3.515758362482302e-05,
+        3.4958444302901626e-05,
+        3.475932317087427e-05,
+        3.4564072848297656e-05,
+        3.4373661037534475e-05,
+        3.418374035391025e-05,
+        3.399681008886546e-05,
+        3.381411079317331e-05,
+        3.3632615668466315e-05,
+        3.345364166307263e-05,
+        3.32783383782953e-05,
+        3.3104584872489795e-05,
+        3.2932963222265244e-05,
+        3.2764688512543216e-05,
+        3.259801451349631e-05,
+        3.243326136725955e-05,
+        3.227154957130551e-05,
+        3.2111383916344494e-05,
+        3.195315002813004e-05,
+        3.17975391226355e-05,
+        3.164351073792204e-05,
+        3.149134136037901e-05,
+        3.134143480565399e-05,
+        3.119317625532858e-05,
+        3.104662027908489e-05,
+        3.090210157097317e-05,
+        3.0759234505239874e-05,
+        3.0617917218478397e-05,
+        3.0478491680696607e-05,
+        3.0340628654812463e-05,
+        3.0204226277419366e-05,
+        3.0069615604588762e-05,
+        2.9936429200461134e-05,
+        2.9804687073919922e-05,
+        2.967456020996906e-05,
+        2.9545783036155626e-05,
+        2.9418406484182924e-05,
+        2.9292499675648287e-05,
+        2.9167877073632553e-05,
+        2.9044589609839022e-05,
+        2.892267184506636e-05,
+        2.8801976441172883e-05,
+        2.8682541596936062e-05,
+        2.856437276932411e-05,
+        2.844738082785625e-05
+      ],
+      "nodes": 32,
+      "model_bytes": 10489249,
+      "model_sha256": "7f09e40122c276b253e252cd6ce0429f30ebb56915532c2cdeb65e3fb52f8a19",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      }
+    }
+  },
+  "benchmarks": {
+    "medium": [
+      {
+        "mode": "numpy_adam",
+        "profile": "medium",
+        "optimizer_epsilon": 1e-06,
+        "dimensions": {
+          "input": 256,
+          "hidden": 512,
+          "output": 64,
+          "rank": 16
+        },
+        "compiled_adam": false,
+        "adam_first_update_ms": 0.13970900909043849,
+        "fetches": [
+          "loss",
+          "lora.A_cotangent",
+          "lora.B_cotangent"
+        ],
+        "batch": 512,
+        "session_creation_ms": 29.53087500645779,
+        "timings_ms": {
+          "prepare": {
+            "median": 0.00029199873097240925,
+            "p95": 0.0004211760824546216
+          },
+          "execute_exchange": {
+            "median": 0.8413540053879842,
+            "p95": 0.887456550844945
+          },
+          "import": {
+            "median": 0.002209009835496545,
+            "p95": 0.002541988214943558
+          },
+          "adam_sync": {
+            "median": 0.040875005652196705,
+            "p95": 0.04262675647623837
+          },
+          "step": {
+            "median": 0.8826045086607337,
+            "p95": 0.9307833141065203
+          }
+        },
+        "python_mlx_allocator_bytes": {
+          "active": 655360,
+          "peak": 655360,
+          "cache": 0
+        },
+        "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+        "peak_process_rss_bytes": 176275456,
+        "final_loss": 2.4221046146521985e-07,
+        "nodes": 32,
+        "model_bytes": 789898,
+        "model_sha256": "2cf34398b0b0130837acf1d515ec4be60d28a7e6260a80cb564c530fb1866c2f",
+        "parameter_bytes": 49152,
+        "dataset_bytes": 655360,
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "versions": {
+          "mlx": "0.32.4",
+          "onnxruntime": "1.31.1",
+          "onnxruntime-ep-mlx": "0.31.0",
+          "onnx": "1.23.2",
+          "onnxscript": "0.7.2",
+          "numpy": "2.4.6"
+        },
+        "threads": {
+          "intra_op": 1,
+          "inter_op": 1
+        },
+        "adam_stream": "NumPy CPU",
+        "ort_graph_optimizer": "disabled",
+        "cpu_ep_fallback": "disabled",
+        "plugin_trace_enabled": false,
+        "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+        "parameter_comparison_to_cpu_adam": {
+          "lora.A": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          },
+          "lora.B": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          }
+        }
+      },
+      {
+        "mode": "dlpack",
+        "profile": "medium",
+        "optimizer_epsilon": 1e-06,
+        "dimensions": {
+          "input": 256,
+          "hidden": 512,
+          "output": 64,
+          "rank": 16
+        },
+        "compiled_adam": false,
+        "adam_first_update_ms": 11.327249987516552,
+        "fetches": [
+          "loss",
+          "lora.A_cotangent",
+          "lora.B_cotangent"
+        ],
+        "batch": 512,
+        "session_creation_ms": 28.665667021414265,
+        "timings_ms": {
+          "prepare": {
+            "median": 0.024520501028746367,
+            "p95": 0.037189888826105744
+          },
+          "execute_exchange": {
+            "median": 0.5153749953024089,
+            "p95": 0.5647517333272843
+          },
+          "import": {
+            "median": 0.037166522815823555,
+            "p95": 0.04367291257949546
+          },
+          "adam_sync": {
+            "median": 0.33460400300100446,
+            "p95": 0.359868751547765
+          },
+          "step": {
+            "median": 0.9125415090238675,
+            "p95": 1.0230746935121715
+          }
+        },
+        "python_mlx_allocator_bytes": {
+          "active": 1048644,
+          "peak": 1048660,
+          "cache": 16
+        },
+        "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+        "peak_process_rss_bytes": 173031424,
+        "final_loss": 2.4221046146521985e-07,
+        "nodes": 32,
+        "model_bytes": 789898,
+        "model_sha256": "2cf34398b0b0130837acf1d515ec4be60d28a7e6260a80cb564c530fb1866c2f",
+        "parameter_bytes": 49152,
+        "dataset_bytes": 655360,
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "versions": {
+          "mlx": "0.32.4",
+          "onnxruntime": "1.31.1",
+          "onnxruntime-ep-mlx": "0.31.0",
+          "onnx": "1.23.2",
+          "onnxscript": "0.7.2",
+          "numpy": "2.4.6"
+        },
+        "threads": {
+          "intra_op": 1,
+          "inter_op": 1
+        },
+        "adam_stream": "MLX GPU",
+        "ort_graph_optimizer": "disabled",
+        "cpu_ep_fallback": "disabled",
+        "plugin_trace_enabled": false,
+        "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+        "parameter_comparison_to_cpu_adam": {
+          "lora.A": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          },
+          "lora.B": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          }
+        }
+      },
+      {
+        "mode": "dlpack",
+        "profile": "medium",
+        "optimizer_epsilon": 1e-06,
+        "dimensions": {
+          "input": 256,
+          "hidden": 512,
+          "output": 64,
+          "rank": 16
+        },
+        "compiled_adam": true,
+        "adam_first_update_ms": 15.910291986074299,
+        "fetches": [
+          "loss",
+          "lora.A_cotangent",
+          "lora.B_cotangent"
+        ],
+        "batch": 512,
+        "session_creation_ms": 27.030750003177673,
+        "timings_ms": {
+          "prepare": {
+            "median": 0.024270484573207796,
+            "p95": 0.030945851176511493
+          },
+          "execute_exchange": {
+            "median": 0.5064795113867149,
+            "p95": 0.8269496815046296
+          },
+          "import": {
+            "median": 0.03714649938046932,
+            "p95": 0.04780769377248362
+          },
+          "adam_sync": {
+            "median": 0.260812506894581,
+            "p95": 0.2878333572880365
+          },
+          "step": {
+            "median": 0.8301250054500997,
+            "p95": 1.177486045344267
+          }
+        },
+        "python_mlx_allocator_bytes": {
+          "active": 999476,
+          "peak": 999492,
+          "cache": 40
+        },
+        "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+        "peak_process_rss_bytes": 172474368,
+        "final_loss": 2.4221046146521985e-07,
+        "nodes": 32,
+        "model_bytes": 789898,
+        "model_sha256": "2cf34398b0b0130837acf1d515ec4be60d28a7e6260a80cb564c530fb1866c2f",
+        "parameter_bytes": 49152,
+        "dataset_bytes": 655360,
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "versions": {
+          "mlx": "0.32.4",
+          "onnxruntime": "1.31.1",
+          "onnxruntime-ep-mlx": "0.31.0",
+          "onnx": "1.23.2",
+          "onnxscript": "0.7.2",
+          "numpy": "2.4.6"
+        },
+        "threads": {
+          "intra_op": 1,
+          "inter_op": 1
+        },
+        "adam_stream": "MLX GPU",
+        "ort_graph_optimizer": "disabled",
+        "cpu_ep_fallback": "disabled",
+        "plugin_trace_enabled": false,
+        "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+        "parameter_comparison_to_cpu_adam": {
+          "lora.A": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          },
+          "lora.B": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          }
+        }
+      }
+    ],
+    "large": [
+      {
+        "mode": "numpy_adam",
+        "profile": "large",
+        "optimizer_epsilon": 1e-06,
+        "dimensions": {
+          "input": 1024,
+          "hidden": 2048,
+          "output": 128,
+          "rank": 128
+        },
+        "compiled_adam": false,
+        "adam_first_update_ms": 1.7227079952135682,
+        "fetches": [
+          "loss",
+          "lora.A_cotangent",
+          "lora.B_cotangent"
+        ],
+        "batch": 2048,
+        "session_creation_ms": 30.359416996361688,
+        "timings_ms": {
+          "prepare": {
+            "median": 0.0007500057108700275,
+            "p95": 0.0010860516340471802
+          },
+          "execute_exchange": {
+            "median": 3.2180000125663355,
+            "p95": 3.2875458491616882
+          },
+          "import": {
+            "median": 0.01033350417856127,
+            "p95": 0.012218458869028836
+          },
+          "adam_sync": {
+            "median": 0.65168748551514,
+            "p95": 0.7043125064228661
+          },
+          "step": {
+            "median": 3.880666976328939,
+            "p95": 3.9686080534011126
+          }
+        },
+        "python_mlx_allocator_bytes": {
+          "active": 9437184,
+          "peak": 9437184,
+          "cache": 0
+        },
+        "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+        "peak_process_rss_bytes": 375701504,
+        "final_loss": 5.022749974159524e-05,
+        "nodes": 32,
+        "model_bytes": 10489249,
+        "model_sha256": "7f09e40122c276b253e252cd6ce0429f30ebb56915532c2cdeb65e3fb52f8a19",
+        "parameter_bytes": 1572864,
+        "dataset_bytes": 9437184,
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "versions": {
+          "mlx": "0.32.4",
+          "onnxruntime": "1.31.1",
+          "onnxruntime-ep-mlx": "0.31.0",
+          "onnx": "1.23.2",
+          "onnxscript": "0.7.2",
+          "numpy": "2.4.6"
+        },
+        "threads": {
+          "intra_op": 1,
+          "inter_op": 1
+        },
+        "adam_stream": "NumPy CPU",
+        "ort_graph_optimizer": "disabled",
+        "cpu_ep_fallback": "disabled",
+        "plugin_trace_enabled": false,
+        "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+        "parameter_comparison_to_cpu_adam": {
+          "lora.A": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          },
+          "lora.B": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          }
+        }
+      },
+      {
+        "mode": "dlpack",
+        "profile": "large",
+        "optimizer_epsilon": 1e-06,
+        "dimensions": {
+          "input": 1024,
+          "hidden": 2048,
+          "output": 128,
+          "rank": 128
+        },
+        "compiled_adam": false,
+        "adam_first_update_ms": 79.82233297661878,
+        "fetches": [
+          "loss",
+          "lora.A_cotangent",
+          "lora.B_cotangent"
+        ],
+        "batch": 2048,
+        "session_creation_ms": 32.23399998387322,
+        "timings_ms": {
+          "prepare": {
+            "median": 0.026458510546945035,
+            "p95": 0.0376045180018991
+          },
+          "execute_exchange": {
+            "median": 2.9149374895496294,
+            "p95": 3.004958343808539
+          },
+          "import": {
+            "median": 0.0440205039922148,
+            "p95": 0.06120689213275908
+          },
+          "adam_sync": {
+            "median": 0.5151250079507008,
+            "p95": 0.5568651962676084
+          },
+          "step": {
+            "median": 3.5003335069632158,
+            "p95": 3.6339663376566023
+          }
+        },
+        "python_mlx_allocator_bytes": {
+          "active": 22020164,
+          "peak": 22020180,
+          "cache": 16
+        },
+        "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+        "peak_process_rss_bytes": 358727680,
+        "final_loss": 5.022749974159524e-05,
+        "nodes": 32,
+        "model_bytes": 10489249,
+        "model_sha256": "7f09e40122c276b253e252cd6ce0429f30ebb56915532c2cdeb65e3fb52f8a19",
+        "parameter_bytes": 1572864,
+        "dataset_bytes": 9437184,
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "versions": {
+          "mlx": "0.32.4",
+          "onnxruntime": "1.31.1",
+          "onnxruntime-ep-mlx": "0.31.0",
+          "onnx": "1.23.2",
+          "onnxscript": "0.7.2",
+          "numpy": "2.4.6"
+        },
+        "threads": {
+          "intra_op": 1,
+          "inter_op": 1
+        },
+        "adam_stream": "MLX GPU",
+        "ort_graph_optimizer": "disabled",
+        "cpu_ep_fallback": "disabled",
+        "plugin_trace_enabled": false,
+        "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+        "parameter_comparison_to_cpu_adam": {
+          "lora.A": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          },
+          "lora.B": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          }
+        }
+      },
+      {
+        "mode": "dlpack",
+        "profile": "large",
+        "optimizer_epsilon": 1e-06,
+        "dimensions": {
+          "input": 1024,
+          "hidden": 2048,
+          "output": 128,
+          "rank": 128
+        },
+        "compiled_adam": true,
+        "adam_first_update_ms": 16.16374999866821,
+        "fetches": [
+          "loss",
+          "lora.A_cotangent",
+          "lora.B_cotangent"
+        ],
+        "batch": 2048,
+        "session_creation_ms": 30.439666006714106,
+        "timings_ms": {
+          "prepare": {
+            "median": 0.02618751022964716,
+            "p95": 0.03487777430564165
+          },
+          "execute_exchange": {
+            "median": 2.908146008849144,
+            "p95": 2.973035413015168
+          },
+          "import": {
+            "median": 0.041292005334980786,
+            "p95": 0.05215626733843237
+          },
+          "adam_sync": {
+            "median": 0.3775209916057065,
+            "p95": 0.414555960742291
+          },
+          "step": {
+            "median": 3.3557499991729856,
+            "p95": 3.4549503194284625
+          }
+        },
+        "python_mlx_allocator_bytes": {
+          "active": 20447284,
+          "peak": 20447300,
+          "cache": 40
+        },
+        "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+        "peak_process_rss_bytes": 367132672,
+        "final_loss": 5.022749974159524e-05,
+        "nodes": 32,
+        "model_bytes": 10489249,
+        "model_sha256": "7f09e40122c276b253e252cd6ce0429f30ebb56915532c2cdeb65e3fb52f8a19",
+        "parameter_bytes": 1572864,
+        "dataset_bytes": 9437184,
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "versions": {
+          "mlx": "0.32.4",
+          "onnxruntime": "1.31.1",
+          "onnxruntime-ep-mlx": "0.31.0",
+          "onnx": "1.23.2",
+          "onnxscript": "0.7.2",
+          "numpy": "2.4.6"
+        },
+        "threads": {
+          "intra_op": 1,
+          "inter_op": 1
+        },
+        "adam_stream": "MLX GPU",
+        "ort_graph_optimizer": "disabled",
+        "cpu_ep_fallback": "disabled",
+        "plugin_trace_enabled": false,
+        "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+        "parameter_comparison_to_cpu_adam": {
+          "lora.A": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          },
+          "lora.B": {
+            "mismatched": 0,
+            "max_abs": 0.0
+          }
+        }
+      }
+    ]
+  }
+}

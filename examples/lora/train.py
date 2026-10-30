@@ -48,7 +48,7 @@ def reference(x, target, params, w, c):
     return prediction, loss, grads
 
 
-def reference_update(params, grads, state):
+def reference_update(params, grads, state, *, eps=1e-8):
     """Independent flattened NumPy Adam, not the Array API implementation."""
     sizes = [params[name].size for name in PARAMETERS]
     vector = np.concatenate([params[name].reshape(-1) for name in PARAMETERS])
@@ -60,7 +60,7 @@ def reference_update(params, grads, state):
     mean = 0.9 * mean + 0.1 * gradient
     variance = 0.999 * variance + 0.001 * gradient**2
     vector = vector - 0.03 * (mean / (1 - 0.9**step)) / (
-        np.sqrt(variance / (1 - 0.999**step)) + 1e-8
+        np.sqrt(variance / (1 - 0.999**step)) + eps
     )
     pieces = np.split(vector, np.cumsum(sizes)[:-1])
     return {

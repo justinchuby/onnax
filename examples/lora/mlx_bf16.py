@@ -25,6 +25,7 @@ from examples.lora.bf16_rules import lower_matmuls
 from examples.lora.mlx_runtime import session
 from examples.lora.model import PARAMETERS, adapt, base_model, digest, with_loss
 from examples.lora.train import close, problem
+from examples.lora.validation import discrepancy
 
 
 def gradient_model(w, c, *, batch):
@@ -42,26 +43,6 @@ def gradient_model(w, c, *, batch):
     graph = InlinePass()(gradient).model
     # Preserve FP32 frozen masters and execute BF16 casts in the runtime.
     return optimizer.optimize(graph, input_size_limit=0, output_size_limit=0)
-
-
-def discrepancy(actual, expected):
-    """Record the unchanged FP32 acceptance tolerance alongside observed errors."""
-    actual, expected = np.asarray(actual), np.asarray(expected)
-    if actual.shape != expected.shape:
-        raise ValueError("Comparison shapes must match")
-    if not np.all(np.isfinite(actual)) or not np.all(np.isfinite(expected)):
-        raise ValueError("Comparison requires finite values")
-    bad = ~np.isclose(actual, expected, rtol=1e-4, atol=1e-6)
-    error = np.abs(actual.astype(np.float64) - expected.astype(np.float64))
-    result = {"mismatched": int(np.count_nonzero(bad)), "max_abs": float(np.max(error))}
-    if np.any(bad):
-        index = tuple(np.argwhere(bad)[0])
-        result["first"] = {
-            "index": [int(i) for i in index],
-            "actual": float(actual[index]),
-            "expected": float(expected[index]),
-        }
-    return result
 
 
 def run(output_dir, *, inspect_products=False):

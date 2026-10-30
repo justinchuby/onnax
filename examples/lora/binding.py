@@ -19,9 +19,19 @@ def gradient_shapes(executor, interface):
         or any(r["dtype"] != "float32" for r in rows)
     ):
         raise ValueError("Expected the version-one LoRA parameter interface.")
+    data_shapes = interface.get("data_shapes", {"features": [None, 16], "target": [None, 8]})
+    if set(data_shapes) != {"features", "target"} or any(
+        not isinstance(shape, (list, tuple))
+        or len(shape) != 2
+        or shape[0] is not None
+        or not isinstance(shape[1], int)
+        or isinstance(shape[1], bool)
+        or shape[1] < 1
+        for shape in data_shapes.values()
+    ):
+        raise ValueError("Expected dynamic-batch feature/target shapes with positive widths")
     shapes = {
-        "features": (None, 16),
-        "target": (None, 8),
+        **{name: tuple(shape) for name, shape in data_shapes.items()},
         **{r["input"]: tuple(r["shape"]) for r in rows},
     }
     inputs = {v.name: v for v in executor.get_inputs()}
