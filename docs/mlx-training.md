@@ -88,7 +88,7 @@ MLX arrays report a Metal DLPack device. The adapter explicitly requests a
 CPU-address view of that unified-memory storage, with `copy=False`, for ORT's
 CPU tensor interface. Pointer checks verify that ORT sees the same allocation.
 
-```{literalinclude} ../examples/lora/mlx_exchange.py
+```{literalinclude} ../examples/mlx_binding.py
 :language: python
 :pyobject: CpuView
 ```

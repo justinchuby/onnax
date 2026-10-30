@@ -28,18 +28,26 @@ NAMES = ("layer1.weight", "layer1.bias", "layer2.weight", "layer2.bias")
 SHAPES = ([2, 16], [16], [16, 3], [3])
 
 
-def model():
-    x = ir.val("features", dtype=ir.DataType.FLOAT, shape=["batch", 2])
-    target = ir.val("targets", dtype=ir.DataType.FLOAT, shape=["batch", 3])
+def model(*, input_width=2, hidden_width=16, classes=3):
+    for name, value in (
+        ("input_width", input_width),
+        ("hidden_width", hidden_width),
+        ("classes", classes),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            raise ValueError(f"{name} must be a positive integer")
+    shapes = ([input_width, hidden_width], [hidden_width], [hidden_width, classes], [classes])
+    x = ir.val("features", dtype=ir.DataType.FLOAT, shape=["batch", input_width])
+    target = ir.val("targets", dtype=ir.DataType.FLOAT, shape=["batch", classes])
     params = [
-        ir.val(n, dtype=ir.DataType.FLOAT, shape=s) for n, s in zip(NAMES, SHAPES, strict=True)
+        ir.val(n, dtype=ir.DataType.FLOAT, shape=s) for n, s in zip(NAMES, shapes, strict=True)
     ]
     tape = ir.tape.Tape()
     hidden = tape.op("Tanh", [tape.op("Add", [tape.op("MatMul", [x, params[0]]), params[1]])])
     logits = tape.op("Add", [tape.op("MatMul", [hidden, params[2]]), params[3]])
     logits.name = "logits"
     logits.type = ir.TensorType(ir.DataType.FLOAT)
-    logits.shape = ir.Shape(["batch", 3])
+    logits.shape = ir.Shape(["batch", classes])
     logp = tape.op("LogSoftmax", [logits], {"axis": -1})
     axes = tape.initializer(ir.tensor(np.array([-1], np.int64), name="class_axis"))
     per_sample = tape.op(
@@ -75,16 +83,16 @@ def reference(x, targets, p):
     return logits, loss, grads
 
 
-def reference_update(params, grads, state):
+def reference_update(params, grads, state, *, lr=0.03, eps=1e-8, beta1=0.9, beta2=0.999):
     vector = np.concatenate([params[n].reshape(-1) for n in NAMES])
     gradient = np.concatenate([grads[n].reshape(-1) for n in NAMES])
     step, mean, variance = (
         (0, np.zeros_like(vector), np.zeros_like(vector)) if state is None else state
     )
     step += 1
-    mean = 0.9 * mean + 0.1 * gradient
-    variance = 0.999 * variance + 0.001 * gradient**2
-    vector -= 0.03 * (mean / (1 - 0.9**step)) / (np.sqrt(variance / (1 - 0.999**step)) + 1e-8)
+    mean = beta1 * mean + (1 - beta1) * gradient
+    variance = beta2 * variance + (1 - beta2) * gradient**2
+    vector -= lr * (mean / (1 - beta1**step)) / (np.sqrt(variance / (1 - beta2**step)) + eps)
     chunks = np.split(vector, np.cumsum([params[n].size for n in NAMES])[:-1])
     return {
         n: value.reshape(params[n].shape) for n, value in zip(NAMES, chunks, strict=True)

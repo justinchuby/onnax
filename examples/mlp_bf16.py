@@ -42,14 +42,17 @@ def problem():
     return x, y, vx, vy, params
 
 
-def reference(x, targets, params):
+def reference(x, targets, params, *, precision="bf16"):
     """Independent BF16 forward and FP32 straight-through analytic backpropagation."""
+    if precision not in ("bf16", "fp32"):
+        raise ValueError("Expected bf16 or fp32 precision")
+    quantize = round_bf16 if precision == "bf16" else np.asarray
     w1, b1, w2, b2 = (params[n] for n in NAMES)
-    qx, qw1, qw2 = (round_bf16(v) for v in (x, w1, w2))
-    z = round_bf16(qx @ qw1) + b1
+    qx, qw1, qw2 = (quantize(v) for v in (x, w1, w2))
+    z = quantize(qx @ qw1) + b1
     hidden = np.tanh(z)
-    qh = round_bf16(hidden)
-    logits = round_bf16(qh @ qw2) + b2
+    qh = quantize(hidden)
+    logits = quantize(qh @ qw2) + b2
     shifted = logits - logits.max(axis=-1, keepdims=True)
     logp = shifted - np.log(np.exp(shifted).sum(axis=-1, keepdims=True))
     loss = -np.mean(np.sum(targets * logp, axis=-1))
@@ -84,16 +87,25 @@ def stable_log_softmax(model):
     return result
 
 
-def graph(*, precision="bf16", batch=None, optimize=True, with_gradients=True):
+def graph(
+    *,
+    precision="bf16",
+    batch=None,
+    optimize=True,
+    with_gradients=True,
+    input_width=2,
+    hidden_width=16,
+    classes=3,
+):
     if precision not in ("bf16", "fp32"):
         raise ValueError("Expected bf16 or fp32 precision")
-    source = model()
+    source = model(input_width=input_width, hidden_width=hidden_width, classes=classes)
     if batch is not None:
         if isinstance(batch, bool) or not isinstance(batch, int) or batch < 1:
             raise ValueError("batch must be a positive integer")
-        source.graph.inputs[0].shape = ir.Shape([batch, 2])
-        source.graph.inputs[1].shape = ir.Shape([batch, 3])
-        source.graph.outputs[0].shape = ir.Shape([batch, 3])
+        source.graph.inputs[0].shape = ir.Shape([batch, input_width])
+        source.graph.inputs[1].shape = ir.Shape([batch, classes])
+        source.graph.outputs[0].shape = ir.Shape([batch, classes])
     if precision == "bf16":
         source = lower_matmuls(source)
     gradient = onnax.grad(source, inputs=NAMES, output="loss") if with_gradients else source

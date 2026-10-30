@@ -1,0 +1,2108 @@
+{
+  "version": 1,
+  "hardware": "Apple M1 Max",
+  "python": "3.11.17",
+  "protocol": "All model graphs execute on MLX with ORT optimization/CPU fallback disabled. Each mode trains for 150 updates with same-parameter and independent references, functional-input checks and checkpoint recovery. Timings use separate sequential worker processes, ten warmups and 100 measured full updates.",
+  "profiles": {
+    "medium": {
+      "input": 128,
+      "hidden": 512,
+      "classes": 16,
+      "training_rows": 1024,
+      "validation_rows": 256
+    },
+    "large": {
+      "input": 512,
+      "hidden": 2048,
+      "classes": 32,
+      "training_rows": 2048,
+      "validation_rows": 512
+    }
+  },
+  "dtype_policy": "FP32 external boundary, biases, nonlinearities, loss, local backward, master parameters and Adam moments. BF16 mode rounds the forward matrix operands/results.",
+  "label_smoothing": 0.125,
+  "state_reference_tolerance": {
+    "rtol": 1e-05,
+    "atol": 1e-15
+  },
+  "summary_storage": "Comparison summaries, errors and all 150 losses agree across update modes; one numerical copy is stored per profile/precision. Residency, measurements and checkpoint comparisons are mode-specific.",
+  "groups": {
+    "medium-fp32": {
+      "numerical": {
+        "version": 1,
+        "profile": "medium",
+        "precision": "fp32",
+        "adam": {
+          "lr": 0.01,
+          "eps": 1e-06,
+          "beta1": 0.9,
+          "beta2": 0.999
+        },
+        "parameters": [
+          {
+            "input": "layer1.weight",
+            "gradient": "layer1.weight_cotangent",
+            "shape": [
+              128,
+              512
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer1.bias",
+            "gradient": "layer1.bias_cotangent",
+            "shape": [
+              512
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer2.weight",
+            "gradient": "layer2.weight_cotangent",
+            "shape": [
+              512,
+              16
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer2.bias",
+            "gradient": "layer2.bias_cotangent",
+            "shape": [
+              16
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "label_smoothing": 0.125,
+        "loss": "loss",
+        "reduction": "mean over samples; sum over classes",
+        "steps": 150,
+        "strict_numerical_acceptance": false,
+        "same_parameter_acceptance": true,
+        "shared_gradient_update_acceptance": true,
+        "independent_trajectory_acceptance": false,
+        "comparison_tolerance": {
+          "rtol": 0.0001,
+          "atol": 1e-06
+        },
+        "snapshots": {
+          "parameter": {
+            "comparison": "parameter.layer1.weight",
+            "step": 2,
+            "file": "first-parameter-mismatch.npz"
+          },
+          "independent_trajectory": {
+            "comparison": "independent_trajectory.logits",
+            "step": 4,
+            "file": "first-independent_trajectory-mismatch.npz"
+          }
+        },
+        "comparisons": {
+          "same_parameter.logits": {
+            "checks": 150,
+            "max_abs": 1.9073486328125e-06,
+            "max_mismatched": 0
+          },
+          "same_parameter.loss": {
+            "checks": 150,
+            "max_abs": 1.1920928955078125e-07,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 9.778887033462524e-09,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 2.3283064365386963e-09,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 3.725290298461914e-08,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 2.0489096641540527e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.logits": {
+            "checks": 150,
+            "max_abs": 1.239776611328125e-05,
+            "max_mismatched": 188
+          },
+          "independent_trajectory.loss": {
+            "checks": 150,
+            "max_abs": 1.1920928955078125e-07,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.weight": {
+            "checks": 150,
+            "max_abs": 6.28642737865448e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.5832483768463135e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer2.weight": {
+            "checks": 150,
+            "max_abs": 6.142072379589081e-07,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer2.bias": {
+            "checks": 150,
+            "max_abs": 2.60770320892334e-08,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer1.weight": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 1.0989606380462646e-05,
+            "max_mismatched": 25
+          },
+          "shared_gradient_update.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.4901161193847656e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.944601535797119e-06,
+            "max_mismatched": 0
+          },
+          "shared_gradient_update.layer2.weight": {
+            "checks": 150,
+            "max_abs": 1.4901161193847656e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 5.880370736122131e-06,
+            "max_mismatched": 2
+          },
+          "shared_gradient_update.layer2.bias": {
+            "checks": 150,
+            "max_abs": 7.450580596923828e-09,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 3.688037395477295e-07,
+            "max_mismatched": 0
+          }
+        },
+        "errors": {
+          "parameter.layer1.weight": {
+            "first_step": 2,
+            "steps": 149,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 2.9045622795820236e-06,
+              "first": {
+                "index": [
+                  50,
+                  273
+                ],
+                "actual": -0.00335011538118124,
+                "expected": -0.003353019943460822
+              }
+            }
+          },
+          "independent_trajectory.logits": {
+            "first_step": 4,
+            "steps": 146,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 3.337860107421875e-06,
+              "first": {
+                "index": [
+                  179,
+                  14
+                ],
+                "actual": -0.003893805667757988,
+                "expected": -0.003892231732606888
+              }
+            }
+          },
+          "parameter.layer2.weight": {
+            "first_step": 5,
+            "steps": 121,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 1.4281831681728363e-06,
+              "first": {
+                "index": [
+                  109,
+                  0
+                ],
+                "actual": 0.0031373542733490467,
+                "expected": 0.0031387824565172195
+              }
+            }
+          }
+        },
+        "initial_train_loss": 2.773509979248047,
+        "final_train_loss": 0.6794089078903198,
+        "initial_validation_loss": 2.7727999687194824,
+        "final_validation_loss": 0.6829463243484497,
+        "validation_accuracy": 1.0,
+        "checkpoint_resume_verified": true,
+        "parameter_bytes": 297024,
+        "model_bytes": 69974,
+        "nodes": 40,
+        "model_sha256": "c88786c25a317cc4a85f9e437b18e1b633098f4aed8a2aa340262aba3304e494",
+        "executed_providers": [
+          "MLXExecutionProvider"
+        ],
+        "sampled_loss_history": {
+          "0": 2.773509979248047,
+          "1": 1.4777247905731201,
+          "2": 0.7236729264259338,
+          "5": 1.0238585472106934,
+          "10": 0.7947371006011963,
+          "25": 0.7053134441375732,
+          "50": 0.6850295066833496,
+          "100": 0.6803667545318604,
+          "149": 0.6794201135635376
+        },
+        "state_bytes": 594048
+      },
+      "modes": {
+        "cpu": {
+          "master_and_state_on_metal": false,
+          "pointer_identity_checked": false,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 27.23045798484236,
+            "first_step_ms": 31.689374998677522,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.00024998735170811415,
+                "p95": 0.0003770750481635331
+              },
+              "execute_exchange": {
+                "median": 0.8885834977263585,
+                "p95": 1.1893559072632343
+              },
+              "import": {
+                "median": 0.0025830086087808013,
+                "p95": 0.0035850738640874624
+              },
+              "adam_sync": {
+                "median": 0.1662920112721622,
+                "p95": 0.18318715010536835
+              },
+              "step": {
+                "median": 1.0714795062085614,
+                "p95": 1.354336051736027
+              }
+            },
+            "peak_process_rss_bytes": 168427520,
+            "python_mlx_allocator_bytes": {
+              "active": 0,
+              "peak": 0,
+              "cache": 0
+            },
+            "returned_output_bytes_per_step": 297028,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        },
+        "eager": {
+          "master_and_state_on_metal": true,
+          "pointer_identity_checked": true,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 27.00937501504086,
+            "first_step_ms": 58.305540995206684,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.03310399188194424,
+                "p95": 0.048694088764023036
+              },
+              "execute_exchange": {
+                "median": 0.7456669845851138,
+                "p95": 1.1419555987231433
+              },
+              "import": {
+                "median": 0.04872900899499655,
+                "p95": 0.06636423495365307
+              },
+              "adam_sync": {
+                "median": 0.4597494989866391,
+                "p95": 0.5626705053145997
+              },
+              "step": {
+                "median": 1.2905420153401792,
+                "p95": 1.8191399081842972
+              }
+            },
+            "peak_process_rss_bytes": 167051264,
+            "python_mlx_allocator_bytes": {
+              "active": 3560192,
+              "peak": 3857220,
+              "cache": 32
+            },
+            "returned_output_bytes_per_step": 297028,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        },
+        "compiled": {
+          "master_and_state_on_metal": true,
+          "pointer_identity_checked": true,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 26.69870899990201,
+            "first_step_ms": 38.690917019266635,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.028437512810342014,
+                "p95": 0.03290203894721344
+              },
+              "execute_exchange": {
+                "median": 0.6253745086723939,
+                "p95": 0.7197068975074217
+              },
+              "import": {
+                "median": 0.042917003156617284,
+                "p95": 0.047820220061112195
+              },
+              "adam_sync": {
+                "median": 0.2729585103224963,
+                "p95": 0.31124822999117896
+              },
+              "step": {
+                "median": 0.9772710036486387,
+                "p95": 1.0861271046451293
+              }
+            },
+            "peak_process_rss_bytes": 167247872,
+            "python_mlx_allocator_bytes": {
+              "active": 2669040,
+              "peak": 2966068,
+              "cache": 120
+            },
+            "returned_output_bytes_per_step": 297028,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        }
+      }
+    },
+    "medium-bf16": {
+      "numerical": {
+        "version": 1,
+        "profile": "medium",
+        "precision": "bf16",
+        "adam": {
+          "lr": 0.01,
+          "eps": 1e-06,
+          "beta1": 0.9,
+          "beta2": 0.999
+        },
+        "parameters": [
+          {
+            "input": "layer1.weight",
+            "gradient": "layer1.weight_cotangent",
+            "shape": [
+              128,
+              512
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer1.bias",
+            "gradient": "layer1.bias_cotangent",
+            "shape": [
+              512
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer2.weight",
+            "gradient": "layer2.weight_cotangent",
+            "shape": [
+              512,
+              16
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer2.bias",
+            "gradient": "layer2.bias_cotangent",
+            "shape": [
+              16
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "label_smoothing": 0.125,
+        "loss": "loss",
+        "reduction": "mean over samples; sum over classes",
+        "steps": 150,
+        "strict_numerical_acceptance": false,
+        "same_parameter_acceptance": false,
+        "shared_gradient_update_acceptance": true,
+        "independent_trajectory_acceptance": false,
+        "comparison_tolerance": {
+          "rtol": 0.0001,
+          "atol": 1e-06
+        },
+        "snapshots": {
+          "parameter": {
+            "comparison": "parameter.layer2.weight",
+            "step": 1,
+            "file": "first-parameter-mismatch.npz"
+          },
+          "same_parameter": {
+            "comparison": "same_parameter.logits",
+            "step": 1,
+            "file": "first-same_parameter-mismatch.npz"
+          },
+          "independent_trajectory": {
+            "comparison": "independent_trajectory.logits",
+            "step": 1,
+            "file": "first-independent_trajectory-mismatch.npz"
+          }
+        },
+        "comparisons": {
+          "same_parameter.logits": {
+            "checks": 150,
+            "max_abs": 0.03125,
+            "max_mismatched": 33
+          },
+          "same_parameter.loss": {
+            "checks": 150,
+            "max_abs": 2.384185791015625e-07,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 7.304258815565845e-07,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.9595144351569616e-07,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 3.3026444725692272e-06,
+            "max_mismatched": 484
+          },
+          "same_parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 3.302444383734837e-06,
+            "max_mismatched": 1
+          },
+          "independent_trajectory.logits": {
+            "checks": 150,
+            "max_abs": 0.0625,
+            "max_mismatched": 12232
+          },
+          "independent_trajectory.loss": {
+            "checks": 150,
+            "max_abs": 5.2869319915771484e-05,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.weight": {
+            "checks": 150,
+            "max_abs": 2.3493205389968352e-05,
+            "max_mismatched": 37728
+          },
+          "independent_trajectory.layer1.bias": {
+            "checks": 150,
+            "max_abs": 8.487631362186221e-06,
+            "max_mismatched": 318
+          },
+          "independent_trajectory.layer2.weight": {
+            "checks": 150,
+            "max_abs": 0.0001622894560568966,
+            "max_mismatched": 8030
+          },
+          "independent_trajectory.layer2.bias": {
+            "checks": 150,
+            "max_abs": 0.00015039950812933967,
+            "max_mismatched": 16
+          },
+          "shared_gradient_update.layer1.weight": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 0.001032501459121704,
+            "max_mismatched": 60196
+          },
+          "shared_gradient_update.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.4901161193847656e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 0.0005442053079605103,
+            "max_mismatched": 495
+          },
+          "shared_gradient_update.layer2.weight": {
+            "checks": 150,
+            "max_abs": 1.4901161193847656e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 0.0005516260862350464,
+            "max_mismatched": 7348
+          },
+          "shared_gradient_update.layer2.bias": {
+            "checks": 150,
+            "max_abs": 1.4901161193847656e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 0.00014708936214447021,
+            "max_mismatched": 16
+          }
+        },
+        "errors": {
+          "parameter.layer2.weight": {
+            "first_step": 1,
+            "steps": 150,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 2.0246952772140503e-06,
+              "first": {
+                "index": [
+                  297,
+                  5
+                ],
+                "actual": 0.008850640617311,
+                "expected": 0.008852665312588215
+              }
+            }
+          },
+          "same_parameter.logits": {
+            "first_step": 1,
+            "steps": 129,
+            "first": {
+              "mismatched": 2,
+              "max_abs": 0.0009765625,
+              "first": {
+                "index": [
+                  619,
+                  0
+                ],
+                "actual": -0.01691713184118271,
+                "expected": -0.01688661426305771
+              }
+            }
+          },
+          "independent_trajectory.logits": {
+            "first_step": 1,
+            "steps": 149,
+            "first": {
+              "mismatched": 60,
+              "max_abs": 0.001953125,
+              "first": {
+                "index": [
+                  39,
+                  10
+                ],
+                "actual": 0.004319274798035622,
+                "expected": 0.004349791444838047
+              }
+            }
+          },
+          "independent_trajectory.layer2.weight": {
+            "first_step": 1,
+            "steps": 148,
+            "first": {
+              "mismatched": 14,
+              "max_abs": 5.259644240140915e-06,
+              "first": {
+                "index": [
+                  168,
+                  7
+                ],
+                "actual": -0.004716821014881134,
+                "expected": -0.004718758165836334
+              }
+            }
+          },
+          "parameter.layer1.weight": {
+            "first_step": 2,
+            "steps": 149,
+            "first": {
+              "mismatched": 6,
+              "max_abs": 6.543472409248352e-06,
+              "first": {
+                "index": [
+                  11,
+                  356
+                ],
+                "actual": -9.247846901416779e-05,
+                "expected": -9.370967745780945e-05
+              }
+            }
+          },
+          "parameter.layer1.bias": {
+            "first_step": 2,
+            "steps": 149,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 2.3636966943740845e-06,
+              "first": {
+                "index": [
+                  227
+                ],
+                "actual": 0.012949850410223007,
+                "expected": 0.012952214106917381
+              }
+            }
+          },
+          "independent_trajectory.layer1.weight": {
+            "first_step": 3,
+            "steps": 147,
+            "first": {
+              "mismatched": 2,
+              "max_abs": 1.2048985809087753e-06,
+              "first": {
+                "index": [
+                  19,
+                  227
+                ],
+                "actual": 0.0007048286497592926,
+                "expected": 0.0007036487804725766
+              }
+            }
+          },
+          "independent_trajectory.layer2.bias": {
+            "first_step": 6,
+            "steps": 144,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 2.696644514799118e-06,
+              "first": {
+                "index": [
+                  11
+                ],
+                "actual": -0.005069836974143982,
+                "expected": -0.005072533618658781
+              }
+            }
+          },
+          "independent_trajectory.layer1.bias": {
+            "first_step": 7,
+            "steps": 143,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 2.447573933750391e-06,
+              "first": {
+                "index": [
+                  238
+                ],
+                "actual": 6.793883949285373e-05,
+                "expected": 7.038641342660412e-05
+              }
+            }
+          },
+          "parameter.layer2.bias": {
+            "first_step": 9,
+            "steps": 142,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 5.241483449935913e-06,
+              "first": {
+                "index": [
+                  9
+                ],
+                "actual": -0.04077776148915291,
+                "expected": -0.040783002972602844
+              }
+            }
+          },
+          "same_parameter.layer2.weight": {
+            "first_step": 63,
+            "steps": 4,
+            "first": {
+              "mismatched": 465,
+              "max_abs": 3.0780565793975256e-06,
+              "first": {
+                "index": [
+                  0,
+                  5
+                ],
+                "actual": -5.470777250593528e-05,
+                "expected": -5.173768295207992e-05
+              }
+            }
+          },
+          "same_parameter.layer2.bias": {
+            "first_step": 63,
+            "steps": 4,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 3.0775117920711637e-06,
+              "first": {
+                "index": [
+                  5
+                ],
+                "actual": -2.9897550120949745e-05,
+                "expected": -3.297506191302091e-05
+              }
+            }
+          }
+        },
+        "initial_train_loss": 2.7735228538513184,
+        "final_train_loss": 0.6794148683547974,
+        "initial_validation_loss": 2.772818088531494,
+        "final_validation_loss": 0.682951807975769,
+        "validation_accuracy": 1.0,
+        "checkpoint_resume_verified": true,
+        "parameter_bytes": 297024,
+        "model_bytes": 70679,
+        "nodes": 49,
+        "model_sha256": "3632ecbad1eba176052e5a9260d9ed8d71d00cc00f813a94bd848e559f74d34a",
+        "executed_providers": [
+          "MLXExecutionProvider"
+        ],
+        "sampled_loss_history": {
+          "0": 2.7735228538513184,
+          "1": 1.4774166345596313,
+          "2": 0.7236218452453613,
+          "5": 1.0238839387893677,
+          "10": 0.794897198677063,
+          "25": 0.7050979137420654,
+          "50": 0.6850640773773193,
+          "100": 0.6803799867630005,
+          "149": 0.6794257164001465
+        },
+        "state_bytes": 594048
+      },
+      "modes": {
+        "cpu": {
+          "master_and_state_on_metal": false,
+          "pointer_identity_checked": false,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 26.79366699885577,
+            "first_step_ms": 23.13145899097435,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.000166997779160738,
+                "p95": 0.0002110449713654815
+              },
+              "execute_exchange": {
+                "median": 0.64337499497924,
+                "p95": 1.1228142466279678
+              },
+              "import": {
+                "median": 0.002042012056335807,
+                "p95": 0.0027583693736232813
+              },
+              "adam_sync": {
+                "median": 0.1516665070084855,
+                "p95": 0.16026039666030556
+              },
+              "step": {
+                "median": 0.7973749889060855,
+                "p95": 1.2764548184350133
+              }
+            },
+            "peak_process_rss_bytes": 167608320,
+            "python_mlx_allocator_bytes": {
+              "active": 0,
+              "peak": 0,
+              "cache": 0
+            },
+            "returned_output_bytes_per_step": 297028,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        },
+        "eager": {
+          "master_and_state_on_metal": true,
+          "pointer_identity_checked": true,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 28.71954199508764,
+            "first_step_ms": 48.23529199347831,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.03104150528088212,
+                "p95": 0.04569345182972028
+              },
+              "execute_exchange": {
+                "median": 0.6449790089391172,
+                "p95": 0.7341003467445262
+              },
+              "import": {
+                "median": 0.045479508116841316,
+                "p95": 0.061049997748341404
+              },
+              "adam_sync": {
+                "median": 0.4441874916665256,
+                "p95": 0.5133743849000894
+              },
+              "step": {
+                "median": 1.1777085164794698,
+                "p95": 1.3241871623904444
+              }
+            },
+            "peak_process_rss_bytes": 167706624,
+            "python_mlx_allocator_bytes": {
+              "active": 3560192,
+              "peak": 3857220,
+              "cache": 32
+            },
+            "returned_output_bytes_per_step": 297028,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        },
+        "compiled": {
+          "master_and_state_on_metal": true,
+          "pointer_identity_checked": true,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 26.60858299350366,
+            "first_step_ms": 41.8669999926351,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.02833301550708711,
+                "p95": 0.034939256147481494
+              },
+              "execute_exchange": {
+                "median": 0.6454170070355758,
+                "p95": 0.7120440510334447
+              },
+              "import": {
+                "median": 0.04243750299792737,
+                "p95": 0.046895857667550445
+              },
+              "adam_sync": {
+                "median": 0.2805834956234321,
+                "p95": 0.3086732671363279
+              },
+              "step": {
+                "median": 0.9974369895644486,
+                "p95": 1.0919464562903158
+              }
+            },
+            "peak_process_rss_bytes": 167739392,
+            "python_mlx_allocator_bytes": {
+              "active": 2669040,
+              "peak": 2966068,
+              "cache": 120
+            },
+            "returned_output_bytes_per_step": 297028,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        }
+      }
+    },
+    "large-fp32": {
+      "numerical": {
+        "version": 1,
+        "profile": "large",
+        "precision": "fp32",
+        "adam": {
+          "lr": 0.01,
+          "eps": 1e-06,
+          "beta1": 0.9,
+          "beta2": 0.999
+        },
+        "parameters": [
+          {
+            "input": "layer1.weight",
+            "gradient": "layer1.weight_cotangent",
+            "shape": [
+              512,
+              2048
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer1.bias",
+            "gradient": "layer1.bias_cotangent",
+            "shape": [
+              2048
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer2.weight",
+            "gradient": "layer2.weight_cotangent",
+            "shape": [
+              2048,
+              32
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer2.bias",
+            "gradient": "layer2.bias_cotangent",
+            "shape": [
+              32
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "label_smoothing": 0.125,
+        "loss": "loss",
+        "reduction": "mean over samples; sum over classes",
+        "steps": 150,
+        "strict_numerical_acceptance": false,
+        "same_parameter_acceptance": false,
+        "shared_gradient_update_acceptance": true,
+        "independent_trajectory_acceptance": false,
+        "comparison_tolerance": {
+          "rtol": 0.0001,
+          "atol": 1e-06
+        },
+        "snapshots": {
+          "parameter": {
+            "comparison": "parameter.layer2.weight",
+            "step": 1,
+            "file": "first-parameter-mismatch.npz"
+          },
+          "independent_trajectory": {
+            "comparison": "independent_trajectory.logits",
+            "step": 1,
+            "file": "first-independent_trajectory-mismatch.npz"
+          },
+          "same_parameter": {
+            "comparison": "same_parameter.logits",
+            "step": 3,
+            "file": "first-same_parameter-mismatch.npz"
+          }
+        },
+        "comparisons": {
+          "same_parameter.logits": {
+            "checks": 150,
+            "max_abs": 6.866455078125e-05,
+            "max_mismatched": 39
+          },
+          "same_parameter.loss": {
+            "checks": 150,
+            "max_abs": 2.384185791015625e-07,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 2.9103830456733704e-09,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 3.6088749766349792e-09,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 1.5273690223693848e-07,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 7.078051567077637e-08,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.logits": {
+            "checks": 150,
+            "max_abs": 0.006009101867675781,
+            "max_mismatched": 31505
+          },
+          "independent_trajectory.loss": {
+            "checks": 150,
+            "max_abs": 3.540515899658203e-05,
+            "max_mismatched": 0
+          },
+          "independent_trajectory.layer1.weight": {
+            "checks": 150,
+            "max_abs": 3.994500730186701e-06,
+            "max_mismatched": 1428
+          },
+          "independent_trajectory.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.0263975127600133e-06,
+            "max_mismatched": 1
+          },
+          "independent_trajectory.layer2.weight": {
+            "checks": 150,
+            "max_abs": 2.7282163500785828e-05,
+            "max_mismatched": 9607
+          },
+          "independent_trajectory.layer2.bias": {
+            "checks": 150,
+            "max_abs": 2.5896355509757996e-05,
+            "max_mismatched": 5
+          },
+          "shared_gradient_update.layer1.weight": {
+            "checks": 150,
+            "max_abs": 4.470348358154297e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 0.0001373477280139923,
+            "max_mismatched": 80637
+          },
+          "shared_gradient_update.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.4901161193847656e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 4.032999277114868e-05,
+            "max_mismatched": 242
+          },
+          "shared_gradient_update.layer2.weight": {
+            "checks": 150,
+            "max_abs": 1.862645149230957e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 4.908908158540726e-05,
+            "max_mismatched": 2124
+          },
+          "shared_gradient_update.layer2.bias": {
+            "checks": 150,
+            "max_abs": 1.1175870895385742e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 4.684552550315857e-06,
+            "max_mismatched": 1
+          }
+        },
+        "errors": {
+          "parameter.layer2.weight": {
+            "first_step": 1,
+            "steps": 150,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 3.078952431678772e-06,
+              "first": {
+                "index": [
+                  1585,
+                  15
+                ],
+                "actual": -0.0047875456511974335,
+                "expected": -0.004790624603629112
+              }
+            }
+          },
+          "independent_trajectory.logits": {
+            "first_step": 1,
+            "steps": 149,
+            "first": {
+              "mismatched": 13,
+              "max_abs": 1.621246337890625e-05,
+              "first": {
+                "index": [
+                  25,
+                  15
+                ],
+                "actual": 0.0026652244850993156,
+                "expected": 0.00266239233314991
+              }
+            }
+          },
+          "parameter.layer1.weight": {
+            "first_step": 2,
+            "steps": 149,
+            "first": {
+              "mismatched": 2,
+              "max_abs": 1.948326826095581e-06,
+              "first": {
+                "index": [
+                  122,
+                  1585
+                ],
+                "actual": -0.005851973779499531,
+                "expected": -0.005850025452673435
+              }
+            }
+          },
+          "same_parameter.logits": {
+            "first_step": 3,
+            "steps": 146,
+            "first": {
+              "mismatched": 2,
+              "max_abs": 3.337860107421875e-05,
+              "first": {
+                "index": [
+                  37,
+                  12
+                ],
+                "actual": -0.0008451994508504868,
+                "expected": -0.0008438136428594589
+              }
+            }
+          },
+          "independent_trajectory.layer2.weight": {
+            "first_step": 11,
+            "steps": 89,
+            "first": {
+              "mismatched": 4,
+              "max_abs": 4.83635812997818e-06,
+              "first": {
+                "index": [
+                  1585,
+                  15
+                ],
+                "actual": -0.013000999577343464,
+                "expected": -0.013003907166421413
+              }
+            }
+          },
+          "parameter.layer1.bias": {
+            "first_step": 12,
+            "steps": 138,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 3.1478703022003174e-06,
+              "first": {
+                "index": [
+                  1568
+                ],
+                "actual": 0.00042521534487605095,
+                "expected": 0.0004240809939801693
+              }
+            }
+          },
+          "independent_trajectory.layer1.weight": {
+            "first_step": 18,
+            "steps": 9,
+            "first": {
+              "mismatched": 3,
+              "max_abs": 1.3927929103374481e-06,
+              "first": {
+                "index": [
+                  258,
+                  808
+                ],
+                "actual": 0.001104805152863264,
+                "expected": 0.0011036881478503346
+              }
+            }
+          },
+          "independent_trajectory.layer2.bias": {
+            "first_step": 18,
+            "steps": 65,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 4.176050424575806e-06,
+              "first": {
+                "index": [
+                  4
+                ],
+                "actual": -0.018084339797496796,
+                "expected": -0.01808016374707222
+              }
+            }
+          },
+          "independent_trajectory.layer1.bias": {
+            "first_step": 28,
+            "steps": 1,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 1.0263975127600133e-06,
+              "first": {
+                "index": [
+                  123
+                ],
+                "actual": -7.286191976163536e-05,
+                "expected": -7.183552224887535e-05
+              }
+            }
+          },
+          "parameter.layer2.bias": {
+            "first_step": 68,
+            "steps": 13,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 2.045184373855591e-06,
+              "first": {
+                "index": [
+                  3
+                ],
+                "actual": 0.002206529024988413,
+                "expected": 0.002205299213528633
+              }
+            }
+          }
+        },
+        "initial_train_loss": 3.4724907875061035,
+        "final_train_loss": 0.7854710817337036,
+        "initial_validation_loss": 3.47097110748291,
+        "final_validation_loss": 0.7864282727241516,
+        "validation_accuracy": 1.0,
+        "checkpoint_resume_verified": true,
+        "parameter_bytes": 4464768,
+        "model_bytes": 266582,
+        "nodes": 40,
+        "model_sha256": "a13dd157679d024abeaf3578cf65d1cd4672f4cb92b7e5459027045079fa1aa0",
+        "executed_providers": [
+          "MLXExecutionProvider"
+        ],
+        "sampled_loss_history": {
+          "0": 3.4724907875061035,
+          "1": 0.8601500391960144,
+          "2": 3.560436487197876,
+          "5": 3.026642322540283,
+          "10": 1.3379205465316772,
+          "25": 1.0299348831176758,
+          "50": 0.8319506049156189,
+          "100": 0.7862425446510315,
+          "149": 0.7854767441749573
+        },
+        "state_bytes": 8929536
+      },
+      "modes": {
+        "cpu": {
+          "master_and_state_on_metal": false,
+          "pointer_identity_checked": false,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 26.850291003938764,
+            "first_step_ms": 35.83562499261461,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.0005829933797940612,
+                "p95": 0.0007940529030747711
+              },
+              "execute_exchange": {
+                "median": 2.6366454985691234,
+                "p95": 2.690388167684432
+              },
+              "import": {
+                "median": 0.00816650572232902,
+                "p95": 0.009054456313606352
+              },
+              "adam_sync": {
+                "median": 2.126624487573281,
+                "p95": 2.242839890823234
+              },
+              "step": {
+                "median": 4.779270995641127,
+                "p95": 4.907283015199937
+              }
+            },
+            "peak_process_rss_bytes": 233144320,
+            "python_mlx_allocator_bytes": {
+              "active": 0,
+              "peak": 0,
+              "cache": 0
+            },
+            "returned_output_bytes_per_step": 4464772,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        },
+        "eager": {
+          "master_and_state_on_metal": true,
+          "pointer_identity_checked": true,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 27.06695898086764,
+            "first_step_ms": 54.346167016774416,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.03077099972870201,
+                "p95": 0.036524987081065774
+              },
+              "execute_exchange": {
+                "median": 2.2609580046264455,
+                "p95": 2.322777708468493
+              },
+              "import": {
+                "median": 0.0422289886046201,
+                "p95": 0.047089906001929194
+              },
+              "adam_sync": {
+                "median": 0.759374990593642,
+                "p95": 0.7883000071160495
+              },
+              "step": {
+                "median": 3.098395507549867,
+                "p95": 3.1555211608065292
+              }
+            },
+            "peak_process_rss_bytes": 195936256,
+            "python_mlx_allocator_bytes": {
+              "active": 30974592,
+              "peak": 53569028,
+              "cache": 18129696
+            },
+            "returned_output_bytes_per_step": 4464772,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        },
+        "compiled": {
+          "master_and_state_on_metal": true,
+          "pointer_identity_checked": true,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 28.073374996893108,
+            "first_step_ms": 46.586915996158496,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.029354006983339787,
+                "p95": 0.0354104078724049
+              },
+              "execute_exchange": {
+                "median": 2.217187502537854,
+                "p95": 2.2649562641163357
+              },
+              "import": {
+                "median": 0.04075001925230026,
+                "p95": 0.049277045764029026
+              },
+              "adam_sync": {
+                "median": 0.4516454937402159,
+                "p95": 0.5339871946489438
+              },
+              "step": {
+                "median": 2.752354499534704,
+                "p95": 2.8388000195263885
+              }
+            },
+            "peak_process_rss_bytes": 197001216,
+            "python_mlx_allocator_bytes": {
+              "active": 35709872,
+              "peak": 40174644,
+              "cache": 120
+            },
+            "returned_output_bytes_per_step": 4464772,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        }
+      },
+      "first_logit_diagnostic": {
+        "step": 3,
+        "index": [
+          37,
+          12
+        ],
+        "native": -0.0008451994508504868,
+        "full_batch_fp32_reference": -0.0008438136428594589,
+        "fp64_single_sample_reference": -0.0008446270057752142,
+        "native_abs_difference_to_fp64": 5.72445075272543e-07,
+        "fp32_reference_abs_difference_to_fp64": 8.133629157552891e-07
+      }
+    },
+    "large-bf16": {
+      "numerical": {
+        "version": 1,
+        "profile": "large",
+        "precision": "bf16",
+        "adam": {
+          "lr": 0.01,
+          "eps": 1e-06,
+          "beta1": 0.9,
+          "beta2": 0.999
+        },
+        "parameters": [
+          {
+            "input": "layer1.weight",
+            "gradient": "layer1.weight_cotangent",
+            "shape": [
+              512,
+              2048
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer1.bias",
+            "gradient": "layer1.bias_cotangent",
+            "shape": [
+              2048
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer2.weight",
+            "gradient": "layer2.weight_cotangent",
+            "shape": [
+              2048,
+              32
+            ],
+            "dtype": "float32"
+          },
+          {
+            "input": "layer2.bias",
+            "gradient": "layer2.bias_cotangent",
+            "shape": [
+              32
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "label_smoothing": 0.125,
+        "loss": "loss",
+        "reduction": "mean over samples; sum over classes",
+        "steps": 150,
+        "strict_numerical_acceptance": false,
+        "same_parameter_acceptance": false,
+        "shared_gradient_update_acceptance": true,
+        "independent_trajectory_acceptance": false,
+        "comparison_tolerance": {
+          "rtol": 0.0001,
+          "atol": 1e-06
+        },
+        "snapshots": {
+          "same_parameter": {
+            "comparison": "same_parameter.logits",
+            "step": 0,
+            "file": "first-same_parameter-mismatch.npz"
+          },
+          "independent_trajectory": {
+            "comparison": "independent_trajectory.logits",
+            "step": 0,
+            "file": "first-independent_trajectory-mismatch.npz"
+          },
+          "parameter": {
+            "comparison": "parameter.layer1.weight",
+            "step": 1,
+            "file": "first-parameter-mismatch.npz"
+          }
+        },
+        "comparisons": {
+          "same_parameter.logits": {
+            "checks": 150,
+            "max_abs": 0.125,
+            "max_mismatched": 173
+          },
+          "same_parameter.loss": {
+            "checks": 150,
+            "max_abs": 7.3909759521484375e-06,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 5.420552042778581e-07,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.19841160994838e-07,
+            "max_mismatched": 0
+          },
+          "same_parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 6.481073796749115e-06,
+            "max_mismatched": 2004
+          },
+          "same_parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 3.0568335205316544e-06,
+            "max_mismatched": 1
+          },
+          "independent_trajectory.logits": {
+            "checks": 150,
+            "max_abs": 0.12508583068847656,
+            "max_mismatched": 57575
+          },
+          "independent_trajectory.loss": {
+            "checks": 150,
+            "max_abs": 0.0003737211227416992,
+            "max_mismatched": 1
+          },
+          "independent_trajectory.layer1.weight": {
+            "checks": 150,
+            "max_abs": 3.515381831675768e-05,
+            "max_mismatched": 325301
+          },
+          "independent_trajectory.layer1.bias": {
+            "checks": 150,
+            "max_abs": 1.3468263205140829e-05,
+            "max_mismatched": 752
+          },
+          "independent_trajectory.layer2.weight": {
+            "checks": 150,
+            "max_abs": 0.0008836491033434868,
+            "max_mismatched": 64711
+          },
+          "independent_trajectory.layer2.bias": {
+            "checks": 150,
+            "max_abs": 0.0003941245377063751,
+            "max_mismatched": 32
+          },
+          "shared_gradient_update.layer1.weight": {
+            "checks": 150,
+            "max_abs": 5.960464477539063e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.weight": {
+            "checks": 150,
+            "max_abs": 0.011187415570020676,
+            "max_mismatched": 981762
+          },
+          "shared_gradient_update.layer1.bias": {
+            "checks": 150,
+            "max_abs": 2.9802322387695312e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer1.bias": {
+            "checks": 150,
+            "max_abs": 0.001671820878982544,
+            "max_mismatched": 1953
+          },
+          "shared_gradient_update.layer2.weight": {
+            "checks": 150,
+            "max_abs": 2.2351741790771484e-08,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.weight": {
+            "checks": 150,
+            "max_abs": 0.001992673729546368,
+            "max_mismatched": 59627
+          },
+          "shared_gradient_update.layer2.bias": {
+            "checks": 150,
+            "max_abs": 7.450580596923828e-09,
+            "max_mismatched": 0
+          },
+          "parameter.layer2.bias": {
+            "checks": 150,
+            "max_abs": 0.00010344758629798889,
+            "max_mismatched": 30
+          }
+        },
+        "errors": {
+          "same_parameter.logits": {
+            "first_step": 0,
+            "steps": 150,
+            "first": {
+              "mismatched": 12,
+              "max_abs": 0.00048828125,
+              "first": {
+                "index": [
+                  185,
+                  10
+                ],
+                "actual": -0.040771484375,
+                "expected": -0.041015625
+              }
+            }
+          },
+          "independent_trajectory.logits": {
+            "first_step": 0,
+            "steps": 150,
+            "first": {
+              "mismatched": 12,
+              "max_abs": 0.00048828125,
+              "first": {
+                "index": [
+                  185,
+                  10
+                ],
+                "actual": -0.040771484375,
+                "expected": -0.041015625
+              }
+            }
+          },
+          "parameter.layer1.weight": {
+            "first_step": 1,
+            "steps": 150,
+            "first": {
+              "mismatched": 2,
+              "max_abs": 1.4408724382519722e-06,
+              "first": {
+                "index": [
+                  395,
+                  790
+                ],
+                "actual": 0.0011535213561728597,
+                "expected": 0.0011549622286111116
+              }
+            }
+          },
+          "parameter.layer2.weight": {
+            "first_step": 1,
+            "steps": 150,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 1.3229437172412872e-06,
+              "first": {
+                "index": [
+                  1831,
+                  27
+                ],
+                "actual": -0.0016119499923661351,
+                "expected": -0.0016106563853099942
+              }
+            }
+          },
+          "parameter.layer1.bias": {
+            "first_step": 2,
+            "steps": 149,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 2.195127308368683e-06,
+              "first": {
+                "index": [
+                  485
+                ],
+                "actual": -0.011900508776307106,
+                "expected": -0.011902703903615475
+              }
+            }
+          },
+          "independent_trajectory.layer1.weight": {
+            "first_step": 2,
+            "steps": 148,
+            "first": {
+              "mismatched": 488,
+              "max_abs": 5.119625711813569e-06,
+              "first": {
+                "index": [
+                  1,
+                  1077
+                ],
+                "actual": 0.0011646789498627186,
+                "expected": 0.0011692277621477842
+              }
+            }
+          },
+          "independent_trajectory.layer1.bias": {
+            "first_step": 2,
+            "steps": 141,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 1.2938398867845535e-06,
+              "first": {
+                "index": [
+                  1889
+                ],
+                "actual": -0.0005522029823623598,
+                "expected": -0.0005534968222491443
+              }
+            }
+          },
+          "independent_trajectory.layer2.weight": {
+            "first_step": 2,
+            "steps": 148,
+            "first": {
+              "mismatched": 479,
+              "max_abs": 1.3109296560287476e-05,
+              "first": {
+                "index": [
+                  4,
+                  0
+                ],
+                "actual": 0.005446917377412319,
+                "expected": 0.005440841428935528
+              }
+            }
+          },
+          "parameter.layer2.bias": {
+            "first_step": 3,
+            "steps": 148,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 2.6710331439971924e-06,
+              "first": {
+                "index": [
+                  9
+                ],
+                "actual": -0.010066654533147812,
+                "expected": -0.010063983500003815
+              }
+            }
+          },
+          "independent_trajectory.layer2.bias": {
+            "first_step": 4,
+            "steps": 143,
+            "first": {
+              "mismatched": 3,
+              "max_abs": 8.32974910736084e-06,
+              "first": {
+                "index": [
+                  11
+                ],
+                "actual": 0.004657672718167305,
+                "expected": 0.004655843134969473
+              }
+            }
+          },
+          "same_parameter.layer2.weight": {
+            "first_step": 10,
+            "steps": 18,
+            "first": {
+              "mismatched": 5,
+              "max_abs": 6.481073796749115e-06,
+              "first": {
+                "index": [
+                  577,
+                  8
+                ],
+                "actual": 0.018420938402414322,
+                "expected": 0.018416281789541245
+              }
+            }
+          },
+          "independent_trajectory.loss": {
+            "first_step": 19,
+            "steps": 19,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 0.00025093555450439453,
+              "first": {
+                "index": [],
+                "actual": 1.2230744361877441,
+                "expected": 1.2228235006332397
+              }
+            }
+          },
+          "same_parameter.layer2.bias": {
+            "first_step": 33,
+            "steps": 14,
+            "first": {
+              "mismatched": 1,
+              "max_abs": 3.0568335205316544e-06,
+              "first": {
+                "index": [
+                  0
+                ],
+                "actual": -0.0019738655537366867,
+                "expected": -0.0019769223872572184
+              }
+            }
+          }
+        },
+        "initial_train_loss": 3.4725027084350586,
+        "final_train_loss": 0.7854761481285095,
+        "initial_validation_loss": 3.470977783203125,
+        "final_validation_loss": 0.7864323854446411,
+        "validation_accuracy": 1.0,
+        "checkpoint_resume_verified": true,
+        "parameter_bytes": 4464768,
+        "model_bytes": 267287,
+        "nodes": 49,
+        "model_sha256": "3cdead98fcb1f26d5141bcce02c5158a803ac2b90e115a1d27531a54b9d37e78",
+        "executed_providers": [
+          "MLXExecutionProvider"
+        ],
+        "sampled_loss_history": {
+          "0": 3.4725027084350586,
+          "1": 0.8602153062820435,
+          "2": 3.56099009513855,
+          "5": 3.0292887687683105,
+          "10": 1.3186146020889282,
+          "25": 1.0258572101593018,
+          "50": 0.8302342891693115,
+          "100": 0.786251425743103,
+          "149": 0.7854795455932617
+        },
+        "state_bytes": 8929536
+      },
+      "modes": {
+        "cpu": {
+          "master_and_state_on_metal": false,
+          "pointer_identity_checked": false,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 27.057375002186745,
+            "first_step_ms": 34.33204200700857,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.0005830079317092896,
+                "p95": 0.0008360497304238378
+              },
+              "execute_exchange": {
+                "median": 2.798541492666118,
+                "p95": 2.8961749907466583
+              },
+              "import": {
+                "median": 0.007833499694243073,
+                "p95": 0.010272891086060552
+              },
+              "adam_sync": {
+                "median": 1.9796880078502,
+                "p95": 2.2005955179338343
+              },
+              "step": {
+                "median": 4.798395995749161,
+                "p95": 5.078389240952674
+              }
+            },
+            "peak_process_rss_bytes": 234094592,
+            "python_mlx_allocator_bytes": {
+              "active": 0,
+              "peak": 0,
+              "cache": 0
+            },
+            "returned_output_bytes_per_step": 4464772,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        },
+        "eager": {
+          "master_and_state_on_metal": true,
+          "pointer_identity_checked": true,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 28.524958004709333,
+            "first_step_ms": 52.53462499240413,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.03214601019863039,
+                "p95": 0.06861909350845961
+              },
+              "execute_exchange": {
+                "median": 2.401833000476472,
+                "p95": 2.6640580021194182
+              },
+              "import": {
+                "median": 0.04641649138648063,
+                "p95": 0.08382322121178731
+              },
+              "adam_sync": {
+                "median": 0.7639585091965273,
+                "p95": 0.8818368994980119
+              },
+              "step": {
+                "median": 3.2427709957119077,
+                "p95": 3.7124898997717537
+              }
+            },
+            "peak_process_rss_bytes": 197099520,
+            "python_mlx_allocator_bytes": {
+              "active": 30974592,
+              "peak": 53569028,
+              "cache": 18129696
+            },
+            "returned_output_bytes_per_step": 4464772,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        },
+        "compiled": {
+          "master_and_state_on_metal": true,
+          "pointer_identity_checked": true,
+          "checkpoint_arrays_byte_identical_to_cpu": true,
+          "measurement": {
+            "session_creation_ms": 27.141750004375353,
+            "first_step_ms": 47.713167004985735,
+            "timings_ms": {
+              "prepare": {
+                "median": 0.029083501431159675,
+                "p95": 0.03161636122968048
+              },
+              "execute_exchange": {
+                "median": 2.377666489337571,
+                "p95": 2.428208355559036
+              },
+              "import": {
+                "median": 0.04137499490752816,
+                "p95": 0.046562505303882055
+              },
+              "adam_sync": {
+                "median": 0.4404374922160059,
+                "p95": 0.47325834311777726
+              },
+              "step": {
+                "median": 2.888521004933864,
+                "p95": 2.9673878001631238
+              }
+            },
+            "peak_process_rss_bytes": 197083136,
+            "python_mlx_allocator_bytes": {
+              "active": 35709872,
+              "peak": 40174644,
+              "cache": 120
+            },
+            "returned_output_bytes_per_step": 4464772,
+            "scope": "Independent worker; ten warmup/100 measured full updates. Prepare includes CPU feeds or synchronized Metal binding; execute includes provider wrapping/copy-out; import checks shared output pointers; Adam includes synchronization of parameters and moments. References/checkpoints excluded. RSS covers process/runtime. MLX counters cover the Python allocator and its active baseline; provider allocations use a separate runtime.",
+            "threads": {
+              "intra_op": 1,
+              "inter_op": 1
+            },
+            "platform": "macOS-27.0.1-arm64-arm-64bit",
+            "versions": {
+              "numpy": "2.4.6",
+              "onnx": "1.23.2",
+              "onnx-ir": "1.1.0",
+              "onnxscript": "0.7.2",
+              "onnxruntime": "1.31.1",
+              "mlx": "0.32.4",
+              "onnxruntime-ep-mlx": "0.31.0"
+            }
+          }
+        }
+      }
+    }
+  },
+  "implementation_sha256_at_report_export": {
+    "examples/mlx_binding.py": "b47e0850fc6bc65e07e60c283b00fb0b908c23699ee5376f33dd5cfba0ef2f6e",
+    "examples/mlp_device.py": "8485db7efefc8187544092d952a886108c5e4c8087de63f52ec456cd4c6a5c92",
+    "examples/mlp.py": "ea0a966e4a38cd730304bc4cf1061e8bb97b1c78bcae63677973fcf0dee1977b",
+    "examples/mlp_bf16.py": "a34e161a9afd84b08717ed3506f518cf85ae94264311463d5281489b16a161b6",
+    "examples/lora/mlx_exchange.py": "823240d2ff6ee54249239e516dd7aebf37e4ef3a6732c5870f1a67cb04e0333f"
+  }
+}
