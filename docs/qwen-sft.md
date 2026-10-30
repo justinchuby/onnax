@@ -74,8 +74,9 @@ weight data are saved alongside the tokenizer.
 
 On an Apple M1 Max with 32 GiB RAM, 30 CPU FP32 updates reduced validation
 loss from 7.436 to 6.265. A separate process resumed update 15 and reproduced
-all final adapter tensors byte for byte. The resumed update median was 5.81 s,
-with four microbatches per update; AdamW accounted for a median 6.49 ms.
+all final adapter tensors byte for byte. The resumed update median was 5.48 s,
+with four microbatches per update; AdamW accounted for a median 6.40 ms. The isolated process peaked at
+15.51 GiB RSS, including model construction, runtime and recovery.
 
 The original `rtol=1e-4, atol=1e-6` audit found FP32 differences: the initial
 logits had relative L2 error 3.05e-6, and a subset of initial adapter gradient

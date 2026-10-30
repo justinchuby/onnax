@@ -7,27 +7,27 @@
     "batch": 4,
     "sequence": 64,
     "valid_shifted_tokens": 252,
-    "initialization_seconds": 0.006267207994824275,
+    "initialization_seconds": 0.009314875002019107,
     "timings_ms": {
       "forward_and_loss": {
-        "median": 1.3884374930057675,
-        "p95": 1.4877604058710858
+        "median": 1.3580835075117648,
+        "p95": 1.5976440437952988
       },
       "backward": {
-        "median": 1.2498750002123415,
-        "p95": 1.3035544965532608
+        "median": 1.2243124947417527,
+        "p95": 1.3714812419493683
       },
       "adamw": {
-        "median": 0.12556251022033393,
-        "p95": 0.14594165404560044
+        "median": 0.11797949264291674,
+        "p95": 0.17698931042104957
       },
       "step": {
-        "median": 2.762479489319958,
-        "p95": 2.912191041104961
+        "median": 2.6978749956469983,
+        "p95": 3.1801086443010718
       }
     },
-    "effective_tokens_per_second": 91222.39675416924,
-    "peak_rss_bytes": 559267840,
+    "effective_tokens_per_second": 93406.84813291949,
+    "peak_rss_bytes": 562987008,
     "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
     "parameter_bytes": 7168,
     "threads": {
@@ -53,27 +53,27 @@
     "batch": 4,
     "sequence": 64,
     "valid_shifted_tokens": 252,
-    "initialization_seconds": 0.8409934160008561,
+    "initialization_seconds": 0.8372605000040494,
     "timings_ms": {
       "forward_and_loss": {
-        "median": 1.5045000036479905,
-        "p95": 1.71758093056269
+        "median": 1.496270502684638,
+        "p95": 1.5506292183999904
       },
       "backward": {
-        "median": 6.350291499984451,
-        "p95": 7.164747617207468
+        "median": 6.328082992695272,
+        "p95": 6.576031252916437
       },
       "adamw": {
-        "median": 0.1622709969524294,
-        "p95": 0.22377468994818628
+        "median": 0.15549999079667032,
+        "p95": 0.1674270941293798
       },
       "step": {
-        "median": 8.017811996978708,
-        "p95": 9.188137493038084
+        "median": 7.99499949789606,
+        "p95": 8.27040974254487
       }
     },
-    "effective_tokens_per_second": 31430.02106995765,
-    "peak_rss_bytes": 610172928,
+    "effective_tokens_per_second": 31519.701791890737,
+    "peak_rss_bytes": 609615872,
     "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
     "parameter_bytes": 7168,
     "threads": {
@@ -97,7 +97,7 @@
     },
     "logical_saved_activation_bytes": 0,
     "saved_activation_count": 0,
-    "input_view_median_us": 7.499998901039362,
+    "input_view_median_us": 6.749993190169334,
     "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
   },
   {
@@ -108,27 +108,27 @@
     "batch": 4,
     "sequence": 64,
     "valid_shifted_tokens": 252,
-    "initialization_seconds": 1.0190192500012927,
+    "initialization_seconds": 1.0254729579901323,
     "timings_ms": {
       "forward_and_loss": {
-        "median": 1.4789999986533076,
-        "p95": 1.5400910517200828
+        "median": 1.5603960055159405,
+        "p95": 1.7389916960382834
       },
       "backward": {
-        "median": 5.895500013139099,
-        "p95": 5.972089263377711
+        "median": 6.218666996574029,
+        "p95": 6.587885379849467
       },
       "adamw": {
-        "median": 0.15535400598309934,
-        "p95": 0.17309585527982563
+        "median": 0.16902100469451398,
+        "p95": 0.22958959889365357
       },
       "step": {
-        "median": 7.533145500929095,
-        "p95": 7.646931253839284
+        "median": 7.940875002532266,
+        "p95": 8.52780895511387
       }
     },
-    "effective_tokens_per_second": 33452.16151326425,
-    "peak_rss_bytes": 619167744,
+    "effective_tokens_per_second": 31734.53806030692,
+    "peak_rss_bytes": 620462080,
     "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
     "parameter_bytes": 7168,
     "threads": {
@@ -152,7 +152,7 @@
     },
     "logical_saved_activation_bytes": 0,
     "saved_activation_count": 0,
-    "input_view_median_us": 6.541988113895059,
+    "input_view_median_us": 7.45849683880806,
     "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
   },
   {
@@ -163,27 +163,27 @@
     "batch": 4,
     "sequence": 64,
     "valid_shifted_tokens": 252,
-    "initialization_seconds": 0.9904656250146218,
+    "initialization_seconds": 0.9887997080222704,
     "timings_ms": {
       "forward_and_loss": {
-        "median": 1.6847705119289458,
-        "p95": 1.736383060051594
+        "median": 1.6668960015522316,
+        "p95": 1.7080749952583574
       },
       "backward": {
-        "median": 4.9303959822282195,
-        "p95": 5.04898720246274
+        "median": 4.906625006697141,
+        "p95": 4.967702085559722
       },
       "adamw": {
-        "median": 0.15574999270029366,
-        "p95": 0.18086393538396803
+        "median": 0.14793798618484288,
+        "p95": 0.16337913984898475
       },
       "step": {
-        "median": 6.772083492251113,
-        "p95": 6.954251736169681
+        "median": 6.723708502249792,
+        "p95": 6.808741956774611
       }
     },
-    "effective_tokens_per_second": 37211.59083291699,
-    "peak_rss_bytes": 625950720,
+    "effective_tokens_per_second": 37479.31664730547,
+    "peak_rss_bytes": 625704960,
     "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
     "parameter_bytes": 7168,
     "threads": {
@@ -207,7 +207,7 @@
     },
     "logical_saved_activation_bytes": 8663040,
     "saved_activation_count": 133,
-    "input_view_median_us": 6.416506948880851,
+    "input_view_median_us": 5.7910074247047305,
     "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
   },
   {
@@ -218,27 +218,27 @@
     "batch": 4,
     "sequence": 64,
     "valid_shifted_tokens": 252,
-    "initialization_seconds": 1.0487787919992115,
+    "initialization_seconds": 1.1060663749813102,
     "timings_ms": {
       "forward_and_loss": {
-        "median": 1.666250012931414,
-        "p95": 1.8145517678931355
+        "median": 1.6866250080056489,
+        "p95": 1.7473143030656502
       },
       "backward": {
-        "median": 5.688833494787104,
-        "p95": 6.008915201527998
+        "median": 5.67377099650912,
+        "p95": 5.900520805153064
       },
       "adamw": {
-        "median": 0.15639601042494178,
-        "p95": 0.19810624362435192
+        "median": 0.15795850777067244,
+        "p95": 0.1725021022139117
       },
       "step": {
-        "median": 7.515979013987817,
-        "p95": 8.07705029292265
+        "median": 7.510666502639651,
+        "p95": 7.836124685127288
       }
     },
-    "effective_tokens_per_second": 33528.56620953951,
-    "peak_rss_bytes": 620380160,
+    "effective_tokens_per_second": 33552.28193282629,
+    "peak_rss_bytes": 620871680,
     "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
     "parameter_bytes": 7168,
     "threads": {
@@ -262,7 +262,7 @@
     },
     "logical_saved_activation_bytes": 0,
     "saved_activation_count": 0,
-    "input_view_median_us": 6.66698906570673,
+    "input_view_median_us": 6.562506314367056,
     "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
   }
 ]

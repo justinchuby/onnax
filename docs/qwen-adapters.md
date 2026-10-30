@@ -78,11 +78,11 @@ update; one CPU thread, 10 warmups and 100 measured updates:
 
 | Path | Step median (ms) | P95 (ms) | Peak process RSS (MiB) |
 | --- | ---: | ---: | ---: |
-| PyTorch | 2.762 | 2.912 | 533.4 |
-| Raw ONNX | 8.018 | 9.188 | 581.9 |
-| Optimized ONNX | 7.533 | 7.647 | 590.5 |
-| Saved activations | 6.772 | 6.954 | 597.0 |
-| Chunked loss | 7.516 | 8.077 | 591.6 |
+| PyTorch | 2.698 | 3.180 | 536.9 |
+| Raw ONNX | 7.995 | 8.270 | 581.4 |
+| Optimized ONNX | 7.941 | 8.528 | 591.7 |
+| Saved activations | 6.724 | 6.809 | 596.7 |
+| Chunked loss | 7.511 | 7.836 | 592.1 |
 
 PyTorch is fastest in this CPU configuration. Saving activations reduces the
 ONNX step time and retains 8.26 MiB of logical residual arrays. The small

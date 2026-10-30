@@ -558,5 +558,40 @@
     "atol": 1e-06
   },
   "mask": "Boolean padding mask converted to additive zero/negative bias before decomposition",
-  "legacy_report": "qwen3-0.6b-before-mask-fix.json"
+  "legacy_report": "qwen3-0.6b-before-mask-fix.json",
+  "recovery_profile": {
+    "checkpoint_replay": true,
+    "remaining_steps": 15,
+    "warmup": 3,
+    "step_ms": {
+      "median": 5482.211687500239,
+      "p95": 6227.151547544053
+    },
+    "adamw_ms": {
+      "median": 6.402771003195085,
+      "p95": 7.668853504583238
+    },
+    "boundaries_ms": {
+      "forward": 399.76204150298145,
+      "backward": 953.538687506807,
+      "exchange": 0.012708012945950031
+    },
+    "peak_process_rss_bytes": 16652124160,
+    "rss_scope": "Isolated CPU process, construction, runtime and Trainer recovery; no FP64 or PEFT oracle",
+    "threads": {
+      "torch": 4,
+      "ort_intra": 1,
+      "ort_inter": 1
+    },
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "versions": {
+      "torch": "2.15.0",
+      "transformers": "5.22.1",
+      "trl": "0.24.0",
+      "peft": "0.21.2",
+      "onnxruntime": "1.31.1",
+      "onnxscript": "0.7.2",
+      "mobius-onnx": "0.1.0"
+    }
+  }
 }
