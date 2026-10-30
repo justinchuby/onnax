@@ -14,6 +14,10 @@ Requires Python 3.11+:
 python -m pip install onnax==0.1.0
 ```
 
+This README describes `main`. Recent additions, including
+`HoistLinearCoefficientsPass` and GELU/PReLU autodiff, are not included in the
+`v0.1.0` release tag. Install from source below to use these development features.
+
 To develop from source:
 
 ```shell
@@ -89,6 +93,8 @@ and [per-example parameter gradients](https://github.com/justinchuby/onnax/blob/
 Autodiff includes standard GELU and its `approximate="tanh"` variant for ONNX
 opsets 20 through 28, including Hessian-vector products and batched gradients.
 The derivative uses the same approximation as the source operator.
+PReLU supports gradients for both data and its learnable broadcast slope tensor,
+including stored-parameter selections, HVPs, and per-example parameter gradients.
 
 Try the [hosted WebGPU jelly playground](https://www.justinchuby.com/onnax/jelly/): drag a spring sheet
 with matrix-free Newton-CG, powered by exported
