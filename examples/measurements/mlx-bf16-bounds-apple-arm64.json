@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "product_bounds": {
+    "enabled": true,
+    "arithmetic_model": {
+      "unit_roundoff": 5.960464477539063e-08,
+      "absolute_underflow_per_operation": 1.1754943508222875e-38,
+      "operation_budget": "2*k",
+      "final_rounding": "nearest-even BF16",
+      "reference": "exact integer products/sums and rational endpoints"
+    },
+    "all_observed_products_pass": true,
+    "scope": "Local BF16 products at observed inputs, FP32 accumulation model with normal/zero BF16 operands, final nearest-even BF16 rounding. Separate from strict end-to-end/trajectory comparisons."
+  },
+  "models": {
+    "gradient": {
+      "nodes": 51,
+      "bytes": 7224
+    },
+    "validation": {
+      "nodes": 51,
+      "bytes": 7224
+    }
+  },
+  "parameter_bytes": 640,
+  "threads": {
+    "intra_op": 1,
+    "inter_op": 1
+  },
+  "ort_graph_optimizer": "disabled",
+  "cpu_ep_fallback": "disabled",
+  "steps": 200,
+  "comparison_tolerance": {
+    "rtol": 0.0001,
+    "atol": 1e-06
+  },
+  "first_same_parameter_mismatch_step": 68,
+  "strict_numerical_acceptance": false,
+  "initial_loss": 0.018899232149124146,
+  "final_loss": 2.9086913855280727e-06,
+  "initial_validation_loss": 0.016215331852436066,
+  "final_validation_loss": 2.887164328058134e-06,
+  "independent_final_validation_loss": 2.7064741061622044e-06,
+  "executed_providers": [
+    "MLXExecutionProvider"
+  ],
+  "session_creation_ms": 39.698999986285344,
+  "execution_ms": {
+    "median": 1.0918959887931123,
+    "p95": 1.275926451489795
+  },
+  "timing_scope": "Original-graph execution/exchange only, first 10 steps warmup and next 100 measured. References, validation/replay and optional product inspection execute between measurements in this process; Adam, references, export and inspection are excluded from timings. Use isolated benchmarks for provider comparisons.",
+  "versions": {
+    "onnxruntime": "1.31.1",
+    "onnxruntime-ep-mlx": "0.31.0",
+    "onnx": "1.23.2",
+    "onnxscript": "0.7.2",
+    "numpy": "2.4.6"
+  },
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "peak_process_rss_bytes": 173621248,
+  "rss_scope": "Isolated CLI process including imports, graph generation, training/validation/replay sessions, optional product inspection, references, checkpoint replay and allocators.",
+  "frozen_master": {
+    "base.W": "581206af414683b765bffda1328863488417c0403a552106ad35b0b16a7f6c86",
+    "base.C": "c9b93aeddfcebb6653054168f6cd7df9ac5bae859ea549b90d5adbdf93befff3"
+  },
+  "parameters": [
+    {
+      "input": "lora.A",
+      "gradient": "lora.A_cotangent",
+      "shape": [
+        16,
+        4
+      ],
+      "dtype": "float32"
+    },
+    {
+      "input": "lora.B",
+      "gradient": "lora.B_cotangent",
+      "shape": [
+        4,
+        24
+      ],
+      "dtype": "float32"
+    }
+  ],
+  "first_mismatch_diagnostic": {
+    "prediction_mismatch_reproduced": true,
+    "index": [
+      50,
+      7
+    ],
+    "bf16_operands_identical": true,
+    "native_prediction": -0.1865234375,
+    "reference_prediction": -0.1875,
+    "fp64_operand_dot": -0.1870117038488388,
+    "numpy_fp32_operand_dot": -0.18701171875,
+    "rounded_fp64_dot": -0.1865234375,
+    "rounded_numpy_fp32_dot": -0.1875
+  },
+  "recorded_date": "2026-10-30",
+  "hardware": "Apple M1 Max",
+  "product_summary": {
+    "val_2_2": {
+      "products": 200,
+      "inner_dimension": 16,
+      "elements": 1228800,
+      "violations": 0,
+      "ambiguous_elements": 11200,
+      "max_interval_width": 0.0078125
+    },
+    "val_2_3": {
+      "products": 200,
+      "inner_dimension": 16,
+      "elements": 204800,
+      "violations": 0,
+      "ambiguous_elements": 2226,
+      "max_interval_width": 0.015625
+    },
+    "val_2_4": {
+      "products": 200,
+      "inner_dimension": 4,
+      "elements": 1228800,
+      "violations": 0,
+      "ambiguous_elements": 10747,
+      "max_interval_width": 0.015625
+    },
+    "val_2_5": {
+      "products": 200,
+      "inner_dimension": 24,
+      "elements": 409600,
+      "violations": 0,
+      "ambiguous_elements": 6956,
+      "max_interval_width": 0.0078125
+    }
+  },
+  "original_output_mismatch_steps": 0,
+  "first_mismatch_product_checks": {
+    "original_outputs_equal": true,
+    "products": {
+      "val_2_2": {
+        "inner_dimension": 16,
+        "elements": 6144,
+        "violations": 0,
+        "ambiguous_elements": 56,
+        "max_interval_width": 0.0078125
+      },
+      "val_2_3": {
+        "inner_dimension": 16,
+        "elements": 1024,
+        "violations": 0,
+        "ambiguous_elements": 6,
+        "max_interval_width": 0.0009765625
+      },
+      "val_2_4": {
+        "inner_dimension": 4,
+        "elements": 6144,
+        "violations": 0,
+        "ambiguous_elements": 34,
+        "max_interval_width": 0.0078125
+      },
+      "val_2_5": {
+        "inner_dimension": 24,
+        "elements": 2048,
+        "violations": 0,
+        "ambiguous_elements": 45,
+        "max_interval_width": 0.00390625
+      }
+    }
+  }
+}

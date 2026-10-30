@@ -19,6 +19,7 @@ iobinding
 dlpack
 coreml
 mlx-bf16
+bf16-bounds
 bf16
 roadmap
 api
