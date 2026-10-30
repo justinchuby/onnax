@@ -66,3 +66,18 @@ excluded from cross-model comparisons; padding keys and targets remain masked.
 `report.json` records the exact model revision, update count and validation
 loss. Final adapter arrays and a standalone `export/forward.onnx` with external
 weight data are saved alongside the tokenizer.
+
+## Recorded Qwen3-0.6B run
+
+On an Apple M1 Max with 32 GiB RAM, 30 CPU FP32 updates reduced validation
+loss from 7.436 to 6.265. A separate process resumed update 15 and reproduced
+all final adapter tensors byte for byte. The resumed update median was 5.81 s,
+with four microbatches per update; AdamW accounted for a median 6.49 ms.
+
+The original `rtol=1e-4, atol=1e-6` audit found FP32 differences: the initial
+logits had relative L2 error 3.05e-6, and a subset of initial adapter gradient
+elements exceeded the elementwise threshold. At the final state all adapter
+gradients passed that threshold; some near-zero logits still exceeded it.
+The checked-in `examples/huggingface/reports/qwen3-0.6b.json` retains those
+failures, per-parameter counts and the recovery timing scope. FP64 diagnosis
+separates arithmetic rounding from the graph and derivative semantics.

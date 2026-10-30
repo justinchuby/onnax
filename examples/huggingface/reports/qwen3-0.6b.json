@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "hardware": {
+    "machine": "Apple M1 Max",
+    "memory_bytes": 34359738368
+  },
+  "training": {
+    "model": "Qwen/Qwen3-0.6B",
+    "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "steps": 30,
+    "validation_loss": [
+      7.435995101928711,
+      6.264889240264893
+    ]
+  },
+  "fp32_audits": [
+    {
+      "strict_logit_check_passed": false,
+      "logit_violations": 25026,
+      "logits_relative_l2": 3.0528390198014677e-06,
+      "logits_max_abs": 7.104873657226562e-05,
+      "gradients_max_abs": 7.276423275470734e-06,
+      "strict_gradient_check_passed": false,
+      "gradient_failures": {
+        "model.layers.2.self_attn.v_proj.lora.B": {
+          "violations": 1,
+          "max_abs": 1.232256181538105e-06
+        },
+        "model.layers.5.self_attn.q_proj.lora.B": {
+          "violations": 3,
+          "max_abs": 1.6370322555303574e-06
+        },
+        "model.layers.6.self_attn.q_proj.lora.B": {
+          "violations": 4,
+          "max_abs": 2.7674250304698944e-06
+        },
+        "model.layers.9.self_attn.v_proj.lora.B": {
+          "violations": 10,
+          "max_abs": 2.2860622266307473e-06
+        },
+        "model.layers.10.self_attn.q_proj.lora.B": {
+          "violations": 2,
+          "max_abs": 1.708976924419403e-06
+        },
+        "model.layers.11.self_attn.q_proj.lora.B": {
+          "violations": 5,
+          "max_abs": 3.871507942676544e-06
+        },
+        "model.layers.15.self_attn.v_proj.lora.B": {
+          "violations": 5,
+          "max_abs": 2.0673032850027084e-06
+        },
+        "model.layers.16.self_attn.q_proj.lora.B": {
+          "violations": 2,
+          "max_abs": 3.1925737857818604e-06
+        },
+        "model.layers.16.self_attn.v_proj.lora.B": {
+          "violations": 1,
+          "max_abs": 1.5455298125743866e-06
+        },
+        "model.layers.17.self_attn.q_proj.lora.B": {
+          "violations": 10,
+          "max_abs": 3.4067779779434204e-06
+        },
+        "model.layers.18.self_attn.q_proj.lora.B": {
+          "violations": 4,
+          "max_abs": 2.062879502773285e-06
+        },
+        "model.layers.18.self_attn.v_proj.lora.B": {
+          "violations": 2,
+          "max_abs": 1.298496499657631e-06
+        },
+        "model.layers.19.self_attn.q_proj.lora.B": {
+          "violations": 1,
+          "max_abs": 2.0544975996017456e-06
+        },
+        "model.layers.19.self_attn.v_proj.lora.B": {
+          "violations": 6,
+          "max_abs": 1.7890706658363342e-06
+        },
+        "model.layers.20.self_attn.q_proj.lora.B": {
+          "violations": 2,
+          "max_abs": 3.7972349673509598e-06
+        },
+        "model.layers.21.self_attn.v_proj.lora.B": {
+          "violations": 3,
+          "max_abs": 1.5525147318840027e-06
+        },
+        "model.layers.22.self_attn.q_proj.lora.B": {
+          "violations": 2,
+          "max_abs": 2.418295480310917e-06
+        },
+        "model.layers.22.self_attn.v_proj.lora.B": {
+          "violations": 1,
+          "max_abs": 1.4808028936386108e-06
+        },
+        "model.layers.23.self_attn.q_proj.lora.B": {
+          "violations": 6,
+          "max_abs": 4.845758667215705e-06
+        },
+        "model.layers.24.self_attn.v_proj.lora.B": {
+          "violations": 4,
+          "max_abs": 1.2408709153532982e-06
+        },
+        "model.layers.25.self_attn.q_proj.lora.B": {
+          "violations": 4,
+          "max_abs": 3.180466592311859e-06
+        },
+        "model.layers.25.self_attn.v_proj.lora.B": {
+          "violations": 1,
+          "max_abs": 1.6794074326753616e-06
+        },
+        "model.layers.26.self_attn.q_proj.lora.B": {
+          "violations": 15,
+          "max_abs": 7.276423275470734e-06
+        },
+        "model.layers.26.self_attn.v_proj.lora.B": {
+          "violations": 30,
+          "max_abs": 3.2461248338222504e-06
+        },
+        "model.layers.27.self_attn.v_proj.lora.B": {
+          "violations": 1,
+          "max_abs": 1.3008248060941696e-06
+        }
+      },
+      "loss": 3.6422934532165527
+    },
+    {
+      "strict_logit_check_passed": false,
+      "logit_violations": 24425,
+      "logits_relative_l2": 3.157583478241577e-06,
+      "logits_max_abs": 8.392333984375e-05,
+      "gradients_max_abs": 1.8142163753509521e-06,
+      "strict_gradient_check_passed": true,
+      "gradient_failures": {},
+      "loss": 0.820919394493103
+    }
+  ],
+  "recovery_profile": {
+    "checkpoint_replay": true,
+    "remaining_steps": 15,
+    "warmup": 3,
+    "step_ms": {
+      "median": 5807.691853988217,
+      "p95": 8842.0916588715
+    },
+    "adamw_ms": {
+      "median": 6.488312516012229,
+      "p95": 7.478685204114298
+    },
+    "boundaries_ms": {
+      "forward": 389.9538124969695,
+      "backward": 1057.1071874874178,
+      "exchange": 0.012874996173195541
+    }
+  },
+  "precision_tolerance": {
+    "rtol": 0.0001,
+    "atol": 1e-06
+  },
+  "profile_scope": "New diagnostic process restoring update 15; 15 remaining updates, first 3 excluded; 4 microbatches per update, variable lengths capped at 64. Torch threads 4, ORT intra/inter 1; optimizer disabled. Timings include Python/Trainer and CPU boundaries."
+}
