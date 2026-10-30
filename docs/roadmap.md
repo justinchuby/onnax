@@ -34,10 +34,12 @@ microbatch accumulation, a defined BF16/master-state policy, runtime capability 
 and isolated full/microbatch RSS/time measurements. The [BF16 LoRA experiment](bf16.md)
 now executes explicit BF16 MatMul functions on CPU ReferenceEvaluator, with declared
 FP32 straight-through derivatives, an independent 200-update reference, FP32 accuracy
-baseline and master-state reload. Next implement and measure runtime bindings, then
-validate native BF16 execution and broaden precision transforms. The recorded CPU ORT
-provider lacks BF16 MatMul. Device memory/transfer measurements will guide DLPack,
-recomputation and structured-operator work.
+baseline and master-state reload. The [CPU binding experiment](iobinding.md) adds
+shared output buffers, input ownership/rebinding checks, complete training parity
+and a measured comparison with ordinary execution. Next validate device-native
+bindings and BF16 execution, then broaden precision transforms. The recorded CPU
+ORT provider lacks BF16 MatMul. Device memory/transfer measurements will guide
+DLPack, recomputation and structured-operator work.
 
 ## Engineering boundaries
 
