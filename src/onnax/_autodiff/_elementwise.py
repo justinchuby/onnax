@@ -29,6 +29,7 @@ OPS = frozenset(
         "Mul",
         "Neg",
         "Pow",
+        "PRelu",
         "Reciprocal",
         "Relu",
         "Selu",
@@ -154,6 +155,14 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
                 p = ctx.op("Mul", b, ctx.op("Pow", x, ctx.op("Sub", safe_b, one)))
             else:
                 p = ctx.op("Mul", y, ctx.op("Log", x))
+        elif op == "PRelu":
+            zero = ctx.scalar(x, 0)
+            positive = ctx.op("Greater", x, zero)
+            p = (
+                ctx.op("Where", positive, one, _input(node, 1))
+                if index == 0
+                else ctx.op("Where", positive, zero, x)
+            )
         elif op == "Neg":
             p = ctx.scalar(x, -1)
         elif op == "Abs":
@@ -239,6 +248,7 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
         "Mul",
         "Neg",
         "Pow",
+        "PRelu",
         "Reciprocal",
         "Relu",
         "Selu",
@@ -286,6 +296,7 @@ def vjp(
         "Mul",
         "Neg",
         "Pow",
+        "PRelu",
         "Reciprocal",
         "Relu",
         "Selu",
@@ -303,9 +314,11 @@ def vjp(
         result = {}
         for i in indices:
             contribution = ctx.op("Mul", g, partials[i])
+            # PRelu only broadcasts slope to data, so its data pullback already
+            # has the exact input shape, even when dimension sizes are unknown.
             result[i] = (
                 ctx.unbroadcast(contribution, _input(node, i), broadcasted=node.outputs[0])
-                if op in _BINARY
+                if op in _BINARY or (op == "PRelu" and i == 1)
                 else contribution
             )
         return result

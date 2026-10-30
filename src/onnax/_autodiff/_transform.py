@@ -221,10 +221,12 @@ class JvpPass(ir.passes.FunctionalPass):
           interfaces are valid ONNX; all dimension sizes may be symbolic.
         * Elementwise: Identity, Add, Sub, Mul, Div, Pow, Neg, Abs, Exp, Log,
           Sqrt, Reciprocal, Sin, Cos, Tan, Sinh, Cosh, Tanh, Sigmoid, Relu,
-          LeakyRelu, Elu, Selu, Softplus, Softsign, Erf. Elu and Selu use the
+          LeakyRelu, PRelu, Elu, Selu, Softplus, Softsign, Erf. Elu and Selu use the
           nonpositive branch's slope at zero (alpha and alpha * gamma).
           Gelu is supported from opset 20 with approximate="none" (default)
           or approximate="tanh", including forward-over-reverse products.
+          PRelu differentiates both data and its unidirectionally broadcast
+          slope tensor, including selected stored parameters.
         * Linear algebra: MatMul (vectors, matrices, broadcast batches), Gemm
           (including transposes and broadcast bias).
         * Reductions: ReduceSum and ReduceMean, including negative/runtime axes,
@@ -285,7 +287,8 @@ class JvpPass(ir.passes.FunctionalPass):
           Inactive integral Pow exponents also support negative bases and, for
           nonnegative exponents, zero bases (including the ONNX ``0**0 == 1``).
           No domain checks are inserted. At zero, Abs and Relu use derivative
-          zero and LeakyRelu uses alpha. Where predicates are fixed, including
+          zero and LeakyRelu uses alpha. PRelu uses its slope tensor for the data
+          partial and zero for the slope partial. Where predicates are fixed, including
           at branch boundaries; no derivative of a discontinuous predicate is
           claimed. Floating Cast uses the usual real-valued identity derivative,
           not the derivative of rounding/overflow in finite-precision arithmetic.
