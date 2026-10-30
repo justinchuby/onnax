@@ -43,3 +43,29 @@ def test_bridge_upstream_accumulation_and_snapshot():
 def test_trainer_complete_training_and_fresh_process_resume(tmp_path):
     report = run(str(tmp_path))
     assert report["checkpoint_replay"]
+
+
+def test_saved_prediction_mutation_keeps_original_derivative():
+    import onnx_ir as ir
+
+    x = ir.val("features", dtype=ir.DataType.FLOAT, shape=[2, 3])
+    p = ir.val("parameter", dtype=ir.DataType.FLOAT, shape=[3, 2])
+    tape = ir.tape.Tape()
+    value = tape.op("Tanh", [tape.op("MatMul", [x, p])])
+    value.name, value.dtype, value.shape = "prediction", ir.DataType.FLOAT, ir.Shape([2, 2])
+    graph = ir.Model(
+        ir.Graph([x, p], [value], nodes=tape.nodes, opset_imports={"": 18}), ir_version=10
+    )
+    weights = np.full((3, 2), 0.1, np.float32)
+    inputs = np.arange(6, dtype=np.float32).reshape(2, 3)
+    model = OnnxModule(graph, {"parameter": weights}, save_activations=True)
+    prediction = model(features=torch.tensor(inputs))
+    prediction.add_(0.5)
+    prediction.sum().backward()
+    expected = inputs.T @ (1 - np.tanh(inputs @ weights) ** 2)
+    np.testing.assert_allclose(model.adapters[0].grad, expected, rtol=1e-4, atol=1e-6)
+
+
+def test_nf4_trainer_recovery(tmp_path):
+    result = run(str(tmp_path), nf4=True)
+    assert result["checkpoint_replay"]

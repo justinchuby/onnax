@@ -52,10 +52,19 @@ class _OnnxFunction(torch.autograd.Function):
         ctx.runtime = runtime
         ctx.feeds = {k: v.copy() for k, v in feeds.items()}
         ctx.save_for_backward(*params)
-        result = runtime.forward_session.run(
-            [runtime.output], {**feeds, **runtime.parameter_feeds(params)}
-        )[0]
-        return torch.from_numpy(result)
+        names = list(dict.fromkeys([runtime.output, *runtime.residual_names]))
+        values = runtime.forward_session.run(
+            names, {**feeds, **runtime.parameter_feeds(params)}
+        )
+        result = dict(zip(names, values, strict=True))
+        ctx.residuals = {
+            name: result[name].copy()
+            if np.shares_memory(result[name], result[runtime.output])
+            else result[name]
+            for name in runtime.residual_names
+        }
+        runtime.last_residual_bytes = sum(value.nbytes for value in ctx.residuals.values())
+        return torch.from_numpy(result[runtime.output])
 
     @staticmethod
     @once_differentiable
@@ -63,6 +72,7 @@ class _OnnxFunction(torch.autograd.Function):
         runtime = ctx.runtime
         # Saved tensors also detect optimizer updates between forward and backward.
         feeds = {**ctx.feeds, **runtime.parameter_feeds(ctx.saved_tensors)}
+        feeds.update(ctx.residuals)
         feeds[runtime.seed] = upstream.detach().contiguous().numpy()
         start = time.perf_counter()
         values = runtime.backward_session.run(runtime.gradients, feeds)
@@ -73,7 +83,7 @@ class _OnnxFunction(torch.autograd.Function):
 class OnnxModule(torch.nn.Module):
     """Own trainable CPU FP32 parameters while ONNX computes values and VJPs."""
 
-    def __init__(self, model, params, *, output=None):
+    def __init__(self, model, params, *, output=None, optimize=True, save_activations=False):
         super().__init__()
         self.model = model
         self.names = tuple(params)
@@ -98,10 +108,26 @@ class OnnxModule(torch.nn.Module):
         self.seed = vjp.graph.inputs[-1].name
         self.gradients = [v.name for v in vjp.graph.outputs[len(model.graph.outputs) :]]
         self.vjp_model = vjp
-        self.optimized_vjp = optimize_training_graph(vjp)
+        self.residual_names = ()
+        forward_model = model
+        if save_activations:
+            from examples.huggingface.residuals import split_vjp
+
+            forward_model, vjp, self.residual_names = split_vjp(model, vjp)
+        self.execution_vjp = vjp
+        if optimize:
+            executable = vjp.clone()
+            outputs = {v.name: v for v in executable.graph.outputs}
+            executable.graph.outputs.clear()
+            executable.graph.outputs.extend(outputs[name] for name in self.gradients)
+            self.optimized_vjp = optimize_training_graph(executable)
+        else:
+            self.optimized_vjp = vjp
         self.runtime_directory = tempfile.TemporaryDirectory(prefix="onnax-runtime-")
 
-        self.forward_session = graph_session(model, self.runtime_directory.name, "forward")
+        self.forward_session = graph_session(
+            forward_model, self.runtime_directory.name, "forward"
+        )
         self.backward_session = graph_session(
             self.optimized_vjp, self.runtime_directory.name, "backward"
         )
@@ -141,11 +167,11 @@ class OnnxModule(torch.nn.Module):
             for n, p in zip(self.names, self.adapters, strict=True)
         }
 
-    def export(self, directory):
+    def export(self, directory, *, forward_model=None):
         os.makedirs(directory, exist_ok=True)
         if frozen_hashes(self.model) != self.frozen:
             raise ValueError("Frozen ONNX weights changed")
-        result = self.model.clone()
+        result = (self.model if forward_model is None else forward_model).clone()
         values = {v.name: v for v in result.graph.inputs}
         for name, array in self.arrays().items():
             value = values[name]

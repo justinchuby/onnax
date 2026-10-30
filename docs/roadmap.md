@@ -56,10 +56,14 @@ Delivered experiments cover four areas:
 The [activation-lifetime experiment](activation-liveness.md) now reports tensor
 last uses and peak live sets, validates a preactivation-recomputation candidate
 through 150 updates and recovery, and compares repeated native allocations.
-The next priority is QLoRA: the [NF4 LoRA reference](nf4-lora.md) validates packed
-frozen weights, input gradients and adapter training. Next, connect a fused NF4
-runtime kernel and a PyTorch training bridge for external Trainer integration.
-Deeper activation-chain checkpointing follows this integration.
+[Trainer integration](huggingface.md), [Mobius Qwen3 SFT](qwen-sft.md), and
+[PEFT/chunked-loss experiments](qwen-adapters.md) now connect external training
+tools to exported ONNX derivatives. NF4 also runs through the Trainer bridge.
+
+Next, qualify the real model's FP32 comparisons against the FP64 oracle with
+layer-level error analysis, then connect a fused NF4 runtime kernel. Use the
+measured save/recompute boundary and output-head memory curve to guide deeper
+activation checkpointing and device execution.
 
 ## Engineering boundaries
 

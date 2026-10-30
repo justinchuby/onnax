@@ -65,9 +65,11 @@ def build_base(reference):
 def reference_model(real=False):
     torch.manual_seed(20261029)
     if real:
-        return Qwen3ForCausalLM.from_pretrained(
+        result = Qwen3ForCausalLM.from_pretrained(
             MODEL_ID, revision=REVISION, dtype=torch.float32, attn_implementation="eager"
         ).eval()
+        result.config._commit_hash = REVISION
+        return result
     config = tiny_config()
     config._attn_implementation = "eager"
     return Qwen3ForCausalLM(config).eval()
@@ -77,6 +79,24 @@ def decompose(model):
     """Lower the Qwen3 FP32 normalization, RoPE and attention operations."""
     result = model.clone()
     ShapeInferencePass()(result)
+    # The pinned Mobius decomposition accepts additive masks; ONNX Attention
+    # also accepts bool masks, where False must exclude the key entirely.
+    for index, node in enumerate(list(result.graph)):
+        if node.domain or node.op_type != "Attention" or len(node.inputs) < 4:
+            continue
+        mask = node.inputs[3]
+        if mask is None or mask.dtype != ir.DataType.BOOL:
+            continue
+        tape = ir.tape.Tape()
+        zero = tape.op("Constant", [], {"value": ir.tensor(np.float32(0))})
+        negative = tape.op("Constant", [], {"value": ir.tensor(np.float32(-3e38))})
+        bias = tape.op("Where", [mask, zero, negative])
+        bias.type, bias.shape = ir.TensorType(ir.DataType.FLOAT), mask.shape
+        for i, operation in enumerate(tape.nodes):
+            operation.name = f"training.mask.{index}.{i}"
+            operation.outputs[0].name = f"training.mask.{index}.{i}"
+        result.graph.insert_before(node, tape.nodes)
+        node.replace_input_with(3, bias)
     decompose_attention_pass()(result)
     for node_index, node in enumerate(list(result.graph)):
         if node.domain or node.op_type not in ("RMSNormalization", "RotaryEmbedding", "Swish"):
@@ -160,7 +180,22 @@ def decompose(model):
 
 
 def inject(model, *, rank=4, alpha=1.0):
+    if (
+        isinstance(rank, bool)
+        or not isinstance(rank, int)
+        or rank < 1
+        or not np.isfinite(alpha)
+    ):
+        raise ValueError("Expected a positive integer rank and finite alpha")
     result = model.clone()
+    existing = {
+        v.name
+        for v in (
+            *result.graph.inputs,
+            *result.graph.initializers.values(),
+            *(v for n in result.graph for v in n.outputs),
+        )
+    }
     params, mapping = {}, []
     for node in list(result.graph):
         if node.domain or node.op_type != "MatMul":
@@ -179,6 +214,8 @@ def inject(model, *, rank=4, alpha=1.0):
             continue
         if not module.endswith((".self_attn.q_proj", ".self_attn.v_proj")):
             continue
+        if {module + ".lora.A", module + ".lora.B"}.intersection(existing):
+            raise ValueError(f"Adapter input name collision: {module}")
         a = ir.val(module + ".lora.A", dtype=ir.DataType.FLOAT, shape=[in_width, rank])
         b = ir.val(module + ".lora.B", dtype=ir.DataType.FLOAT, shape=[rank, out_width])
         result.graph.inputs.extend([a, b])
