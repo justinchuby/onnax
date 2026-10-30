@@ -74,10 +74,13 @@ class MlxDLPack:
             if (
                 prediction is None
                 or prediction.type != "tensor(float)"
-                or prediction.shape != [self.batch, 8]
+                or prediction.shape != [self.batch, self.shapes["target"][1]]
             ):
                 raise ValueError("Expected FP32 prediction output with the fixed batch")
-            self.output_shapes = {self.prediction_name: (self.batch, 8), **self.output_shapes}
+            self.output_shapes = {
+                self.prediction_name: (self.batch, self.shapes["target"][1]),
+                **self.output_shapes,
+            }
         self.loss_name = interface["loss"]
         self.gradient_names = {
             row["input"]: row["gradient"] for row in interface["parameters"]

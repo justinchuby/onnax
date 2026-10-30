@@ -20,20 +20,22 @@ from examples.lora.adam import adam_step
 from examples.lora.mlx_exchange import MlxDLPack, synchronize
 from examples.lora.mlx_runtime import session
 from examples.lora.mlx_training import gradient_model, host
-from examples.lora.train import problem
+from examples.lora.workloads import PROFILES, optimizer_epsilon, problem_for
 
 
-def benchmark(mode, *, batch=256, compiled_adam=False):
+def benchmark(mode, *, batch=None, compiled_adam=False, profile="tiny"):
     import mlx.core as mx
 
     if mode not in {"dlpack", "numpy_view", "numpy_adam"}:
         raise ValueError("Expected dlpack, numpy_view or numpy_adam mode")
     if compiled_adam and mode == "numpy_adam":
         raise ValueError("Compiled Adam requires an MLX GPU update mode")
-    w, c, x, y, _, _, initial = problem()
+    w, c, x, y, _, _, initial = problem_for(profile)
+    batch = len(x) if batch is None else batch
+    epsilon = optimizer_epsilon(profile)
     repeats = (batch + len(x) - 1) // len(x)
     x, y = np.tile(x, (repeats, 1))[:batch], np.tile(y, (repeats, 1))[:batch]
-    graph, interface = gradient_model(w, c, batch=batch)
+    graph, interface = gradient_model(w, c, batch=batch, rank=initial["lora.A"].shape[1])
     started = time.perf_counter()
     executor = session(graph)
     creation = time.perf_counter() - started
@@ -57,9 +59,9 @@ def benchmark(mode, *, batch=256, compiled_adam=False):
         if compiled_adam:
             from examples.lora.mlx_adam import CompiledAdam
 
-            update = CompiledAdam()
+            update = CompiledAdam(eps=epsilon)
         else:
-            update = partial(adam_step, xp=np if cpu_adam else mx)
+            update = partial(adam_step, xp=np if cpu_adam else mx, eps=epsilon)
         first_update_ms = None
         initial_active = mx.get_active_memory()
         mx.reset_peak_memory()
@@ -132,6 +134,14 @@ def benchmark(mode, *, batch=256, compiled_adam=False):
     rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return {
         "mode": mode,
+        "profile": profile,
+        "optimizer_epsilon": epsilon,
+        "dimensions": {
+            "input": w.shape[0],
+            "hidden": w.shape[1],
+            "output": c.shape[1],
+            "rank": initial["lora.A"].shape[1],
+        },
         "compiled_adam": compiled_adam,
         "adam_first_update_ms": first_update_ms,
         "fetches": output_names,
@@ -177,10 +187,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--mode", choices=["dlpack", "numpy_view", "numpy_adam"], required=True
     )
-    parser.add_argument("--batch", type=int, default=256)
+    parser.add_argument("--batch", type=int)
+    parser.add_argument("--profile", choices=list(PROFILES), default="tiny")
     parser.add_argument("--output", required=True)
     parser.add_argument("--compiled-adam", action="store_true")
     args = parser.parse_args()
-    result = benchmark(args.mode, batch=args.batch, compiled_adam=args.compiled_adam)
+    result = benchmark(
+        args.mode, batch=args.batch, compiled_adam=args.compiled_adam, profile=args.profile
+    )
     with open(args.output, "w") as stream:
         json.dump(result, stream, indent=2)

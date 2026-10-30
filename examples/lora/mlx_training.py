@@ -20,19 +20,29 @@ from examples.lora.adam import AdamState, adam_step
 from examples.lora.mlx_exchange import MlxDLPack, synchronize
 from examples.lora.mlx_runtime import session
 from examples.lora.model import PARAMETERS, adapt, base_model, digest, with_loss
-from examples.lora.train import close, problem, reference, reference_update
+from examples.lora.train import close, reference, reference_update
+from examples.lora.validation import discrepancy
+from examples.lora.workloads import PROFILES, optimizer_epsilon, problem_for
 
 
-def gradient_model(w, c, *, batch, include_prediction=False):
+def gradient_model(w, c, *, batch, include_prediction=False, rank=4):
+    return gradient_from_base(
+        base_model(w, c), batch=batch, include_prediction=include_prediction, rank=rank
+    )
+
+
+def gradient_from_base(base, *, batch, include_prediction=False, rank=4):
     if isinstance(batch, bool) or not isinstance(batch, int) or batch < 1:
         raise ValueError("batch must be a positive integer")
-    source = with_loss(adapt(base_model(w, c)))
+    source = with_loss(adapt(base, rank=rank))
+    width = source.graph.initializers["base.W"].shape[0]
+    outputs = source.graph.initializers["base.C"].shape[1]
     for value in source.graph.inputs:
         if value.name == "features":
-            value.shape = ir.Shape([batch, 16])
+            value.shape = ir.Shape([batch, width])
         elif value.name == "target":
-            value.shape = ir.Shape([batch, 8])
-    source.graph.outputs[0].shape = ir.Shape([batch, 8])
+            value.shape = ir.Shape([batch, outputs])
+    source.graph.outputs[0].shape = ir.Shape([batch, outputs])
     frozen = {name: digest(source.graph.initializers[name]) for name in ("base.W", "base.C")}
     if not include_prediction:
         source.graph.outputs.remove(source.graph.outputs[0])
@@ -40,6 +50,7 @@ def gradient_model(w, c, *, batch, include_prediction=False):
     assert frozen == {name: digest(graph.graph.initializers[name]) for name in frozen}
     interface = {
         "version": 1,
+        "data_shapes": {"features": [None, width], "target": [None, outputs]},
         "loss": "loss",
         "prediction": "prediction" if include_prediction else None,
         "loss_reduction": "mean over batch and output coordinates",
@@ -67,16 +78,22 @@ def host(value):
     return np.asarray(value, copy=False)
 
 
-def run(output_dir, *, compiled_adam=False):
+def run(output_dir, *, compiled_adam=False, profile="tiny"):
     import mlx.core as mx
 
     os.makedirs(output_dir, exist_ok=True)
-    w, c, x, y, vx, vy, initial = problem()
-    graph, interface = gradient_model(w, c, batch=256)
-    validation_graph, validation_interface = gradient_model(
-        w, c, batch=128, include_prediction=True
+    w, c, x, y, vx, vy, initial = problem_for(profile)
+    rank = initial[PARAMETERS[0]].shape[1]
+    epsilon = optimizer_epsilon(profile)
+    base_path = os.path.join(output_dir, "base.onnx")
+    ir.save(base_model(w, c), base_path)
+    loaded_base = ir.load(base_path)
+    base_before = ir.to_proto(loaded_base).SerializeToString()
+    graph, interface = gradient_from_base(loaded_base, batch=len(x), rank=rank)
+    validation_graph, validation_interface = gradient_from_base(
+        loaded_base, batch=len(vx), include_prediction=True, rank=rank
     )
-    forward_graph = adapt(base_model(w, c))
+    forward_graph = adapt(loaded_base, rank=rank)
     for name, model in (
         ("forward", forward_graph),
         ("gradient", graph),
@@ -96,9 +113,12 @@ def run(output_dir, *, compiled_adam=False):
     if compiled_adam:
         from examples.lora.mlx_adam import CompiledAdam
 
-        update = CompiledAdam()
+        update = CompiledAdam(eps=epsilon)
     else:
-        update = partial(adam_step, xp=mx)
+        update = partial(adam_step, xp=mx, eps=epsilon)
+    comparison_errors = {}
+    trajectory_errors = {}
+    first_failure = {}
     history = []
     reference_params = {name: value.copy() for name, value in initial.items()}
     state = reference_state = None
@@ -116,6 +136,32 @@ def run(output_dir, *, compiled_adam=False):
                 },
             )[0]
 
+        def compare(name, actual, expected, *, step, atol=1e-6):
+            metric = discrepancy(actual, expected, atol=atol)
+            summary = comparison_errors.setdefault(
+                name, {"comparisons": 0, "max_abs": 0.0, "max_mismatched": 0}
+            )
+            summary["comparisons"] += 1
+            summary["max_abs"] = max(summary["max_abs"], metric["max_abs"])
+            summary["max_mismatched"] = max(summary["max_mismatched"], metric["mismatched"])
+            if not metric["mismatched"]:
+                return
+            if profile != "large":
+                np.testing.assert_allclose(actual, expected, rtol=1e-4, atol=atol)
+            row = trajectory_errors.setdefault(
+                name, {"first_step": step, "steps": 0, "max_abs": 0.0, "max_mismatched": 0}
+            )
+            row["steps"] += 1
+            row["max_abs"] = max(row["max_abs"], metric["max_abs"])
+            row["max_mismatched"] = max(row["max_mismatched"], metric["mismatched"])
+            if not first_failure:
+                first_failure.update({"comparison": name, "step": step, **metric})
+                snapshot = {"native." + key: host(value) for key, value in params.items()}
+                snapshot.update(
+                    {"reference." + key: value for key, value in reference_params.items()}
+                )
+                np.savez(os.path.join(output_dir, "first-mismatch.npz"), **snapshot)
+
         validation.bind(validation_x, validation_y, params)
         initial_validation = float(host(validation.run()[1]))
         for step in range(200):
@@ -123,10 +169,29 @@ def run(output_dir, *, compiled_adam=False):
             _, loss, grads = bound.run()
             prediction = predict(params)
             expected = reference(x, y, reference_params, w, c)
-            close(prediction, expected[0])
-            close(host(loss), expected[1])
+            same_point = reference(
+                x, y, {name: host(value) for name, value in params.items()}, w, c
+            )
+            compare("same_parameter.prediction", prediction, same_point[0], step=step)
+            compare("same_parameter.loss", host(loss), same_point[1], step=step)
             for name in PARAMETERS:
-                close(host(grads[name]), expected[2][name])
+                compare(
+                    "same_parameter.gradient." + name,
+                    host(grads[name]),
+                    same_point[2][name],
+                    step=step,
+                    atol=1e-6 if profile == "tiny" else 1e-9,
+                )
+            compare("prediction", prediction, expected[0], step=step)
+            compare("loss", host(loss), expected[1], step=step)
+            for name in PARAMETERS:
+                compare(
+                    "gradient." + name,
+                    host(grads[name]),
+                    expected[2][name],
+                    step=step,
+                    atol=1e-6 if profile == "tiny" else 1e-9,
+                )
             if step == 0:
                 assert np.count_nonzero(host(grads[PARAMETERS[0]])) == 0
                 assert np.count_nonzero(host(grads[PARAMETERS[1]])) > 0
@@ -136,10 +201,15 @@ def run(output_dir, *, compiled_adam=False):
             params, state = update(params, grads, state)
             synchronize(params, state)
             reference_params, reference_state = reference_update(
-                reference_params, expected[2], reference_state
+                reference_params, expected[2], reference_state, eps=epsilon
             )
             for name in PARAMETERS:
-                close(host(params[name]), reference_params[name])
+                compare(
+                    "parameter." + name,
+                    host(params[name]),
+                    reference_params[name],
+                    step=step + 1,
+                )
                 assert params[name].__dlpack_device__() == (8, 0)
                 assert state.first[name].__dlpack_device__() == (8, 0)
                 assert state.second[name].__dlpack_device__() == (8, 0)
@@ -150,10 +220,23 @@ def run(output_dir, *, compiled_adam=False):
         validation_result = validation.run()
         final_validation = float(host(validation_result[1]))
         expected_validation = reference(vx, vy, reference_params, w, c)
-        close(host(validation_result[0]), expected_validation[0])
-        close(host(validation_result[1]), expected_validation[1])
+        compare(
+            "validation.prediction",
+            host(validation_result[0]),
+            expected_validation[0],
+            step=200,
+        )
+        compare(
+            "validation.loss", host(validation_result[1]), expected_validation[1], step=200
+        )
         for name in PARAMETERS:
-            close(host(validation_result[2][name]), expected_validation[2][name])
+            compare(
+                "validation.gradient." + name,
+                host(validation_result[2][name]),
+                expected_validation[2][name],
+                step=200,
+                atol=1e-6 if profile == "tiny" else 1e-9,
+            )
         assert float(host(final[1])) < history[0] * 0.5
         assert final_validation < initial_validation * 0.5
         saved = {name: host(value) for name, value in params.items()}
@@ -178,21 +261,47 @@ def run(output_dir, *, compiled_adam=False):
         replay.bind(features, target, restored)
         replayed = replay.run()
         close(final_prediction, predict(restored))
-        for batch in (1, 7, 128):
+        reload_batches = sorted({1, 7, len(vx), len(x)})
+        for batch in reload_batches:
             close(
                 predict(restored, mx.array(x[:batch])),
-                reference(x[:batch], y[:batch], reference_params, w, c)[0],
+                reference(
+                    x[:batch], y[:batch], {name: saved[name] for name in PARAMETERS}, w, c
+                )[0],
             )
         close(host(final[1]), host(replayed[1]))
         for name in PARAMETERS:
             close(host(final[2][name]), host(replayed[2][name]))
         updated, _ = update(params, final[2], state)
-        restored_update = CompiledAdam() if compiled_adam else update
+        restored_update = CompiledAdam(eps=epsilon) if compiled_adam else update
         restored_updated, _ = restored_update(restored, replayed[2], restored_state)
         synchronize(updated)
         synchronize(restored_updated)
         for name in PARAMETERS:
             close(host(updated[name]), host(restored_updated[name]))
+        if first_failure:
+            with np.load(os.path.join(output_dir, "first-mismatch.npz")) as snapshot:
+                native_point = {
+                    name: mx.array(snapshot["native." + name]) for name in PARAMETERS
+                }
+                native_cpu = {name: snapshot["native." + name] for name in PARAMETERS}
+                reference_point = {name: snapshot["reference." + name] for name in PARAMETERS}
+            observed = predict(native_point)
+            same = reference(x, y, native_cpu, w, c)[0]
+            separate = reference(x, y, reference_point, w, c)[0]
+            precise = reference(
+                x.astype(np.float64),
+                y.astype(np.float64),
+                {name: value.astype(np.float64) for name, value in native_cpu.items()},
+                w.astype(np.float64),
+                c.astype(np.float64),
+            )[0]
+            first_failure["diagnostic"] = {
+                "native_vs_same_parameter_fp32": discrepancy(observed, same),
+                "native_vs_same_parameter_fp64": discrepancy(observed, precise),
+                "same_parameter_fp32_vs_independent_trajectory": discrepancy(same, separate),
+            }
+    assert ir.to_proto(loaded_base).SerializeToString() == base_before
     assert interface["frozen"] == {
         name: digest(graph.graph.initializers[name]) for name in interface["frozen"]
     }
@@ -208,8 +317,32 @@ def run(output_dir, *, compiled_adam=False):
     assert providers == ["MLXExecutionProvider"], providers
     report = {
         "steps": 200,
+        "strict_numerical_acceptance": not trajectory_errors,
+        "same_parameter_acceptance": not any(
+            name.startswith("same_parameter.") for name in trajectory_errors
+        ),
+        "independent_trajectory_acceptance": not any(
+            not name.startswith("same_parameter.") for name in trajectory_errors
+        ),
+        "comparison_rtol": 1e-4,
+        "prediction_parameter_loss_atol": 1e-6,
+        "comparison_errors": comparison_errors,
+        "trajectory_errors": trajectory_errors,
+        "first_failure": first_failure,
         "compiled_adam": compiled_adam,
-        "forward_reload_batches": [1, 7, 128, 256],
+        "profile": profile,
+        "optimizer_epsilon": epsilon,
+        "gradient_comparison_atol": 1e-6 if profile == "tiny" else 1e-9,
+        "dimensions": {
+            "input": w.shape[0],
+            "hidden": w.shape[1],
+            "output": c.shape[1],
+            "rank": rank,
+        },
+        "train_rows": len(x),
+        "validation_rows": len(vx),
+        "parameter_bytes": sum(value.nbytes for value in initial.values()),
+        "forward_reload_batches": reload_batches,
         "training_fetches": [value.name for value in graph.graph.outputs],
         "initial_loss": history[0],
         "final_loss": float(host(final[1])),
@@ -238,6 +371,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", default="mlx_training_models")
     parser.add_argument("--compiled-adam", action="store_true")
+    parser.add_argument("--profile", choices=list(PROFILES), default="tiny")
     args = parser.parse_args()
-    result = run(args.output_dir, compiled_adam=args.compiled_adam)
+    result = run(args.output_dir, compiled_adam=args.compiled_adam, profile=args.profile)
     print(f"Loss: {result['initial_loss']:.6g} -> {result['final_loss']:.6g}")
+    print(f"Strict numerical acceptance: {result['strict_numerical_acceptance']}")
+    raise SystemExit(0 if result["strict_numerical_acceptance"] else 1)

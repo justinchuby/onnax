@@ -172,5 +172,75 @@ uv run --no-sync python -m examples.lora.mlx_benchmark \
 The [compiled-update report](https://github.com/justinchuby/onnax/blob/main/examples/measurements/compiled-mlx-updates-apple-arm64.json)
 contains eager/compiled training endpoints, all benchmark variants, first-update
 costs and parameter comparisons. The [shared-buffer report](https://github.com/justinchuby/onnax/blob/main/examples/measurements/mlx-gpu-updates-apple-arm64.json)
-records input alignment and sampled Metal memory. Larger adapters are the next
-workload for evaluating GPU update placement.
+records input alignment and sampled Metal memory.
+
+
+## Increase matrix dimensions and adapter rank
+
+`--profile medium` uses input/hidden/output widths 256/512/64, rank 16,
+512 training rows and 128 validation rows. `--profile large` uses widths
+1024/2048/128, rank 128, 2048 training rows and 512 validation rows.
+Both retain the scale factor $1/4$. The base graph is saved and loaded before
+LoRA injection; the interface records the feature width and adapter shapes.
+The default `tiny` profile keeps the original workload.
+
+```bash
+uv run --no-sync python -m examples.lora.mlx_training \
+  --profile medium --compiled-adam --output-dir medium_models
+```
+
+The larger profiles use Adam epsilon $10^{-6}$. Their mean loss produces
+smaller parameter gradients. On the first update, Adam maps a gradient to
+$-\eta g/(|g|+\epsilon)$; its sensitivity near zero is bounded by
+$\eta/\epsilon$. Raising epsilon from $10^{-8}$ to $10^{-6}$ reduces this
+amplification by a factor of 100. The independent reference uses the same
+optimizer configuration.
+
+On Apple M1 Max, the medium profile completes 200 updates with parameter and
+prediction comparisons at `rtol=1e-4, atol=1e-6` and gradient comparisons at
+`rtol=1e-4, atol=1e-9`. Training loss falls from 0.0002444 to
+0.00000003415; validation loss falls from 0.0002599 to 0.0000001730.
+
+The large profile completes training and checkpoint replay. Training loss
+falls from 0.002049 to 0.00002833 and validation loss from 0.002054 to
+0.0001065. Its independent trajectories exceed the comparison tolerance
+starting at step 7. Every step passes same-parameter prediction, loss and
+gradient comparisons. At the first divergent snapshot, native predictions agree with both
+FP32 and FP64 NumPy calculations using the native parameters; the two
+parameter trajectories have begun to diverge. The CLI saves the first
+parameter snapshot, aggregates errors through step 200, and exits with
+status 1 when numerical acceptance fails.
+
+The [scaled training report](https://github.com/justinchuby/onnax/blob/main/examples/measurements/scaled-mlx-training-apple-arm64.json)
+contains both trajectories' results and the first-mismatch diagnosis.
+
+
+### Measure larger adapters
+
+The same Apple M1 Max measurement procedure gives these results. Each row
+uses an independent process, 10 warmup updates and 100 measured updates.
+Adam measurements synchronize parameter and moment arrays; complete steps
+include execution, boundary exchange and the update. RSS covers the process.
+
+| Profile | Update | Adam median (ms) | Step median (ms) | Step P95 (ms) | Peak RSS (MiB) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| medium | NumPy CPU | 0.041 | 0.883 | 0.931 | 168.1 |
+| medium | MLX GPU | 0.335 | 0.913 | 1.023 | 165.0 |
+| medium | compiled MLX GPU | 0.261 | 0.830 | 1.177 | 164.5 |
+| large | NumPy CPU | 0.652 | 3.881 | 3.969 | 358.3 |
+| large | MLX GPU | 0.515 | 3.500 | 3.634 | 342.1 |
+| large | compiled MLX GPU | 0.378 | 3.356 | 3.455 | 350.1 |
+
+The medium adapter has 12,288 parameters (48 KiB); the large adapter has
+393,216 parameters (1.5 MiB). At the larger size, compiled GPU Adam reduces
+the recorded complete-step median by about 14% relative to CPU Adam.
+For each profile, all three paths use byte-identical exported graphs and
+finish 110 updates with identical parameter values. Timing runs omit NumPy
+reference evaluation; the separate 200-step runs provide numerical checks.
+
+```bash
+uv run --no-sync python -m examples.lora.mlx_benchmark \
+  --profile large --mode dlpack --compiled-adam --output large_gpu.json
+uv run --no-sync python -m examples.lora.mlx_benchmark \
+  --profile large --mode numpy_adam --output large_cpu.json
+```

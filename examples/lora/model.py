@@ -17,7 +17,9 @@ PARAMETERS = ("lora.A", "lora.B")
 
 
 def base_model(w, c):
-    x = ir.val("features", dtype=ir.DataType.FLOAT, shape=["batch", 16])
+    if w.ndim != 2 or c.ndim != 2 or w.shape[1] != c.shape[0] or min(*w.shape, *c.shape) < 1:
+        raise ValueError("Expected compatible nonempty rank-two base weights")
+    x = ir.val("features", dtype=ir.DataType.FLOAT, shape=["batch", w.shape[0]])
     tape = ir.tape.Tape()
     weight = tape.initializer(ir.tensor(w, name="base.W"))
     head = tape.initializer(ir.tensor(c, name="base.C"))
@@ -25,7 +27,7 @@ def base_model(w, c):
     prediction = tape.op("MatMul", [hidden, head])
     prediction.name = "prediction"
     prediction.type = ir.TensorType(ir.DataType.FLOAT)
-    prediction.shape = ir.Shape(["batch", 8])
+    prediction.shape = ir.Shape(["batch", c.shape[1]])
     return ir.Model(
         ir.Graph(
             [x],
@@ -39,8 +41,10 @@ def base_model(w, c):
     )
 
 
-def adapt(base):
-    """Adapt this example's XW -> Tanh -> C graph; this is not a generic injector."""
+def adapt(base, *, rank=4):
+    """Add a rank-controlled LoRA branch to the XW -> Tanh -> C graph."""
+    if isinstance(rank, bool) or not isinstance(rank, int) or rank < 1:
+        raise ValueError("rank must be a positive integer")
     result = base.clone()
     graph = result.graph
     names = ir.convenience.create_value_mapping(graph, include_subgraphs=False)
@@ -54,13 +58,27 @@ def adapt(base):
     nodes = list(graph)
     if [n.op_type for n in nodes] != ["MatMul", "Tanh", "MatMul"]:
         raise ValueError("Expected the example's MatMul/Tanh/MatMul base architecture.")
+    shapes = {}
+    for name in ("base.W", "base.C"):
+        value = graph.initializers[name]
+        if (
+            value.dtype != ir.DataType.FLOAT
+            or value.shape is None
+            or len(value.shape) != 2
+            or any(not isinstance(d, int) or d < 1 for d in value.shape)
+        ):
+            raise ValueError(f"Expected a static nonempty FLOAT matrix for {name}.")
+        shapes[name] = list(value.shape)
+    width, hidden = shapes["base.W"]
+    if shapes["base.C"][0] != hidden:
+        raise ValueError("Frozen base.W/base.C inner dimensions must match")
     x = graph.inputs[0]
     if (
         x.name != "features"
         or x.dtype != ir.DataType.FLOAT
         or x.shape is None
         or len(x.shape) != 2
-        or x.shape[1] != 16
+        or x.shape[1] != width
         or nodes[0].inputs[0] is not x
         or nodes[0].inputs[1] is not graph.initializers["base.W"]
         or nodes[1].inputs[0] is not nodes[0].outputs[0]
@@ -72,14 +90,8 @@ def adapt(base):
         raise ValueError(
             "Expected features -> MatMul(base.W) -> Tanh -> MatMul(base.C) -> prediction."
         )
-    for name, shape in (("base.W", [16, 24]), ("base.C", [24, 8])):
-        if (
-            graph.initializers[name].dtype != ir.DataType.FLOAT
-            or list(graph.initializers[name].shape) != shape
-        ):
-            raise ValueError(f"Expected FLOAT weight {name} with shape {shape}.")
-    a = ir.val(PARAMETERS[0], dtype=ir.DataType.FLOAT, shape=[16, 4])
-    b = ir.val(PARAMETERS[1], dtype=ir.DataType.FLOAT, shape=[4, 24])
+    a = ir.val(PARAMETERS[0], dtype=ir.DataType.FLOAT, shape=[width, rank])
+    b = ir.val(PARAMETERS[1], dtype=ir.DataType.FLOAT, shape=[rank, hidden])
     graph.inputs.extend([a, b])
     tape = ir.tape.Tape()
     scale = tape.initializer(ir.tensor(np.array(0.25, np.float32), name="lora.scale"))
@@ -94,7 +106,10 @@ def adapt(base):
 
 def with_loss(forward):
     result = forward.clone()
-    target = ir.val("target", dtype=ir.DataType.FLOAT, shape=["batch", 8])
+    prediction = result.graph.outputs[0]
+    if prediction.shape is None or len(prediction.shape) != 2:
+        raise ValueError("Expected a rank-two prediction for mean squared loss")
+    target = ir.val("target", dtype=ir.DataType.FLOAT, shape=ir.Shape(prediction.shape))
     result.graph.inputs.append(target)
     tape = ir.tape.Tape(result.graph)
     residual = tape.op("Sub", [result.graph.outputs[0], target])
@@ -123,13 +138,18 @@ def export(base_path, output_dir):
             strict=True,
         )
     )
+    input_shapes = {value.name: list(value.shape) for value in forward.graph.inputs}
     interface = {
+        "data_shapes": {
+            "features": [None, input_shapes["features"][1]],
+            "target": [None, loss.graph.inputs[-1].shape[1]],
+        },
         "version": 1,
         "loss": "loss",
         "loss_reduction": "mean over batch and outputs",
         "parameters": [
             {"input": name, "gradient": mapping[name], "shape": shape, "dtype": "float32"}
-            for name, shape in zip(PARAMETERS, ([16, 4], [4, 24]), strict=True)
+            for name, shape in ((name, input_shapes[name]) for name in PARAMETERS)
         ],
         "frozen": {
             name: digest(base.graph.initializers[name]) for name in ("base.W", "base.C")
