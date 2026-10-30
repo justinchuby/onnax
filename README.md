@@ -136,7 +136,7 @@ applies Log. Its derivative reuses the primal result without repeating the sum.
 Try the [hosted WebGPU jelly playground](https://www.justinchuby.com/onnax/jelly/): drag a spring sheet
 with matrix-free Newton-CG, powered by exported
 `grad` and `jvp(grad(...))` ONNX graphs. See the [documentation site](https://www.justinchuby.com/onnax/)
-and [playground source and run instructions](examples/jelly).
+and [playground source and run instructions](https://github.com/justinchuby/onnax/blob/main/examples/jelly).
 
 ## Optimize generated models
 
@@ -168,7 +168,7 @@ it is separate from differentiation. The jelly exporter uses ONNXScript for this
 step and disables ONNX Runtime graph optimization during browser execution.
 
 For repeated directional products, use the optional
-[`HoistLinearCoefficientsPass`](src/onnax/_linear.py) before ONNXScript optimization:
+[`HoistLinearCoefficientsPass`](https://github.com/justinchuby/onnax/blob/main/src/onnax/_linear.py) before ONNXScript optimization:
 
 ```python
 import onnx_ir as ir
@@ -248,7 +248,7 @@ def square_jvp(
 
 Use `register_vjp` for reverse rules shared by `vjp` and `grad`, and
 `register_batching` for `vmap`. The complete runnable
-[custom rules example](examples/custom_rules.py) registers all three and validates
+[custom rules example](https://github.com/justinchuby/onnax/blob/main/examples/custom_rules.py) registers all three and validates
 JVP, VJP, gradients, HVPs, and per-example gradients. Extensions use public
 `AutodiffContext` and `BatchingContext` helpers; no private imports are needed.
 
