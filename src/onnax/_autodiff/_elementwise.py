@@ -268,6 +268,12 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
                 ctx.scalar(x, negative),
             )
         elif op == "Celu":
+            version = node.version or ctx.graph.opset_imports[""]
+            if x.dtype == ir.DataType.DOUBLE and version < 28:
+                raise NotImplementedError(
+                    f"Celu DOUBLE differentiation requires opset >= 28; got opset {version}. "
+                    "Use FLOAT data or a valid opset-28 model; validate any conversion."
+                )
             alpha = _float(node, "alpha", 1.0)
             if not math.isfinite(alpha) or alpha <= 0:
                 raise ValueError(
