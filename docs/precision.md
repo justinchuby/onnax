@@ -124,6 +124,14 @@ The report includes model bytes/node counts, data/parameter bytes, versions and
 thread settings. There is no machine-dependent performance gate.
 
 The [recorded development run](https://github.com/justinchuby/onnax/blob/main/examples/measurements/microbatch-apple-arm64.json)
-shows a memory/time tradeoff; rerun it on your machine before choosing a
-microbatch size. Smaller microbatches need more runtime invocations and are not
-automatically faster. This experiment does not establish a GPU or BF16 speedup.
+measured the following on CPU, with an effective batch of 16,384:
+
+| Microbatch | Median gradient + accumulation (ms) | P95 (ms) | Peak process RSS (MB, decimal) |
+| --- | ---: | ---: | ---: |
+| 16,384 | 3.876 | 4.258 | 170.7 |
+| 512 | 4.844 | 4.907 | 146.3 |
+
+This is a memory/time tradeoff: lower observed RSS took more runtime calls and
+more time. Rerun on your machine before choosing a microbatch size. These process
+peaks are not activation-memory measurements, and the experiment does not
+establish a GPU or BF16 speedup.
