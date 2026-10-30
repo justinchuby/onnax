@@ -2,8 +2,24 @@
 # SPDX-License-Identifier: MIT
 """Optional native MLX execution-provider sessions for workload examples."""
 
+import os
+
 import onnx_ir as ir
 import onnxruntime as ort
+
+_development_library = None
+
+
+def register_library(path):
+    """Register one development binary and reject conflicting selections."""
+    global _development_library
+    path = os.path.realpath(path)
+    if _development_library is not None:
+        if _development_library != path:
+            raise ValueError("A different MLX EP library is already registered")
+        return
+    ort.register_execution_provider_library("MLXExecutionProvider", path)
+    _development_library = path
 
 
 def session(graph, *, profile_prefix=None):
@@ -20,8 +36,7 @@ def session(graph, *, profile_prefix=None):
     if profile_prefix is not None:
         options.enable_profiling = True
         options.profile_file_prefix = str(profile_prefix)
-    executor = ort.InferenceSession(
-        ir.to_proto(graph).SerializeToString(), options, providers=["MLXExecutionProvider"]
-    )
+    source = ir.to_proto(graph).SerializeToString() if isinstance(graph, ir.Model) else graph
+    executor = ort.InferenceSession(source, options, providers=["MLXExecutionProvider"])
     executor.disable_fallback()
     return executor

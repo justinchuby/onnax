@@ -9,7 +9,6 @@ import json
 import os
 import platform
 
-import onnxruntime as ort
 import torch
 
 from examples.huggingface.bridge import frozen_hashes
@@ -22,7 +21,9 @@ from examples.lora.mlx_runtime import session
 def run(*, library=None):
     """Compare four independent AdamW updates with CPU fallback disabled."""
     if library is not None:
-        ort.register_execution_provider_library("MLXExecutionProvider", str(library))
+        from examples.lora.mlx_runtime import register_library
+
+        register_library(library)
     torch.set_num_threads(1)
     model, reference = prepare(nf4=True, save_activations=True)
     forward, _, _ = split_vjp(model.onnx.model, model.onnx.vjp_model)
