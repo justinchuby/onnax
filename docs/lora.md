@@ -103,12 +103,12 @@ compare 20 updates with a separately written, flattened NumPy Adam calculation.
 | NumPy | Complete CPU ONNX training and portable update tests |
 | array-api-strict | Required portable update tests |
 | JAX CPU | Required portable update tests |
-| MLX | Optional Apple Silicon GPU update test; install MLX separately |
+| MLX | [Native ONNX training and eager/compiled GPU updates](mlx-training.md) on Apple Silicon |
 | CuPy | Optional CUDA update test; requires a matching CuPy/CUDA installation |
 
 Optional tests are skipped when their hardware or dependencies are unavailable. The
-development Apple Silicon run verified MLX GPU updates. Complete ONNX training uses
-NumPy and CPU ORT; CUDA validation is pending.
+Apple Silicon workload verifies native ONNX training and GPU updates. CUDA
+hardware validation is pending.
 
 ## Correctness checks
 

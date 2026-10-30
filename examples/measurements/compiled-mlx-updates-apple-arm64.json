@@ -1,0 +1,761 @@
+{
+  "recorded_date": "2026-10-30",
+  "hardware": "Apple M1 Max",
+  "training": {
+    "eager": {
+      "steps": 200,
+      "compiled_adam": false,
+      "forward_reload_batches": [
+        1,
+        7,
+        128,
+        256
+      ],
+      "training_fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "initial_loss": 0.018961653113365173,
+      "final_loss": 3.0959328434221334e-09,
+      "initial_validation_loss": 0.016257060691714287,
+      "final_validation_loss": 4.596107494592161e-09,
+      "executed_providers": [
+        "MLXExecutionProvider"
+      ],
+      "parameter_and_state_dlpack_device": [
+        8,
+        0
+      ],
+      "boundary": "Shared CPU views of Metal inputs and fresh runtime outputs imported with copy=False; pointer identity checked both ways. Plugin internal wrapping/copy-out is separate.",
+      "nodes": 30,
+      "model_bytes": 14566,
+      "model_sha256": "e574be28db419518ea0c71179edb66ed2f4ab64e7d01489ce5184a5e065aeb2e",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      }
+    },
+    "compiled": {
+      "steps": 200,
+      "compiled_adam": true,
+      "forward_reload_batches": [
+        1,
+        7,
+        128,
+        256
+      ],
+      "training_fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "initial_loss": 0.018961653113365173,
+      "final_loss": 3.0959328434221334e-09,
+      "initial_validation_loss": 0.016257060691714287,
+      "final_validation_loss": 4.596107494592161e-09,
+      "executed_providers": [
+        "MLXExecutionProvider"
+      ],
+      "parameter_and_state_dlpack_device": [
+        8,
+        0
+      ],
+      "boundary": "Shared CPU views of Metal inputs and fresh runtime outputs imported with copy=False; pointer identity checked both ways. Plugin internal wrapping/copy-out is separate.",
+      "nodes": 30,
+      "model_bytes": 14566,
+      "model_sha256": "e574be28db419518ea0c71179edb66ed2f4ab64e7d01489ce5184a5e065aeb2e",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      }
+    }
+  },
+  "benchmarks": [
+    {
+      "mode": "dlpack",
+      "compiled_adam": false,
+      "adam_first_update_ms": 1.8960419984068722,
+      "fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "batch": 256,
+      "session_creation_ms": 27.67812498495914,
+      "timings_ms": {
+        "prepare": {
+          "median": 0.025624496629461646,
+          "p95": 0.04122146492591128
+        },
+        "execute_exchange": {
+          "median": 0.5227914953138679,
+          "p95": 0.5686735355993733
+        },
+        "import": {
+          "median": 0.04004199581686407,
+          "p95": 0.04618895909516141
+        },
+        "adam_sync": {
+          "median": 0.36533350066747516,
+          "p95": 0.4063961547217332
+        },
+        "step": {
+          "median": 0.9522495092824101,
+          "p95": 1.0420312595670111
+        }
+      },
+      "python_mlx_allocator_bytes": {
+        "active": 29764,
+        "peak": 29780,
+        "cache": 16
+      },
+      "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+      "peak_process_rss_bytes": 163905536,
+      "final_loss": 5.217953912506346e-06,
+      "nodes": 30,
+      "model_bytes": 14566,
+      "model_sha256": "e574be28db419518ea0c71179edb66ed2f4ab64e7d01489ce5184a5e065aeb2e",
+      "parameter_bytes": 640,
+      "dataset_bytes": 24576,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnx": "1.23.2",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "adam_stream": "MLX GPU",
+      "ort_graph_optimizer": "disabled",
+      "cpu_ep_fallback": "disabled",
+      "plugin_trace_enabled": false,
+      "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+      "max_parameter_difference_from_numpy_adam": 0.0
+    },
+    {
+      "mode": "dlpack",
+      "compiled_adam": true,
+      "adam_first_update_ms": 3.731499979039654,
+      "fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "batch": 256,
+      "session_creation_ms": 39.12354199565016,
+      "timings_ms": {
+        "prepare": {
+          "median": 0.024499997380189598,
+          "p95": 0.03709198790602385
+        },
+        "execute_exchange": {
+          "median": 0.5255835130810738,
+          "p95": 0.5961898918030784
+        },
+        "import": {
+          "median": 0.041646009776741266,
+          "p95": 0.05738364561693742
+        },
+        "adam_sync": {
+          "median": 0.2903749991673976,
+          "p95": 0.32373511785408476
+        },
+        "step": {
+          "median": 0.8837290079100057,
+          "p95": 0.9916038339724764
+        }
+      },
+      "python_mlx_allocator_bytes": {
+        "active": 29108,
+        "peak": 29124,
+        "cache": 40
+      },
+      "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+      "peak_process_rss_bytes": 165609472,
+      "final_loss": 5.217953912506346e-06,
+      "nodes": 30,
+      "model_bytes": 14566,
+      "model_sha256": "e574be28db419518ea0c71179edb66ed2f4ab64e7d01489ce5184a5e065aeb2e",
+      "parameter_bytes": 640,
+      "dataset_bytes": 24576,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnx": "1.23.2",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "adam_stream": "MLX GPU",
+      "ort_graph_optimizer": "disabled",
+      "cpu_ep_fallback": "disabled",
+      "plugin_trace_enabled": false,
+      "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+      "max_parameter_difference_from_numpy_adam": 0.0
+    },
+    {
+      "mode": "numpy_view",
+      "compiled_adam": false,
+      "adam_first_update_ms": 1.913707994390279,
+      "fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "batch": 256,
+      "session_creation_ms": 27.001792012015358,
+      "timings_ms": {
+        "prepare": {
+          "median": 0.004791989340446889,
+          "p95": 0.007815194840077306
+        },
+        "execute_exchange": {
+          "median": 0.5223744956310838,
+          "p95": 0.5542687445995398
+        },
+        "import": {
+          "median": 0.03581200144253671,
+          "p95": 0.04546936688711866
+        },
+        "adam_sync": {
+          "median": 0.36741700023412704,
+          "p95": 0.39256599702639505
+        },
+        "step": {
+          "median": 0.9357709932373837,
+          "p95": 0.9930642481776886
+        }
+      },
+      "python_mlx_allocator_bytes": {
+        "active": 29764,
+        "peak": 29780,
+        "cache": 16
+      },
+      "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+      "peak_process_rss_bytes": 164069376,
+      "final_loss": 5.217953912506346e-06,
+      "nodes": 30,
+      "model_bytes": 14566,
+      "model_sha256": "e574be28db419518ea0c71179edb66ed2f4ab64e7d01489ce5184a5e065aeb2e",
+      "parameter_bytes": 640,
+      "dataset_bytes": 24576,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnx": "1.23.2",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "adam_stream": "MLX GPU",
+      "ort_graph_optimizer": "disabled",
+      "cpu_ep_fallback": "disabled",
+      "plugin_trace_enabled": false,
+      "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+      "max_parameter_difference_from_numpy_adam": 0.0
+    },
+    {
+      "mode": "numpy_view",
+      "compiled_adam": true,
+      "adam_first_update_ms": 3.1460419995710254,
+      "fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "batch": 256,
+      "session_creation_ms": 26.922374992864206,
+      "timings_ms": {
+        "prepare": {
+          "median": 0.004792003892362118,
+          "p95": 0.010977419151458879
+        },
+        "execute_exchange": {
+          "median": 0.4909375129500404,
+          "p95": 0.5562190606724471
+        },
+        "import": {
+          "median": 0.03704198752529919,
+          "p95": 0.05758750048698856
+        },
+        "adam_sync": {
+          "median": 0.2750209969235584,
+          "p95": 0.3223270556190982
+        },
+        "step": {
+          "median": 0.8076874946709722,
+          "p95": 0.9227455157088116
+        }
+      },
+      "python_mlx_allocator_bytes": {
+        "active": 29108,
+        "peak": 29124,
+        "cache": 40
+      },
+      "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+      "peak_process_rss_bytes": 165167104,
+      "final_loss": 5.217953912506346e-06,
+      "nodes": 30,
+      "model_bytes": 14566,
+      "model_sha256": "e574be28db419518ea0c71179edb66ed2f4ab64e7d01489ce5184a5e065aeb2e",
+      "parameter_bytes": 640,
+      "dataset_bytes": 24576,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnx": "1.23.2",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "adam_stream": "MLX GPU",
+      "ort_graph_optimizer": "disabled",
+      "cpu_ep_fallback": "disabled",
+      "plugin_trace_enabled": false,
+      "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+      "max_parameter_difference_from_numpy_adam": 0.0
+    },
+    {
+      "mode": "numpy_adam",
+      "compiled_adam": false,
+      "adam_first_update_ms": 0.08341699140146375,
+      "fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "batch": 256,
+      "session_creation_ms": 27.115999982925132,
+      "timings_ms": {
+        "prepare": {
+          "median": 0.00020800507627427578,
+          "p95": 0.00033300602808594704
+        },
+        "execute_exchange": {
+          "median": 0.5316460010362789,
+          "p95": 0.5545639563933946
+        },
+        "import": {
+          "median": 0.00204198295250535,
+          "p95": 0.0029252914828248318
+        },
+        "adam_sync": {
+          "median": 0.016896010492928326,
+          "p95": 0.019425000937189903
+        },
+        "step": {
+          "median": 0.5509165057446808,
+          "p95": 0.5751798045821488
+        }
+      },
+      "python_mlx_allocator_bytes": {
+        "active": 24576,
+        "peak": 24576,
+        "cache": 0
+      },
+      "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+      "peak_process_rss_bytes": 163250176,
+      "final_loss": 5.217953912506346e-06,
+      "nodes": 30,
+      "model_bytes": 14566,
+      "model_sha256": "e574be28db419518ea0c71179edb66ed2f4ab64e7d01489ce5184a5e065aeb2e",
+      "parameter_bytes": 640,
+      "dataset_bytes": 24576,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnx": "1.23.2",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "adam_stream": "NumPy CPU",
+      "ort_graph_optimizer": "disabled",
+      "cpu_ep_fallback": "disabled",
+      "plugin_trace_enabled": false,
+      "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+      "max_parameter_difference_from_numpy_adam": 0.0
+    },
+    {
+      "mode": "dlpack",
+      "compiled_adam": false,
+      "adam_first_update_ms": 2.47312497231178,
+      "fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "batch": 16384,
+      "session_creation_ms": 30.357458017533645,
+      "timings_ms": {
+        "prepare": {
+          "median": 0.027958492864854634,
+          "p95": 0.04746280756080523
+        },
+        "execute_exchange": {
+          "median": 0.9866254986263812,
+          "p95": 1.0982368636177853
+        },
+        "import": {
+          "median": 0.05060450348537415,
+          "p95": 0.09419166308362033
+        },
+        "adam_sync": {
+          "median": 0.39068699697963893,
+          "p95": 0.4819517271243967
+        },
+        "step": {
+          "median": 1.4534999936586246,
+          "p95": 1.7400502998498268
+        }
+      },
+      "python_mlx_allocator_bytes": {
+        "active": 1578052,
+        "peak": 1578068,
+        "cache": 16
+      },
+      "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+      "peak_process_rss_bytes": 169459712,
+      "final_loss": 5.217958005232504e-06,
+      "nodes": 31,
+      "model_bytes": 530831,
+      "model_sha256": "162193c7c41299d448e9f84634177eebb6dd45cc947129828b0556497d77fd39",
+      "parameter_bytes": 640,
+      "dataset_bytes": 1572864,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnx": "1.23.2",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "adam_stream": "MLX GPU",
+      "ort_graph_optimizer": "disabled",
+      "cpu_ep_fallback": "disabled",
+      "plugin_trace_enabled": false,
+      "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+      "max_parameter_difference_from_numpy_adam": 0.0
+    },
+    {
+      "mode": "dlpack",
+      "compiled_adam": true,
+      "adam_first_update_ms": 3.1759579724166542,
+      "fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "batch": 16384,
+      "session_creation_ms": 27.249749982729554,
+      "timings_ms": {
+        "prepare": {
+          "median": 0.025375004042871296,
+          "p95": 0.028724639560095966
+        },
+        "execute_exchange": {
+          "median": 0.6864999886602163,
+          "p95": 0.773285458853934
+        },
+        "import": {
+          "median": 0.04537450149655342,
+          "p95": 0.0562100947718136
+        },
+        "adam_sync": {
+          "median": 0.273291501798667,
+          "p95": 0.3025747064384632
+        },
+        "step": {
+          "median": 1.0315000108676031,
+          "p95": 1.1321669997414574
+        }
+      },
+      "python_mlx_allocator_bytes": {
+        "active": 1577396,
+        "peak": 1577412,
+        "cache": 40
+      },
+      "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+      "peak_process_rss_bytes": 170065920,
+      "final_loss": 5.217958005232504e-06,
+      "nodes": 31,
+      "model_bytes": 530831,
+      "model_sha256": "162193c7c41299d448e9f84634177eebb6dd45cc947129828b0556497d77fd39",
+      "parameter_bytes": 640,
+      "dataset_bytes": 1572864,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnx": "1.23.2",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "adam_stream": "MLX GPU",
+      "ort_graph_optimizer": "disabled",
+      "cpu_ep_fallback": "disabled",
+      "plugin_trace_enabled": false,
+      "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+      "max_parameter_difference_from_numpy_adam": 0.0
+    },
+    {
+      "mode": "numpy_view",
+      "compiled_adam": false,
+      "adam_first_update_ms": 2.0014159963466227,
+      "fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "batch": 16384,
+      "session_creation_ms": 29.148750007152557,
+      "timings_ms": {
+        "prepare": {
+          "median": 0.005729496479034424,
+          "p95": 0.01195348158944398
+        },
+        "execute_exchange": {
+          "median": 0.9551455004839227,
+          "p95": 1.06052086193813
+        },
+        "import": {
+          "median": 0.04722901212517172,
+          "p95": 0.07737769919913262
+        },
+        "adam_sync": {
+          "median": 0.39229149115271866,
+          "p95": 0.4491166619118303
+        },
+        "step": {
+          "median": 1.404687500325963,
+          "p95": 1.546918394160457
+        }
+      },
+      "python_mlx_allocator_bytes": {
+        "active": 1578052,
+        "peak": 1578068,
+        "cache": 16
+      },
+      "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+      "peak_process_rss_bytes": 170885120,
+      "final_loss": 5.217958005232504e-06,
+      "nodes": 31,
+      "model_bytes": 530831,
+      "model_sha256": "162193c7c41299d448e9f84634177eebb6dd45cc947129828b0556497d77fd39",
+      "parameter_bytes": 640,
+      "dataset_bytes": 1572864,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnx": "1.23.2",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "adam_stream": "MLX GPU",
+      "ort_graph_optimizer": "disabled",
+      "cpu_ep_fallback": "disabled",
+      "plugin_trace_enabled": false,
+      "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+      "max_parameter_difference_from_numpy_adam": 0.0
+    },
+    {
+      "mode": "numpy_view",
+      "compiled_adam": true,
+      "adam_first_update_ms": 3.252083988627419,
+      "fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "batch": 16384,
+      "session_creation_ms": 27.256500005023554,
+      "timings_ms": {
+        "prepare": {
+          "median": 0.005416019121184945,
+          "p95": 0.006127115921117365
+        },
+        "execute_exchange": {
+          "median": 0.7144379924284294,
+          "p95": 0.9800332816666923
+        },
+        "import": {
+          "median": 0.04041698412038386,
+          "p95": 0.05503538268385455
+        },
+        "adam_sync": {
+          "median": 0.2771045110421255,
+          "p95": 0.3114848193945363
+        },
+        "step": {
+          "median": 1.0440625046612695,
+          "p95": 1.3310294481925666
+        }
+      },
+      "python_mlx_allocator_bytes": {
+        "active": 1577396,
+        "peak": 1577412,
+        "cache": 40
+      },
+      "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+      "peak_process_rss_bytes": 169754624,
+      "final_loss": 5.217958005232504e-06,
+      "nodes": 31,
+      "model_bytes": 530831,
+      "model_sha256": "162193c7c41299d448e9f84634177eebb6dd45cc947129828b0556497d77fd39",
+      "parameter_bytes": 640,
+      "dataset_bytes": 1572864,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnx": "1.23.2",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "adam_stream": "MLX GPU",
+      "ort_graph_optimizer": "disabled",
+      "cpu_ep_fallback": "disabled",
+      "plugin_trace_enabled": false,
+      "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+      "max_parameter_difference_from_numpy_adam": 0.0
+    },
+    {
+      "mode": "numpy_adam",
+      "compiled_adam": false,
+      "adam_first_update_ms": 0.07933299639262259,
+      "fetches": [
+        "loss",
+        "lora.A_cotangent",
+        "lora.B_cotangent"
+      ],
+      "batch": 16384,
+      "session_creation_ms": 29.361499997321516,
+      "timings_ms": {
+        "prepare": {
+          "median": 0.0002500019036233425,
+          "p95": 0.0007500057108700275
+        },
+        "execute_exchange": {
+          "median": 1.0018750035669655,
+          "p95": 1.3153836480341852
+        },
+        "import": {
+          "median": 0.002291490091010928,
+          "p95": 0.011216351413168013
+        },
+        "adam_sync": {
+          "median": 0.019125014659948647,
+          "p95": 0.044351768156047904
+        },
+        "step": {
+          "median": 1.0237495007459074,
+          "p95": 1.3740976166445762
+        }
+      },
+      "python_mlx_allocator_bytes": {
+        "active": 1572864,
+        "peak": 1572864,
+        "cache": 0
+      },
+      "python_mlx_allocator_scope": "Python MLX allocator; plugin allocator is separate. Peak includes the active initialization baseline and the allocation maximum over measured/warmup updates.",
+      "peak_process_rss_bytes": 168738816,
+      "final_loss": 5.217958005232504e-06,
+      "nodes": 31,
+      "model_bytes": 530831,
+      "model_sha256": "162193c7c41299d448e9f84634177eebb6dd45cc947129828b0556497d77fd39",
+      "parameter_bytes": 640,
+      "dataset_bytes": 1572864,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnx": "1.23.2",
+        "onnxscript": "0.7.2",
+        "numpy": "2.4.6"
+      },
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "adam_stream": "NumPy CPU",
+      "ort_graph_optimizer": "disabled",
+      "cpu_ep_fallback": "disabled",
+      "plugin_trace_enabled": false,
+      "scope": "Isolated process per mode/batch, sequential runs, 10 warmup/100 measured updates. All modes use the same native gradient graph and shared dataset views. dlpack and numpy_view use MLX GPU Adam and share Python-boundary storage; numpy_adam keeps parameters/state on CPU. Prepare includes input synchronization and views/binding. Execute includes plugin internal wrapping/copy-out. Adam time synchronizes parameters and both moments. RSS includes imports, graph generation, runtime and allocators.",
+      "max_parameter_difference_from_numpy_adam": 0.0
+    }
+  ],
+  "compiled_provider_trace": {
+    "claimed_nodes": 30,
+    "total_nodes": 30,
+    "claim_pct": "100.0",
+    "fused_subgraphs": 1,
+    "path_decode": 0,
+    "path_prefill": 0,
+    "path_general": 110,
+    "path_eager": 0,
+    "cache_hit": 109,
+    "cache_miss": 1,
+    "cache_retrace": 0,
+    "managed_wrap_bytes": 2785044,
+    "managed_wrap_aligned": 221,
+    "delta_copyout_bytes": 0,
+    "full_copyout_bytes": 70840,
+    "scope": "Separate traced DLPack/compiled run, 110 executions at batch 256, excluded from timing table."
+  },
+  "training_loss_history_max_difference": 0.0
+}

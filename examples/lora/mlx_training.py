@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from functools import partial
 from importlib.metadata import version
 
 import numpy as np
@@ -66,7 +67,7 @@ def host(value):
     return np.asarray(value, copy=False)
 
 
-def run(output_dir):
+def run(output_dir, *, compiled_adam=False):
     import mlx.core as mx
 
     os.makedirs(output_dir, exist_ok=True)
@@ -92,6 +93,12 @@ def run(output_dir):
     bound = MlxDLPack(executor, interface)
     forward_executor = session(ir.load(os.path.join(output_dir, "forward.onnx")))
     validation = MlxDLPack(session(validation_graph), validation_interface)
+    if compiled_adam:
+        from examples.lora.mlx_adam import CompiledAdam
+
+        update = CompiledAdam()
+    else:
+        update = partial(adam_step, xp=mx)
     history = []
     reference_params = {name: value.copy() for name, value in initial.items()}
     state = reference_state = None
@@ -126,7 +133,7 @@ def run(output_dir):
             elif step == 1:
                 assert np.count_nonzero(host(grads[PARAMETERS[0]])) > 0
             history.append(float(host(loss)))
-            params, state = adam_step(params, grads, state, xp=mx)
+            params, state = update(params, grads, state)
             synchronize(params, state)
             reference_params, reference_state = reference_update(
                 reference_params, expected[2], reference_state
@@ -179,8 +186,9 @@ def run(output_dir):
         close(host(final[1]), host(replayed[1]))
         for name in PARAMETERS:
             close(host(final[2][name]), host(replayed[2][name]))
-        updated, _ = adam_step(params, final[2], state, xp=mx)
-        restored_updated, _ = adam_step(restored, replayed[2], restored_state, xp=mx)
+        updated, _ = update(params, final[2], state)
+        restored_update = CompiledAdam() if compiled_adam else update
+        restored_updated, _ = restored_update(restored, replayed[2], restored_state)
         synchronize(updated)
         synchronize(restored_updated)
         for name in PARAMETERS:
@@ -200,6 +208,7 @@ def run(output_dir):
     assert providers == ["MLXExecutionProvider"], providers
     report = {
         "steps": 200,
+        "compiled_adam": compiled_adam,
         "forward_reload_batches": [1, 7, 128, 256],
         "training_fetches": [value.name for value in graph.graph.outputs],
         "initial_loss": history[0],
@@ -228,6 +237,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", default="mlx_training_models")
+    parser.add_argument("--compiled-adam", action="store_true")
     args = parser.parse_args()
-    result = run(args.output_dir)
+    result = run(args.output_dir, compiled_adam=args.compiled_adam)
     print(f"Loss: {result['initial_loss']:.6g} -> {result['final_loss']:.6g}")

@@ -10,6 +10,7 @@ import platform
 import resource
 import sys
 import time
+from functools import partial
 from importlib.metadata import version
 
 import numpy as np
@@ -22,11 +23,13 @@ from examples.lora.mlx_training import gradient_model, host
 from examples.lora.train import problem
 
 
-def benchmark(mode, *, batch=256):
+def benchmark(mode, *, batch=256, compiled_adam=False):
     import mlx.core as mx
 
     if mode not in {"dlpack", "numpy_view", "numpy_adam"}:
         raise ValueError("Expected dlpack, numpy_view or numpy_adam mode")
+    if compiled_adam and mode == "numpy_adam":
+        raise ValueError("Compiled Adam requires an MLX GPU update mode")
     w, c, x, y, _, _, initial = problem()
     repeats = (batch + len(x) - 1) // len(x)
     x, y = np.tile(x, (repeats, 1))[:batch], np.tile(y, (repeats, 1))[:batch]
@@ -51,6 +54,13 @@ def benchmark(mode, *, batch=256):
             synchronize(params)
         cpu_data = {name: np.asarray(value, copy=False) for name, value in data.items()}
         state = None
+        if compiled_adam:
+            from examples.lora.mlx_adam import CompiledAdam
+
+            update = CompiledAdam()
+        else:
+            update = partial(adam_step, xp=np if cpu_adam else mx)
+        first_update_ms = None
         initial_active = mx.get_active_memory()
         mx.reset_peak_memory()
         for index in range(110):
@@ -90,10 +100,12 @@ def benchmark(mode, *, batch=256):
                     row["input"]: named[row["gradient"]] for row in interface["parameters"]
                 }
             imported = time.perf_counter()
-            params, state = adam_step(params, grads, state, xp=np if cpu_adam else mx)
+            params, state = update(params, grads, state)
             if not cpu_adam:
                 synchronize(params, state)
             updated = time.perf_counter()
+            if index == 0:
+                first_update_ms = (updated - imported) * 1000
             if index >= 10:
                 for key, elapsed in zip(
                     timings,
@@ -120,6 +132,8 @@ def benchmark(mode, *, batch=256):
     rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return {
         "mode": mode,
+        "compiled_adam": compiled_adam,
+        "adam_first_update_ms": first_update_ms,
         "fetches": output_names,
         "batch": batch,
         "session_creation_ms": creation * 1000,
@@ -165,7 +179,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("--batch", type=int, default=256)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--compiled-adam", action="store_true")
     args = parser.parse_args()
-    result = benchmark(args.mode, batch=args.batch)
+    result = benchmark(args.mode, batch=args.batch, compiled_adam=args.compiled_adam)
     with open(args.output, "w") as stream:
         json.dump(result, stream, indent=2)
