@@ -52,7 +52,14 @@ def _data_indices(node: ir.Node) -> Sequence[int]:
         return (1, 2)
     if node.op_type == "ScatterND":
         return (0, 2)
-    if node.op_type in _STRUCTURAL | {"Gather", "Split", "ReduceSum", "ReduceMean"}:
+    if node.op_type in _STRUCTURAL | {
+        "Gather",
+        "Split",
+        "ReduceSum",
+        "ReduceMean",
+        "ReduceL1",
+        "ReduceSumSquare",
+    }:
         return (0,)
     return range(len(node.inputs))
 
