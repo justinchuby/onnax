@@ -54,6 +54,32 @@ the same-input VJP backend checks pass. The {ref}`operator audit <qwen-operator-
 compares projection, normalization and Swish arithmetic at identical inputs, with
 independent scalar dot-product references.
 
+## Control RMSNorm arithmetic
+
+Transformers computes RMSNorm with `x * rsqrt(mean(x²) + epsilon)`. The ONNX
+training decomposition uses `x / sqrt(mean(x²) + epsilon)`. The following control
+temporarily replaces the reference model's RMSNorm forward methods with the
+sqrt/div expression, then repeats the forward and all-adapter gradient audit:
+
+```bash
+uv run python -m examples.huggingface.rms_audit --real --nf4 \
+  --output rms-control.json
+```
+
+The {download}`real-model report <../examples/huggingface/reports/qwen3-nf4-rms-control.json>`
+uses the same fixed 64-token sequence, initial adapters and packed weights as the
+paired audit. Across all 113 normalizations, the control leaves 39 adapter tensors
+outside the original tolerance. The maximum gradient difference changes from
+`1.087e-5` to `1.106e-5`. This arithmetic change does not resolve the gradient gap.
+The control restores the reference methods and verifies that adapter parameters
+are unchanged.
+
+This diagnostic disables ORT tensor memory reuse during session construction.
+An [initialization investigation](https://github.com/justinchuby/onnax/issues/103)
+reproduces expensive reusable-tensor searches on graphs with many distinct
+symbolic shapes. Session construction, execution time and execution memory are
+separate measurements.
+
 ## Reuse smaller ONNX sessions
 
 `examples.huggingface.segmented.SegmentedSession` cuts a flat tensor graph into
