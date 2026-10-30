@@ -846,3 +846,30 @@ def test_bernoulli_on_inactive_path_is_still_rejected():
     y = tape.op("Mul", [x, random])
     with pytest.raises(NotImplementedError, match="randomness"):
         JvpPass(inputs=["x"])(_model([x, p], tape, [y]))
+
+
+def test_gemm_float_attributes_are_consistent_before_and_after_serialization():
+    a, b, c = _value("a", [2, 2]), _value("b", [2, 2]), _value("c", [])
+    tape = ir.tape.Tape()
+    source = _model(
+        [a, b, c],
+        tape,
+        [tape.op("Gemm", [a, b, c], {"alpha": 0.3, "beta": 0.7})],
+    )
+    alpha, beta = float(np.float32(0.3)), float(np.float32(0.7))
+    feeds = {"a": np.ones((2, 2)), "b": np.ones((2, 2)), "c": np.array(1.0)}
+    for model in (source, ir.from_proto(ir.to_proto(source))):
+        forward = JvpPass()(model).model
+        seeded = dict(feeds)
+        seeded.update(
+            {value.name: np.ones(tuple(value.shape)) for value in forward.graph.inputs[3:]}
+        )
+        actual = runtime_session(forward).run(None, seeded)[-1]
+        np.testing.assert_array_equal(actual, np.full((2, 2), 4 * alpha + beta))
+        reverse = VjpPass()(model).model
+        actual = runtime_session(reverse).run(
+            None, {**feeds, reverse.graph.inputs[-1].name: np.ones((2, 2))}
+        )
+        np.testing.assert_array_equal(actual[-3], np.full((2, 2), 2 * alpha))
+        np.testing.assert_array_equal(actual[-2], np.full((2, 2), 2 * alpha))
+        np.testing.assert_array_equal(actual[-1], np.array(4 * beta))
