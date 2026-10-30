@@ -41,8 +41,11 @@ adds shared CPU parameter/gradient storage, immutable output ownership, synchron
 Array API updates and checkpoint restoration. The [CoreML experiment](coreml.md)
 executes complete static-batch gradient graphs
 and 200 external updates through the native provider, with CPU/CoreML timing
-and process-memory comparisons. Next validate native GPU bindings and BF16
-execution, then broaden precision transforms. The recorded CPU
+and process-memory comparisons. The [native MLX BF16 evaluation](mlx-bf16.md)
+executes the full gradient graph and checkpoint replay and records strict
+numerical comparisons, including a reproduced rounding-boundary difference.
+Next resolve the native BF16 numerical contract and validate device-resident
+GPU updates, then broaden precision transforms. The recorded CPU
 ORT provider lacks BF16 MatMul. Device memory/transfer measurements will guide
 DLPack, recomputation and structured-operator work.
 

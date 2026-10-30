@@ -36,6 +36,10 @@ Documentation = "https://www.justinchuby.com/onnax/"
 Examples = "https://github.com/justinchuby/onnax/tree/main/examples"
 
 [dependency-groups]
+native-mlx = [
+    "onnxruntime-ep-mlx>=0.31.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "mlx>=0.32.4; sys_platform == 'darwin' and platform_machine == 'arm64'",
+]
 training = ["onnxscript>=0.7", "array-api-compat>=1.16", "array-api-strict>=2.6", "jax>=0.10.2"]
 docs = ["sphinx>=8", "furo", "myst-nb", "sphinx-copybutton", "sphinx-exec-code", "linkify-it-py"]
 dev = [
