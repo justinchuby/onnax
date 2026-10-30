@@ -1,0 +1,105 @@
+# Copyright (c) 2026 onnax contributors
+# SPDX-License-Identifier: MIT
+"""Offline Mobius Qwen3 model, gradients, masks and SFT acceptance."""
+# ruff: file-ignore[module-import-not-at-top-of-file] - Optional integration dependencies.
+
+import numpy as np
+import pytest
+
+pytest.importorskip("mobius")
+pytest.importorskip("trl")
+torch = pytest.importorskip("torch")
+
+from examples.huggingface.sft import prepare, run, token_loss, tokenizer
+from examples.huggingface.validation import add_reference_adapters, audit
+
+
+@pytest.fixture(scope="module")
+def workload():
+    torch.set_num_threads(1)
+    model, reference = prepare()
+    return model, add_reference_adapters(reference, model)
+
+
+def batch():
+    ids = torch.tensor([[1, 4, 5, 6, 2], [1, 7, 2, 0, 0]])
+    mask = ids.ne(0).long()
+    labels = ids.clone()
+    labels[mask == 0] = -100
+    return {
+        "input_ids": ids,
+        "attention_mask": mask,
+        "position_ids": (mask.cumsum(-1) - 1).clamp(min=0),
+        "labels": labels,
+    }
+
+
+def test_qwen_full_parameter_gradients_and_nonzero_b(workload):
+    model, reference = workload
+    audit(model, reference, batch())
+    with torch.no_grad():
+        for name, p in zip(model.onnx.names, model.onnx.adapters, strict=True):
+            if name.endswith(".B"):
+                p.add_(0.01)
+    audit(model, reference, batch())
+
+
+def test_causal_padding_positions_and_dynamic_sequence(workload):
+    model, _ = workload
+    b = batch()
+    a = model(**b).logits.detach()
+    changed = {k: v.clone() for k, v in b.items()}
+    changed["input_ids"][0, -1] = 17
+    changed["input_ids"][1, -2:] = 19
+    z = model(**changed).logits.detach()
+    torch.testing.assert_close(a[0, :-1], z[0, :-1], rtol=1e-4, atol=1e-6)
+    torch.testing.assert_close(a[1, :3], z[1, :3], rtol=1e-4, atol=1e-6)
+    short = {k: v[:1, :3] for k, v in b.items()}
+    torch.testing.assert_close(a[:1, :3], model(**short).logits, rtol=1e-4, atol=1e-6)
+
+
+def test_token_normalization_and_all_ignored(workload):
+    model, _ = workload
+    b = batch()
+    model.zero_grad()
+    model(**b).loss.backward()
+    full = [p.grad.clone() for p in model.onnx.adapters]
+    model.zero_grad()
+    count = b["labels"][:, 1:].ne(-100).sum()
+    for i in range(2):
+        model(
+            **{k: v[i : i + 1] for k, v in b.items()}, num_items_in_batch=count
+        ).loss.backward()
+    for p, expected in zip(model.onnx.adapters, full, strict=True):
+        torch.testing.assert_close(p.grad, expected, rtol=1e-4, atol=1e-6)
+    logits = torch.randn(2, 5, 256, requires_grad=True)
+    loss = token_loss(logits, torch.full((2, 5), -100))
+    loss.backward()
+    assert loss.item() == 0 and logits.grad.count_nonzero() == 0
+
+
+def test_tiny_sft_complete_training(tmp_path):
+    result = run(str(tmp_path))
+    assert result["steps"] == 100
+    assert result["validation_loss"][1] < result["validation_loss"][0]
+    assert tokenizer().padding_side == "right"
+
+
+def test_independent_multi_step_updates():
+    model, reference = prepare()
+    reference = add_reference_adapters(reference, model)
+    actual_optimizer = torch.optim.AdamW(model.parameters(), lr=0.003, weight_decay=0)
+    expected_optimizer = torch.optim.AdamW(
+        [p for p in reference.parameters() if p.requires_grad], lr=0.003, weight_decay=0
+    )
+    for _ in range(3):
+        audit(model, reference, batch(), sync=False)
+        actual_optimizer.step()
+        expected_optimizer.step()
+        for row in model.mapping:
+            layer = reference.get_submodule(row["module"])
+            for key in ("A", "B"):
+                value = model.onnx.arrays()[row[key]]
+                np.testing.assert_allclose(
+                    value, getattr(layer, key).detach(), rtol=1e-4, atol=1e-6
+                )

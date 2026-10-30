@@ -5,16 +5,17 @@
 import hashlib
 import json
 import os
+import tempfile
 import time
 
 import numpy as np
 import onnx
 import onnx_ir as ir
 import torch
-from onnxscript import optimizer
 from torch.autograd.function import once_differentiable
 
 import onnax
+from examples.huggingface.optimization import optimize_training_graph
 from examples.lora.train import session
 
 
@@ -23,6 +24,26 @@ def frozen_hashes(model):
         name: hashlib.sha256(v.const_value.numpy().tobytes()).hexdigest()
         for name, v in model.graph.initializers.items()
     }
+
+
+def save_graph(model, path, *, data_name):
+    """Serialize lazy transpose views through contiguous buffers once per export."""
+    result = model.clone()
+    for name, value in result.graph.initializers.items():
+        tensor = value.const_value
+        if tensor.nbytes >= 64 * 1024:
+            value.const_value = ir.tensor(np.ascontiguousarray(tensor.numpy()), name=name)
+    ir.save(result, path, external_data=data_name)
+
+
+def graph_session(model, directory, name):
+    """Use external data for large graphs and in-memory protobufs for small ones."""
+    size = sum(v.const_value.nbytes for v in model.graph.initializers.values())
+    if size < 64 * 1024**2:
+        return session(ir.to_proto(model).SerializeToString())
+    path = os.path.join(directory, name + ".onnx")
+    save_graph(model, path, data_name=name + ".data")
+    return session(path)
 
 
 class _OnnxFunction(torch.autograd.Function):
@@ -77,9 +98,13 @@ class OnnxModule(torch.nn.Module):
         self.seed = vjp.graph.inputs[-1].name
         self.gradients = [v.name for v in vjp.graph.outputs[len(model.graph.outputs) :]]
         self.vjp_model = vjp
-        self.optimized_vjp = optimizer.optimize(vjp.clone(), inline=False)
-        self.forward_session = session(ir.to_proto(model).SerializeToString())
-        self.backward_session = session(ir.to_proto(self.optimized_vjp).SerializeToString())
+        self.optimized_vjp = optimize_training_graph(vjp)
+        self.runtime_directory = tempfile.TemporaryDirectory(prefix="onnax-runtime-")
+
+        self.forward_session = graph_session(model, self.runtime_directory.name, "forward")
+        self.backward_session = graph_session(
+            self.optimized_vjp, self.runtime_directory.name, "backward"
+        )
         self.timings = {n: [] for n in ("forward", "backward", "exchange")}
 
     def _load_from_state_dict(self, state_dict, prefix, *args, **kwargs):
@@ -128,7 +153,7 @@ class OnnxModule(torch.nn.Module):
             value.const_value = ir.tensor(array, name=name)
             result.graph.register_initializer(value)
         path = os.path.join(directory, "forward.onnx")
-        ir.save(result, path)
+        save_graph(result, path, data_name="forward.data")
         onnx.checker.check_model(path, full_check=True)
         np.savez(os.path.join(directory, "adapter.npz"), **self.arrays())
         with open(os.path.join(directory, "interface.json"), "w") as stream:

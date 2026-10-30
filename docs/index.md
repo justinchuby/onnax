@@ -14,6 +14,7 @@ onnxscript
 lora
 nf4-lora
 huggingface
+qwen-sft
 mlp
 mlp-bf16
 classifier-device
