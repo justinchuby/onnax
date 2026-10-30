@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from threading import RLock
-from typing import Protocol
+from typing import Protocol, TypeVar
 
 import onnx_ir as ir
 
@@ -33,6 +33,11 @@ class VjpRule(Protocol):
 
 class BatchingRule(Protocol):
     def __call__(self, ctx: onnax.BatchingContext, node: ir.Node, /) -> None: ...
+
+
+_JvpRuleT = TypeVar("_JvpRuleT", bound=JvpRule)
+_VjpRuleT = TypeVar("_VjpRuleT", bound=VjpRule)
+_BatchingRuleT = TypeVar("_BatchingRuleT", bound=BatchingRule)
 
 
 class _RuleSet:
@@ -149,7 +154,7 @@ def _register(mode, domain, op_type, since_version, until_version):
 
 def register_jvp(
     domain: str, op_type: str, *, since_version: int, until_version: int
-) -> Callable[[JvpRule], JvpRule]:
+) -> Callable[[_JvpRuleT], _JvpRuleT]:
     """Globally register a forward rule for an inclusive, explicit version interval.
 
     Returns the decorated callable unchanged. Later rules override extensions or
@@ -162,7 +167,7 @@ def register_jvp(
 
 def register_vjp(
     domain: str, op_type: str, *, since_version: int, until_version: int
-) -> Callable[[VjpRule], VjpRule]:
+) -> Callable[[_VjpRuleT], _VjpRuleT]:
     """Globally register a reverse rule, used by both vjp and grad.
 
     The callback returns exactly the requested input-index contributions.
@@ -173,7 +178,7 @@ def register_vjp(
 
 def register_batching(
     domain: str, op_type: str, *, since_version: int, until_version: int
-) -> Callable[[BatchingRule], BatchingRule]:
+) -> Callable[[_BatchingRuleT], _BatchingRuleT]:
     """Globally register a batching callback using public context helpers.
 
     The callback updates the cloned node and registers every output. Use
