@@ -252,7 +252,7 @@ class JvpPass(ir.passes.FunctionalPass):
           interfaces are valid ONNX; all dimension sizes may be symbolic.
         * Elementwise: Identity, Add, Sub, Mul, Div, Sum, Mean, Max, Min, Pow, Neg, Abs, Exp, Log,
           Sqrt, Reciprocal, Sin, Cos, Tan, Asin, Acos, Atan, Asinh, Acosh, Atanh, Sinh, Cosh, Tanh, Sigmoid, Sign, Relu,
-          LeakyRelu, PRelu, Elu, Selu, HardSigmoid, HardSwish, Softplus, Softsign, Erf.
+          LeakyRelu, PRelu, Elu, Selu, HardSigmoid, HardSwish, ThresholdedRelu, Softplus, Softsign, Erf.
           Elu and Selu use the
           nonpositive branch's slope at zero (alpha and alpha * gamma).
           Gelu is supported from opset 20 with approximate="none" (default)

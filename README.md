@@ -99,6 +99,8 @@ HardSigmoid (including custom alpha/beta) and HardSwish support JVP, VJP,
 HVPs, and batched gradients across opsets 18 through 28. At clipping boundaries,
 HardSigmoid selects zero slope; HardSwish selects zero at the lower boundary and
 one at the upper boundary. Both select zero curvature at the boundaries.
+ThresholdedRelu supports JVP, VJP, HVPs, and batching. It selects zero slope
+and curvature at its threshold, a convention at this nonsmooth boundary.
 Abs now supports HVPs through its Sign pullback. Sign has a zero-derivative
 convention everywhere, including at zero, and Abs retains its zero slope at zero.
 These conventions permit piecewise differentiation; they do not claim classical
