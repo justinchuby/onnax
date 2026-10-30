@@ -295,8 +295,11 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
 def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Value]:
     op = node.op_type
     if op in OPS:
-        partials = _partials(ctx, node, tuple(d))
-        result = ctx.sum([ctx.op("Mul", d[i], partials[i]) for i in d])
+        if op == "Sum":
+            result = ctx.sum(list(d.values()))
+        else:
+            partials = _partials(ctx, node, tuple(d))
+            result = ctx.sum([ctx.op("Mul", d[i], partials[i]) for i in d])
         return [
             ctx.op("Expand", result, ctx.op("Shape", node.outputs[0]))
             if op in _BINARY | {"Sum", "Mean"}
@@ -314,6 +317,18 @@ def vjp(
     ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
 ) -> dict[int, ir.Value]:
     op, g = node.op_type, gs[0]
+    if op in {"Sum", "Mean"}:
+        # Every input receives the same cotangent before undoing broadcasting.
+        # Share the scaling here rather than relying on optimizer CSE.
+        contribution = (
+            ctx.op("Mul", g, ctx.scalar(_input(node), 1 / len(node.inputs)))
+            if op == "Mean"
+            else g
+        )
+        return {
+            i: ctx.unbroadcast(contribution, _input(node, i), broadcasted=node.outputs[0])
+            for i in indices
+        }
     if op in OPS:
         partials = _partials(ctx, node, indices)
         result = {}
