@@ -64,8 +64,11 @@ ir.save(per_example, "per_example.onnx")
 ir.save(hvp, "hvp.onnx")
 ```
 
-Every transform returns a **new graph**, leaves its source unchanged, and
-retains all primal outputs before appended derivatives. `grad` selects one
+The functional transforms accept `ir.Model`, `ir.Graph`, `ir.GraphView` and
+`onnx.ModelProto`. Each returns the same container type; a `GraphView` returns
+an independent `ir.Graph`. Source objects remain unchanged.
+
+Every transform retains all primal outputs before appended derivatives. `grad` selects one
 rank-zero loss and uses an implicit unit seed. `jvp` and `vjp` instead append
 explicit runtime tangent/cotangent inputs; feed seeds with exactly the selected
 primal's shape and dtype. Inspect the returned graph's inputs and outputs for
