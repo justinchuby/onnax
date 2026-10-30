@@ -1,6 +1,7 @@
 # LoRA training over an NF4 base
 
 Train FP32 LoRA adapters while storing the frozen ONNX base as packed NF4 codes.
+The [Qwen NF4 tutorial](qwen-nf4.md) applies the same kernels to multi-layer SFTTrainer fine-tuning.
 This example extends the [LoRA workload](lora.md) with blockwise quantization and
 input-gradient rules for quantized matrix multiplication.
 

@@ -1,0 +1,341 @@
+[
+  {
+    "mode": "pytorch",
+    "real": false,
+    "weight_values": "nf4_reconstructed_fp32",
+    "base_storage": "fp32",
+    "warmup": 10,
+    "samples": 100,
+    "batch": 4,
+    "sequence": 64,
+    "valid_shifted_tokens": 252,
+    "initialization_seconds": 0.009844084008364007,
+    "timings_ms": {
+      "forward_and_loss": {
+        "median": 1.6857295122463256,
+        "p95": 8.995037132990543
+      },
+      "backward": {
+        "median": 1.417812003637664,
+        "p95": 6.2068728875601655
+      },
+      "adamw": {
+        "median": 0.17485400894656777,
+        "p95": 0.6969663460040462
+      },
+      "step": {
+        "median": 3.2862704974832013,
+        "p95": 16.658843125333078
+      }
+    },
+    "effective_tokens_per_second": 76682.67119002981,
+    "peak_rss_bytes": 567476224,
+    "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+    "parameter_bytes": 7168,
+    "threads": {
+      "torch": 1,
+      "ort_intra": 1,
+      "ort_inter": 1
+    },
+    "ort_optimizer": "disabled",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "versions": {
+      "torch": "2.15.0",
+      "transformers": "5.22.1",
+      "onnxruntime": "1.31.1",
+      "onnxscript": "0.7.2",
+      "mobius-onnx": "0.1.0"
+    },
+    "hardware": {
+      "cpu": "Apple M1 Max",
+      "logical_cores": 10,
+      "physical_memory_bytes": 34359738368
+    }
+  },
+  {
+    "mode": "raw",
+    "real": false,
+    "weight_values": "nf4_reconstructed_fp32",
+    "base_storage": "packed_nf4_decoder",
+    "warmup": 10,
+    "samples": 100,
+    "batch": 4,
+    "sequence": 64,
+    "valid_shifted_tokens": 252,
+    "initialization_seconds": 1.8557827500044368,
+    "timings_ms": {
+      "forward_and_loss": {
+        "median": 2.538646003813483,
+        "p95": 17.001106262614478
+      },
+      "backward": {
+        "median": 9.622833502362482,
+        "p95": 33.218620842671946
+      },
+      "adamw": {
+        "median": 0.271479002549313,
+        "p95": 0.6192954868311059
+      },
+      "step": {
+        "median": 13.610124500701204,
+        "p95": 45.73102565918815
+      }
+    },
+    "effective_tokens_per_second": 18515.627831840684,
+    "peak_rss_bytes": 626475008,
+    "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+    "parameter_bytes": 7168,
+    "threads": {
+      "torch": 1,
+      "ort_intra": 1,
+      "ort_inter": 1
+    },
+    "ort_optimizer": "disabled",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "versions": {
+      "torch": "2.15.0",
+      "transformers": "5.22.1",
+      "onnxruntime": "1.31.1",
+      "onnxscript": "0.7.2",
+      "mobius-onnx": "0.1.0"
+    },
+    "initializer_bytes_by_session": {
+      "forward": 111720,
+      "backward": 111720
+    },
+    "initializer_scope": "Logical top-level initializer bytes for each execution session",
+    "decoder_storage_bytes": {
+      "original": 294912,
+      "packed": 41472
+    },
+    "nodes": {
+      "forward": 266,
+      "raw_vjp": 3252,
+      "executed_vjp": 3252
+    },
+    "logical_saved_activation_bytes": 0,
+    "saved_activation_count": 0,
+    "input_view_median_us": 13.687502359971404,
+    "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries",
+    "hardware": {
+      "cpu": "Apple M1 Max",
+      "logical_cores": 10,
+      "physical_memory_bytes": 34359738368
+    }
+  },
+  {
+    "mode": "optimized",
+    "real": false,
+    "weight_values": "nf4_reconstructed_fp32",
+    "base_storage": "packed_nf4_decoder",
+    "warmup": 10,
+    "samples": 100,
+    "batch": 4,
+    "sequence": 64,
+    "valid_shifted_tokens": 252,
+    "initialization_seconds": 1.2587704579927959,
+    "timings_ms": {
+      "forward_and_loss": {
+        "median": 2.2013539855834097,
+        "p95": 2.5322666915599257
+      },
+      "backward": {
+        "median": 8.20681250479538,
+        "p95": 9.309337145532481
+      },
+      "adamw": {
+        "median": 0.16693749057594687,
+        "p95": 0.2609666567877866
+      },
+      "step": {
+        "median": 10.563521005678922,
+        "p95": 12.178714605397545
+      }
+    },
+    "effective_tokens_per_second": 23855.682197680624,
+    "peak_rss_bytes": 633733120,
+    "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+    "parameter_bytes": 7168,
+    "threads": {
+      "torch": 1,
+      "ort_intra": 1,
+      "ort_inter": 1
+    },
+    "ort_optimizer": "disabled",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "versions": {
+      "torch": "2.15.0",
+      "transformers": "5.22.1",
+      "onnxruntime": "1.31.1",
+      "onnxscript": "0.7.2",
+      "mobius-onnx": "0.1.0"
+    },
+    "initializer_bytes_by_session": {
+      "forward": 111720,
+      "backward": 111804
+    },
+    "initializer_scope": "Logical top-level initializer bytes for each execution session",
+    "decoder_storage_bytes": {
+      "original": 294912,
+      "packed": 41472
+    },
+    "nodes": {
+      "forward": 266,
+      "raw_vjp": 3252,
+      "executed_vjp": 2325
+    },
+    "logical_saved_activation_bytes": 0,
+    "saved_activation_count": 0,
+    "input_view_median_us": 7.5830030255019665,
+    "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries",
+    "hardware": {
+      "cpu": "Apple M1 Max",
+      "logical_cores": 10,
+      "physical_memory_bytes": 34359738368
+    }
+  },
+  {
+    "mode": "saved",
+    "real": false,
+    "weight_values": "nf4_reconstructed_fp32",
+    "base_storage": "packed_nf4_decoder",
+    "warmup": 10,
+    "samples": 100,
+    "batch": 4,
+    "sequence": 64,
+    "valid_shifted_tokens": 252,
+    "initialization_seconds": 1.181266165978741,
+    "timings_ms": {
+      "forward_and_loss": {
+        "median": 2.4304999969899654,
+        "p95": 2.4734357008128427
+      },
+      "backward": {
+        "median": 6.503208511276171,
+        "p95": 6.564495564089157
+      },
+      "adamw": {
+        "median": 0.16127049457281828,
+        "p95": 0.1745979156112298
+      },
+      "step": {
+        "median": 9.097416492295451,
+        "p95": 9.187389604630878
+      }
+    },
+    "effective_tokens_per_second": 27700.171824981007,
+    "peak_rss_bytes": 641253376,
+    "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+    "parameter_bytes": 7168,
+    "threads": {
+      "torch": 1,
+      "ort_intra": 1,
+      "ort_inter": 1
+    },
+    "ort_optimizer": "disabled",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "versions": {
+      "torch": "2.15.0",
+      "transformers": "5.22.1",
+      "onnxruntime": "1.31.1",
+      "onnxscript": "0.7.2",
+      "mobius-onnx": "0.1.0"
+    },
+    "initializer_bytes_by_session": {
+      "forward": 111720,
+      "backward": 37300
+    },
+    "initializer_scope": "Logical top-level initializer bytes for each execution session",
+    "decoder_storage_bytes": {
+      "original": 294912,
+      "packed": 41472
+    },
+    "nodes": {
+      "forward": 266,
+      "raw_vjp": 3252,
+      "executed_vjp": 2072
+    },
+    "logical_saved_activation_bytes": 10039296,
+    "saved_activation_count": 141,
+    "input_view_median_us": 6.874994141981006,
+    "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries",
+    "hardware": {
+      "cpu": "Apple M1 Max",
+      "logical_cores": 10,
+      "physical_memory_bytes": 34359738368
+    }
+  },
+  {
+    "mode": "chunked",
+    "real": false,
+    "weight_values": "nf4_reconstructed_fp32",
+    "base_storage": "packed_nf4_decoder",
+    "warmup": 10,
+    "samples": 100,
+    "batch": 4,
+    "sequence": 64,
+    "valid_shifted_tokens": 252,
+    "initialization_seconds": 1.3553115419927053,
+    "timings_ms": {
+      "forward_and_loss": {
+        "median": 3.322854492580518,
+        "p95": 3.5902773975976743
+      },
+      "backward": {
+        "median": 8.016562496777624,
+        "p95": 8.38686045317445
+      },
+      "adamw": {
+        "median": 0.16412499826401472,
+        "p95": 0.2074235497275367
+      },
+      "step": {
+        "median": 11.507687508128583,
+        "p95": 12.138318763754796
+      }
+    },
+    "effective_tokens_per_second": 21898.404855188932,
+    "peak_rss_bytes": 635240448,
+    "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+    "parameter_bytes": 7168,
+    "threads": {
+      "torch": 1,
+      "ort_intra": 1,
+      "ort_inter": 1
+    },
+    "ort_optimizer": "disabled",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "versions": {
+      "torch": "2.15.0",
+      "transformers": "5.22.1",
+      "onnxruntime": "1.31.1",
+      "onnxscript": "0.7.2",
+      "mobius-onnx": "0.1.0"
+    },
+    "initializer_bytes_by_session": {
+      "forward": 111720,
+      "backward": 111804,
+      "head_forward": 65536,
+      "head_backward": 65589
+    },
+    "initializer_scope": "Logical top-level initializer bytes for each execution session",
+    "decoder_storage_bytes": {
+      "original": 294912,
+      "packed": 41472
+    },
+    "nodes": {
+      "forward": 264,
+      "raw_vjp": 3228,
+      "executed_vjp": 2306
+    },
+    "logical_saved_activation_bytes": 0,
+    "saved_activation_count": 0,
+    "input_view_median_us": 7.16649810783565,
+    "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries",
+    "hardware": {
+      "cpu": "Apple M1 Max",
+      "logical_cores": 10,
+      "physical_memory_bytes": 34359738368
+    }
+  }
+]

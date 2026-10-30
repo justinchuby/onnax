@@ -6,9 +6,7 @@ import onnx_ir as ir
 
 
 def split_vjp(model, joint):
-    """Return forward/backward graphs and the exact activation boundary."""
-    if model.functions:
-        raise ValueError("Activation splitting expects an expanded flat graph")
+    """Split top-level nodes, retaining opaque local functions in both models."""
     primal_count = len(model.graph)
     original = list(model.graph)
     nodes = list(joint.graph)

@@ -20,11 +20,32 @@ from examples.huggingface.sft import prepare, texts, token_loss, tokenizer
 from examples.huggingface.validation import TorchLora
 
 
-def measure(mode, *, real=False, samples=100, warmup=10, batch_size=4):
+def hardware():
+    cpu = platform.processor() or platform.machine()
+    if sys.platform == "darwin":
+        result = subprocess.run(
+            ["sysctl", "-n", "machdep.cpu.brand_string"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        cpu = result.stdout.strip() or cpu
+    return {
+        "cpu": cpu,
+        "logical_cores": os.cpu_count(),
+        "physical_memory_bytes": os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES"),
+    }
+
+
+def measure(mode, *, real=False, samples=100, warmup=10, batch_size=4, nf4=False):
     torch.set_num_threads(1)
     start = time.perf_counter()
     if mode == "pytorch":
         model = reference_model(real)
+        if nf4:
+            from examples.huggingface.nf4 import quantize_reference
+
+            quantize_reference(model)
         for p in model.parameters():
             p.requires_grad_(False)
         count = 0
@@ -42,6 +63,7 @@ def measure(mode, *, real=False, samples=100, warmup=10, batch_size=4):
             mode="chunked" if mode == "chunked" else "full",
             optimize=mode != "raw",
             save_activations=mode == "saved",
+            nf4=nf4,
         )
         del reference
     params = [p for p in model.parameters() if p.requires_grad]
@@ -85,6 +107,8 @@ def measure(mode, *, real=False, samples=100, warmup=10, batch_size=4):
     report = {
         "mode": mode,
         "real": real,
+        "weight_values": "nf4_reconstructed_fp32" if nf4 else "fp32",
+        "base_storage": "packed_nf4_decoder" if nf4 and mode != "pytorch" else "fp32",
         "warmup": warmup,
         "samples": samples,
         "batch": batch_size,
@@ -106,12 +130,30 @@ def measure(mode, *, real=False, samples=100, warmup=10, batch_size=4):
         "threads": {"torch": 1, "ort_intra": 1, "ort_inter": 1},
         "ort_optimizer": "disabled",
         "platform": platform.platform(),
+        "hardware": hardware(),
         "versions": {
             n: version(n)
             for n in ("torch", "transformers", "onnxruntime", "onnxscript", "mobius-onnx")
         },
     }
     if mode != "pytorch":
+        executed_graphs = {"forward": model.onnx.model, "backward": model.onnx.optimized_vjp}
+        if mode == "chunked":
+            executed_graphs.update(
+                head_forward=model.head.model, head_backward=model.head.gradient
+            )
+        report["initializer_bytes_by_session"] = {
+            name: sum(value.const_value.nbytes for value in graph.graph.initializers.values())
+            for name, graph in executed_graphs.items()
+        }
+        report["initializer_scope"] = (
+            "Logical top-level initializer bytes for each execution session"
+        )
+        if nf4:
+            report["decoder_storage_bytes"] = {
+                "original": model.quantization["original_decoder_bytes"],
+                "packed": model.quantization["packed_decoder_bytes"],
+            }
         report["nodes"] = {
             "forward": len(model.onnx.model.graph),
             "raw_vjp": len(model.onnx.vjp_model.graph),
@@ -134,6 +176,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=["pytorch", "raw", "optimized", "saved", "chunked"])
     parser.add_argument("--real", action="store_true")
+    parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--samples", type=int, default=100)
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=4)
@@ -150,6 +193,7 @@ if __name__ == "__main__":
                     samples=args.samples,
                     warmup=args.warmup,
                     batch_size=args.batch_size,
+                    nf4=args.nf4,
                 )
             )
         )
@@ -171,6 +215,8 @@ if __name__ == "__main__":
             ]
             if args.real:
                 cmd.append("--real")
+            if args.nf4:
+                cmd.append("--nf4")
             result = subprocess.run(cmd, check=True, capture_output=True, text=True)
             reports.append(json.loads(result.stdout))
         with open(args.output, "w") as stream:

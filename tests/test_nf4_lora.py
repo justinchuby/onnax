@@ -247,3 +247,40 @@ def test_nf4_codebook_layout_is_high_nibble_first():
     )
     np.testing.assert_array_equal(scales, np.ones(1, np.float32))
     np.testing.assert_array_equal(dequantize(packed, scales, (4, 4)), CODEBOOK.reshape(4, 4))
+
+
+def test_lower_authors_functions_for_source_opset_and_replaces_node_version():
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[2, 3])
+    tape = ir.tape.Tape()
+    weight = tape.initializer(
+        ir.tensor(np.arange(12, dtype=np.float32).reshape(3, 4), name="weight")
+    )
+    y = tape.op("MatMul", [x, weight])
+    y.producer().version = 24
+    y.name, y.dtype, y.shape = "y", x.dtype, ir.Shape([2, 4])
+    source = ir.Model(
+        ir.Graph(
+            [x],
+            [y],
+            nodes=tape.nodes,
+            initializers=tape.initializers,
+            opset_imports={"": 24},
+            name="nf4_opset24",
+        ),
+        ir_version=12,
+    )
+    graph, _ = lower(source, names=["weight"])
+    custom = next(node for node in graph.graph if node.domain)
+    assert custom.version == 1
+    assert all(fn.opset_imports[""] == 24 for fn in graph.functions.values())
+    onnx.checker.check_model(ir.to_proto(graph), full_check=True)
+    derivative = onnax.vjp(graph)
+    onnx.checker.check_model(ir.to_proto(derivative), full_check=True)
+    values = np.ones((2, 3), np.float32)
+    seed = np.ones((2, 4), np.float32)
+    outputs = session(ir.to_proto(derivative).SerializeToString()).run(
+        None, {"x": values, derivative.graph.inputs[-1].name: seed}
+    )
+    packed, scales = quantize(weight.const_value.numpy())
+    decoded = dequantize(packed, scales, (3, 4))
+    np.testing.assert_allclose(outputs[-1], seed @ decoded.T, rtol=1e-4, atol=1e-6)

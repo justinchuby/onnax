@@ -1,0 +1,261 @@
+{
+  "model": "tiny-qwen3",
+  "revision": null,
+  "steps": 100,
+  "validation_loss": [
+    5.542850971221924,
+    5.417977333068848
+  ],
+  "audits": [
+    {
+      "strict_logit_check_passed": true,
+      "logit_violations": 0,
+      "logits_relative_l2": 3.12307633976161e-07,
+      "logits_max_abs": 2.980232238769531e-07,
+      "gradients_max_abs": 1.979060471057892e-09,
+      "strict_gradient_check_passed": true,
+      "gradient_failures": {},
+      "loss": 5.577284812927246
+    },
+    {
+      "strict_logit_check_passed": true,
+      "logit_violations": 0,
+      "logits_relative_l2": 3.912483066415007e-07,
+      "logits_max_abs": 3.501772880554199e-07,
+      "gradients_max_abs": 3.91155481338501e-08,
+      "strict_gradient_check_passed": true,
+      "gradient_failures": {},
+      "loss": 5.201505661010742
+    }
+  ],
+  "quantization": {
+    "format": "onnax-row-major-nf4-v1",
+    "codebook": [
+      -1.0,
+      -0.6961928009986877,
+      -0.5250730514526367,
+      -0.39491748809814453,
+      -0.28444138169288635,
+      -0.18477343022823334,
+      -0.09105003625154495,
+      0.0,
+      0.07958029955625534,
+      0.16093020141124725,
+      0.24611230194568634,
+      0.33791524171829224,
+      0.44070982933044434,
+      0.5626170039176941,
+      0.7229568362236023,
+      1.0
+    ],
+    "packing": "high nibble first; row-major transposed Linear weight",
+    "block_size": 64,
+    "compute_dtype": "float32",
+    "adapter_dtype": "float32",
+    "embedding_dtype": "float32",
+    "lm_head_dtype": "float32",
+    "weights": {
+      "model.layers.0.mlp.down_proj.weight_t": {
+        "packed": "model.layers.0.mlp.down_proj.weight_t.nf4",
+        "scales": "model.layers.0.mlp.down_proj.weight_t.absmax",
+        "shape": [
+          128,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 4096,
+        "scale_bytes": 512,
+        "original_bytes": 32768
+      },
+      "model.layers.0.mlp.gate_proj.weight_t": {
+        "packed": "model.layers.0.mlp.gate_proj.weight_t.nf4",
+        "scales": "model.layers.0.mlp.gate_proj.weight_t.absmax",
+        "shape": [
+          64,
+          128
+        ],
+        "block_size": 64,
+        "packed_bytes": 4096,
+        "scale_bytes": 512,
+        "original_bytes": 32768
+      },
+      "model.layers.0.mlp.up_proj.weight_t": {
+        "packed": "model.layers.0.mlp.up_proj.weight_t.nf4",
+        "scales": "model.layers.0.mlp.up_proj.weight_t.absmax",
+        "shape": [
+          64,
+          128
+        ],
+        "block_size": 64,
+        "packed_bytes": 4096,
+        "scale_bytes": 512,
+        "original_bytes": 32768
+      },
+      "model.layers.0.self_attn.k_proj.weight_t": {
+        "packed": "model.layers.0.self_attn.k_proj.weight_t.nf4",
+        "scales": "model.layers.0.self_attn.k_proj.weight_t.absmax",
+        "shape": [
+          64,
+          32
+        ],
+        "block_size": 64,
+        "packed_bytes": 1024,
+        "scale_bytes": 128,
+        "original_bytes": 8192
+      },
+      "model.layers.0.self_attn.o_proj.weight_t": {
+        "packed": "model.layers.0.self_attn.o_proj.weight_t.nf4",
+        "scales": "model.layers.0.self_attn.o_proj.weight_t.absmax",
+        "shape": [
+          64,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 2048,
+        "scale_bytes": 256,
+        "original_bytes": 16384
+      },
+      "model.layers.0.self_attn.q_proj.weight_t": {
+        "packed": "model.layers.0.self_attn.q_proj.weight_t.nf4",
+        "scales": "model.layers.0.self_attn.q_proj.weight_t.absmax",
+        "shape": [
+          64,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 2048,
+        "scale_bytes": 256,
+        "original_bytes": 16384
+      },
+      "model.layers.0.self_attn.v_proj.weight_t": {
+        "packed": "model.layers.0.self_attn.v_proj.weight_t.nf4",
+        "scales": "model.layers.0.self_attn.v_proj.weight_t.absmax",
+        "shape": [
+          64,
+          32
+        ],
+        "block_size": 64,
+        "packed_bytes": 1024,
+        "scale_bytes": 128,
+        "original_bytes": 8192
+      },
+      "model.layers.1.mlp.down_proj.weight_t": {
+        "packed": "model.layers.1.mlp.down_proj.weight_t.nf4",
+        "scales": "model.layers.1.mlp.down_proj.weight_t.absmax",
+        "shape": [
+          128,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 4096,
+        "scale_bytes": 512,
+        "original_bytes": 32768
+      },
+      "model.layers.1.mlp.gate_proj.weight_t": {
+        "packed": "model.layers.1.mlp.gate_proj.weight_t.nf4",
+        "scales": "model.layers.1.mlp.gate_proj.weight_t.absmax",
+        "shape": [
+          64,
+          128
+        ],
+        "block_size": 64,
+        "packed_bytes": 4096,
+        "scale_bytes": 512,
+        "original_bytes": 32768
+      },
+      "model.layers.1.mlp.up_proj.weight_t": {
+        "packed": "model.layers.1.mlp.up_proj.weight_t.nf4",
+        "scales": "model.layers.1.mlp.up_proj.weight_t.absmax",
+        "shape": [
+          64,
+          128
+        ],
+        "block_size": 64,
+        "packed_bytes": 4096,
+        "scale_bytes": 512,
+        "original_bytes": 32768
+      },
+      "model.layers.1.self_attn.k_proj.weight_t": {
+        "packed": "model.layers.1.self_attn.k_proj.weight_t.nf4",
+        "scales": "model.layers.1.self_attn.k_proj.weight_t.absmax",
+        "shape": [
+          64,
+          32
+        ],
+        "block_size": 64,
+        "packed_bytes": 1024,
+        "scale_bytes": 128,
+        "original_bytes": 8192
+      },
+      "model.layers.1.self_attn.o_proj.weight_t": {
+        "packed": "model.layers.1.self_attn.o_proj.weight_t.nf4",
+        "scales": "model.layers.1.self_attn.o_proj.weight_t.absmax",
+        "shape": [
+          64,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 2048,
+        "scale_bytes": 256,
+        "original_bytes": 16384
+      },
+      "model.layers.1.self_attn.q_proj.weight_t": {
+        "packed": "model.layers.1.self_attn.q_proj.weight_t.nf4",
+        "scales": "model.layers.1.self_attn.q_proj.weight_t.absmax",
+        "shape": [
+          64,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 2048,
+        "scale_bytes": 256,
+        "original_bytes": 16384
+      },
+      "model.layers.1.self_attn.v_proj.weight_t": {
+        "packed": "model.layers.1.self_attn.v_proj.weight_t.nf4",
+        "scales": "model.layers.1.self_attn.v_proj.weight_t.absmax",
+        "shape": [
+          64,
+          32
+        ],
+        "block_size": 64,
+        "packed_bytes": 1024,
+        "scale_bytes": 128,
+        "original_bytes": 8192
+      }
+    },
+    "original_decoder_bytes": 294912,
+    "packed_decoder_bytes": 41472
+  },
+  "artifact_bytes": {
+    "forward.onnx": 76547,
+    "forward.data": 116736,
+    "adapter.npz": 9654,
+    "interface.json": 7739,
+    "quantization.json": 5481
+  },
+  "forward_nodes": 266,
+  "adapter_parameter_bytes": 7168,
+  "requested_audits": {
+    "peft": true,
+    "fp64": false
+  },
+  "peft": {
+    "adapter_tensors": 8,
+    "format_roundtrip_bitwise": true,
+    "gradient_check_passed": true,
+    "gradient_failures": {},
+    "update_check_passed": true,
+    "update_failures": {},
+    "logit_violations": 0,
+    "logits_max_abs": 2.7567148208618164e-07
+  },
+  "execution": {
+    "dtype": "float32",
+    "cpu_provider": "CPUExecutionProvider",
+    "ort_graph_optimization": "disabled",
+    "saved_activations": true,
+    "microbatch": 4,
+    "gradient_accumulation": 2
+  }
+}

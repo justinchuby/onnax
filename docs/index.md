@@ -16,6 +16,7 @@ nf4-lora
 huggingface
 qwen-sft
 qwen-adapters
+qwen-nf4
 mlp
 mlp-bf16
 classifier-device
