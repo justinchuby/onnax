@@ -9,7 +9,7 @@ from _testing import evaluator, runtime_session
 from test_autodiff import _model, _products, _value
 from test_higher_order import _hvp_check
 
-from onnax import grad, jvp, vmap
+from onnax import grad, jvp, vjp, vmap
 
 
 @pytest.mark.parametrize("op", ["ReduceL1", "ReduceSumSquare"])
@@ -193,3 +193,30 @@ def test_variadic_first_operand_expands_at_runtime(op):
     scale = 1 if op == "Sum" else 0.5
     np.testing.assert_allclose(actual[-2], np.full((2, 1), 3 * scale))
     np.testing.assert_allclose(actual[-1], np.full((1, 3), 2 * scale))
+
+
+@pytest.mark.parametrize("op", ["Sum", "Mean"])
+@pytest.mark.parametrize("selected", [None, ["a"]])
+def test_variadic_pullback_shares_scaling(op, selected):
+    inputs = [_value(name, [2, 3]) for name in ("a", "b", "c")]
+    tape = ir.tape.Tape()
+    source = _model(inputs, tape, [tape.op(op, inputs)])
+    derivative = vjp(source, inputs=selected)
+    multiplies = [node for node in derivative.graph if node.op_type == "Mul"]
+    assert len(multiplies) == (1 if op == "Mean" else 0)
+    feeds = {value.name: np.ones((2, 3)) for value in inputs}
+    cotangent = np.arange(6.0).reshape(2, 3)
+    feeds[derivative.graph.inputs[-1].name] = cotangent
+    outputs = evaluator(derivative).run(None, feeds)
+    count = len(selected) if selected else len(inputs)
+    for output in outputs[-count:]:
+        np.testing.assert_allclose(output, cotangent / (3 if op == "Mean" else 1))
+
+
+def test_sum_pushforward_needs_no_multiplication():
+    inputs = [_value(name, [2, 3]) for name in ("a", "b", "c")]
+    tape = ir.tape.Tape()
+    source = _model(inputs, tape, [tape.op("Sum", inputs)])
+    derivative = jvp(source)
+    assert all(node.op_type != "Mul" for node in derivative.graph)
+    _products(source, {value.name: np.ones((2, 3)) for value in inputs})
