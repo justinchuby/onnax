@@ -148,6 +148,9 @@ It returns a clone and needs no ONNXScript dependency itself. It preserves
 nonlinear operations, matrix products, functions, and subgraphs as boundaries;
 it does not prove the entire model is linear. `max_terms=64` bounds the number
 of dependent bases represented per island.
+Overloaded calls remain opaque. Models defining local functions that shadow
+emitted standard operators are left unchanged; explicitly inline those
+functions first if factoring their bodies is intended.
 
 This is an explicit opt-in to floating-point reassociation: rounding, overflow,
 underflow, signed zeros, and non-finite behavior may change, even for finite

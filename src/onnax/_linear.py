@@ -118,6 +118,9 @@ class HoistLinearCoefficientsPass(ir.passes.FunctionalPass):
     18 through 28 are factored. Div requires an independent denominator.
     Broadcasting is retained; shapes may be symbolic or unknown. MatMul,
     custom-domain operators, local functions, and subgraphs are not rewritten.
+    Overloaded calls are opaque even when named like standard arithmetic.
+    Models defining a bare main-domain function named like an emitted operator
+    are left unchanged, so factoring cannot accidentally call that function.
     Subgraph outputs are conservatively treated as dependent because subgraphs
     may capture selected inputs. Model/function metadata, interfaces, and
     initializers are preserved in a clone; the source model is unchanged.
@@ -182,6 +185,15 @@ class HoistLinearCoefficientsPass(ir.passes.FunctionalPass):
                     "input; integer, half, and complex arithmetic are not factored."
                 )
             dependent.add(value)
+        # Generated nodes must resolve to standard arithmetic, not to a local
+        # function with the same bare identifier. Inlining such functions first
+        # is the caller's explicit choice; this pass preserves definitions.
+        if any(
+            (domain, op, "") in result.functions
+            for domain in ("", "ai.onnx")
+            for op in _OPS | {"Constant"}
+        ):
+            return ir.passes.PassResult(result, False)
         original_nodes = list(graph)
         try:
             graph.sort()
@@ -204,6 +216,8 @@ class HoistLinearCoefficientsPass(ir.passes.FunctionalPass):
                 dependent.update(node.outputs)
             if (
                 node.domain not in ("", "ai.onnx")
+                or node.overload
+                or node.op_identifier() in result.functions
                 or node.op_type not in _OPS
                 or len(node.outputs) != 1
                 or len(node.inputs) != (1 if node.op_type == "Neg" else 2)
