@@ -79,6 +79,8 @@ def audit(model, reference, batch, *, sync=True, diagnose_rounding=False):
             index = model.onnx.names.index(row[key])
             gradient = model.onnx.adapters[index].grad.numpy()
             expected_gradient = getattr(layer, key).grad.numpy()
+            if not np.isfinite(gradient).all() or not np.isfinite(expected_gradient).all():
+                raise AssertionError(f"Nonfinite gradient: {row[key]}")
             maximum = max(maximum, float(np.max(np.abs(gradient - expected_gradient))))
             failed = np.abs(gradient - expected_gradient) > 1e-6 + 1e-4 * np.abs(
                 expected_gradient

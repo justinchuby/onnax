@@ -107,6 +107,8 @@ independent AdamW update exceeds the parameter tolerance for some entries;
 the report preserves the per-parameter failures. The offline tiny model passes the
 full bidirectional adapter, gradient and update regression.
 
+(qwen-operator-audit)=
+
 ## Compare operators on the same inputs
 
 The layer audit exposes each projection, RMSNorm and Swish input and replays that

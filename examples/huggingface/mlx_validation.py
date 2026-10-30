@@ -18,17 +18,31 @@ from examples.huggingface.validation import add_reference_adapters, audit
 from examples.lora.mlx_runtime import session
 
 
-def run(*, library=None):
+def run(*, library=None, segmented=False, target_nodes=1024):
     """Compare four independent AdamW updates with CPU fallback disabled."""
     if library is not None:
         from examples.lora.mlx_runtime import register_library
 
         register_library(library)
+    library_hash = None
+    if library is not None:
+        with open(library, "rb") as stream:
+            library_hash = hashlib.file_digest(stream, "sha256").hexdigest()
     torch.set_num_threads(1)
     model, reference = prepare(nf4=True, save_activations=True)
     forward, _, _ = split_vjp(model.onnx.model, model.onnx.vjp_model)
-    model.onnx.forward_session = session(forward)
-    model.onnx.backward_session = session(model.onnx.optimized_vjp)
+    if segmented:
+        from examples.huggingface.segmented import SegmentedSession
+
+        model.onnx.forward_session = SegmentedSession(
+            forward, target_nodes=target_nodes, session_factory=session
+        )
+        model.onnx.backward_session = SegmentedSession(
+            model.onnx.optimized_vjp, target_nodes=target_nodes, session_factory=session
+        )
+    else:
+        model.onnx.forward_session = session(forward)
+        model.onnx.backward_session = session(model.onnx.optimized_vjp)
     reference = add_reference_adapters(reference, model)
     ids = torch.tensor([[1, 4, 5, 6, 2], [1, 7, 2, 0, 0]])
     mask = ids.ne(0).long()
@@ -56,12 +70,10 @@ def run(*, library=None):
         raise AssertionError(f"Training loss did not decrease: {losses}")
     if frozen_hashes(model.onnx.model) != model.onnx.frozen:
         raise AssertionError("Frozen model buffers changed")
-    library_hash = None
-    if library is not None:
-        with open(library, "rb") as stream:
-            library_hash = hashlib.file_digest(stream, "sha256").hexdigest()
     return {
         "model": "tiny-qwen3-nf4",
+        "execution": "segmented" if segmented else "whole_graph",
+        "segment_target_nodes": target_nodes if segmented else None,
         "platform": platform.platform(),
         "versions": {
             name: importlib.metadata.version(name)
@@ -86,9 +98,13 @@ def run(*, library=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--library", help="Development MLX EP dylib")
+    parser.add_argument("--segmented", action="store_true")
+    parser.add_argument("--segment-nodes", type=int, default=1024)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
-    result = run(library=args.library)
+    result = run(
+        library=args.library, segmented=args.segmented, target_nodes=args.segment_nodes
+    )
     os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
     with open(args.output, "w", encoding="utf-8") as stream:
         stream.write(json.dumps(result, indent=2) + "\n")
