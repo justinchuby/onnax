@@ -128,8 +128,8 @@ def solve(residual, transpose, product, initial, *, iterations=12, damping=1e-3)
 
 
 def run(output_dir):
-    output_dir.mkdir(parents=True, exist_ok=True)
     output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     source = model()
     before = ir.to_proto(source).SerializeToString()
     graphs = {
@@ -177,7 +177,8 @@ def run(output_dir):
         feeds = {**base, "parameters": p}
         if seed is not None:
             feeds[executor.get_inputs()[-1].name] = seed
-        return executor.run(None, feeds)[-1 if seed is not None else 0]
+        output = executor.get_outputs()[-1 if seed is not None else 0].name
+        return executor.run([output], feeds)[0]
 
     def transpose(p, v):
         return execute("vjp", p, v)
@@ -206,12 +207,21 @@ def run(output_dir):
             execute("residual", initial)[:count], r, rtol=1e-9, atol=1e-10
         )
     directions = rng.normal(size=(5, 3))
-    batched = executors["batched_jvp"]
-    actual = batched.run(
-        None, {**base, "parameters": initial, batched.get_inputs()[-1].name: directions}
-    )[-1]
     jacobian = reference(initial, t, y)[1]
-    np.testing.assert_allclose(actual, directions @ jacobian.T, rtol=1e-9, atol=1e-10)
+    for suffix in ("", ".optimized"):
+        batched = session(output_dir / f"batched_jvp{suffix}.onnx")
+        for count in (1, 5):
+            actual = batched.run(
+                None,
+                {
+                    **base,
+                    "parameters": initial,
+                    batched.get_inputs()[-1].name: directions[:count],
+                },
+            )[-1]
+            np.testing.assert_allclose(
+                actual, directions[:count] @ jacobian.T, rtol=1e-9, atol=1e-10
+            )
     direction = directions[0]
     cotangent = rng.normal(size=len(t))
     np.testing.assert_allclose(
