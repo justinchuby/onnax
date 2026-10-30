@@ -107,6 +107,9 @@ Atan supports JVP, VJP, HVPs and batching, using a bounded reciprocal
 expression to avoid squaring large inputs in its derivative.
 Asinh supports JVP, VJP, HVPs, and batching, with bounded intermediate values
 to preserve gradients and curvature for large finite inputs.
+Acosh and Atanh support JVP, VJP, HVPs, and batching on their smooth domains
+(x > 1 and |x| < 1 respectively); endpoint derivatives are singular. Acosh
+avoids squaring large inputs, and Atanh retains small curvature near zero.
 Asin and Acos support JVP, VJP, HVPs, and batching for inputs strictly inside
 (-1, 1); their derivatives are singular at the endpoints.
 Sigmoid and Tanh derivatives use stable exponential tails to retain small

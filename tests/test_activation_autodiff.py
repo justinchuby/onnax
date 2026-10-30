@@ -335,3 +335,64 @@ def test_asinh_extremes_serialized_batched_hvp(dtype, opset, tmp_path):
     np.testing.assert_allclose(actual[-1], curvature.astype(np_dtype), rtol=3e-6, atol=0)
     assert all(np.isfinite(value).all() for value in actual)
     assert ir.to_proto(source).SerializeToString() == before
+
+
+@pytest.mark.parametrize("op", ["Acosh", "Atanh"])
+def test_inverse_hyperbolic_products_and_nonlinear_hvp(op):
+    values = (
+        np.array([[1.1, 1.4, 2.0], [2.5, 3.0, 5.0]])
+        if op == "Acosh"
+        else np.array([[-0.8, -0.3, 0.0], [0.2, 0.5, 0.9]])
+    )
+    x = _value("x", ["n", 3])
+    tape = ir.tape.Tape()
+    y = tape.op(op, [x])
+    source = _model([x], tape, [y])
+    _products(source, {"x": values})
+    loss_tape = ir.tape.Tape(source.graph)
+    loss = loss_tape.op("ReduceSum", [loss_tape.op("Mul", [y, y])], {"keepdims": 0})
+    source.graph.outputs.clear()
+    source.graph.outputs.append(loss)
+    loss.name = "loss"
+    _hvp_check(source, {"x": values})
+
+
+@pytest.mark.parametrize("op", ["Acosh", "Atanh"])
+@pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
+@pytest.mark.parametrize("opset", [18, 28])
+def test_inverse_hyperbolic_boundaries_serialized_batched_hvp(op, dtype, opset, tmp_path):
+    np_dtype = np.float32 if dtype == ir.DataType.FLOAT else np.float64
+    if op == "Acosh":
+        boundary = np.nextafter(np_dtype(1), np_dtype(2))
+        curved = 1e18 if dtype == ir.DataType.FLOAT else 1e150
+        large = 1e30 if dtype == ir.DataType.FLOAT else 1e200
+        values = np.array([boundary, 1.01, 2, curved, large], dtype=np_dtype)
+    else:
+        boundary = np.nextafter(np_dtype(1), np_dtype(0))
+        tiny = 1e-18 if dtype == ir.DataType.FLOAT else 1e-150
+        values = np.array([-boundary, -0.5, -tiny, 0, tiny, 0.5, boundary], dtype=np_dtype)
+    x = _value("x", ["n"], dtype=dtype)
+    tape = ir.tape.Tape()
+    loss = tape.op("ReduceSum", [tape.op(op, [x])], {"keepdims": 0})
+    source = _model([x], tape, [loss], opset=opset)
+    before = ir.to_proto(source).SerializeToString()
+    ir.save(grad(source), tmp_path / "gradient.onnx")
+    product = jvp(ir.load(tmp_path / "gradient.onnx"))
+    mapped = vmap(product, in_axes=(0, 0))
+    batch = np.stack([values, values])
+    directions = np.stack([np.ones_like(values), -np.ones_like(values)])
+    executor = runtime_session if opset == 18 and dtype == ir.DataType.FLOAT else evaluator
+    actual = executor(mapped).run(None, {"x": batch, mapped.graph.inputs[-1].name: directions})
+    reference = batch.astype(np.float64)
+    if op == "Acosh":
+        slope = (1 / np.sqrt(reference - 1)) / np.sqrt(reference + 1)
+        curvature = -0.5 * slope * (1 / (reference - 1) + 1 / (reference + 1))
+    else:
+        slope = 1 / ((1 - reference) * (1 + reference))
+        curvature = 2 * reference * slope * slope
+    np.testing.assert_allclose(actual[-2], slope.astype(np_dtype), rtol=3e-6, atol=0)
+    np.testing.assert_allclose(
+        actual[-1], (curvature * directions).astype(np_dtype), rtol=3e-6, atol=0
+    )
+    assert all(np.isfinite(value).all() for value in actual)
+    assert ir.to_proto(source).SerializeToString() == before

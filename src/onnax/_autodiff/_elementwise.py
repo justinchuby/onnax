@@ -17,9 +17,11 @@ OPS = frozenset(
     (
         "Abs",
         "Acos",
+        "Acosh",
         "Asin",
         "Asinh",
         "Atan",
+        "Atanh",
         "Add",
         "Cos",
         "Cosh",
@@ -217,6 +219,16 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
         elif op in ("Asin", "Acos"):
             denominator = ctx.op("Sqrt", ctx.op("Sub", one, ctx.op("Mul", x, x)))
             p = ctx.op("Div", ctx.scalar(x, -1) if op == "Acos" else one, denominator)
+        elif op == "Acosh":
+            # Separate reciprocal roots avoid overflow in x*x or the product
+            # (x-1)*(x+1), while retaining accuracy next to the domain boundary.
+            lower = ctx.op("Reciprocal", ctx.op("Sqrt", ctx.op("Sub", x, one)))
+            upper = ctx.op("Reciprocal", ctx.op("Sqrt", ctx.op("Add", x, one)))
+            p = ctx.op("Mul", lower, upper)
+        elif op == "Atanh":
+            # Keep x*x so higher-order derivatives retain tiny curvature near
+            # zero instead of subtracting the rounded slopes of (1-x)*(1+x).
+            p = ctx.op("Reciprocal", ctx.op("Sub", one, ctx.op("Mul", x, x)))
         elif op in ("Atan", "Asinh"):
             # Evaluate inverse quadratic norms with a bounded operand. Both Where
             # branches execute, so also protect the inactive reciprocal at zero.
