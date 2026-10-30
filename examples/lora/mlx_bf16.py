@@ -45,12 +45,13 @@ def gradient_model(w, c, *, batch):
     return optimizer.optimize(graph, input_size_limit=0, output_size_limit=0)
 
 
-def run(output_dir, *, inspect_products=False):
+def run(output_dir, *, inspect_products=False, inspect_fp32=False):
     """Train and report both same-parameter and independent-trajectory comparisons.
 
     A mismatch remains visible in the report and CLI status; it is never hidden
     by widening the acceptance tolerance. Native convergence is checked separately.
     """
+    inspect_products = inspect_products or inspect_fp32
     os.makedirs(output_dir, exist_ok=True)
     w, c, x, y, vx, vy, params = problem()
     graphs = {
@@ -76,7 +77,9 @@ def run(output_dir, *, inspect_products=False):
     if inspect_products:
         from examples.lora.bf16_inspector import ProductInspector
 
-        inspector = ProductInspector(graphs["gradient"], session_factory=session)
+        inspector = ProductInspector(
+            graphs["gradient"], session_factory=session, include_fp32=inspect_fp32
+        )
     initial_validation = float(
         validation.run(None, {"features": vx, "target": vy, **params})[1]
     )
@@ -191,11 +194,12 @@ def run(output_dir, *, inspect_products=False):
         "version": 1,
         "product_bounds": {
             "enabled": inspect_products,
+            "include_fp32_backward": inspect_fp32,
             "arithmetic_model": {
                 "unit_roundoff": 2**-24,
                 "absolute_underflow_per_operation": 2**-126,
                 "operation_budget": "2*k",
-                "final_rounding": "nearest-even BF16",
+                "final_rounding": "nearest-even BF16 for BF16 products; outward FP32 endpoints for FP32 products",
                 "reference": "exact integer products/sums and rational endpoints",
             },
             "all_observed_products_pass": all(
@@ -207,7 +211,7 @@ def run(output_dir, *, inspect_products=False):
             )
             if inspect_products
             else None,
-            "scope": "Local BF16 products at observed inputs, FP32 accumulation model with normal/zero BF16 operands, final nearest-even BF16 rounding. Separate from strict end-to-end/trajectory comparisons.",
+            "scope": "Local matrix products at observed inputs. FP32 accumulation model, normal/zero operands; BF16 forward products and optional FP32 backward products. Original graph outputs compared byte-for-byte.",
         },
         "models": {
             name: {
@@ -321,15 +325,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", default="mlx_bf16_models")
     parser.add_argument("--inspect-products", action="store_true")
+    parser.add_argument("--inspect-fp32", action="store_true")
     args = parser.parse_args()
-    result = run(args.output_dir, inspect_products=args.inspect_products)
+    inspect_products = args.inspect_products or args.inspect_fp32
+    result = run(
+        args.output_dir, inspect_products=inspect_products, inspect_fp32=args.inspect_fp32
+    )
     print(f"Loss: {result['initial_loss']:.6g} -> {result['final_loss']:.6g}")
     print(f"Strict numerical acceptance: {result['strict_numerical_acceptance']}")
-    if args.inspect_products:
+    if inspect_products:
         print(
-            f"Local BF16 product bounds: {result['product_bounds']['all_observed_products_pass']}"
+            f"Local matrix product bounds: {result['product_bounds']['all_observed_products_pass']}"
         )
     accepted = result["strict_numerical_acceptance"] and (
-        not args.inspect_products or result["product_bounds"]["all_observed_products_pass"]
+        not inspect_products or result["product_bounds"]["all_observed_products_pass"]
     )
     raise SystemExit(0 if accepted else 1)
