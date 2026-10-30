@@ -114,6 +114,10 @@ Asin and Acos support JVP, VJP, HVPs, and batching for inputs strictly inside
 (-1, 1); their derivatives are singular at the endpoints.
 Sigmoid and Tanh derivatives use stable exponential tails to retain small
 FLOAT gradients and HVPs even when primal outputs round to saturation.
+Variadic Max and Min support JVP, VJP, HVPs, and batching for finite inputs.
+Tied extrema share derivatives equally across all operand occurrences, including
+inactive and repeated inputs; higher-order derivatives hold these choices fixed.
+This is a convention at ties, where classical derivatives need not exist.
 Variadic Sum and Mean support differentiation with broadcasting and repeated
 operands; Mean always divides by the total input count, including inactive inputs.
 ReduceSumSquare and ReduceL1 support direct differentiation, HVPs, and batching,

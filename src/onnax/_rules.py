@@ -118,7 +118,7 @@ def _load_builtin_rules() -> _RuleSet:
     import importlib
 
     for package, modules in (
-        ("_autodiff", ("_elementwise", "_linalg", "_layout", "_reductions")),
+        ("_autodiff", ("_elementwise", "_extrema", "_linalg", "_layout", "_reductions")),
         (
             "_batching",
             ("_elementwise", "_linalg", "_nn", "_indexing", "_layout", "_reductions"),
