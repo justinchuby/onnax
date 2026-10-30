@@ -277,6 +277,10 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
             positive = ctx.op("Greater", x, ctx.scalar(x, 0))
             negative_x = ctx.op("Where", positive, ctx.scalar(x, 0), x)
             slope = ctx.op("Exp", ctx.op("Div", negative_x, ctx.scalar(x, alpha)))
+            # A tiny alpha can overflow its reciprocal after the tail underflows.
+            # Mask the differentiated zero tail to prevent 0*inf in an HVP.
+            zero = ctx.scalar(x, 0)
+            slope = ctx.op("Where", ctx.op("Equal", slope, zero), zero, slope)
             p = ctx.op("Where", positive, one, slope)
         elif op in ("Elu", "Selu"):
             # ONNX stores attribute defaults as float32, even for DOUBLE inputs.
