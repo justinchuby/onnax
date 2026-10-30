@@ -103,6 +103,10 @@ Abs now supports HVPs through its Sign pullback. Sign has a zero-derivative
 convention everywhere, including at zero, and Abs retains its zero slope at zero.
 These conventions permit piecewise differentiation; they do not claim classical
 derivatives at discontinuities or second derivatives at nonsmooth points.
+ReduceSumSquare and ReduceL1 support direct differentiation, HVPs, and batching,
+including runtime axes and `noop_with_empty_axes`. Their non-reduction steps
+(square or absolute value) still apply when the reduction itself is a no-op.
+ReduceL1 uses the same zero-slope/zero-curvature convention as Abs at zero.
 
 Try the [hosted WebGPU jelly playground](https://www.justinchuby.com/onnax/jelly/): drag a spring sheet
 with matrix-free Newton-CG, powered by exported

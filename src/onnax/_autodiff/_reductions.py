@@ -12,28 +12,23 @@ from onnax._autodiff._common import _FLOATS, _input, _int
 from onnax._autodiff._context import _Context
 from onnax._rules import _builtin
 
-OPS = frozenset(("LogSoftmax", "ReduceMean", "ReduceSum", "Softmax"))
+OPS = frozenset(
+    ("LogSoftmax", "ReduceL1", "ReduceMean", "ReduceSum", "ReduceSumSquare", "Softmax")
+)
 
 
 def reduction_vjp(ctx: _Context, node: ir.Node, g: ir.Value) -> ir.Value:
     x = _input(node)
     shape = ctx.op("Shape", x)
-    rank = ctx.op("Size", shape)
-    zero, one = ctx.constant(0), ctx.constant(1)
     axes = node.inputs[1] if len(node.inputs) > 1 else None
-    noop = _int(node, "noop_with_empty_axes", 0)
-    if axes is None:
-        if noop:
-            axes = ctx.constant([])
-        elif x.shape is not None:
-            # Known rank fixes the axes even when dimension sizes are symbolic.
-            axes = ctx.constant(list(range(len(x.shape))))
-        else:
-            axes = ctx.op("Range", zero, rank, one)
-    elif not noop:
-        stop = ctx.op("Where", ctx.op("Equal", ctx.op("Size", axes), zero), rank, zero)
-        axes = ctx.op("Concat", axes, ctx.op("Range", zero, stop, one), axis=0)
-    if not _int(node, "keepdims", 1):
+    # Kept dimensions already broadcast. Omitted axes either reduce everything
+    # to a scalar or preserve the input shape (noop), both directly expandable.
+    if not _int(node, "keepdims", 1) and axes is not None:
+        if not _int(node, "noop_with_empty_axes", 0):
+            rank = ctx.op("Size", shape)
+            zero = ctx.constant(0)
+            stop = ctx.op("Where", ctx.op("Equal", ctx.op("Size", axes), zero), rank, zero)
+            axes = ctx.op("Concat", axes, ctx.op("Range", zero, stop, ctx.constant(1)), axis=0)
         ones = ctx.op(
             "ConstantOfShape",
             ctx.op("Shape", axes),
@@ -59,6 +54,15 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
     op = node.op_type
     if op in ("ReduceMean", "ReduceSum"):
         return [ctx.tape.op(op, [d[0], *node.inputs[1:]], attributes=dict(node.attributes))]
+    elif op in ("ReduceL1", "ReduceSumSquare"):
+        x = _input(node)
+        slope = ctx.op("Sign", x) if op == "ReduceL1" else ctx.op("Mul", ctx.scalar(x, 2), x)
+        weighted = ctx.op("Mul", slope, d[0])
+        return [
+            ctx.tape.op(
+                "ReduceSum", [weighted, *node.inputs[1:]], attributes=dict(node.attributes)
+            )
+        ]
     elif op in ("LogSoftmax", "Softmax"):
         y = node.outputs[0]
         axis = ctx.constant([_int(node, "axis", -1)])
@@ -81,6 +85,10 @@ def vjp(
     op, g = node.op_type, gs[0]
     if op in ("ReduceMean", "ReduceSum"):
         return {0: reduction_vjp(ctx, node, g)}
+    elif op in ("ReduceL1", "ReduceSumSquare"):
+        x = _input(node)
+        slope = ctx.op("Sign", x) if op == "ReduceL1" else ctx.op("Mul", ctx.scalar(x, 2), x)
+        return {0: ctx.op("Mul", reduction_vjp(ctx, node, g), slope)}
     elif op in ("LogSoftmax", "Softmax"):
         y = node.outputs[0]
         axis_tensor = ctx.constant([_int(node, "axis", -1)])

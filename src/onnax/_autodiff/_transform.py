@@ -261,7 +261,8 @@ class JvpPass(ir.passes.FunctionalPass):
           slope tensor, including selected stored parameters.
         * Linear algebra: MatMul (vectors, matrices, broadcast batches), Gemm
           (including transposes and broadcast bias).
-        * Reductions: ReduceSum and ReduceMean, including negative/runtime axes,
+        * Reductions: ReduceSum, ReduceMean, ReduceL1, and ReduceSumSquare,
+          including negative/runtime axes,
           keepdims, absent/empty axes, and noop_with_empty_axes.
         * Layout/indexing: Reshape, Flatten, Squeeze, Unsqueeze, Transpose,
           Expand, Concat, Split, Gather (including repeated/negative indices).
