@@ -35,16 +35,18 @@ def matmul_vjp(
     if ra == 1:
         g = ctx.op("Unsqueeze", g, ctx.constant([-2]))
     result = {}
+    # Vector/matrix products have no broadcast batch dimensions to reduce.
+    batched = ra > 2 or rb > 2
     if 0 in indices:
         ga = ctx.op("MatMul", g, ctx.transpose(bv, max(rb, 2)))
         if ra == 1:
             ga = ctx.op("Squeeze", ga, ctx.constant([-2]))
-        result[0] = ctx.unbroadcast(ga, a)
+        result[0] = ctx.unbroadcast(ga, a) if batched else ga
     if 1 in indices:
         gb = ctx.op("MatMul", ctx.transpose(av, max(ra, 2)), g)
         if rb == 1:
             gb = ctx.op("Squeeze", gb, ctx.constant([-1]))
-        result[1] = ctx.unbroadcast(gb, b)
+        result[1] = ctx.unbroadcast(gb, b) if batched else gb
     return result
 
 

@@ -138,7 +138,8 @@ overhead, measured on Unix/macOS via `resource`.
 
 See the [MLP classifier](mlp.md) for classification, [microbatch
 accumulation](precision.md) for memory measurements, and [BF16 LoRA](bf16.md) for mixed
-precision. The [roadmap](roadmap.md) tracks upcoming runtime and model support.
+precision. The [MLX GPU training example](mlx-training.md) keeps external Adam
+state in MLX and measures shared runtime boundaries. The [roadmap](roadmap.md) tracks upcoming runtime and model support.
 
 ### Recorded development-machine run
 

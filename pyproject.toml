@@ -37,6 +37,7 @@ Examples = "https://github.com/justinchuby/onnax/tree/main/examples"
 
 [dependency-groups]
 native-mlx = [
+    "numpy>=2.1; sys_platform == 'darwin' and platform_machine == 'arm64'",
     "onnxruntime-ep-mlx>=0.31.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
     "mlx>=0.32.4; sys_platform == 'darwin' and platform_machine == 'arm64'",
 ]
