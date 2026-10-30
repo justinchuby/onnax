@@ -18,12 +18,14 @@ ONNX gradients and an external Array API Adam. Stable LogSoftmax cross-entropy,
 independent gradients and update trajectories, reloads and dynamic batches are
 validated. Further operators must be justified by actual training workloads.
 
-## P2 — Matrix-free scientific computing
+## P2 — Matrix-free scientific computing (delivered)
 
-Extend the existing [Jelly Newton-CG example](https://www.justinchuby.com/onnax/jelly/)
-with a parameter-fitting or inverse-problem workload. Compose JVP/VJP for
-Gauss–Newton products and HVPs for Newton-CG without materializing dense
-Jacobians or Hessians. Check solver progress against an independent reference.
+The [nonlinear decay fit](fitting.md) composes JVP/VJP products with external
+damped Gauss–Newton CG. Exact HVPs and vmap direction batches are also validated;
+only the independent small-problem oracle materializes derivatives. Solver
+trajectories, reloads, failure paths and scoped measurements are covered. The
+[Jelly Newton-CG example](https://www.justinchuby.com/onnax/jelly/) remains the
+interactive exact-HVP workload.
 
 ## P3 — Memory, precision and device execution
 
