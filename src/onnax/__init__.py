@@ -12,5 +12,16 @@ Implementation modules and rule registries are private, not a plugin API.
 from onnax._autodiff import GradPass, JvpPass, VjpPass
 from onnax._batching import VmapPass
 from onnax._functional import grad, jvp, vjp, vmap
+from onnax._linear import HoistLinearCoefficientsPass
 
-__all__ = ["GradPass", "JvpPass", "VjpPass", "VmapPass", "grad", "jvp", "vjp", "vmap"]
+__all__ = [
+    "GradPass",
+    "JvpPass",
+    "VjpPass",
+    "VmapPass",
+    "HoistLinearCoefficientsPass",
+    "grad",
+    "jvp",
+    "vjp",
+    "vmap",
+]

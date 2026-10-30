@@ -925,19 +925,19 @@
           "packed: FLOAT [36,2]"
         ],
         "excerpt": [
-          "0: val_0 = Mul(half, stiffness)",
-          "1: val_1 = Mul(free, q)",
-          "2: val_2 = Add(val_1, anchor)",
-          "3: val_3 = MatMul(incidence, val_2)",
-          "4: val_4 = Mul(val_3, val_3)",
-          "5: val_5 = ReduceSum(val_4, coordinate_axis)",
+          "0: val_0 = Mul(free, q)",
+          "1: val_1 = Add(val_0, anchor)",
+          "2: val_2 = MatMul(incidence, val_1)",
+          "3: val_3 = Mul(val_2, val_2)",
+          "4: val_4 = ReduceSum(val_3, coordinate_axis)",
+          "5: val_5 = Add(val_4, epsilon_squared)",
           "... 29 nodes omitted ...",
-          "35: val_60 = Mul(val_59, val_52)",
-          "36: val_61 = Mul(val_57, val_53)",
-          "37: val_62 = Add(val_60, val_61)",
-          "38: val_63 = MatMul(val_98, val_62)",
-          "39: val_64 = Mul(val_63, free)",
-          "40: packed = Add(val_39, val_64)"
+          "35: val_34 = Mul(free, val_52)",
+          "36: val_36 = Add(val_34, val_34)",
+          "37: val_37 = Mul(val_36, free)",
+          "38: val_38 = Mul(q_tangent, val_37)",
+          "39: val_39 = Mul(val_232, free)",
+          "40: packed = Add(val_38, val_39)"
         ]
       }
     },
