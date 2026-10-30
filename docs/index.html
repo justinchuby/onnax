@@ -38,6 +38,22 @@
         <li><a href="https://github.com/justinchuby/onnax/tree/main/examples/jelly#readme">Playground physics, execution, and reproducible validation</a></li>
         <li><a href="https://github.com/justinchuby/onnax">Source repository (MIT)</a></li>
       </ul>
+      <h2>Extend operator support</h2>
+      <p>Register custom transformation rules once with
+        <code>@onnax.register_jvp</code>, <code>@onnax.register_vjp</code>, or
+        <code>@onnax.register_batching</code>. Import your plugin before calling
+        the usual <code>onnax.jvp(model)</code>, <code>onnax.grad(model)</code>,
+        or <code>onnax.vmap(model, in_axes=...)</code>; no rule argument is needed.</p>
+      <p>Each registration names a domain, operator, and inclusive opset range.
+        Later registrations override earlier rules, including builtins, within
+        overlapping versions. Each transformation uses a stable snapshot of the
+        current registrations.</p>
+      <p>Registrations live in the Python process. Exported derivative graphs are
+        ordinary ONNX models; custom primal operators still need an ONNX function
+        or runtime implementation.
+        <a href="https://github.com/justinchuby/onnax/blob/main/examples/custom_rules.py">Run the complete plugin example</a>,
+        which checks JVPs, VJPs, gradients, HVPs, and per-example gradients.
+        <a href="https://github.com/justinchuby/onnax#extend-transformation-rules">Read the callback contracts</a>.</p>
       <h2>Optimize for deployment</h2>
       <p>Compose <code>grad</code>, <code>jvp</code>, or <code>vmap</code> first,
         then optimize a copy with the ONNXScript optimizer. onnax emits compact
