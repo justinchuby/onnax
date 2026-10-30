@@ -173,3 +173,23 @@ def test_hard_swish_float_clipping_boundaries():
     )
     np.testing.assert_allclose(actual[-2], [0, 0, 0.5, 1, 1])
     np.testing.assert_allclose(actual[-1], [0, 0, np.float32(1 / 3), 0, 0])
+
+
+@pytest.mark.parametrize("op", ["Sigmoid", "Tanh"])
+def test_saturated_float_gradients_and_hvp_retain_small_tails(op):
+    values = np.array([-40.0, -20.0, -10.0, 0.0, 10.0, 20.0, 40.0], dtype=np.float32)
+    x = _value("x", [7], dtype=ir.DataType.FLOAT)
+    tape = ir.tape.Tape()
+    y = tape.op(op, [x])
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    product = jvp(grad(_model([x], tape, [loss])))
+    actual = runtime_session(product).run(
+        None, {"x": values, product.graph.inputs[-1].name: np.ones_like(values)}
+    )
+    scale = 2 if op == "Tanh" else 1
+    tail = np.exp(-scale * np.abs(values.astype(np.float64)))
+    slope = (4 if op == "Tanh" else 1) * tail / (1 + tail) ** 2
+    curvature = -scale * np.sign(values) * slope * (1 - tail) / (1 + tail)
+    np.testing.assert_allclose(actual[-2], slope, rtol=3e-6, atol=0)
+    np.testing.assert_allclose(actual[-1], curvature, rtol=3e-6, atol=0)
+    assert np.all(actual[-2] > 0)

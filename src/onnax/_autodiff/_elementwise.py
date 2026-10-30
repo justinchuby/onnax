@@ -216,10 +216,16 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
             p = ctx.op("Cosh", x)
         elif op == "Cosh":
             p = ctx.op("Sinh", x)
-        elif op == "Tanh":
-            p = ctx.op("Sub", one, ctx.op("Mul", y, y))
-        elif op == "Sigmoid":
-            p = ctx.op("Mul", y, ctx.op("Sub", one, y))
+        elif op in ("Tanh", "Sigmoid"):
+            # Avoid subtracting rounded saturated outputs from one. Selecting
+            # the positive branch at zero also preserves higher-order behavior.
+            positive = ctx.op("GreaterOrEqual", x, ctx.scalar(x, 0))
+            magnitude = ctx.op("Where", positive, x, ctx.op("Neg", x))
+            scale = -2 if op == "Tanh" else -1
+            tail = ctx.op("Exp", ctx.op("Mul", ctx.scalar(x, scale), magnitude))
+            denominator = ctx.op("Add", one, tail)
+            numerator = ctx.op("Mul", ctx.scalar(x, 4), tail) if op == "Tanh" else tail
+            p = ctx.op("Div", numerator, ctx.op("Mul", denominator, denominator))
         elif op in ("Relu", "LeakyRelu"):
             negative = 0.0 if op == "Relu" else _float(node, "alpha", 0.01)
             p = ctx.op(
