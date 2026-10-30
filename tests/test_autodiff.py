@@ -884,3 +884,37 @@ def test_gemm_unit_coefficients_need_no_derivative_multiplications(attributes):
         derivative = transform(source).model
         assert all(node.op_type != "Mul" for node in derivative.graph)
     _products(source, {"a": np.ones((2, 2)), "b": np.ones((2, 2)), "c": np.array(0.3)})
+
+
+@pytest.mark.parametrize("selected,expected_products", [("a", 1), ("b", 1), ("c", 0)])
+def test_gemm_pullback_only_constructs_requested_products(
+    monkeypatch, selected, expected_products
+):
+    from onnax import AutodiffContext
+
+    original = AutodiffContext.op
+    products = []
+
+    def record(self, op, *args, **kwargs):
+        if op == "MatMul":
+            products.append(args)
+        return original(self, op, *args, **kwargs)
+
+    monkeypatch.setattr(AutodiffContext, "op", record)
+    a, b, c = _value("a", [2, 2]), _value("b", [2, 2]), _value("c", [])
+    tape = ir.tape.Tape()
+    source = _model([a, b, c], tape, [tape.op("Gemm", [a, b, c])])
+    derivative = VjpPass(inputs=[selected])(source).model
+    assert len(products) == expected_products
+    actual = runtime_session(derivative).run(
+        None,
+        {
+            "a": np.ones((2, 2)),
+            "b": np.ones((2, 2)),
+            "c": np.array(0.3),
+            derivative.graph.inputs[-1].name: np.ones((2, 2)),
+        },
+    )[-1]
+    np.testing.assert_array_equal(
+        actual, np.array(4.0) if selected == "c" else np.full((2, 2), 2.0)
+    )

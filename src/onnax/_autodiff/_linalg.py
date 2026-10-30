@@ -49,7 +49,11 @@ def matmul_vjp(
 
 
 def gemm(
-    ctx: _Context, node: ir.Node, derivatives: Mapping[int, ir.Value], reverse: bool
+    ctx: _Context,
+    node: ir.Node,
+    derivatives: Mapping[int, ir.Value],
+    reverse: bool,
+    indices: Sequence[int] = (),
 ) -> dict[int, ir.Value]:
     a, b = _input(node), _input(node, 1)
     ta, tb = _int(node, "transA", 0), _int(node, "transB", 0)
@@ -68,13 +72,14 @@ def gemm(
 
     if reverse:
         g = derivatives[0]
-        ga = ctx.op("MatMul", g, ctx.transpose(bv, 2))
-        gb = ctx.op("MatMul", ctx.transpose(av, 2), g)
-        result = {
-            0: scale(ctx.transpose(ga, 2) if ta else ga, alpha),
-            1: scale(ctx.transpose(gb, 2) if tb else gb, alpha),
-        }
-        if len(node.inputs) > 2 and node.inputs[2] is not None:
+        result = {}
+        if 0 in indices:
+            ga = ctx.op("MatMul", g, ctx.transpose(bv, 2))
+            result[0] = scale(ctx.transpose(ga, 2) if ta else ga, alpha)
+        if 1 in indices:
+            gb = ctx.op("MatMul", ctx.transpose(av, 2), g)
+            result[1] = scale(ctx.transpose(gb, 2) if tb else gb, alpha)
+        if 2 in indices:
             result[2] = ctx.unbroadcast(
                 scale(g, beta), _input(node, 2), broadcasted=node.outputs[0]
             )
@@ -119,8 +124,7 @@ def vjp(
     if op in ("MatMul",):
         return matmul_vjp(ctx, node, g, indices)
     elif op in ("Gemm",):
-        contributions = gemm(ctx, node, {0: g}, reverse=True)
-        return {i: contributions[i] for i in indices}
+        return gemm(ctx, node, {0: g}, reverse=True, indices=indices)
     raise NotImplementedError(
         f"No VJP rule for {op} in the linear algebra family. "
         "Correct the private registry dispatch or implement and validate the missing rule; "
