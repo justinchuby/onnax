@@ -39,7 +39,7 @@ class _RuleSet:
     """Internal storage for global decorator registrations.
 
     Rules are isolated per collection. Both version bounds are inclusive and
-    required. Overlaps, including attempts to override builtins, are rejected.
+    required. Later registrations override overlapping versions, including builtins.
     Transform invocations take a snapshot; later registrations cannot change
     an in-progress transform. Callbacks operate on a cloned graph, never the source.
 
@@ -137,15 +137,10 @@ def _register(mode, domain, op_type, since_version, until_version):
     def decorate(rule):
         global _EXTENSIONS
         with _LOCK:
-            builtins = _load_builtin_rules()
             candidate = _EXTENSIONS.copy()
             getattr(candidate, mode)(
                 domain, op_type, since_version=since_version, until_version=until_version
             )(rule)
-            combined: _RuleRegistry = _RuleRegistry()
-            combined._kind = mode.upper() if mode != "batching" else mode
-            combined.extend(getattr(builtins, "_" + mode))
-            combined.extend(getattr(candidate, "_" + mode))
             _EXTENSIONS = candidate
         return rule
 
@@ -157,8 +152,8 @@ def register_jvp(
 ) -> Callable[[JvpRule], JvpRule]:
     """Globally register a forward rule for an inclusive, explicit version interval.
 
-    Returns the decorated callable unchanged. Conflicting extensions or builtins
-    raise ValueError atomically. Existing registrations remain intact on failure.
+    Returns the decorated callable unchanged. Later rules override extensions or
+    builtins within the new interval. Invalid registrations leave existing rules intact.
     Transforms snapshot the global registry at invocation, so plugin imports
     require no changes to jvp(model) or JvpPass()(model).
     """
@@ -171,7 +166,7 @@ def register_vjp(
     """Globally register a reverse rule, used by both vjp and grad.
 
     The callback returns exactly the requested input-index contributions.
-    Registration preserves the callable and rejects overlapping version ranges.
+    Registration preserves the callable; later rules override overlapping versions.
     """
     return _register("vjp", domain, op_type, since_version, until_version)
 
@@ -183,6 +178,7 @@ def register_batching(
 
     The callback updates the cloned node and registers every output. Use
     ctx.elementwise(node) only when the operator obeys elementwise broadcasting.
+    Later registrations override overlapping versions, including builtin rules.
     Rules do not install execution kernels or shape inference schemas.
     """
     return _register("batching", domain, op_type, since_version, until_version)

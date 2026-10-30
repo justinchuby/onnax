@@ -543,16 +543,13 @@ def test_metadata_marker_mismatch_and_orphan_diagnostics_preserve_recovery_contr
     _contains(caught.value, "Higher-order", "marker", "original model", "preserve")
 
 
-def test_registry_conflict_and_missing_import_diagnostics_are_actionable():
+def test_registry_missing_import_diagnostics_are_actionable():
     registry = _rule_registry._RuleRegistry()
 
     def rule():
         pass
 
     registry.register("example", "Scale", rule, since_version=3, until_version=5)
-    with pytest.raises(ValueError) as caught:
-        registry.register("example", "Scale", rule, since_version=5, until_version=6)
-    _contains(caught.value, "example", "Scale", "[5, 6]", "[3, 5]", "duplicate registration")
     node = ir.Node("example", "Scale", [], num_outputs=1, name="custom")
     with pytest.raises(ValueError) as caught:
         registry.lookup(node, {"": 18})

@@ -102,17 +102,20 @@ def test_invalid_versions(version):
 
 
 @pytest.mark.parametrize("interval", [(3, 5), (1, 3), (5, 7), (4, 4), (1, 9)])
-def test_overlap_rejected_atomically(interval):
+def test_overlap_replaced_with_unaffected_versions_preserved(interval):
     registry = _rule_registry._RuleRegistry()
     registry.register("", "Scale", _first, since_version=3, until_version=5)
-    for rule in (_first, _second):
-        with pytest.raises(ValueError, match="Overrides are not supported"):
-            registry.register(
-                "ai.onnx", "Scale", rule, since_version=interval[0], until_version=interval[1]
-            )
-    assert registry.lookup(_node(), {"": 3}) is _first
-    registry.register("", "Scale", _second, since_version=6, until_version=6)
-    assert registry.lookup(_node(), {"": 6}) is _second
+    registry.register(
+        "ai.onnx", "Scale", _second, since_version=interval[0], until_version=interval[1]
+    )
+    for version in range(1, 10):
+        if interval[0] <= version <= interval[1]:
+            assert registry.lookup(_node(), {"": version}) is _second
+        elif 3 <= version <= 5:
+            assert registry.lookup(_node(), {"": version}) is _first
+        else:
+            with pytest.raises(NotImplementedError):
+                registry.lookup(_node(), {"": version})
 
 
 def test_invalid_registration_and_overloaded_node():

@@ -216,8 +216,9 @@ JVP, VJP, gradients, HVPs, and per-example gradients. Extensions use public
 `AutodiffContext` and `BatchingContext` helpers; no private imports are needed.
 
 Registrations are keyed by domain, operator name, and an explicit inclusive
-opset interval. Overlaps with builtins or another extension raise `ValueError`
-without changing existing registrations; disjoint intervals are allowed.
+opset interval. Later registrations override builtins or earlier extensions within
+the new interval; earlier rules remain active outside that interval. Invalid
+registrations leave existing rules unchanged.
 Each transform takes a stable snapshot, including during concurrent registration.
 Import plugins before invoking transforms. Registration is process-local and is
 not serialized into exported models.
