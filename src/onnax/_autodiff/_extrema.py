@@ -26,6 +26,8 @@ def _winners(ctx: _Context, node: ir.Node) -> tuple[list[ir.Value], ir.Value]:
 
 @_builtin("jvp", OPS)
 def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Value]:
+    if len(node.inputs) == 1:
+        return [d[0]]
     masks, count = _winners(ctx, node)
     zero = ctx.scalar(_input(node), 0)
     return [
@@ -42,6 +44,8 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
 def vjp(
     ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
 ) -> dict[int, ir.Value]:
+    if len(node.inputs) == 1:
+        return {0: gs[0]}
     masks, count = _winners(ctx, node)
     shared = ctx.op("Div", gs[0], count)
     zero = ctx.scalar(_input(node), 0)

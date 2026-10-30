@@ -102,6 +102,9 @@ def test_single_operand_extrema_are_identity(op, shape):
     source = _model([x], tape, [tape.op(op, [x])])
     for transform in (jvp, vjp):
         derivative = transform(source)
+        assert not {"Equal", "Cast", "Div", "Where"}.intersection(
+            node.op_type for node in derivative.graph
+        )
         direction = np.full(shape, 0.7)
         actual = runtime_session(derivative).run(
             None,
