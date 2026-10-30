@@ -281,3 +281,23 @@ def test_softsign_large_input_gradient_and_curvature(dtype):
     curvature = -2 * np.sign(values) * inverse * inverse * inverse
     np.testing.assert_allclose(actual[-1], curvature.astype(np_dtype), rtol=3e-6, atol=0)
     assert np.all(actual[-2] > 0)
+
+
+@pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
+def test_erf_saturated_finite_inputs_do_not_produce_nan_hvp(dtype):
+    np_dtype = np.float32 if dtype == ir.DataType.FLOAT else np.float64
+    limit = np.finfo(np_dtype).max
+    values = np.array([-limit, -1e30, 0.0, 1e30, limit], dtype=np_dtype)
+    x = _value("x", [5], dtype=dtype)
+    tape = ir.tape.Tape()
+    y = tape.op("Erf", [x])
+    loss = tape.op("ReduceSum", [y], {"keepdims": 0})
+    product = jvp(grad(_model([x], tape, [loss])))
+    executor = runtime_session if dtype == ir.DataType.FLOAT else evaluator
+    with np.errstate(over="ignore", invalid="ignore"):
+        actual = executor(product).run(
+            None, {"x": values, product.graph.inputs[-1].name: np.ones_like(values)}
+        )
+    np.testing.assert_allclose(actual[-2], [0, 0, 2 / np.sqrt(np.pi), 0, 0], rtol=1e-6)
+    np.testing.assert_array_equal(actual[-1], np.zeros_like(values))
+    assert all(np.isfinite(value).all() for value in actual)
