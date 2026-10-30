@@ -396,3 +396,33 @@ def test_inverse_hyperbolic_boundaries_serialized_batched_hvp(op, dtype, opset, 
     )
     assert all(np.isfinite(value).all() for value in actual)
     assert ir.to_proto(source).SerializeToString() == before
+
+
+@pytest.mark.parametrize("alpha", [None, 0.0, 0.3])
+@pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
+@pytest.mark.parametrize("opset", [18, 28])
+def test_thresholded_relu_batched_hvp(alpha, dtype, opset):
+    threshold = float(np.float32(1 if alpha is None else alpha))
+    x = _value("x", ["n"], dtype=dtype)
+    tape = ir.tape.Tape()
+    y = tape.op("ThresholdedRelu", [x], {} if alpha is None else {"alpha": alpha})
+    loss = tape.op("ReduceSum", [tape.op("Mul", [y, y])], {"keepdims": 0})
+    source = _model([x], tape, [loss], opset=opset)
+    mapped = vmap(jvp(grad(source)), in_axes=(0, 0))
+    np_dtype = np.float32 if dtype == ir.DataType.FLOAT else np.float64
+    values = np.array([[threshold - 1, threshold, threshold + 1]], dtype=np_dtype)
+    executor = runtime_session if opset == 18 and dtype == ir.DataType.FLOAT else evaluator
+    actual = executor(mapped).run(
+        None, {"x": values, mapped.graph.inputs[-1].name: np.ones_like(values)}
+    )
+    slope = (values > threshold).astype(np_dtype)
+    np.testing.assert_allclose(actual[-2], 2 * values * slope)
+    np.testing.assert_allclose(actual[-1], 2 * slope)
+
+
+@pytest.mark.parametrize("alpha", [None, 0.3])
+def test_thresholded_relu_products_away_from_boundary(alpha):
+    x = _value("x", [3])
+    tape = ir.tape.Tape()
+    y = tape.op("ThresholdedRelu", [x], {} if alpha is None else {"alpha": alpha})
+    _products(_model([x], tape, [y]), {"x": np.array([-0.5, 0.7, 1.5])})
