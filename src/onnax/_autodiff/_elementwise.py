@@ -289,8 +289,12 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
             positive = ctx.op("Greater", x, ctx.scalar(x, 0))
             # Where evaluates both branches. Clamp the exponential's input so
             # large positive primals cannot overflow the inactive branch or HVP.
-            negative_x = ctx.op("Where", positive, ctx.scalar(x, 0), x)
-            slope = ctx.op("Mul", ctx.scalar(x, alpha * gamma), ctx.op("Exp", negative_x))
+            coefficient = alpha * gamma
+            if coefficient == 0:
+                slope = ctx.scalar(x, 0)
+            else:
+                negative_x = ctx.op("Where", positive, ctx.scalar(x, 0), x)
+                slope = ctx.op("Mul", ctx.scalar(x, coefficient), ctx.op("Exp", negative_x))
             p = ctx.op("Where", positive, ctx.scalar(x, gamma), slope)
         elif op == "Softplus":
             p = ctx.op("Sigmoid", x)
