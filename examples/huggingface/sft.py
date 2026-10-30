@@ -272,6 +272,12 @@ def run(
         "audits": [initial_audit, final_audit],
     }
     final_params = model.onnx.arrays()
+    report["artifact_bytes"] = {
+        name: os.path.getsize(os.path.join(directory, "export", name))
+        for name in ("forward.onnx", "forward.data", "adapter.npz", "interface.json")
+    }
+    report["forward_nodes"] = len(model.forward_graph.graph)
+    report["adapter_parameter_bytes"] = sum(value.nbytes for value in final_params.values())
     if peft_roundtrip:
         from examples.huggingface.peft_adapter import roundtrip
 

@@ -551,7 +551,15 @@
         "loss": 0.8209020232070021,
         "strict_check_passed": true
       }
-    ]
+    ],
+    "artifact_bytes": {
+      "forward.onnx": 721925,
+      "forward.data": 2407464960,
+      "adapter.npz": 2328422,
+      "interface.json": 62233
+    },
+    "forward_nodes": 3188,
+    "adapter_parameter_bytes": 2293760
   },
   "precision_tolerance": {
     "rtol": 0.0001,
