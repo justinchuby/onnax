@@ -3,6 +3,7 @@
 """Replay Qwen operators at identical FP32 inputs to locate local rounding errors."""
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -13,7 +14,7 @@ import numpy as np
 import onnxruntime as ort
 import torch
 
-from examples.huggingface.bridge import graph_session
+from examples.huggingface.bridge import graph_session, save_graph
 from examples.huggingface.qwen import (
     MODEL_ID,
     REVISION,
@@ -75,7 +76,16 @@ def probes(reference):
     return decompose(model), records, constants
 
 
-def run(*, real=False):
+def run(*, real=False, mlx=False, library=None):
+    if library is not None and not mlx:
+        raise ValueError("--library requires --mlx")
+    library_hash = None
+    if library is not None:
+        from examples.lora.mlx_runtime import register_library
+
+        register_library(library)
+        with open(library, "rb") as stream:
+            library_hash = hashlib.file_digest(stream, "sha256").hexdigest()
     torch.set_num_threads(1)
     reference = reference_model(real)
     model, records, constants = probes(reference)
@@ -89,7 +99,14 @@ def run(*, real=False):
         "position_ids": np.arange(ids.shape[1], dtype=np.int64)[None],
     }
     with tempfile.TemporaryDirectory(prefix="onnax-layer-audit-") as directory:
-        executor = graph_session(model, directory, "probes")
+        if mlx:
+            from examples.lora.mlx_runtime import session
+
+            path = os.path.join(directory, "probes.onnx")
+            save_graph(model, path, data_name="probes.data")
+            executor = session(path)
+        else:
+            executor = graph_session(model, directory, "probes")
         observed = dict(
             zip([v.name for v in model.graph.outputs], executor.run(None, feeds), strict=True)
         )
@@ -130,7 +147,7 @@ def run(*, real=False):
                     "width": len(left),
                     "scalar_fsum_oracle": oracle,
                     "rounded_fp32_oracle": float(np.float32(oracle)),
-                    "ort_cpu": float(actual[index]),
+                    "ort_mlx" if mlx else "ort_cpu": float(actual[index]),
                     "torch_cpu": float(expected_array[index]),
                     "ort_abs_error": abs(float(actual[index]) - oracle),
                     "torch_abs_error": abs(float(expected_array[index]) - oracle),
@@ -146,6 +163,10 @@ def run(*, real=False):
         "model": MODEL_ID if real else "tiny-qwen3",
         "revision": REVISION if real else None,
         "dtype": "float32",
+        "execution_provider": "MLXExecutionProvider" if mlx else "CPUExecutionProvider",
+        "cpu_fallback_disabled": mlx,
+        "library": os.path.abspath(library) if library else None,
+        "library_sha256": library_hash,
         "swish_decomposition": "bounded_exponential_sigmoid",
         "ort_graph_optimization": "disabled",
         "scope": "Initial frozen base; PyTorch FP32 operators replay identical ONNX-observed inputs. Accuracy probes expose extra graph outputs. Host-side report norms use FP64; selected dot products use scalar math.fsum.",
@@ -165,9 +186,11 @@ def run(*, real=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--real", action="store_true")
+    parser.add_argument("--mlx", action="store_true")
+    parser.add_argument("--library", help="Development MLX EP dylib")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
-    result = run(real=args.real)
+    result = run(real=args.real, mlx=args.mlx, library=args.library)
     os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
     with open(args.output, "w") as stream:
         json.dump(result, stream, indent=2, allow_nan=False)

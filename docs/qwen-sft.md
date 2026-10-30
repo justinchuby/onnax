@@ -106,3 +106,28 @@ The real PEFT comparison passes loss and final-gradient checks. Its first
 independent AdamW update exceeds the parameter tolerance for some entries;
 the report preserves the per-parameter failures. The offline tiny model passes the
 full bidirectional adapter, gradient and update regression.
+
+## Compare operators on the same inputs
+
+The layer audit exposes each projection, RMSNorm and Swish input and replays that
+operator independently in PyTorch. This separates local arithmetic differences
+from errors accumulated across decoder layers. Selected matrix outputs also use
+`math.fsum` over the FP32 operands as an independent dot-product reference.
+
+```bash
+uv run python -m examples.huggingface.layer_audit --real --mlx \
+  --library /path/to/libonnxruntime_mlx_ep.dylib --output mlx-layers.json
+```
+
+Omit `--mlx` and `--library` to audit ORT CPU. MLX requires complete provider
+assignment, disables CPU fallback and reads the large probe model from external
+data. Both paths disable ORT graph optimization. Reports record the provider,
+input token IDs, local comparison errors and independent dot-product errors;
+development builds also record the dylib SHA256.
+
+The M1 Max Qwen3-0.6B FP32 audit covers 197 MatMul, 113 RMSNorm and 28 Swish
+operations. RMSNorm and Swish pass `rtol=1e-4, atol=1e-6` on identical inputs.
+MatMul has 694 elementwise differences against PyTorch across 31,744,000 outputs.
+For each matrix, the report checks its largest tolerance-scaled difference with
+an independent dot product; either runtime can have the smaller error. The
+end-to-end logits retain their elementwise comparison failures in the report.
