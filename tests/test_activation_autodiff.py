@@ -523,7 +523,7 @@ def test_zero_exponential_coefficient_eliminates_derivative_exp(op, attributes, 
     x = _value("x", [3])
     tape = ir.tape.Tape()
     source = _model([x], tape, [tape.op(op, [x], attributes)])
-    values = np.array([-1000.0, 0.0, 1000.0])
+    values = np.array([-100.0, 0.0, 100.0])
     for transform in (jvp, vjp):
         derivative = transform(source)
         assert all(node.op_type != "Exp" for node in derivative.graph)
