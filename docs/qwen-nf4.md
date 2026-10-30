@@ -87,7 +87,10 @@ On Apple M1 Max with 32 GiB RAM, Qwen3-0.6B completed 30 NF4 adapter updates.
 Validation loss decreased from **7.750500 to 5.731173**. Its 196 decoder matrices
 use 247,726,080 packed/scales bytes, compared with 1,761,607,680 FP32 bytes.
 The exported weight data is 893,583,360 bytes, including the FP32 embedding and
-other frozen buffers. The full ONNX checker validates the export.
+other frozen buffers. The full ONNX checker validates the export. A fresh process resumed checkpoint
+15 and reproduced all 112 adapters, all 113 checkpoint tensors, optimizer and
+scheduler state byte for byte. Both loaded exports returned byte-identical
+logits and hidden states; all 532 frozen initializer hashes matched.
 
 `qwen3-nf4.json` retains the original elementwise comparisons. At the final
 state, three gradient elements in layer 16's q-projection B exceed the original

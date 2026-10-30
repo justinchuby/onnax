@@ -2995,5 +2995,17 @@
     "onnxscript": "0.7.2",
     "mobius-onnx": "0.1.0"
   },
-  "platform": "macOS-27.0.1-arm64-arm-64bit"
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "resume_verification": {
+    "step": 30,
+    "adapter_tensors": 112,
+    "checkpoint_tensors": 113,
+    "frozen_initializers": 532,
+    "adapter_bitwise_equal": true,
+    "checkpoint_bitwise_equal": true,
+    "optimizer_bitwise_equal": true,
+    "scheduler_equal": true,
+    "frozen_hashes_equal": true,
+    "export_load_outputs_bitwise_equal": true
+  }
 }
