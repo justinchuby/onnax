@@ -161,3 +161,37 @@ with graph optimization and CPU fallback disabled.
 The [complete evaluation report](https://github.com/justinchuby/onnax/blob/main/examples/measurements/classifier-device-state-apple-arm64.json)
 contains all 12 timing rows, numerical checks, checkpoint equivalence,
 software versions, graph hashes and the FP64 diagnostic.
+
+## Trace output-layer gradient differences
+
+The first BF16 output-layer gradient differences occur at pre-update step 63
+for the medium model, and steps 10 (weight) and 33 (bias) for the large model.
+Replay those states from an exported run:
+
+```bash
+python -m examples.classifier_inspector classifier_models --step 63
+```
+
+The inspector exposes the rounded hidden activation $H$ and logits $S$ from the
+native graph, then computes the output-layer derivatives independently in NumPy:
+
+$$
+D = (\operatorname{softmax}(S)-Y)/N,\qquad
+\nabla_{W_2}L=H^\mathsf{T}D,\qquad
+\nabla_{b_2}L=\sum_i D_i.
+$$
+
+It first verifies that adding observation outputs preserves every original output
+byte for byte. This lets the comparison isolate backpropagation from differences
+in the forward values used by each implementation.
+
+On the recorded M1 Max runs, all three states pass the original
+`rtol=1e-4, atol=1e-6` comparison with observed forward values. The largest absolute
+head-gradient differences are respectively $2.51\times10^{-9}$,
+$1.16\times10^{-7}$ and $1.40\times10^{-8}$. The fully independent NumPy
+forward/backward comparisons retain their original failures. At these states,
+forward numerical differences account for the output-layer gradient discrepancy.
+
+The [diagnostic record](https://github.com/justinchuby/onnax/blob/main/examples/measurements/classifier-head-diagnostic-apple-arm64.json)
+contains both comparisons. Observation runs execute separately from performance
+measurements.
