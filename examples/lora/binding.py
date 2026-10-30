@@ -10,6 +10,52 @@ import onnxruntime as ort
 from examples.lora.model import PARAMETERS
 
 
+def gradient_shapes(executor, interface):
+    """Validate the LoRA manifest against runtime metadata and return shape maps."""
+    rows = interface["parameters"]
+    if (
+        interface.get("version") != 1
+        or [r["input"] for r in rows] != list(PARAMETERS)
+        or any(r["dtype"] != "float32" for r in rows)
+    ):
+        raise ValueError("Expected the version-one LoRA parameter interface.")
+    shapes = {
+        "features": (None, 16),
+        "target": (None, 8),
+        **{r["input"]: tuple(r["shape"]) for r in rows},
+    }
+    inputs = {v.name: v for v in executor.get_inputs()}
+    if inputs.keys() != shapes.keys():
+        raise ValueError("Model inputs do not match the LoRA interface.")
+    outputs = {v.name: v for v in executor.get_outputs()}
+    loss_name = interface["loss"]
+    output_shapes = {
+        loss_name: (),
+        **{r["gradient"]: tuple(r["shape"]) for r in rows},
+    }
+    if len(output_shapes) != len(rows) + 1:
+        raise ValueError("Loss and gradient output names must be distinct.")
+    for name, shape in shapes.items():
+        actual = inputs[name]
+        if (
+            actual.type != "tensor(float)"
+            or len(actual.shape) != len(shape)
+            or any(
+                wanted is not None and actual.shape[i] != wanted
+                for i, wanted in enumerate(shape)
+            )
+        ):
+            raise ValueError(f"Model input shape/dtype mismatch for {name}.")
+    for name, shape in output_shapes.items():
+        if (
+            name not in outputs
+            or outputs[name].type != "tensor(float)"
+            or tuple(outputs[name].shape) != shape
+        ):
+            raise ValueError(f"Model output shape/dtype mismatch for {name}.")
+    return shapes, output_shapes
+
+
 class CpuGradientBinding:
     """Reuse owned output arrays; results are borrowed until the next run.
 
@@ -21,52 +67,14 @@ class CpuGradientBinding:
     def __init__(self, executor, interface):
         if executor.get_providers() != ["CPUExecutionProvider"]:
             raise ValueError("This adapter requires a CPUExecutionProvider session.")
-        rows = interface["parameters"]
-        if (
-            interface.get("version") != 1
-            or [r["input"] for r in rows] != list(PARAMETERS)
-            or any(r["dtype"] != "float32" for r in rows)
-        ):
-            raise ValueError("Expected the version-one LoRA parameter interface.")
         self.executor = executor
         self.binding = executor.io_binding()
-        self.shapes = {
-            "features": (None, 16),
-            "target": (None, 8),
-            **{r["input"]: tuple(r["shape"]) for r in rows},
-        }
-        inputs = {v.name: v for v in executor.get_inputs()}
-        if inputs.keys() != self.shapes.keys():
-            raise ValueError("Model inputs do not match the LoRA interface.")
-        outputs = {v.name: v for v in executor.get_outputs()}
+        self.shapes, output_shapes = gradient_shapes(executor, interface)
         self.loss_name = interface["loss"]
-        self.gradient_names = {r["input"]: r["gradient"] for r in rows}
-        output_shapes = {
-            self.loss_name: (),
-            **{r["gradient"]: tuple(r["shape"]) for r in rows},
-        }
-        if len(output_shapes) != len(rows) + 1:
-            raise ValueError("Loss and gradient output names must be distinct.")
-        for name, shape in self.shapes.items():
-            actual = inputs[name]
-            if (
-                actual.type != "tensor(float)"
-                or len(actual.shape) != len(shape)
-                or any(
-                    wanted is not None and actual.shape[i] != wanted
-                    for i, wanted in enumerate(shape)
-                )
-            ):
-                raise ValueError(f"Model input shape/dtype mismatch for {name}.")
+        self.gradient_names = {r["input"]: r["gradient"] for r in interface["parameters"]}
         self.output_arrays = {}
         self.output_values = {}
         for name, shape in output_shapes.items():
-            if (
-                name not in outputs
-                or outputs[name].type != "tensor(float)"
-                or tuple(outputs[name].shape) != shape
-            ):
-                raise ValueError(f"Model output shape/dtype mismatch for {name}.")
             array = np.empty(shape, np.float32)
             value = ort.OrtValue.ortvalue_from_numpy(array)
             if value.data_ptr() != array.ctypes.data:

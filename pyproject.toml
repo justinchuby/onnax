@@ -36,7 +36,7 @@ Documentation = "https://www.justinchuby.com/onnax/"
 Examples = "https://github.com/justinchuby/onnax/tree/main/examples"
 
 [dependency-groups]
-training = ["onnxscript>=0.7", "array-api-compat>=1.16", "array-api-strict>=2.6", "jax>=0.4"]
+training = ["onnxscript>=0.7", "array-api-compat>=1.16", "array-api-strict>=2.6", "jax>=0.10.2"]
 docs = ["sphinx>=8", "furo", "myst-nb", "sphinx-copybutton", "sphinx-exec-code", "linkify-it-py"]
 dev = [
     "pytest>=8",

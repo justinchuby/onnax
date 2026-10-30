@@ -16,6 +16,7 @@ mlp
 fitting
 precision
 iobinding
+dlpack
 bf16
 roadmap
 api
