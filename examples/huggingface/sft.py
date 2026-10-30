@@ -278,6 +278,16 @@ def run(
     }
     report["forward_nodes"] = len(model.forward_graph.graph)
     report["adapter_parameter_bytes"] = sum(value.nbytes for value in final_params.values())
+
+    # Keep completed training/export evidence even if an optional audit raises.
+    def persist():
+        path = os.path.join(directory, "report.json")
+        with open(path + ".tmp", "w") as stream:
+            json.dump(report, stream, indent=2)
+        os.replace(path + ".tmp", path)
+
+    report["requested_audits"] = {"peft": peft_roundtrip, "fp64": fp64_audit}
+    persist()
     if peft_roundtrip:
         from examples.huggingface.peft_adapter import roundtrip
 
@@ -301,8 +311,7 @@ def run(
         model.onnx.forward_session = model.onnx.backward_session = None
         model.onnx.runtime_directory.cleanup()
         report["fp64"] = audit64(model, reference, sample, [initial_params, final_params])
-    with open(os.path.join(directory, "report.json"), "w") as stream:
-        json.dump(report, stream, indent=2)
+    persist()
     return report
 
 

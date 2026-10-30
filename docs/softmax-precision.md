@@ -89,3 +89,42 @@ further differentiation. Exported function bodies use standard ONNX operations.
 The real-model FP32 elementwise comparison remains open. FP64 diagnostics help
 locate arithmetic differences; the acceptance target is FP32 and lower precision
 compute with FP32 accumulation.
+
+## Locate Qwen3 differences at identical inputs
+
+```bash
+uv sync --group dev --group training --group huggingface
+HF_HUB_OFFLINE=1 uv run python -m examples.huggingface.layer_audit \
+  --real --output qwen3-fp32-layers.json
+```
+
+The audit exposes inputs and outputs of the source Mobius MatMul, RMSNorm and
+Swish operators. Each operator is replayed in PyTorch FP32 using the **observed
+ONNX input**, so upstream rounding is held fixed. The frozen Qwen3-0.6B run uses
+64 token IDs and the pinned model revision. Selected MatMul elements also have
+an independent scalar dot-product oracle using `math.fsum` over exact FP32
+products.
+
+The recorded 338-operator audit found:
+
+| Operator | Nodes | Elements exceeding the original tolerance before the Swish fix | After |
+| --- | --- | --- | --- |
+| RMSNorm | 113 | 0 | 0 |
+| Swish | 28 | 10 | 0 |
+| MatMul | 197 | 31,756 | 32,589 |
+
+Swish now uses a bounded exponential sigmoid, preserving small negative-tail
+activations and derivatives. Changing its output also changes downstream MatMul
+inputs, so the MatMul columns describe two different observed trajectories.
+Full-logit relative L2 error against PyTorch changed from 4.63e-6 to 4.29e-6;
+strict elementwise violations changed from 220,670 to 210,219 out of 9,723,904.
+
+The lm_head contains most local MatMul violations. At one of its largest scaled
+mismatches, the independent dot product was `-0.0009705360527334506`.
+ORT's absolute error was `4.12e-6`; PyTorch's was `7.07e-6`. This provides a
+concrete case where the FP32 reference contributes more error than ORT.
+
+The before/after JSON reports in `examples/huggingface/reports/` retain source
+node names, local metrics and selected dot-product oracles. The next comparison
+is adapter-gradient propagation at fixed activations, followed by the independent
+optimizer trajectories.

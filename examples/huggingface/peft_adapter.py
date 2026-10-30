@@ -137,11 +137,23 @@ def roundtrip(model, reference, batch, directory, *, diagnose_rounding=False):
     actual.loss.backward()
     expected.loss.backward()
     parameters = dict(peft.named_parameters())
+    gradient_failures = {}
     for row in model.mapping:
         for key in ("A", "B"):
             p = model.onnx.adapters[model.onnx.names.index(row[key])]
             q = parameters[f"base_model.model.{row['module']}.lora_{key}.default.weight"]
-            np.testing.assert_allclose(p.grad.numpy(), q.grad.numpy().T, rtol=1e-4, atol=1e-6)
+            actual_gradient, expected_gradient = p.grad.numpy(), q.grad.numpy().T
+            delta = np.abs(actual_gradient - expected_gradient)
+            failed = delta > 1e-6 + 1e-4 * np.abs(expected_gradient)
+            if np.any(failed):
+                gradient_failures[row[key]] = {
+                    "violations": int(np.count_nonzero(failed)),
+                    "max_abs": float(np.max(delta)),
+                }
+            if not diagnose_rounding:
+                np.testing.assert_allclose(
+                    actual_gradient, expected_gradient, rtol=1e-4, atol=1e-6
+                )
     torch.optim.AdamW(model.parameters(), lr=0.003, weight_decay=0).step()
     torch.optim.AdamW(
         [p for p in peft.parameters() if p.requires_grad], lr=0.003, weight_decay=0
@@ -163,7 +175,8 @@ def roundtrip(model, reference, batch, directory, *, diagnose_rounding=False):
     return {
         "adapter_tensors": len(arrays),
         "format_roundtrip_bitwise": True,
-        "gradient_check_passed": True,
+        "gradient_check_passed": not bool(gradient_failures),
+        "gradient_failures": gradient_failures,
         "update_check_passed": not bool(update_failures),
         "update_failures": update_failures,
         "logit_violations": logit_failures,

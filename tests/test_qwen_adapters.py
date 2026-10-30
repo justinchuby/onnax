@@ -196,3 +196,22 @@ def test_invalid_labels_and_atomic_adapter_import(tmp_path):
         import_adapter(model, str(tmp_path))
     for name, value in model.onnx.arrays().items():
         np.testing.assert_array_equal(value, before[name])
+
+
+@pytest.mark.parametrize("diagnose", [False, True])
+def test_peft_gradient_diagnostic_retains_failures(tmp_path, diagnose):
+    from examples.huggingface.peft_adapter import roundtrip
+
+    model, reference = prepare()
+    name = model.onnx.names[0]
+    model.onnx.adapters[0].register_hook(lambda gradient: gradient + 0.01)
+    ids = torch.tensor([[1, 4, 5, 2]])
+    batch = {"input_ids": ids, "attention_mask": torch.ones_like(ids), "labels": ids.clone()}
+    if diagnose:
+        report = roundtrip(model, reference, batch, str(tmp_path), diagnose_rounding=True)
+        assert not report["gradient_check_passed"]
+        assert report["gradient_failures"][name]["violations"] > 0
+        assert not report["update_check_passed"]
+    else:
+        with pytest.raises(AssertionError):
+            roundtrip(model, reference, batch, str(tmp_path))

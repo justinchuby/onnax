@@ -122,7 +122,16 @@ def decompose(model):
             output = op("Mul", op("Div", x, root), node.inputs[1])
         elif node.op_type == "Swish":
             alpha = node.attributes.get_float("alpha", 1.0)
-            output = op("Mul", x, op("Sigmoid", op("Mul", x, const(np.float32(alpha)))))
+            scaled = op("Mul", x, const(np.float32(alpha)))
+            zero, one = const(np.float32(0)), const(np.float32(1))
+            positive = op("GreaterOrEqual", scaled, zero)
+            magnitude = op("Where", positive, scaled, op("Neg", scaled))
+            tail = op("Exp", op("Neg", magnitude))
+            denominator = op("Add", one, tail)
+            sigmoid = op(
+                "Where", positive, op("Div", one, denominator), op("Div", tail, denominator)
+            )
+            output = op("Mul", x, sigmoid)
         else:
             if node.attributes.get_int("interleaved", 0) or node.attributes.get_int(
                 "rotary_embedding_dim", 0
