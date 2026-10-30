@@ -202,6 +202,11 @@ are computed from the current runtime inputs, not cached across executions.
 
 ## Development
 
+The first workload milestone is [LoRA fine-tuning](https://www.justinchuby.com/onnax/lora.html).
+See the [workload roadmap](https://www.justinchuby.com/onnax/roadmap.html).
+Install development and example dependencies with `uv sync --group dev --group training`
+before running the complete test suite.
+
 Ruff lint and formatting are both required.
 Numerical ONNX Runtime tests disable graph optimization to validate the actual
 generated artifacts independently of runtime optimizer cleanup.
