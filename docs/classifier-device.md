@@ -195,3 +195,46 @@ forward numerical differences account for the output-layer gradient discrepancy.
 The [diagnostic record](https://github.com/justinchuby/onnax/blob/main/examples/measurements/classifier-head-diagnostic-apple-arm64.json)
 contains both comparisons. Observation runs execute separately from performance
 measurements.
+
+### Check the hidden layer across training
+
+Audit every pre-update state with the same saved initial data and parameters:
+
+```bash
+python -m examples.classifier_inspector classifier_models --steps 150
+```
+
+The extended inspector also observes the rounded input $Q(X)$, rounded second
+weight $Q(W_2)$, and hidden preactivation $Z$. With $D$ from the output-layer
+formula above, the hidden-layer derivatives are
+
+$$
+E=(D Q(W_2)^\mathsf{T})\odot\frac{4e^{-2|Z|}}{(1+e^{-2|Z|})^2},\qquad
+\nabla_{W_1}L=Q(X)^\mathsf{T}E,\qquad
+\nabla_{b_1}L=\sum_iE_i.
+$$
+
+The exponential expression evaluates the tanh derivative accurately near
+saturation. The formulas implement the example's FP32 straight-through backward
+policy for BF16 casts. Finite-difference tests check all four analytic derivatives
+on the corresponding smooth model.
+
+Both recorded profiles pass all four observed-forward gradient comparisons at
+all 150 states, with `rtol=1e-4, atol=1e-6`. Every original loss/gradient output
+remains byte-identical when the extra observations are enabled.
+
+| Profile | First weight | First bias | Second weight | Second bias |
+|---|---:|---:|---:|---:|
+| Medium, largest absolute error | 1.21e-8 | 2.10e-9 | 4.47e-8 | 2.79e-8 |
+| Large, largest absolute error | 1.86e-9 | 3.14e-9 | 1.15e-7 | 6.15e-8 |
+
+The fully independent forward/backward comparison still records 4 failing states
+for each medium output-layer tensor, and 18 weight / 14 bias states for the large
+output layer. Its hidden-layer comparisons pass throughout. These results locate
+the recorded output-layer gradient differences in forward numerical variation,
+while independently checking the hidden-layer backward calculation.
+
+The [full audit record](https://github.com/justinchuby/onnax/blob/main/examples/measurements/classifier-backward-audit-apple-arm64.json)
+contains maximum errors and first failures from both comparisons. The audit runs
+separately from performance measurements because it exports additional
+intermediate arrays and recomputes derivatives on the CPU.
