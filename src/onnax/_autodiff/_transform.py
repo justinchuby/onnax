@@ -251,7 +251,7 @@ class JvpPass(ir.passes.FunctionalPass):
           Selected graph inputs/outputs need known ranks so their derivative
           interfaces are valid ONNX; all dimension sizes may be symbolic.
         * Elementwise: Identity, Add, Sub, Mul, Div, Pow, Neg, Abs, Exp, Log,
-          Sqrt, Reciprocal, Sin, Cos, Tan, Sinh, Cosh, Tanh, Sigmoid, Sign, Relu,
+          Sqrt, Reciprocal, Sin, Cos, Tan, Asin, Acos, Sinh, Cosh, Tanh, Sigmoid, Sign, Relu,
           LeakyRelu, PRelu, Elu, Selu, HardSigmoid, HardSwish, Softplus, Softsign, Erf.
           Elu and Selu use the
           nonpositive branch's slope at zero (alpha and alpha * gamma).
@@ -317,7 +317,7 @@ class JvpPass(ir.passes.FunctionalPass):
           differentiation are not supported.
         * Derivatives assume finite inputs within the operators' differentiable
           real domains: in particular, positive bases for Pow, positive inputs
-          for Log/Sqrt, nonzero divisors, and nonempty ReduceMean groups.
+          for Log/Sqrt, inputs strictly between -1 and 1 for Asin/Acos, nonzero divisors, and nonempty ReduceMean groups.
           Inactive integral Pow exponents also support negative bases and, for
           nonnegative exponents, zero bases (including the ONNX ``0**0 == 1``).
           No domain checks are inserted. At zero, Abs and Relu use derivative

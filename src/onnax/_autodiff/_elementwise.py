@@ -16,6 +16,8 @@ from onnax._rules import _builtin
 OPS = frozenset(
     (
         "Abs",
+        "Acos",
+        "Asin",
         "Add",
         "Cos",
         "Cosh",
@@ -206,6 +208,9 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
             p = ctx.op("Div", ctx.scalar(x, 0.5), y)
         elif op == "Reciprocal":
             p = ctx.op("Neg", ctx.op("Mul", y, y))
+        elif op in ("Asin", "Acos"):
+            denominator = ctx.op("Sqrt", ctx.op("Sub", one, ctx.op("Mul", x, x)))
+            p = ctx.op("Div", ctx.scalar(x, -1) if op == "Acos" else one, denominator)
         elif op == "Sin":
             p = ctx.op("Cos", x)
         elif op == "Cos":
