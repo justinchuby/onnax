@@ -99,6 +99,10 @@ HardSigmoid (including custom alpha/beta) and HardSwish support JVP, VJP,
 HVPs, and batched gradients across opsets 18 through 28. At clipping boundaries,
 HardSigmoid selects zero slope; HardSwish selects zero at the lower boundary and
 one at the upper boundary. Both select zero curvature at the boundaries.
+Abs now supports HVPs through its Sign pullback. Sign has a zero-derivative
+convention everywhere, including at zero, and Abs retains its zero slope at zero.
+These conventions permit piecewise differentiation; they do not claim classical
+derivatives at discontinuities or second derivatives at nonsmooth points.
 
 Try the [hosted WebGPU jelly playground](https://www.justinchuby.com/onnax/jelly/): drag a spring sheet
 with matrix-free Newton-CG, powered by exported

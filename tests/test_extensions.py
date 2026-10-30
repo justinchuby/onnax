@@ -283,7 +283,7 @@ def test_registration_is_thread_safe():
         assert jvp(square_model(version=version)).graph.outputs[-1].name
 
 
-def test_external_rule_can_add_a_standard_operator():
+def test_standard_operator_registration_accepts_domain_alias():
     @register_jvp("ai.onnx", "Sign", since_version=18, until_version=28)
     def sign_jvp(ctx, node, tangents):
         return [ctx.like(ctx.input(node))]

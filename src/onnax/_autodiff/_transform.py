@@ -251,7 +251,7 @@ class JvpPass(ir.passes.FunctionalPass):
           Selected graph inputs/outputs need known ranks so their derivative
           interfaces are valid ONNX; all dimension sizes may be symbolic.
         * Elementwise: Identity, Add, Sub, Mul, Div, Pow, Neg, Abs, Exp, Log,
-          Sqrt, Reciprocal, Sin, Cos, Tan, Sinh, Cosh, Tanh, Sigmoid, Relu,
+          Sqrt, Reciprocal, Sin, Cos, Tan, Sinh, Cosh, Tanh, Sigmoid, Sign, Relu,
           LeakyRelu, PRelu, Elu, Selu, HardSigmoid, HardSwish, Softplus, Softsign, Erf.
           Elu and Selu use the
           nonpositive branch's slope at zero (alpha and alpha * gamma).
@@ -308,7 +308,7 @@ class JvpPass(ir.passes.FunctionalPass):
           operations, broadcasting, reductions, layouts, and Gather's additive
           ScatterND pullback. Shape/index paths remain structural even when
           computed at runtime. Unsupported active generated operators still fail
-          precisely (for example Sign in the pullback of Abs). Piecewise
+          precisely. Abs pullbacks support Sign with a zero-derivative convention. Piecewise
           rules such as Relu/Where retain fixed-predicate conventions away from
           boundaries; no second derivative at a nonsmooth point is claimed.
           Complex numbers, sequences, sparse tensors,
@@ -320,7 +320,8 @@ class JvpPass(ir.passes.FunctionalPass):
           Inactive integral Pow exponents also support negative bases and, for
           nonnegative exponents, zero bases (including the ONNX ``0**0 == 1``).
           No domain checks are inserted. At zero, Abs and Relu use derivative
-          zero and LeakyRelu uses alpha. PRelu uses its slope tensor for the data
+          zero and LeakyRelu uses alpha. Sign uses zero derivative everywhere,
+          including its discontinuity at zero; no classical derivative is claimed there. PRelu uses its slope tensor for the data
           partial and zero for the slope partial. HardSigmoid uses zero at both
           clipping boundaries; HardSwish uses zero at the lower boundary and one
           at the upper boundary. Their HVP curvature is zero at those boundaries.

@@ -37,6 +37,7 @@ OPS = frozenset(
         "Relu",
         "Selu",
         "Sigmoid",
+        "Sign",
         "Sin",
         "Sinh",
         "Softplus",
@@ -168,6 +169,9 @@ def _partials(ctx: _Context, node: ir.Node, indices: Sequence[int]) -> dict[int,
             )
         elif op == "Neg":
             p = ctx.scalar(x, -1)
+        elif op == "Sign":
+            # Zero almost everywhere; choose zero at the discontinuity as well.
+            p = ctx.scalar(x, 0)
         elif op == "Abs":
             p = ctx.op("Sign", x)
         elif op == "Exp":
