@@ -20,6 +20,23 @@ from examples.huggingface.sft import prepare, texts, token_loss, tokenizer
 from examples.huggingface.validation import TorchLora
 
 
+def hardware():
+    cpu = platform.processor() or platform.machine()
+    if sys.platform == "darwin":
+        result = subprocess.run(
+            ["sysctl", "-n", "machdep.cpu.brand_string"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        cpu = result.stdout.strip() or cpu
+    return {
+        "cpu": cpu,
+        "logical_cores": os.cpu_count(),
+        "physical_memory_bytes": os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES"),
+    }
+
+
 def measure(mode, *, real=False, samples=100, warmup=10, batch_size=4, nf4=False):
     torch.set_num_threads(1)
     start = time.perf_counter()
@@ -113,6 +130,7 @@ def measure(mode, *, real=False, samples=100, warmup=10, batch_size=4, nf4=False
         "threads": {"torch": 1, "ort_intra": 1, "ort_inter": 1},
         "ort_optimizer": "disabled",
         "platform": platform.platform(),
+        "hardware": hardware(),
         "versions": {
             n: version(n)
             for n in ("torch", "transformers", "onnxruntime", "onnxscript", "mobius-onnx")

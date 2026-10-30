@@ -84,7 +84,7 @@ further differentiation. Exported function bodies use standard ONNX operations.
 | Tiny Qwen3 | Training, masking, adapter exchange, chunked head; rounded BF16/FP16 logits with FP32 loss tests | Full mixed-precision model execution |
 | Qwen3-0.6B FP32 | 30 updates, loss decrease, checkpoint replay, export | Locate layerwise FP32 differences at identical intermediate inputs; repeat paired updates at the original tolerance |
 | BF16 Qwen3 | Dtype policy and smaller mixed-precision examples | Full model gradients and optimizer trajectory |
-| NF4 | Multi-layer tiny Qwen SFT, PEFT and fresh-process recovery | Real-model NF4 validation, decoding lifetime and backend measurements |
+| NF4 | Tiny Qwen SFT/recovery/PEFT; real Qwen 30-step training; isolated tiny benchmarks | Real-model gradient qualification, decoding lifetime and fused backend |
 
 The real-model FP32 elementwise comparison remains open. FP64 diagnostics help
 locate arithmetic differences; the acceptance target is FP32 and lower precision

@@ -80,3 +80,33 @@ peak process RSS, thread counts and package versions.
 
 The next performance work is decoding lifetime and backend fusion, guided by
 these measurements.
+
+## Recorded CPU runs
+
+On Apple M1 Max with 32 GiB RAM, Qwen3-0.6B completed 30 NF4 adapter updates.
+Validation loss decreased from **7.750500 to 5.731173**. Its 196 decoder matrices
+use 247,726,080 packed/scales bytes, compared with 1,761,607,680 FP32 bytes.
+The exported weight data is 893,583,360 bytes, including the FP32 embedding and
+other frozen buffers. The full ONNX checker validates the export.
+
+`qwen3-nf4.json` retains the original elementwise comparisons. At the final
+state, three gradient elements in layer 16's q-projection B exceed the original
+threshold; independent AdamW update differences are also recorded. Tiny Qwen
+passes the strict gradient, update and PEFT comparisons.
+
+The isolated tiny-model benchmark uses batch four, sequence length 64 and 252
+valid shifted tokens per update. Each path warms up for 10 updates and measures
+100 updates on the same NF4-reconstructed base values:
+
+| Execution | Step median (ms) | P95 (ms) | Effective tokens/s | Peak process RSS (MiB) |
+| --- | ---: | ---: | ---: | ---: |
+| PyTorch, reconstructed FP32 storage | 3.29 | 16.66 | 76,683 | 541.2 |
+| Raw ONNX NF4 | 13.61 | 45.73 | 18,516 | 597.5 |
+| Optimized ONNX NF4 | 10.56 | 12.18 | 23,856 | 604.4 |
+| Saved activations | 9.10 | 9.19 | 27,700 | 611.5 |
+| Chunked loss | 11.51 | 12.14 | 21,898 | 605.8 |
+
+The JSON report records per-phase times, CPU array-view costs and versions.
+Process RSS includes imports, model construction and runtime. A sample of the
+real CPU run identifies codebook Gather as a decoding hotspot; backend fusion
+and decoding lifetime are the next performance targets.
