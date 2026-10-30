@@ -16,6 +16,7 @@ mlp
 mlp-bf16
 classifier-device
 metal-microbatch
+memory-lifecycle
 fitting
 precision
 iobinding

@@ -1,0 +1,856 @@
+{
+  "version": 1,
+  "hardware": "Apple M1 Max",
+  "date": "2026-10-30",
+  "initialization_seed": 20261030,
+  "source_workload": "activation-memory-apple-arm64.json",
+  "c_abi_source": "https://github.com/ml-explore/mlx-c/blob/main/mlx/c/memory.h",
+  "runs": {
+    "fp32-16384": {
+      "version": 1,
+      "profile": "activation",
+      "precision": "fp32",
+      "microbatch": 16384,
+      "batch_sizes": [
+        16384
+      ],
+      "settle_ms": 250,
+      "baseline_warmup": 10,
+      "baseline_samples": 100,
+      "resumed_step": 111,
+      "resumed_outputs_byte_equal": true,
+      "preserved_input_checkpoint": true,
+      "compared_outputs_and_state": [
+        "loss",
+        "gradient.layer1.weight",
+        "gradient.layer1.bias",
+        "gradient.layer2.weight",
+        "gradient.layer2.bias",
+        "layer1.weight",
+        "layer1.bias",
+        "layer2.weight",
+        "layer2.bias",
+        "adam.first.layer1.weight",
+        "adam.first.layer1.bias",
+        "adam.first.layer2.weight",
+        "adam.first.layer2.bias",
+        "adam.second.layer1.weight",
+        "adam.second.layer1.bias",
+        "adam.second.layer2.weight",
+        "adam.second.layer2.bias",
+        "adam.step"
+      ],
+      "steady_step_ms": {
+        "median": 7.650312501937151,
+        "p95": 7.827517308760434
+      },
+      "first_resumed_step_ms": 37.8642079886049,
+      "first_resumed_scope": "One synchronized training step after idle cache release",
+      "phases": [
+        {
+          "phase": "setup",
+          "provider": {
+            "active_bytes": 0,
+            "cache_bytes": 0,
+            "peak_bytes": 0
+          },
+          "python_mlx": {
+            "active_bytes": 10625088,
+            "cache_bytes": 0,
+            "peak_bytes": 10625088
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 163447720,
+            "lifetime_peak_bytes": 163447720,
+            "current_resident_bytes": 211058688,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "before_release",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 418064968,
+            "peak_bytes": 428755616
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 3563848,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 603603952,
+            "lifetime_peak_bytes": 603603952,
+            "current_resident_bytes": 234684416,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_python_clear",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 418064968,
+            "peak_bytes": 428755616
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 603603952,
+            "lifetime_peak_bytes": 603603952,
+            "current_resident_bytes": 234684416,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_python_settle",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 418064968,
+            "peak_bytes": 428755616
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 600065008,
+            "lifetime_peak_bytes": 603603952,
+            "current_resident_bytes": 231145472,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_provider_clear",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 0,
+            "peak_bytes": 428755616
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 600065008,
+            "lifetime_peak_bytes": 603603952,
+            "current_resident_bytes": 231145472,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_provider_settle",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 0,
+            "peak_bytes": 428755616
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 182010864,
+            "lifetime_peak_bytes": 603603952,
+            "current_resident_bytes": 229965824,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "resumed",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 418064968,
+            "peak_bytes": 428755616
+          },
+          "python_mlx": {
+            "active_bytes": 17752548,
+            "cache_bytes": 16,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 610829320,
+            "lifetime_peak_bytes": 610829320,
+            "current_resident_bytes": 241893376,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        }
+      ],
+      "graphs": {
+        "16384": {
+          "nodes": 44,
+          "bytes": 70402
+        }
+      },
+      "provider_api": "Bundled libmlxc.dylib; mlx/c/memory.h C ABI",
+      "allocator_scope": "Provider counters use bundled C ABI; Python counters use mlx.core; footprint covers the process",
+      "parameter_names": [
+        "layer1.weight",
+        "layer1.bias",
+        "layer2.weight",
+        "layer2.bias"
+      ],
+      "parameter_bytes": 1187904,
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "numpy": "2.4.6",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2"
+      }
+    },
+    "fp32-4096": {
+      "version": 1,
+      "profile": "activation",
+      "precision": "fp32",
+      "microbatch": 4096,
+      "batch_sizes": [
+        4096,
+        4096,
+        4096,
+        4096
+      ],
+      "settle_ms": 250,
+      "baseline_warmup": 10,
+      "baseline_samples": 100,
+      "resumed_step": 111,
+      "resumed_outputs_byte_equal": true,
+      "preserved_input_checkpoint": true,
+      "compared_outputs_and_state": [
+        "loss",
+        "gradient.layer1.weight",
+        "gradient.layer1.bias",
+        "gradient.layer2.weight",
+        "gradient.layer2.bias",
+        "layer1.weight",
+        "layer1.bias",
+        "layer2.weight",
+        "layer2.bias",
+        "adam.first.layer1.weight",
+        "adam.first.layer1.bias",
+        "adam.first.layer2.weight",
+        "adam.first.layer2.bias",
+        "adam.second.layer1.weight",
+        "adam.second.layer1.bias",
+        "adam.second.layer2.weight",
+        "adam.second.layer2.bias",
+        "adam.step"
+      ],
+      "steady_step_ms": {
+        "median": 11.844729495351203,
+        "p95": 12.324916351644788
+      },
+      "first_resumed_step_ms": 20.25875000981614,
+      "first_resumed_scope": "One synchronized training step after idle cache release",
+      "phases": [
+        {
+          "phase": "setup",
+          "provider": {
+            "active_bytes": 0,
+            "cache_bytes": 0,
+            "peak_bytes": 0
+          },
+          "python_mlx": {
+            "active_bytes": 10625088,
+            "cache_bytes": 0,
+            "peak_bytes": 10625088
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 163283880,
+            "lifetime_peak_bytes": 163283880,
+            "current_resident_bytes": 210911232,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "before_release",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 106637384,
+            "peak_bytes": 110446748
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 5939660,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 293569544,
+            "lifetime_peak_bytes": 293569544,
+            "current_resident_bytes": 235585536,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_python_clear",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 106637384,
+            "peak_bytes": 110446748
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 293569544,
+            "lifetime_peak_bytes": 293569544,
+            "current_resident_bytes": 235585536,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_python_settle",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 106637384,
+            "peak_bytes": 110446748
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 287671304,
+            "lifetime_peak_bytes": 293569544,
+            "current_resident_bytes": 230866944,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_provider_clear",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 0,
+            "peak_bytes": 110446748
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 287671304,
+            "lifetime_peak_bytes": 293569544,
+            "current_resident_bytes": 230866944,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_provider_settle",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 0,
+            "peak_bytes": 110446748
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 181044232,
+            "lifetime_peak_bytes": 293569544,
+            "current_resident_bytes": 229687296,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "resumed",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 106637384,
+            "peak_bytes": 110446748
+          },
+          "python_mlx": {
+            "active_bytes": 17752548,
+            "cache_bytes": 56,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 305415176,
+            "lifetime_peak_bytes": 305415176,
+            "current_resident_bytes": 248610816,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        }
+      ],
+      "graphs": {
+        "4096": {
+          "nodes": 40,
+          "bytes": 266582
+        }
+      },
+      "provider_api": "Bundled libmlxc.dylib; mlx/c/memory.h C ABI",
+      "allocator_scope": "Provider counters use bundled C ABI; Python counters use mlx.core; footprint covers the process",
+      "parameter_names": [
+        "layer1.weight",
+        "layer1.bias",
+        "layer2.weight",
+        "layer2.bias"
+      ],
+      "parameter_bytes": 1187904,
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "numpy": "2.4.6",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2"
+      }
+    },
+    "bf16-16384": {
+      "version": 1,
+      "profile": "activation",
+      "precision": "bf16",
+      "microbatch": 16384,
+      "batch_sizes": [
+        16384
+      ],
+      "settle_ms": 250,
+      "baseline_warmup": 10,
+      "baseline_samples": 100,
+      "resumed_step": 111,
+      "resumed_outputs_byte_equal": true,
+      "preserved_input_checkpoint": true,
+      "compared_outputs_and_state": [
+        "loss",
+        "gradient.layer1.weight",
+        "gradient.layer1.bias",
+        "gradient.layer2.weight",
+        "gradient.layer2.bias",
+        "layer1.weight",
+        "layer1.bias",
+        "layer2.weight",
+        "layer2.bias",
+        "adam.first.layer1.weight",
+        "adam.first.layer1.bias",
+        "adam.first.layer2.weight",
+        "adam.first.layer2.bias",
+        "adam.second.layer1.weight",
+        "adam.second.layer1.bias",
+        "adam.second.layer2.weight",
+        "adam.second.layer2.bias",
+        "adam.step"
+      ],
+      "steady_step_ms": {
+        "median": 8.512646003509872,
+        "p95": 8.606376448005904
+      },
+      "first_resumed_step_ms": 39.19987499830313,
+      "first_resumed_scope": "One synchronized training step after idle cache release",
+      "phases": [
+        {
+          "phase": "setup",
+          "provider": {
+            "active_bytes": 0,
+            "cache_bytes": 0,
+            "peak_bytes": 0
+          },
+          "python_mlx": {
+            "active_bytes": 10625088,
+            "cache_bytes": 0,
+            "peak_bytes": 10625088
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 165168064,
+            "lifetime_peak_bytes": 165168064,
+            "current_resident_bytes": 212762624,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "before_release",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 566110792,
+            "peak_bytes": 576801440
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 3563848,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 753959968,
+            "lifetime_peak_bytes": 753959968,
+            "current_resident_bytes": 236584960,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_python_clear",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 566110792,
+            "peak_bytes": 576801440
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 753959968,
+            "lifetime_peak_bytes": 753959968,
+            "current_resident_bytes": 236584960,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_python_settle",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 566110792,
+            "peak_bytes": 576801440
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 750404616,
+            "lifetime_peak_bytes": 753959968,
+            "current_resident_bytes": 233046016,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_provider_clear",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 0,
+            "peak_bytes": 576801440
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 750404616,
+            "lifetime_peak_bytes": 753959968,
+            "current_resident_bytes": 233046016,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_provider_settle",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 0,
+            "peak_bytes": 576801440
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 184304648,
+            "lifetime_peak_bytes": 753959968,
+            "current_resident_bytes": 231866368,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "resumed",
+          "provider": {
+            "active_bytes": 65560,
+            "cache_bytes": 566110792,
+            "peak_bytes": 576801440
+          },
+          "python_mlx": {
+            "active_bytes": 17752548,
+            "cache_bytes": 16,
+            "peak_bytes": 17752596
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 760857632,
+            "lifetime_peak_bytes": 760857632,
+            "current_resident_bytes": 243482624,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        }
+      ],
+      "graphs": {
+        "16384": {
+          "nodes": 53,
+          "bytes": 71113
+        }
+      },
+      "provider_api": "Bundled libmlxc.dylib; mlx/c/memory.h C ABI",
+      "allocator_scope": "Provider counters use bundled C ABI; Python counters use mlx.core; footprint covers the process",
+      "parameter_names": [
+        "layer1.weight",
+        "layer1.bias",
+        "layer2.weight",
+        "layer2.bias"
+      ],
+      "parameter_bytes": 1187904,
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "numpy": "2.4.6",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2"
+      }
+    },
+    "bf16-4096": {
+      "version": 1,
+      "profile": "activation",
+      "precision": "bf16",
+      "microbatch": 4096,
+      "batch_sizes": [
+        4096,
+        4096,
+        4096,
+        4096
+      ],
+      "settle_ms": 250,
+      "baseline_warmup": 10,
+      "baseline_samples": 100,
+      "resumed_step": 111,
+      "resumed_outputs_byte_equal": true,
+      "preserved_input_checkpoint": true,
+      "compared_outputs_and_state": [
+        "loss",
+        "gradient.layer1.weight",
+        "gradient.layer1.bias",
+        "gradient.layer2.weight",
+        "gradient.layer2.bias",
+        "layer1.weight",
+        "layer1.bias",
+        "layer2.weight",
+        "layer2.bias",
+        "adam.first.layer1.weight",
+        "adam.first.layer1.bias",
+        "adam.first.layer2.weight",
+        "adam.first.layer2.bias",
+        "adam.second.layer1.weight",
+        "adam.second.layer1.bias",
+        "adam.second.layer2.weight",
+        "adam.second.layer2.bias",
+        "adam.step"
+      ],
+      "steady_step_ms": {
+        "median": 12.306353994063102,
+        "p95": 13.137183061917312
+      },
+      "first_resumed_step_ms": 29.68983299797401,
+      "first_resumed_scope": "One synchronized training step after idle cache release",
+      "phases": [
+        {
+          "phase": "setup",
+          "provider": {
+            "active_bytes": 0,
+            "cache_bytes": 0,
+            "peak_bytes": 0
+          },
+          "python_mlx": {
+            "active_bytes": 10625088,
+            "cache_bytes": 0,
+            "peak_bytes": 10625088
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 163201960,
+            "lifetime_peak_bytes": 163201960,
+            "current_resident_bytes": 210829312,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "before_release",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 144189512,
+            "peak_bytes": 147998876
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 5939660,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 331842568,
+            "lifetime_peak_bytes": 331842568,
+            "current_resident_bytes": 236601344,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_python_clear",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 144189512,
+            "peak_bytes": 147998876
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 331842568,
+            "lifetime_peak_bytes": 331842568,
+            "current_resident_bytes": 236601344,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_python_settle",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 144189512,
+            "peak_bytes": 147998876
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 325944328,
+            "lifetime_peak_bytes": 331842568,
+            "current_resident_bytes": 231751680,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_provider_clear",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 0,
+            "peak_bytes": 147998876
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 325944328,
+            "lifetime_peak_bytes": 331842568,
+            "current_resident_bytes": 231751680,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "after_provider_settle",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 0,
+            "peak_bytes": 147998876
+          },
+          "python_mlx": {
+            "active_bytes": 13000928,
+            "cache_bytes": 0,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 181765128,
+            "lifetime_peak_bytes": 331842568,
+            "current_resident_bytes": 230572032,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        },
+        {
+          "phase": "resumed",
+          "provider": {
+            "active_bytes": 262164,
+            "cache_bytes": 144189512,
+            "peak_bytes": 147998876
+          },
+          "python_mlx": {
+            "active_bytes": 17752548,
+            "cache_bytes": 56,
+            "peak_bytes": 18940492
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 337888264,
+            "lifetime_peak_bytes": 337888264,
+            "current_resident_bytes": 243695616,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          }
+        }
+      ],
+      "graphs": {
+        "4096": {
+          "nodes": 49,
+          "bytes": 267287
+        }
+      },
+      "provider_api": "Bundled libmlxc.dylib; mlx/c/memory.h C ABI",
+      "allocator_scope": "Provider counters use bundled C ABI; Python counters use mlx.core; footprint covers the process",
+      "parameter_names": [
+        "layer1.weight",
+        "layer1.bias",
+        "layer2.weight",
+        "layer2.bias"
+      ],
+      "parameter_bytes": 1187904,
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "mlx": "0.32.4",
+        "numpy": "2.4.6",
+        "onnxruntime": "1.31.1",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "onnxscript": "0.7.2"
+      }
+    }
+  }
+}
