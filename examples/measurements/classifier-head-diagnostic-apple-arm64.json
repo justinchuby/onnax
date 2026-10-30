@@ -1,0 +1,135 @@
+{
+  "scope": "Output-layer analytic backpropagation using observed native BF16 forward values; no timing instrumentation",
+  "hardware": "Apple M1 Max",
+  "source_measurement": "classifier-device-state-apple-arm64.json",
+  "cases": [
+    {
+      "original_outputs_equal": true,
+      "observed_primal_head_gradients": {
+        "layer2.weight": {
+          "mismatched": 0,
+          "max_abs": 2.5029294192790985e-09
+        },
+        "layer2.bias": {
+          "mismatched": 0,
+          "max_abs": 2.240994945168495e-09
+        }
+      },
+      "step": 63,
+      "profile": "medium",
+      "rtol": 0.0001,
+      "atol": 1e-06,
+      "independent_head_gradients": {
+        "layer2.weight": {
+          "mismatched": 465,
+          "max_abs": 3.0780565793975256e-06,
+          "first": {
+            "index": [
+              0,
+              5
+            ],
+            "actual": -5.470777250593528e-05,
+            "expected": -5.173768295207992e-05
+          }
+        },
+        "layer2.bias": {
+          "mismatched": 1,
+          "max_abs": 3.0775117920711637e-06,
+          "first": {
+            "index": [
+              5
+            ],
+            "actual": -2.9897550120949745e-05,
+            "expected": -3.297506191302091e-05
+          }
+        }
+      }
+    },
+    {
+      "original_outputs_equal": true,
+      "observed_primal_head_gradients": {
+        "layer2.weight": {
+          "mismatched": 0,
+          "max_abs": 1.1548399925231934e-07
+        },
+        "layer2.bias": {
+          "mismatched": 0,
+          "max_abs": 5.587935447692871e-08
+        }
+      },
+      "step": 10,
+      "profile": "large",
+      "rtol": 0.0001,
+      "atol": 1e-06,
+      "independent_head_gradients": {
+        "layer2.weight": {
+          "mismatched": 5,
+          "max_abs": 6.481073796749115e-06,
+          "first": {
+            "index": [
+              577,
+              8
+            ],
+            "actual": 0.018420938402414322,
+            "expected": 0.018416281789541245
+          }
+        },
+        "layer2.bias": {
+          "mismatched": 0,
+          "max_abs": 2.87545844912529e-07
+        }
+      }
+    },
+    {
+      "original_outputs_equal": true,
+      "observed_primal_head_gradients": {
+        "layer2.weight": {
+          "mismatched": 0,
+          "max_abs": 1.3969838619232178e-08
+        },
+        "layer2.bias": {
+          "mismatched": 0,
+          "max_abs": 4.6566128730773926e-09
+        }
+      },
+      "step": 33,
+      "profile": "large",
+      "rtol": 0.0001,
+      "atol": 1e-06,
+      "independent_head_gradients": {
+        "layer2.weight": {
+          "mismatched": 1975,
+          "max_abs": 3.0694063752889633e-06,
+          "first": {
+            "index": [
+              0,
+              0
+            ],
+            "actual": -0.004161038901656866,
+            "expected": -0.004164096899330616
+          }
+        },
+        "layer2.bias": {
+          "mismatched": 1,
+          "max_abs": 3.0568335205316544e-06,
+          "first": {
+            "index": [
+              0
+            ],
+            "actual": -0.0019738655537366867,
+            "expected": -0.0019769223872572184
+          }
+        }
+      }
+    }
+  ],
+  "versions": {
+    "numpy": "2.4.6",
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnxruntime": "1.31.1",
+    "onnxruntime-ep-mlx": "0.31.0",
+    "mlx": "0.32.4"
+  },
+  "platform": "macOS-27.0.1-arm64-arm-64bit"
+}

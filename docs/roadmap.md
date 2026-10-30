@@ -64,8 +64,10 @@ adjoints. The [larger-classifier experiment](classifier-device.md) now shares
 named model buffers through a common adapter, keeps all four masters and Adam
 moments on Metal, and compares CPU/uncompiled/compiled updates on 74K/1.1M
 parameter models. All update modes restore byte-identical checkpoints; the
-report retains the strict NumPy precision differences. Next evaluate Metal
-microbatch accumulation and extend the precision diagnosis for larger classifiers. The recorded CPU
+report retains the strict NumPy precision differences. An observed-forward
+inspector now replays the first BF16 output-layer gradient failures and checks
+independent head backpropagation at native forward values. Next evaluate Metal
+microbatch accumulation and extend the diagnosis through the hidden layer. The recorded CPU
 ORT provider lacks BF16 MatMul. Device memory/transfer measurements will guide
 DLPack, recomputation and structured-operator work.
 
