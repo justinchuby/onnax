@@ -5,7 +5,11 @@ import { defineConfig } from 'vite';
 const hash = createHash('sha256');
 for (const name of [
   'mesh.json',
-  ...['energy', 'gradient', 'hvp'].map((kind) => `${kind}.onnx`),
+  ...['energy', 'gradient', 'hvp'].flatMap((kind) => [
+    `${kind}.onnx`,
+    `${kind}.svg`,
+    `runtime/${kind}.svg`,
+  ]),
   ...['energy', 'gradient', 'hvp', 'cg', 'step', 'batch'].map((kind) => `runtime/${kind}.onnx`),
 ]) {
   const path = new URL(`./public/models/${name}`, import.meta.url);

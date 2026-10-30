@@ -335,8 +335,11 @@ ONNX models, manifest, and pinned ORT WASM/JS. Assembly rejects missing, empty,
 mixed-version models and incorrectly based HTML. Vite also fails before building
 if any checked-in model is missing. A content digest of the complete model set
 versions model/manifest requests and the JavaScript bundle to avoid stale model
-mixing after deployment. Graph excerpts are generated deterministically from the
-actual canonical/optimized IR graphs into the manifest; they do not execute models.
+mixing after deployment. The computation panel displays checked-in SVG diagrams
+exported by Netron 9.3.3 from the original and runtime energy/gradient/HVP models.
+Links open the published models in Netron. After regenerating these ONNX files,
+open each in Netron and use **File → Export as SVG**, saving beside its model
+with the same basename. The previews do not execute models.
 
 Run the browser suite against the deployed URL without a local server:
 

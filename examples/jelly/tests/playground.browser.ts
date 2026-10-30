@@ -52,11 +52,26 @@ test('GPU-only autodiff, force field, stiff solve, controls, pointer/touch and r
   await expect(page.locator('#overlay')).toHaveValue('force');
   await page.locator('#computation summary').focus();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#graph-excerpts')).toBeVisible();
-  await expect(page.locator('#graph-excerpts section')).toHaveCount(3);
-  await expect(page.locator('#graph-excerpts')).toContainText('q_tangent');
-  await expect(page.locator('#graph-excerpts')).toContainText('ONNX opset 22');
-  await expect(page.locator('#graph-excerpts pre').first()).toContainText('[36,2]');
+  await expect(page.locator('#model-graphs')).toBeVisible();
+  await expect(page.locator('#model-graphs section')).toHaveCount(3);
+  await expect(page.locator('#model-graphs img')).toHaveCount(6);
+  await expect(page.locator('#model-graphs')).toContainText('ONNX opset 22');
+  await expect(page.locator('#model-graphs pre')).toHaveCount(0);
+  for (const link of await page.locator('#model-graphs a').all()) {
+    const url = new URL((await link.getAttribute('href'))!);
+    expect(url.origin).toBe('https://netron.app');
+    expect(url.searchParams.get('url')).toMatch(
+      /^https:\/\/www\.justinchuby\.com\/onnax\/jelly\/models\/(runtime\/)?(energy|gradient|hvp)\.onnx$/,
+    );
+    await expect(link).toHaveAttribute('target', '_blank');
+  }
+  for (const image of await page.locator('#model-graphs img').all()) {
+    await image.scrollIntoViewIfNeeded();
+    await expect(image).toHaveJSProperty('complete', true);
+    expect(
+      await image.evaluate((element) => (element as HTMLImageElement).naturalWidth),
+    ).toBeGreaterThan(0);
+  }
   await page.keyboard.press('Enter');
   await expect(page.locator('#error')).toBeHidden();
 
