@@ -7,6 +7,7 @@ import onnx_ir as ir
 import pytest
 from _testing import evaluator, runtime_session
 from onnx.reference import ReferenceEvaluator
+from onnx_ir.passes.common import InlinePass
 
 from onnax import HoistLinearCoefficientsPass
 
@@ -236,3 +237,79 @@ def test_distribution_without_invariant_work_is_not_a_rewrite():
     )
     result = HoistLinearCoefficientsPass(inputs=["v", "w"])(model)
     assert not result.modified
+
+
+@pytest.mark.parametrize("index", [0, 1])
+def test_overloaded_arithmetic_is_an_opaque_boundary(index):
+    model = _model(mode="chain")
+    model.ir_version = 10
+    model.graph[index].overload = "custom"
+    before = ir.to_proto(model).SerializeToString()
+    result = HoistLinearCoefficientsPass(inputs=["v"])(model)
+    assert not result.modified
+    assert ir.to_proto(result.model).SerializeToString() == before
+
+
+def test_builtin_islands_can_still_factor_around_overloaded_boundaries():
+    model = _model(mode="chain")
+    model.ir_version = 10
+    model.graph[0].overload = "custom"
+    boundary = model.graph[0].outputs[0]
+    boundary.dtype, boundary.shape = ir.DataType.DOUBLE, ir.Shape([2, 3])
+    tape = ir.tape.Tape(model.graph)
+    y = tape.op("Mul", [model.graph.outputs[0], model.graph.inputs[1]])
+    y.name, y.dtype, y.shape = "result", ir.DataType.DOUBLE, ir.Shape([2, 3])
+    model.graph.outputs.clear()
+    model.graph.outputs.append(y)
+    result = _check(model)
+    assert result.modified
+    calls = [n for n in result.model.graph if n.overload]
+    assert len(calls) == 1
+    assert calls[0].op_identifier() == ("", "Mul", "custom")
+
+
+def _arithmetic_function(name, overload="", domain=""):
+    x = ir.val("x", dtype=ir.DataType.DOUBLE, shape=[2, 3])
+    a = ir.val("a", dtype=ir.DataType.DOUBLE, shape=[2, 3])
+    tape = ir.tape.Tape()
+    y = tape.op("Sub", [x, a])
+    return ir.Function(
+        domain,
+        name,
+        overload,
+        graph=ir.Graph(
+            [x, a], [y], nodes=tape.nodes, opset_imports={"": 18}, name="difference"
+        ),
+        attributes=[],
+    )
+
+
+def test_local_arithmetic_overload_preserves_function_semantics():
+    model = _model(mode="chain")
+    model.ir_version = 10
+    function = _arithmetic_function("Mul", "difference")
+    model.functions[function.identifier()] = function
+    model.graph[0].overload = "difference"
+    before = ir.to_proto(model).SerializeToString()
+    result = HoistLinearCoefficientsPass(inputs=["v"])(model)
+    assert not result.modified
+    assert ir.to_proto(result.model).SerializeToString() == before
+    # Resolve IR function identities explicitly before schema/runtime checks.
+    source = InlinePass()(model.clone()).model
+    transformed = InlinePass()(result.model.clone()).model
+    feeds = {"v": np.full((2, 3), 2.0), "a": np.full((2, 1), 0.5), "b": np.array(4.0)}
+    expected = (feeds["v"] - feeds["a"]) / feeds["b"]
+    for candidate in (source, transformed):
+        np.testing.assert_allclose(evaluator(candidate).run(None, feeds)[0], expected)
+
+
+@pytest.mark.parametrize("name", ["Add", "Mul", "Constant"])
+@pytest.mark.parametrize("domain", ["", "ai.onnx"])
+def test_generated_operator_names_cannot_capture_local_functions(name, domain):
+    model = _model(mode="negative")
+    function = _arithmetic_function(name, domain=domain)
+    model.functions[function.identifier()] = function
+    before = ir.to_proto(model).SerializeToString()
+    result = HoistLinearCoefficientsPass(inputs=["v"])(model)
+    assert not result.modified
+    assert ir.to_proto(result.model).SerializeToString() == before
