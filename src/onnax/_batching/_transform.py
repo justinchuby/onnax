@@ -315,10 +315,17 @@ class _Batcher(_Context):
         self.registry.extend(_load_builtin_rules()._batching)
         if rules is not None:
             self.registry.extend(rules._batching)
-        self.external = set() if rules is None else set(rules._batching._rules)
+        self.external = {} if rules is None else rules._batching._rules
 
     def _node(self, node: ir.Node) -> None:
-        if (node.domain, node.op_type) in self.external and not node.overload:
+        entries = self.external.get((node.domain, node.op_type), ())
+        use_extension = bool(entries)
+        if entries and not node.domain:
+            version = _rule_registry._effective_opset(node, self.graph.opset_imports)
+            use_extension = any(
+                entry.since_version <= version <= entry.until_version for entry in entries
+            )
+        if use_extension and not node.overload:
             if not node.domain and node.op_type in _RANDOM:
                 raise ir.passes.PreconditionError(
                     "External rules cannot bypass random-operator restrictions. Supply independent samples as mapped inputs."
