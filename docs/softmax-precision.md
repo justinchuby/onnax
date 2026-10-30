@@ -26,6 +26,22 @@ the probability underflows before Log. ORT's Sigmoid loses a representable small
 value. These checks compare kernels at identical inputs, independently of the
 model's accumulated rounding differences.
 
+On Apple M1 Max, MLX EP 0.31.0 preserves both negative-tail Sigmoid values
+and returns finite LogSoftmax results. The audit disables CPU fallback and records
+MLX-only kernel events from ORT profiling:
+
+```bash
+uv sync --group dev --group training --group native-mlx
+uv run python -m examples.huggingface.numerics --mlx --output fp32-mlx.json
+ONNAX_TEST_MLX_EP=1 uv run pytest -q tests/test_mlx_precision.py
+```
+
+Eight native MLX regressions cover the kernel audit, confident Softmax/LogSoftmax
+JVP/VJP and Softplus gradients/HVP. The full hard-label loss graph currently assigns
+a generated Reshape node to CPU; allowing mixed execution produces the expected
+FP32 loss and gradients. Full MLX loss-graph assignment is the next integration step.
+The CPU Sigmoid reproduction is tracked in [onnax issue #95](https://github.com/justinchuby/onnax/issues/95).
+
 The Qwen validation reference is the corresponding **PyTorch Transformers model**.
 Its report is distinct from these ONNX ReferenceEvaluator diagnostics.
 
