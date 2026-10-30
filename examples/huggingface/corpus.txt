@@ -1,0 +1,24 @@
+A matrix maps an input vector to an output vector.
+A gradient tells us how a small parameter change affects the loss.
+LoRA adds two small trainable matrices to a frozen linear layer.
+A frozen weight can still transmit a gradient to an earlier layer.
+The optimizer updates trainable parameters after each backward pass.
+A checkpoint stores parameters and optimizer state for later recovery.
+ONNX represents tensor computations as a graph of operations.
+A tokenizer maps text into a sequence of integer token identifiers.
+A causal mask prevents a token from attending to future tokens.
+Padding lets sequences of different lengths share one batch.
+An attention mask marks which tokens contain actual text.
+The loss averages prediction errors over valid target tokens.
+A vector product can evaluate a derivative without a full Jacobian.
+A low rank update uses fewer parameters than a dense matrix update.
+The forward pass computes predictions from inputs and parameters.
+The backward pass computes gradients from an upstream derivative.
+Saving an adapter preserves the small trainable part of a model.
+The same adapter can be loaded into matching ONNX and PyTorch models.
+The training graph uses the complete sequence of hidden states.
+A stable softmax subtracts the maximum before exponentiation.
+An optimizer uses gradients to update the adapter matrices.
+A checkpoint can restore a training run after an interruption.
+ONNX graph transformations generate derivatives for tensor operations.
+A frozen model and its adapter together produce text predictions.

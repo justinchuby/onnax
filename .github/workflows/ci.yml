@@ -62,4 +62,4 @@ jobs:
         with:
           python-version: "3.11"
       - run: uv sync --group dev --group training --group huggingface
-      - run: uv run --no-sync pytest -q tests/test_huggingface_bridge.py
+      - run: uv run --no-sync pytest -q tests/test_huggingface_bridge.py tests/test_qwen_sft.py
