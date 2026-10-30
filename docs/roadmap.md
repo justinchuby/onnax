@@ -53,10 +53,11 @@ Delivered experiments cover four areas:
   observes provider and Python caches, samples delayed footprint changes after
   idle release, and verifies exact FP32/BF16 update resumption.
 
-Next, analyze activation liveness within exported gradient graphs and compare
-it with runtime allocation peaks. Use that evidence to select a recomputation
-boundary, then validate its training trajectory, export/reload behavior and
-memory/time tradeoff on the activation-scale workload.
+The [activation-lifetime experiment](activation-liveness.md) now reports tensor
+last uses and peak live sets, validates a preactivation-recomputation candidate
+through 150 updates and recovery, and compares repeated native allocations.
+Next, add a deeper activation-chain workload and use the peak live set to choose
+a checkpoint boundary with a measurable memory/time tradeoff.
 
 ## Engineering boundaries
 

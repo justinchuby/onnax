@@ -1,0 +1,4722 @@
+{
+  "version": 1,
+  "steps": 150,
+  "all_updates_byte_equal": true,
+  "independent_gradients_checked": 150,
+  "checkpoint_replay": true,
+  "initial_loss": 2.7699756622314453,
+  "final_training_loss": 0.6814330816268921,
+  "initial_validation_loss": 2.7687840461730957,
+  "native_final_validation_loss": 0.6819223165512085,
+  "analysis": {
+    "baseline": {
+      "False": {
+        "version": 1,
+        "alias_views": false,
+        "nodes": 44,
+        "persistent_external_bytes": 10690676,
+        "peak_activation_bytes": 570556484,
+        "peak_total_tensor_bytes": 581247160,
+        "peak_node": 32,
+        "peak_groups": [
+          {
+            "bytes": 134217728,
+            "birth": 1,
+            "last_use": 32,
+            "external": false,
+            "values": [
+              16
+            ]
+          },
+          {
+            "bytes": 4,
+            "birth": 14,
+            "last_use": 44,
+            "external": false,
+            "values": [
+              29
+            ]
+          },
+          {
+            "bytes": 64,
+            "birth": 25,
+            "last_use": 44,
+            "external": false,
+            "values": [
+              40
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 27,
+            "last_use": 39,
+            "external": false,
+            "values": [
+              42
+            ]
+          },
+          {
+            "bytes": 131072,
+            "birth": 29,
+            "last_use": 44,
+            "external": false,
+            "values": [
+              44
+            ]
+          },
+          {
+            "bytes": 33554432,
+            "birth": 30,
+            "last_use": 32,
+            "external": false,
+            "values": [
+              45
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 31,
+            "last_use": 32,
+            "external": false,
+            "values": [
+              46
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 32,
+            "last_use": 33,
+            "external": false,
+            "values": [
+              47
+            ]
+          }
+        ],
+        "values": [
+          {
+            "id": 0,
+            "name": "features",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              128
+            ],
+            "bytes": 8388608,
+            "birth": -1,
+            "last_use": 42,
+            "group": 0
+          },
+          {
+            "id": 1,
+            "name": "targets",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": -1,
+            "last_use": 19,
+            "group": 1
+          },
+          {
+            "id": 2,
+            "name": "layer1.weight",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              2048
+            ],
+            "bytes": 1048576,
+            "birth": -1,
+            "last_use": 0,
+            "group": 2
+          },
+          {
+            "id": 3,
+            "name": "layer1.bias",
+            "dtype": "FLOAT",
+            "shape": [
+              2048
+            ],
+            "bytes": 8192,
+            "birth": -1,
+            "last_use": 1,
+            "group": 3
+          },
+          {
+            "id": 4,
+            "name": "layer2.weight",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16
+            ],
+            "bytes": 131072,
+            "birth": -1,
+            "last_use": 26,
+            "group": 4
+          },
+          {
+            "id": 5,
+            "name": "layer2.bias",
+            "dtype": "FLOAT",
+            "shape": [
+              16
+            ],
+            "bytes": 64,
+            "birth": -1,
+            "last_use": 4,
+            "group": 5
+          },
+          {
+            "id": 6,
+            "name": "class_axis",
+            "dtype": "INT64",
+            "shape": [
+              1
+            ],
+            "bytes": 8,
+            "birth": -1,
+            "last_use": 20,
+            "group": 6
+          },
+          {
+            "id": 7,
+            "name": "val_10",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": -1,
+            "last_use": 15,
+            "group": 7
+          },
+          {
+            "id": 8,
+            "name": "val_15",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 15,
+            "group": 8
+          },
+          {
+            "id": 9,
+            "name": "val_18",
+            "dtype": "INT64",
+            "shape": [
+              2
+            ],
+            "bytes": 16,
+            "birth": -1,
+            "last_use": 18,
+            "group": 9
+          },
+          {
+            "id": 10,
+            "name": "val_28",
+            "dtype": "INT64",
+            "shape": [
+              1
+            ],
+            "bytes": 8,
+            "birth": -1,
+            "last_use": 41,
+            "group": 10
+          },
+          {
+            "id": 11,
+            "name": "val_36",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 35,
+            "group": 11
+          },
+          {
+            "id": 12,
+            "name": "val_37",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 30,
+            "group": 12
+          },
+          {
+            "id": 13,
+            "name": "val_41",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 33,
+            "group": 13
+          },
+          {
+            "id": 14,
+            "name": "val_45",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 36,
+            "group": 14
+          },
+          {
+            "id": 15,
+            "name": "val_0",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 0,
+            "last_use": 1,
+            "group": 15
+          },
+          {
+            "id": 16,
+            "name": "val_1",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 1,
+            "last_use": 32,
+            "group": 16
+          },
+          {
+            "id": 17,
+            "name": "val_2",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 2,
+            "last_use": 28,
+            "group": 17
+          },
+          {
+            "id": 18,
+            "name": "val_3",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 3,
+            "last_use": 4,
+            "group": 18
+          },
+          {
+            "id": 19,
+            "name": "logits",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 4,
+            "last_use": 6,
+            "group": 19
+          },
+          {
+            "id": 20,
+            "name": "val_57",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 5,
+            "last_use": 6,
+            "group": 20
+          },
+          {
+            "id": 21,
+            "name": "val_58",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 6,
+            "last_use": 10,
+            "group": 21
+          },
+          {
+            "id": 22,
+            "name": "val_59",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 7,
+            "last_use": 8,
+            "group": 22
+          },
+          {
+            "id": 23,
+            "name": "val_60",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 8,
+            "last_use": 9,
+            "group": 23
+          },
+          {
+            "id": 24,
+            "name": "val_61",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 9,
+            "last_use": 10,
+            "group": 24
+          },
+          {
+            "id": 25,
+            "name": "val_4",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 10,
+            "last_use": 21,
+            "group": 25
+          },
+          {
+            "id": 26,
+            "name": "val_5",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 11,
+            "last_use": 12,
+            "group": 26
+          },
+          {
+            "id": 27,
+            "name": "val_6",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 12,
+            "last_use": 13,
+            "group": 27
+          },
+          {
+            "id": 28,
+            "name": "val_7",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 13,
+            "last_use": 14,
+            "group": 28
+          },
+          {
+            "id": 29,
+            "name": "loss",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": 14,
+            "last_use": 44,
+            "group": 29
+          },
+          {
+            "id": 30,
+            "name": "val_16",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 15,
+            "last_use": 16,
+            "group": 30
+          },
+          {
+            "id": 31,
+            "name": "val_17",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 16,
+            "last_use": 17,
+            "group": 31
+          },
+          {
+            "id": 32,
+            "name": "val_19",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 17,
+            "last_use": 18,
+            "group": 32
+          },
+          {
+            "id": 33,
+            "name": "val_20",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 18,
+            "last_use": 19,
+            "group": 33
+          },
+          {
+            "id": 34,
+            "name": "val_22",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 19,
+            "last_use": 23,
+            "group": 34
+          },
+          {
+            "id": 35,
+            "name": "val_24",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 20,
+            "last_use": 22,
+            "group": 35
+          },
+          {
+            "id": 36,
+            "name": "val_25",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 21,
+            "last_use": 22,
+            "group": 36
+          },
+          {
+            "id": 37,
+            "name": "val_26",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 22,
+            "last_use": 23,
+            "group": 37
+          },
+          {
+            "id": 38,
+            "name": "val_27",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 23,
+            "last_use": 29,
+            "group": 38
+          },
+          {
+            "id": 39,
+            "name": "val_29",
+            "dtype": "FLOAT",
+            "shape": [
+              1,
+              16
+            ],
+            "bytes": 64,
+            "birth": 24,
+            "last_use": 25,
+            "group": 39
+          },
+          {
+            "id": 40,
+            "name": "layer2.bias_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              16
+            ],
+            "bytes": 64,
+            "birth": 25,
+            "last_use": 44,
+            "group": 40
+          },
+          {
+            "id": 41,
+            "name": "val_32",
+            "dtype": "FLOAT",
+            "shape": [
+              16,
+              2048
+            ],
+            "bytes": 131072,
+            "birth": 26,
+            "last_use": 27,
+            "group": 41
+          },
+          {
+            "id": 42,
+            "name": "val_33",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 27,
+            "last_use": 39,
+            "group": 42
+          },
+          {
+            "id": 43,
+            "name": "val_34",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16384
+            ],
+            "bytes": 134217728,
+            "birth": 28,
+            "last_use": 29,
+            "group": 43
+          },
+          {
+            "id": 44,
+            "name": "layer2.weight_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16
+            ],
+            "bytes": 131072,
+            "birth": 29,
+            "last_use": 44,
+            "group": 44
+          },
+          {
+            "id": 45,
+            "name": "val_38",
+            "dtype": "BOOL",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 33554432,
+            "birth": 30,
+            "last_use": 32,
+            "group": 45
+          },
+          {
+            "id": 46,
+            "name": "val_39",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 31,
+            "last_use": 32,
+            "group": 46
+          },
+          {
+            "id": 47,
+            "name": "val_40",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 32,
+            "last_use": 33,
+            "group": 47
+          },
+          {
+            "id": 48,
+            "name": "val_42",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 33,
+            "last_use": 34,
+            "group": 48
+          },
+          {
+            "id": 49,
+            "name": "val_43",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 34,
+            "last_use": 36,
+            "group": 49
+          },
+          {
+            "id": 50,
+            "name": "val_44",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 35,
+            "last_use": 37,
+            "group": 50
+          },
+          {
+            "id": 51,
+            "name": "val_46",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 36,
+            "last_use": 38,
+            "group": 51
+          },
+          {
+            "id": 52,
+            "name": "val_47",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 37,
+            "last_use": 38,
+            "group": 52
+          },
+          {
+            "id": 53,
+            "name": "val_48",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 38,
+            "last_use": 39,
+            "group": 53
+          },
+          {
+            "id": 54,
+            "name": "val_49",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 39,
+            "last_use": 43,
+            "group": 54
+          },
+          {
+            "id": 55,
+            "name": "val_51",
+            "dtype": "FLOAT",
+            "shape": [
+              1,
+              2048
+            ],
+            "bytes": 8192,
+            "birth": 40,
+            "last_use": 41,
+            "group": 55
+          },
+          {
+            "id": 56,
+            "name": "layer1.bias_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              2048
+            ],
+            "bytes": 8192,
+            "birth": 41,
+            "last_use": 44,
+            "group": 56
+          },
+          {
+            "id": 57,
+            "name": "val_54",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              16384
+            ],
+            "bytes": 8388608,
+            "birth": 42,
+            "last_use": 43,
+            "group": 57
+          },
+          {
+            "id": 58,
+            "name": "layer1.weight_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              2048
+            ],
+            "bytes": 1048576,
+            "birth": 43,
+            "last_use": 44,
+            "group": 58
+          }
+        ],
+        "timeline": [
+          {
+            "node": 0,
+            "op_type": "MatMul",
+            "activation_bytes": 134217728
+          },
+          {
+            "node": 1,
+            "op_type": "Add",
+            "activation_bytes": 268435456
+          },
+          {
+            "node": 2,
+            "op_type": "Tanh",
+            "activation_bytes": 268435456
+          },
+          {
+            "node": 3,
+            "op_type": "MatMul",
+            "activation_bytes": 269484032
+          },
+          {
+            "node": 4,
+            "op_type": "Add",
+            "activation_bytes": 270532608
+          },
+          {
+            "node": 5,
+            "op_type": "ReduceMax",
+            "activation_bytes": 269549568
+          },
+          {
+            "node": 6,
+            "op_type": "Sub",
+            "activation_bytes": 270598144
+          },
+          {
+            "node": 7,
+            "op_type": "Exp",
+            "activation_bytes": 270532608
+          },
+          {
+            "node": 8,
+            "op_type": "ReduceSum",
+            "activation_bytes": 270598144
+          },
+          {
+            "node": 9,
+            "op_type": "Log",
+            "activation_bytes": 269615104
+          },
+          {
+            "node": 10,
+            "op_type": "Sub",
+            "activation_bytes": 270598144
+          },
+          {
+            "node": 11,
+            "op_type": "Mul",
+            "activation_bytes": 270532608
+          },
+          {
+            "node": 12,
+            "op_type": "ReduceSum",
+            "activation_bytes": 270598144
+          },
+          {
+            "node": 13,
+            "op_type": "Neg",
+            "activation_bytes": 269615104
+          },
+          {
+            "node": 14,
+            "op_type": "ReduceMean",
+            "activation_bytes": 269549572
+          },
+          {
+            "node": 15,
+            "op_type": "Div",
+            "activation_bytes": 269549572
+          },
+          {
+            "node": 16,
+            "op_type": "Neg",
+            "activation_bytes": 269615108
+          },
+          {
+            "node": 17,
+            "op_type": "Unsqueeze",
+            "activation_bytes": 269615108
+          },
+          {
+            "node": 18,
+            "op_type": "Expand",
+            "activation_bytes": 270598148
+          },
+          {
+            "node": 19,
+            "op_type": "Mul",
+            "activation_bytes": 271581188
+          },
+          {
+            "node": 20,
+            "op_type": "ReduceSum",
+            "activation_bytes": 270598148
+          },
+          {
+            "node": 21,
+            "op_type": "Exp",
+            "activation_bytes": 271646724
+          },
+          {
+            "node": 22,
+            "op_type": "Mul",
+            "activation_bytes": 271646724
+          },
+          {
+            "node": 23,
+            "op_type": "Sub",
+            "activation_bytes": 271581188
+          },
+          {
+            "node": 24,
+            "op_type": "ReduceSum",
+            "activation_bytes": 269484100
+          },
+          {
+            "node": 25,
+            "op_type": "Squeeze",
+            "activation_bytes": 269484164
+          },
+          {
+            "node": 26,
+            "op_type": "Transpose",
+            "activation_bytes": 269615172
+          },
+          {
+            "node": 27,
+            "op_type": "MatMul",
+            "activation_bytes": 403832900
+          },
+          {
+            "node": 28,
+            "op_type": "Transpose",
+            "activation_bytes": 537919556
+          },
+          {
+            "node": 29,
+            "op_type": "MatMul",
+            "activation_bytes": 403832900
+          },
+          {
+            "node": 30,
+            "op_type": "GreaterOrEqual",
+            "activation_bytes": 302121028
+          },
+          {
+            "node": 31,
+            "op_type": "Neg",
+            "activation_bytes": 436338756
+          },
+          {
+            "node": 32,
+            "op_type": "Where",
+            "activation_bytes": 570556484
+          },
+          {
+            "node": 33,
+            "op_type": "Mul",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 34,
+            "op_type": "Exp",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 35,
+            "op_type": "Add",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 36,
+            "op_type": "Mul",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 37,
+            "op_type": "Mul",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 38,
+            "op_type": "Div",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 39,
+            "op_type": "Mul",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 40,
+            "op_type": "ReduceSum",
+            "activation_bytes": 134357060
+          },
+          {
+            "node": 41,
+            "op_type": "Squeeze",
+            "activation_bytes": 134365252
+          },
+          {
+            "node": 42,
+            "op_type": "Transpose",
+            "activation_bytes": 142745668
+          },
+          {
+            "node": 43,
+            "op_type": "MatMul",
+            "activation_bytes": 143794244
+          }
+        ],
+        "scope": "Serialized node order; outputs allocated before last-use input release; graph outputs retained; tensor storage only"
+      },
+      "True": {
+        "version": 1,
+        "alias_views": true,
+        "nodes": 44,
+        "persistent_external_bytes": 10690676,
+        "peak_activation_bytes": 570556484,
+        "peak_total_tensor_bytes": 581247160,
+        "peak_node": 32,
+        "peak_groups": [
+          {
+            "bytes": 134217728,
+            "birth": 1,
+            "last_use": 32,
+            "external": false,
+            "values": [
+              16
+            ]
+          },
+          {
+            "bytes": 4,
+            "birth": 14,
+            "last_use": 44,
+            "external": false,
+            "values": [
+              29
+            ]
+          },
+          {
+            "bytes": 64,
+            "birth": 24,
+            "last_use": 44,
+            "external": false,
+            "values": [
+              39,
+              40
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 27,
+            "last_use": 39,
+            "external": false,
+            "values": [
+              42
+            ]
+          },
+          {
+            "bytes": 131072,
+            "birth": 29,
+            "last_use": 44,
+            "external": false,
+            "values": [
+              44
+            ]
+          },
+          {
+            "bytes": 33554432,
+            "birth": 30,
+            "last_use": 32,
+            "external": false,
+            "values": [
+              45
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 31,
+            "last_use": 32,
+            "external": false,
+            "values": [
+              46
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 32,
+            "last_use": 33,
+            "external": false,
+            "values": [
+              47
+            ]
+          }
+        ],
+        "values": [
+          {
+            "id": 0,
+            "name": "features",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              128
+            ],
+            "bytes": 8388608,
+            "birth": -1,
+            "last_use": 42,
+            "group": 0
+          },
+          {
+            "id": 1,
+            "name": "targets",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": -1,
+            "last_use": 19,
+            "group": 1
+          },
+          {
+            "id": 2,
+            "name": "layer1.weight",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              2048
+            ],
+            "bytes": 1048576,
+            "birth": -1,
+            "last_use": 0,
+            "group": 2
+          },
+          {
+            "id": 3,
+            "name": "layer1.bias",
+            "dtype": "FLOAT",
+            "shape": [
+              2048
+            ],
+            "bytes": 8192,
+            "birth": -1,
+            "last_use": 1,
+            "group": 3
+          },
+          {
+            "id": 4,
+            "name": "layer2.weight",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16
+            ],
+            "bytes": 131072,
+            "birth": -1,
+            "last_use": 26,
+            "group": 4
+          },
+          {
+            "id": 5,
+            "name": "layer2.bias",
+            "dtype": "FLOAT",
+            "shape": [
+              16
+            ],
+            "bytes": 64,
+            "birth": -1,
+            "last_use": 4,
+            "group": 5
+          },
+          {
+            "id": 6,
+            "name": "class_axis",
+            "dtype": "INT64",
+            "shape": [
+              1
+            ],
+            "bytes": 8,
+            "birth": -1,
+            "last_use": 20,
+            "group": 6
+          },
+          {
+            "id": 7,
+            "name": "val_10",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": -1,
+            "last_use": 15,
+            "group": 7
+          },
+          {
+            "id": 8,
+            "name": "val_15",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 15,
+            "group": 8
+          },
+          {
+            "id": 9,
+            "name": "val_18",
+            "dtype": "INT64",
+            "shape": [
+              2
+            ],
+            "bytes": 16,
+            "birth": -1,
+            "last_use": 18,
+            "group": 9
+          },
+          {
+            "id": 10,
+            "name": "val_28",
+            "dtype": "INT64",
+            "shape": [
+              1
+            ],
+            "bytes": 8,
+            "birth": -1,
+            "last_use": 41,
+            "group": 10
+          },
+          {
+            "id": 11,
+            "name": "val_36",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 35,
+            "group": 11
+          },
+          {
+            "id": 12,
+            "name": "val_37",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 30,
+            "group": 12
+          },
+          {
+            "id": 13,
+            "name": "val_41",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 33,
+            "group": 13
+          },
+          {
+            "id": 14,
+            "name": "val_45",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 36,
+            "group": 14
+          },
+          {
+            "id": 15,
+            "name": "val_0",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 0,
+            "last_use": 1,
+            "group": 15
+          },
+          {
+            "id": 16,
+            "name": "val_1",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 1,
+            "last_use": 32,
+            "group": 16
+          },
+          {
+            "id": 17,
+            "name": "val_2",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 2,
+            "last_use": 28,
+            "group": 17
+          },
+          {
+            "id": 18,
+            "name": "val_3",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 3,
+            "last_use": 4,
+            "group": 18
+          },
+          {
+            "id": 19,
+            "name": "logits",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 4,
+            "last_use": 6,
+            "group": 19
+          },
+          {
+            "id": 20,
+            "name": "val_57",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 5,
+            "last_use": 6,
+            "group": 20
+          },
+          {
+            "id": 21,
+            "name": "val_58",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 6,
+            "last_use": 10,
+            "group": 21
+          },
+          {
+            "id": 22,
+            "name": "val_59",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 7,
+            "last_use": 8,
+            "group": 22
+          },
+          {
+            "id": 23,
+            "name": "val_60",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 8,
+            "last_use": 9,
+            "group": 23
+          },
+          {
+            "id": 24,
+            "name": "val_61",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 9,
+            "last_use": 10,
+            "group": 24
+          },
+          {
+            "id": 25,
+            "name": "val_4",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 10,
+            "last_use": 21,
+            "group": 25
+          },
+          {
+            "id": 26,
+            "name": "val_5",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 11,
+            "last_use": 12,
+            "group": 26
+          },
+          {
+            "id": 27,
+            "name": "val_6",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 12,
+            "last_use": 13,
+            "group": 27
+          },
+          {
+            "id": 28,
+            "name": "val_7",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 13,
+            "last_use": 14,
+            "group": 28
+          },
+          {
+            "id": 29,
+            "name": "loss",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": 14,
+            "last_use": 44,
+            "group": 29
+          },
+          {
+            "id": 30,
+            "name": "val_16",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 15,
+            "last_use": 16,
+            "group": 30
+          },
+          {
+            "id": 31,
+            "name": "val_17",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 16,
+            "last_use": 17,
+            "group": 31
+          },
+          {
+            "id": 32,
+            "name": "val_19",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 17,
+            "last_use": 18,
+            "group": 31
+          },
+          {
+            "id": 33,
+            "name": "val_20",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 18,
+            "last_use": 19,
+            "group": 32
+          },
+          {
+            "id": 34,
+            "name": "val_22",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 19,
+            "last_use": 23,
+            "group": 33
+          },
+          {
+            "id": 35,
+            "name": "val_24",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 20,
+            "last_use": 22,
+            "group": 34
+          },
+          {
+            "id": 36,
+            "name": "val_25",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 21,
+            "last_use": 22,
+            "group": 35
+          },
+          {
+            "id": 37,
+            "name": "val_26",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 22,
+            "last_use": 23,
+            "group": 36
+          },
+          {
+            "id": 38,
+            "name": "val_27",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 23,
+            "last_use": 29,
+            "group": 37
+          },
+          {
+            "id": 39,
+            "name": "val_29",
+            "dtype": "FLOAT",
+            "shape": [
+              1,
+              16
+            ],
+            "bytes": 64,
+            "birth": 24,
+            "last_use": 25,
+            "group": 38
+          },
+          {
+            "id": 40,
+            "name": "layer2.bias_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              16
+            ],
+            "bytes": 64,
+            "birth": 25,
+            "last_use": 44,
+            "group": 38
+          },
+          {
+            "id": 41,
+            "name": "val_32",
+            "dtype": "FLOAT",
+            "shape": [
+              16,
+              2048
+            ],
+            "bytes": 131072,
+            "birth": 26,
+            "last_use": 27,
+            "group": 4
+          },
+          {
+            "id": 42,
+            "name": "val_33",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 27,
+            "last_use": 39,
+            "group": 39
+          },
+          {
+            "id": 43,
+            "name": "val_34",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16384
+            ],
+            "bytes": 134217728,
+            "birth": 28,
+            "last_use": 29,
+            "group": 17
+          },
+          {
+            "id": 44,
+            "name": "layer2.weight_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16
+            ],
+            "bytes": 131072,
+            "birth": 29,
+            "last_use": 44,
+            "group": 40
+          },
+          {
+            "id": 45,
+            "name": "val_38",
+            "dtype": "BOOL",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 33554432,
+            "birth": 30,
+            "last_use": 32,
+            "group": 41
+          },
+          {
+            "id": 46,
+            "name": "val_39",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 31,
+            "last_use": 32,
+            "group": 42
+          },
+          {
+            "id": 47,
+            "name": "val_40",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 32,
+            "last_use": 33,
+            "group": 43
+          },
+          {
+            "id": 48,
+            "name": "val_42",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 33,
+            "last_use": 34,
+            "group": 44
+          },
+          {
+            "id": 49,
+            "name": "val_43",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 34,
+            "last_use": 36,
+            "group": 45
+          },
+          {
+            "id": 50,
+            "name": "val_44",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 35,
+            "last_use": 37,
+            "group": 46
+          },
+          {
+            "id": 51,
+            "name": "val_46",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 36,
+            "last_use": 38,
+            "group": 47
+          },
+          {
+            "id": 52,
+            "name": "val_47",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 37,
+            "last_use": 38,
+            "group": 48
+          },
+          {
+            "id": 53,
+            "name": "val_48",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 38,
+            "last_use": 39,
+            "group": 49
+          },
+          {
+            "id": 54,
+            "name": "val_49",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 39,
+            "last_use": 43,
+            "group": 50
+          },
+          {
+            "id": 55,
+            "name": "val_51",
+            "dtype": "FLOAT",
+            "shape": [
+              1,
+              2048
+            ],
+            "bytes": 8192,
+            "birth": 40,
+            "last_use": 41,
+            "group": 51
+          },
+          {
+            "id": 56,
+            "name": "layer1.bias_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              2048
+            ],
+            "bytes": 8192,
+            "birth": 41,
+            "last_use": 44,
+            "group": 51
+          },
+          {
+            "id": 57,
+            "name": "val_54",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              16384
+            ],
+            "bytes": 8388608,
+            "birth": 42,
+            "last_use": 43,
+            "group": 0
+          },
+          {
+            "id": 58,
+            "name": "layer1.weight_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              2048
+            ],
+            "bytes": 1048576,
+            "birth": 43,
+            "last_use": 44,
+            "group": 52
+          }
+        ],
+        "timeline": [
+          {
+            "node": 0,
+            "op_type": "MatMul",
+            "activation_bytes": 134217728
+          },
+          {
+            "node": 1,
+            "op_type": "Add",
+            "activation_bytes": 268435456
+          },
+          {
+            "node": 2,
+            "op_type": "Tanh",
+            "activation_bytes": 268435456
+          },
+          {
+            "node": 3,
+            "op_type": "MatMul",
+            "activation_bytes": 269484032
+          },
+          {
+            "node": 4,
+            "op_type": "Add",
+            "activation_bytes": 270532608
+          },
+          {
+            "node": 5,
+            "op_type": "ReduceMax",
+            "activation_bytes": 269549568
+          },
+          {
+            "node": 6,
+            "op_type": "Sub",
+            "activation_bytes": 270598144
+          },
+          {
+            "node": 7,
+            "op_type": "Exp",
+            "activation_bytes": 270532608
+          },
+          {
+            "node": 8,
+            "op_type": "ReduceSum",
+            "activation_bytes": 270598144
+          },
+          {
+            "node": 9,
+            "op_type": "Log",
+            "activation_bytes": 269615104
+          },
+          {
+            "node": 10,
+            "op_type": "Sub",
+            "activation_bytes": 270598144
+          },
+          {
+            "node": 11,
+            "op_type": "Mul",
+            "activation_bytes": 270532608
+          },
+          {
+            "node": 12,
+            "op_type": "ReduceSum",
+            "activation_bytes": 270598144
+          },
+          {
+            "node": 13,
+            "op_type": "Neg",
+            "activation_bytes": 269615104
+          },
+          {
+            "node": 14,
+            "op_type": "ReduceMean",
+            "activation_bytes": 269549572
+          },
+          {
+            "node": 15,
+            "op_type": "Div",
+            "activation_bytes": 269549572
+          },
+          {
+            "node": 16,
+            "op_type": "Neg",
+            "activation_bytes": 269615108
+          },
+          {
+            "node": 17,
+            "op_type": "Unsqueeze",
+            "activation_bytes": 269549572
+          },
+          {
+            "node": 18,
+            "op_type": "Expand",
+            "activation_bytes": 270598148
+          },
+          {
+            "node": 19,
+            "op_type": "Mul",
+            "activation_bytes": 271581188
+          },
+          {
+            "node": 20,
+            "op_type": "ReduceSum",
+            "activation_bytes": 270598148
+          },
+          {
+            "node": 21,
+            "op_type": "Exp",
+            "activation_bytes": 271646724
+          },
+          {
+            "node": 22,
+            "op_type": "Mul",
+            "activation_bytes": 271646724
+          },
+          {
+            "node": 23,
+            "op_type": "Sub",
+            "activation_bytes": 271581188
+          },
+          {
+            "node": 24,
+            "op_type": "ReduceSum",
+            "activation_bytes": 269484100
+          },
+          {
+            "node": 25,
+            "op_type": "Squeeze",
+            "activation_bytes": 269484100
+          },
+          {
+            "node": 26,
+            "op_type": "Transpose",
+            "activation_bytes": 269484100
+          },
+          {
+            "node": 27,
+            "op_type": "MatMul",
+            "activation_bytes": 403701828
+          },
+          {
+            "node": 28,
+            "op_type": "Transpose",
+            "activation_bytes": 403701828
+          },
+          {
+            "node": 29,
+            "op_type": "MatMul",
+            "activation_bytes": 403832900
+          },
+          {
+            "node": 30,
+            "op_type": "GreaterOrEqual",
+            "activation_bytes": 302121028
+          },
+          {
+            "node": 31,
+            "op_type": "Neg",
+            "activation_bytes": 436338756
+          },
+          {
+            "node": 32,
+            "op_type": "Where",
+            "activation_bytes": 570556484
+          },
+          {
+            "node": 33,
+            "op_type": "Mul",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 34,
+            "op_type": "Exp",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 35,
+            "op_type": "Add",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 36,
+            "op_type": "Mul",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 37,
+            "op_type": "Mul",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 38,
+            "op_type": "Div",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 39,
+            "op_type": "Mul",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 40,
+            "op_type": "ReduceSum",
+            "activation_bytes": 134357060
+          },
+          {
+            "node": 41,
+            "op_type": "Squeeze",
+            "activation_bytes": 134357060
+          },
+          {
+            "node": 42,
+            "op_type": "Transpose",
+            "activation_bytes": 134357060
+          },
+          {
+            "node": 43,
+            "op_type": "MatMul",
+            "activation_bytes": 135405636
+          }
+        ],
+        "scope": "Serialized node order; outputs allocated before last-use input release; graph outputs retained; tensor storage only"
+      }
+    },
+    "candidate": {
+      "False": {
+        "version": 1,
+        "alias_views": false,
+        "nodes": 46,
+        "persistent_external_bytes": 10690676,
+        "peak_activation_bytes": 570556484,
+        "peak_total_tensor_bytes": 581247160,
+        "peak_node": 34,
+        "peak_groups": [
+          {
+            "bytes": 4,
+            "birth": 14,
+            "last_use": 46,
+            "external": false,
+            "values": [
+              29
+            ]
+          },
+          {
+            "bytes": 64,
+            "birth": 25,
+            "last_use": 46,
+            "external": false,
+            "values": [
+              40
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 27,
+            "last_use": 41,
+            "external": false,
+            "values": [
+              42
+            ]
+          },
+          {
+            "bytes": 131072,
+            "birth": 29,
+            "last_use": 46,
+            "external": false,
+            "values": [
+              44
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 31,
+            "last_use": 34,
+            "external": false,
+            "values": [
+              46
+            ]
+          },
+          {
+            "bytes": 33554432,
+            "birth": 32,
+            "last_use": 34,
+            "external": false,
+            "values": [
+              47
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 33,
+            "last_use": 34,
+            "external": false,
+            "values": [
+              48
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 34,
+            "last_use": 35,
+            "external": false,
+            "values": [
+              49
+            ]
+          }
+        ],
+        "values": [
+          {
+            "id": 0,
+            "name": "features",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              128
+            ],
+            "bytes": 8388608,
+            "birth": -1,
+            "last_use": 44,
+            "group": 0
+          },
+          {
+            "id": 1,
+            "name": "targets",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": -1,
+            "last_use": 19,
+            "group": 1
+          },
+          {
+            "id": 2,
+            "name": "layer1.weight",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              2048
+            ],
+            "bytes": 1048576,
+            "birth": -1,
+            "last_use": 30,
+            "group": 2
+          },
+          {
+            "id": 3,
+            "name": "layer1.bias",
+            "dtype": "FLOAT",
+            "shape": [
+              2048
+            ],
+            "bytes": 8192,
+            "birth": -1,
+            "last_use": 31,
+            "group": 3
+          },
+          {
+            "id": 4,
+            "name": "layer2.weight",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16
+            ],
+            "bytes": 131072,
+            "birth": -1,
+            "last_use": 26,
+            "group": 4
+          },
+          {
+            "id": 5,
+            "name": "layer2.bias",
+            "dtype": "FLOAT",
+            "shape": [
+              16
+            ],
+            "bytes": 64,
+            "birth": -1,
+            "last_use": 4,
+            "group": 5
+          },
+          {
+            "id": 6,
+            "name": "class_axis",
+            "dtype": "INT64",
+            "shape": [
+              1
+            ],
+            "bytes": 8,
+            "birth": -1,
+            "last_use": 20,
+            "group": 6
+          },
+          {
+            "id": 7,
+            "name": "val_10",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": -1,
+            "last_use": 15,
+            "group": 7
+          },
+          {
+            "id": 8,
+            "name": "val_15",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 15,
+            "group": 8
+          },
+          {
+            "id": 9,
+            "name": "val_18",
+            "dtype": "INT64",
+            "shape": [
+              2
+            ],
+            "bytes": 16,
+            "birth": -1,
+            "last_use": 18,
+            "group": 9
+          },
+          {
+            "id": 10,
+            "name": "val_28",
+            "dtype": "INT64",
+            "shape": [
+              1
+            ],
+            "bytes": 8,
+            "birth": -1,
+            "last_use": 43,
+            "group": 10
+          },
+          {
+            "id": 11,
+            "name": "val_36",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 37,
+            "group": 11
+          },
+          {
+            "id": 12,
+            "name": "val_37",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 32,
+            "group": 12
+          },
+          {
+            "id": 13,
+            "name": "val_41",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 35,
+            "group": 13
+          },
+          {
+            "id": 14,
+            "name": "val_45",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 38,
+            "group": 14
+          },
+          {
+            "id": 15,
+            "name": "val_0",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 0,
+            "last_use": 1,
+            "group": 15
+          },
+          {
+            "id": 16,
+            "name": "val_1",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 1,
+            "last_use": 2,
+            "group": 16
+          },
+          {
+            "id": 17,
+            "name": "val_2",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 2,
+            "last_use": 28,
+            "group": 17
+          },
+          {
+            "id": 18,
+            "name": "val_3",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 3,
+            "last_use": 4,
+            "group": 18
+          },
+          {
+            "id": 19,
+            "name": "logits",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 4,
+            "last_use": 6,
+            "group": 19
+          },
+          {
+            "id": 20,
+            "name": "val_57",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 5,
+            "last_use": 6,
+            "group": 20
+          },
+          {
+            "id": 21,
+            "name": "val_58",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 6,
+            "last_use": 10,
+            "group": 21
+          },
+          {
+            "id": 22,
+            "name": "val_59",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 7,
+            "last_use": 8,
+            "group": 22
+          },
+          {
+            "id": 23,
+            "name": "val_60",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 8,
+            "last_use": 9,
+            "group": 23
+          },
+          {
+            "id": 24,
+            "name": "val_61",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 9,
+            "last_use": 10,
+            "group": 24
+          },
+          {
+            "id": 25,
+            "name": "val_4",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 10,
+            "last_use": 21,
+            "group": 25
+          },
+          {
+            "id": 26,
+            "name": "val_5",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 11,
+            "last_use": 12,
+            "group": 26
+          },
+          {
+            "id": 27,
+            "name": "val_6",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 12,
+            "last_use": 13,
+            "group": 27
+          },
+          {
+            "id": 28,
+            "name": "val_7",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 13,
+            "last_use": 14,
+            "group": 28
+          },
+          {
+            "id": 29,
+            "name": "loss",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": 14,
+            "last_use": 46,
+            "group": 29
+          },
+          {
+            "id": 30,
+            "name": "val_16",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 15,
+            "last_use": 16,
+            "group": 30
+          },
+          {
+            "id": 31,
+            "name": "val_17",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 16,
+            "last_use": 17,
+            "group": 31
+          },
+          {
+            "id": 32,
+            "name": "val_19",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 17,
+            "last_use": 18,
+            "group": 32
+          },
+          {
+            "id": 33,
+            "name": "val_20",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 18,
+            "last_use": 19,
+            "group": 33
+          },
+          {
+            "id": 34,
+            "name": "val_22",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 19,
+            "last_use": 23,
+            "group": 34
+          },
+          {
+            "id": 35,
+            "name": "val_24",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 20,
+            "last_use": 22,
+            "group": 35
+          },
+          {
+            "id": 36,
+            "name": "val_25",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 21,
+            "last_use": 22,
+            "group": 36
+          },
+          {
+            "id": 37,
+            "name": "val_26",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 22,
+            "last_use": 23,
+            "group": 37
+          },
+          {
+            "id": 38,
+            "name": "val_27",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 23,
+            "last_use": 29,
+            "group": 38
+          },
+          {
+            "id": 39,
+            "name": "val_29",
+            "dtype": "FLOAT",
+            "shape": [
+              1,
+              16
+            ],
+            "bytes": 64,
+            "birth": 24,
+            "last_use": 25,
+            "group": 39
+          },
+          {
+            "id": 40,
+            "name": "layer2.bias_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              16
+            ],
+            "bytes": 64,
+            "birth": 25,
+            "last_use": 46,
+            "group": 40
+          },
+          {
+            "id": 41,
+            "name": "val_32",
+            "dtype": "FLOAT",
+            "shape": [
+              16,
+              2048
+            ],
+            "bytes": 131072,
+            "birth": 26,
+            "last_use": 27,
+            "group": 41
+          },
+          {
+            "id": 42,
+            "name": "val_33",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 27,
+            "last_use": 41,
+            "group": 42
+          },
+          {
+            "id": 43,
+            "name": "val_34",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16384
+            ],
+            "bytes": 134217728,
+            "birth": 28,
+            "last_use": 29,
+            "group": 43
+          },
+          {
+            "id": 44,
+            "name": "layer2.weight_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16
+            ],
+            "bytes": 131072,
+            "birth": 29,
+            "last_use": 46,
+            "group": 44
+          },
+          {
+            "id": 45,
+            "name": "val_8",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 30,
+            "last_use": 31,
+            "group": 45
+          },
+          {
+            "id": 46,
+            "name": "val_9",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 31,
+            "last_use": 34,
+            "group": 46
+          },
+          {
+            "id": 47,
+            "name": "val_38",
+            "dtype": "BOOL",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 33554432,
+            "birth": 32,
+            "last_use": 34,
+            "group": 47
+          },
+          {
+            "id": 48,
+            "name": "val_39",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 33,
+            "last_use": 34,
+            "group": 48
+          },
+          {
+            "id": 49,
+            "name": "val_40",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 34,
+            "last_use": 35,
+            "group": 49
+          },
+          {
+            "id": 50,
+            "name": "val_42",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 35,
+            "last_use": 36,
+            "group": 50
+          },
+          {
+            "id": 51,
+            "name": "val_43",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 36,
+            "last_use": 38,
+            "group": 51
+          },
+          {
+            "id": 52,
+            "name": "val_44",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 37,
+            "last_use": 39,
+            "group": 52
+          },
+          {
+            "id": 53,
+            "name": "val_46",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 38,
+            "last_use": 40,
+            "group": 53
+          },
+          {
+            "id": 54,
+            "name": "val_47",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 39,
+            "last_use": 40,
+            "group": 54
+          },
+          {
+            "id": 55,
+            "name": "val_48",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 40,
+            "last_use": 41,
+            "group": 55
+          },
+          {
+            "id": 56,
+            "name": "val_49",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 41,
+            "last_use": 45,
+            "group": 56
+          },
+          {
+            "id": 57,
+            "name": "val_51",
+            "dtype": "FLOAT",
+            "shape": [
+              1,
+              2048
+            ],
+            "bytes": 8192,
+            "birth": 42,
+            "last_use": 43,
+            "group": 57
+          },
+          {
+            "id": 58,
+            "name": "layer1.bias_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              2048
+            ],
+            "bytes": 8192,
+            "birth": 43,
+            "last_use": 46,
+            "group": 58
+          },
+          {
+            "id": 59,
+            "name": "val_54",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              16384
+            ],
+            "bytes": 8388608,
+            "birth": 44,
+            "last_use": 45,
+            "group": 59
+          },
+          {
+            "id": 60,
+            "name": "layer1.weight_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              2048
+            ],
+            "bytes": 1048576,
+            "birth": 45,
+            "last_use": 46,
+            "group": 60
+          }
+        ],
+        "timeline": [
+          {
+            "node": 0,
+            "op_type": "MatMul",
+            "activation_bytes": 134217728
+          },
+          {
+            "node": 1,
+            "op_type": "Add",
+            "activation_bytes": 268435456
+          },
+          {
+            "node": 2,
+            "op_type": "Tanh",
+            "activation_bytes": 268435456
+          },
+          {
+            "node": 3,
+            "op_type": "MatMul",
+            "activation_bytes": 135266304
+          },
+          {
+            "node": 4,
+            "op_type": "Add",
+            "activation_bytes": 136314880
+          },
+          {
+            "node": 5,
+            "op_type": "ReduceMax",
+            "activation_bytes": 135331840
+          },
+          {
+            "node": 6,
+            "op_type": "Sub",
+            "activation_bytes": 136380416
+          },
+          {
+            "node": 7,
+            "op_type": "Exp",
+            "activation_bytes": 136314880
+          },
+          {
+            "node": 8,
+            "op_type": "ReduceSum",
+            "activation_bytes": 136380416
+          },
+          {
+            "node": 9,
+            "op_type": "Log",
+            "activation_bytes": 135397376
+          },
+          {
+            "node": 10,
+            "op_type": "Sub",
+            "activation_bytes": 136380416
+          },
+          {
+            "node": 11,
+            "op_type": "Mul",
+            "activation_bytes": 136314880
+          },
+          {
+            "node": 12,
+            "op_type": "ReduceSum",
+            "activation_bytes": 136380416
+          },
+          {
+            "node": 13,
+            "op_type": "Neg",
+            "activation_bytes": 135397376
+          },
+          {
+            "node": 14,
+            "op_type": "ReduceMean",
+            "activation_bytes": 135331844
+          },
+          {
+            "node": 15,
+            "op_type": "Div",
+            "activation_bytes": 135331844
+          },
+          {
+            "node": 16,
+            "op_type": "Neg",
+            "activation_bytes": 135397380
+          },
+          {
+            "node": 17,
+            "op_type": "Unsqueeze",
+            "activation_bytes": 135397380
+          },
+          {
+            "node": 18,
+            "op_type": "Expand",
+            "activation_bytes": 136380420
+          },
+          {
+            "node": 19,
+            "op_type": "Mul",
+            "activation_bytes": 137363460
+          },
+          {
+            "node": 20,
+            "op_type": "ReduceSum",
+            "activation_bytes": 136380420
+          },
+          {
+            "node": 21,
+            "op_type": "Exp",
+            "activation_bytes": 137428996
+          },
+          {
+            "node": 22,
+            "op_type": "Mul",
+            "activation_bytes": 137428996
+          },
+          {
+            "node": 23,
+            "op_type": "Sub",
+            "activation_bytes": 137363460
+          },
+          {
+            "node": 24,
+            "op_type": "ReduceSum",
+            "activation_bytes": 135266372
+          },
+          {
+            "node": 25,
+            "op_type": "Squeeze",
+            "activation_bytes": 135266436
+          },
+          {
+            "node": 26,
+            "op_type": "Transpose",
+            "activation_bytes": 135397444
+          },
+          {
+            "node": 27,
+            "op_type": "MatMul",
+            "activation_bytes": 269615172
+          },
+          {
+            "node": 28,
+            "op_type": "Transpose",
+            "activation_bytes": 403701828
+          },
+          {
+            "node": 29,
+            "op_type": "MatMul",
+            "activation_bytes": 269615172
+          },
+          {
+            "node": 30,
+            "op_type": "MatMul",
+            "activation_bytes": 268566596
+          },
+          {
+            "node": 31,
+            "op_type": "Add",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 32,
+            "op_type": "GreaterOrEqual",
+            "activation_bytes": 302121028
+          },
+          {
+            "node": 33,
+            "op_type": "Neg",
+            "activation_bytes": 436338756
+          },
+          {
+            "node": 34,
+            "op_type": "Where",
+            "activation_bytes": 570556484
+          },
+          {
+            "node": 35,
+            "op_type": "Mul",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 36,
+            "op_type": "Exp",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 37,
+            "op_type": "Add",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 38,
+            "op_type": "Mul",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 39,
+            "op_type": "Mul",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 40,
+            "op_type": "Div",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 41,
+            "op_type": "Mul",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 42,
+            "op_type": "ReduceSum",
+            "activation_bytes": 134357060
+          },
+          {
+            "node": 43,
+            "op_type": "Squeeze",
+            "activation_bytes": 134365252
+          },
+          {
+            "node": 44,
+            "op_type": "Transpose",
+            "activation_bytes": 142745668
+          },
+          {
+            "node": 45,
+            "op_type": "MatMul",
+            "activation_bytes": 143794244
+          }
+        ],
+        "scope": "Serialized node order; outputs allocated before last-use input release; graph outputs retained; tensor storage only"
+      },
+      "True": {
+        "version": 1,
+        "alias_views": true,
+        "nodes": 46,
+        "persistent_external_bytes": 10690676,
+        "peak_activation_bytes": 570556484,
+        "peak_total_tensor_bytes": 581247160,
+        "peak_node": 34,
+        "peak_groups": [
+          {
+            "bytes": 4,
+            "birth": 14,
+            "last_use": 46,
+            "external": false,
+            "values": [
+              29
+            ]
+          },
+          {
+            "bytes": 64,
+            "birth": 24,
+            "last_use": 46,
+            "external": false,
+            "values": [
+              39,
+              40
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 27,
+            "last_use": 41,
+            "external": false,
+            "values": [
+              42
+            ]
+          },
+          {
+            "bytes": 131072,
+            "birth": 29,
+            "last_use": 46,
+            "external": false,
+            "values": [
+              44
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 31,
+            "last_use": 34,
+            "external": false,
+            "values": [
+              46
+            ]
+          },
+          {
+            "bytes": 33554432,
+            "birth": 32,
+            "last_use": 34,
+            "external": false,
+            "values": [
+              47
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 33,
+            "last_use": 34,
+            "external": false,
+            "values": [
+              48
+            ]
+          },
+          {
+            "bytes": 134217728,
+            "birth": 34,
+            "last_use": 35,
+            "external": false,
+            "values": [
+              49
+            ]
+          }
+        ],
+        "values": [
+          {
+            "id": 0,
+            "name": "features",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              128
+            ],
+            "bytes": 8388608,
+            "birth": -1,
+            "last_use": 44,
+            "group": 0
+          },
+          {
+            "id": 1,
+            "name": "targets",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": -1,
+            "last_use": 19,
+            "group": 1
+          },
+          {
+            "id": 2,
+            "name": "layer1.weight",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              2048
+            ],
+            "bytes": 1048576,
+            "birth": -1,
+            "last_use": 30,
+            "group": 2
+          },
+          {
+            "id": 3,
+            "name": "layer1.bias",
+            "dtype": "FLOAT",
+            "shape": [
+              2048
+            ],
+            "bytes": 8192,
+            "birth": -1,
+            "last_use": 31,
+            "group": 3
+          },
+          {
+            "id": 4,
+            "name": "layer2.weight",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16
+            ],
+            "bytes": 131072,
+            "birth": -1,
+            "last_use": 26,
+            "group": 4
+          },
+          {
+            "id": 5,
+            "name": "layer2.bias",
+            "dtype": "FLOAT",
+            "shape": [
+              16
+            ],
+            "bytes": 64,
+            "birth": -1,
+            "last_use": 4,
+            "group": 5
+          },
+          {
+            "id": 6,
+            "name": "class_axis",
+            "dtype": "INT64",
+            "shape": [
+              1
+            ],
+            "bytes": 8,
+            "birth": -1,
+            "last_use": 20,
+            "group": 6
+          },
+          {
+            "id": 7,
+            "name": "val_10",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": -1,
+            "last_use": 15,
+            "group": 7
+          },
+          {
+            "id": 8,
+            "name": "val_15",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 15,
+            "group": 8
+          },
+          {
+            "id": 9,
+            "name": "val_18",
+            "dtype": "INT64",
+            "shape": [
+              2
+            ],
+            "bytes": 16,
+            "birth": -1,
+            "last_use": 18,
+            "group": 9
+          },
+          {
+            "id": 10,
+            "name": "val_28",
+            "dtype": "INT64",
+            "shape": [
+              1
+            ],
+            "bytes": 8,
+            "birth": -1,
+            "last_use": 43,
+            "group": 10
+          },
+          {
+            "id": 11,
+            "name": "val_36",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 37,
+            "group": 11
+          },
+          {
+            "id": 12,
+            "name": "val_37",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 32,
+            "group": 12
+          },
+          {
+            "id": 13,
+            "name": "val_41",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 35,
+            "group": 13
+          },
+          {
+            "id": 14,
+            "name": "val_45",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": -1,
+            "last_use": 38,
+            "group": 14
+          },
+          {
+            "id": 15,
+            "name": "val_0",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 0,
+            "last_use": 1,
+            "group": 15
+          },
+          {
+            "id": 16,
+            "name": "val_1",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 1,
+            "last_use": 2,
+            "group": 16
+          },
+          {
+            "id": 17,
+            "name": "val_2",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 2,
+            "last_use": 28,
+            "group": 17
+          },
+          {
+            "id": 18,
+            "name": "val_3",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 3,
+            "last_use": 4,
+            "group": 18
+          },
+          {
+            "id": 19,
+            "name": "logits",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 4,
+            "last_use": 6,
+            "group": 19
+          },
+          {
+            "id": 20,
+            "name": "val_57",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 5,
+            "last_use": 6,
+            "group": 20
+          },
+          {
+            "id": 21,
+            "name": "val_58",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 6,
+            "last_use": 10,
+            "group": 21
+          },
+          {
+            "id": 22,
+            "name": "val_59",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 7,
+            "last_use": 8,
+            "group": 22
+          },
+          {
+            "id": 23,
+            "name": "val_60",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 8,
+            "last_use": 9,
+            "group": 23
+          },
+          {
+            "id": 24,
+            "name": "val_61",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 9,
+            "last_use": 10,
+            "group": 24
+          },
+          {
+            "id": 25,
+            "name": "val_4",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 10,
+            "last_use": 21,
+            "group": 25
+          },
+          {
+            "id": 26,
+            "name": "val_5",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 11,
+            "last_use": 12,
+            "group": 26
+          },
+          {
+            "id": 27,
+            "name": "val_6",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 12,
+            "last_use": 13,
+            "group": 27
+          },
+          {
+            "id": 28,
+            "name": "val_7",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 13,
+            "last_use": 14,
+            "group": 28
+          },
+          {
+            "id": 29,
+            "name": "loss",
+            "dtype": "FLOAT",
+            "shape": [],
+            "bytes": 4,
+            "birth": 14,
+            "last_use": 46,
+            "group": 29
+          },
+          {
+            "id": 30,
+            "name": "val_16",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 15,
+            "last_use": 16,
+            "group": 30
+          },
+          {
+            "id": 31,
+            "name": "val_17",
+            "dtype": "FLOAT",
+            "shape": [
+              16384
+            ],
+            "bytes": 65536,
+            "birth": 16,
+            "last_use": 17,
+            "group": 31
+          },
+          {
+            "id": 32,
+            "name": "val_19",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 17,
+            "last_use": 18,
+            "group": 31
+          },
+          {
+            "id": 33,
+            "name": "val_20",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 18,
+            "last_use": 19,
+            "group": 32
+          },
+          {
+            "id": 34,
+            "name": "val_22",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 19,
+            "last_use": 23,
+            "group": 33
+          },
+          {
+            "id": 35,
+            "name": "val_24",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              1
+            ],
+            "bytes": 65536,
+            "birth": 20,
+            "last_use": 22,
+            "group": 34
+          },
+          {
+            "id": 36,
+            "name": "val_25",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 21,
+            "last_use": 22,
+            "group": 35
+          },
+          {
+            "id": 37,
+            "name": "val_26",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 22,
+            "last_use": 23,
+            "group": 36
+          },
+          {
+            "id": 38,
+            "name": "val_27",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              16
+            ],
+            "bytes": 1048576,
+            "birth": 23,
+            "last_use": 29,
+            "group": 37
+          },
+          {
+            "id": 39,
+            "name": "val_29",
+            "dtype": "FLOAT",
+            "shape": [
+              1,
+              16
+            ],
+            "bytes": 64,
+            "birth": 24,
+            "last_use": 25,
+            "group": 38
+          },
+          {
+            "id": 40,
+            "name": "layer2.bias_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              16
+            ],
+            "bytes": 64,
+            "birth": 25,
+            "last_use": 46,
+            "group": 38
+          },
+          {
+            "id": 41,
+            "name": "val_32",
+            "dtype": "FLOAT",
+            "shape": [
+              16,
+              2048
+            ],
+            "bytes": 131072,
+            "birth": 26,
+            "last_use": 27,
+            "group": 4
+          },
+          {
+            "id": 42,
+            "name": "val_33",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 27,
+            "last_use": 41,
+            "group": 39
+          },
+          {
+            "id": 43,
+            "name": "val_34",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16384
+            ],
+            "bytes": 134217728,
+            "birth": 28,
+            "last_use": 29,
+            "group": 17
+          },
+          {
+            "id": 44,
+            "name": "layer2.weight_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              2048,
+              16
+            ],
+            "bytes": 131072,
+            "birth": 29,
+            "last_use": 46,
+            "group": 40
+          },
+          {
+            "id": 45,
+            "name": "val_8",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 30,
+            "last_use": 31,
+            "group": 41
+          },
+          {
+            "id": 46,
+            "name": "val_9",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 31,
+            "last_use": 34,
+            "group": 42
+          },
+          {
+            "id": 47,
+            "name": "val_38",
+            "dtype": "BOOL",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 33554432,
+            "birth": 32,
+            "last_use": 34,
+            "group": 43
+          },
+          {
+            "id": 48,
+            "name": "val_39",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 33,
+            "last_use": 34,
+            "group": 44
+          },
+          {
+            "id": 49,
+            "name": "val_40",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 34,
+            "last_use": 35,
+            "group": 45
+          },
+          {
+            "id": 50,
+            "name": "val_42",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 35,
+            "last_use": 36,
+            "group": 46
+          },
+          {
+            "id": 51,
+            "name": "val_43",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 36,
+            "last_use": 38,
+            "group": 47
+          },
+          {
+            "id": 52,
+            "name": "val_44",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 37,
+            "last_use": 39,
+            "group": 48
+          },
+          {
+            "id": 53,
+            "name": "val_46",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 38,
+            "last_use": 40,
+            "group": 49
+          },
+          {
+            "id": 54,
+            "name": "val_47",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 39,
+            "last_use": 40,
+            "group": 50
+          },
+          {
+            "id": 55,
+            "name": "val_48",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 40,
+            "last_use": 41,
+            "group": 51
+          },
+          {
+            "id": 56,
+            "name": "val_49",
+            "dtype": "FLOAT",
+            "shape": [
+              16384,
+              2048
+            ],
+            "bytes": 134217728,
+            "birth": 41,
+            "last_use": 45,
+            "group": 52
+          },
+          {
+            "id": 57,
+            "name": "val_51",
+            "dtype": "FLOAT",
+            "shape": [
+              1,
+              2048
+            ],
+            "bytes": 8192,
+            "birth": 42,
+            "last_use": 43,
+            "group": 53
+          },
+          {
+            "id": 58,
+            "name": "layer1.bias_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              2048
+            ],
+            "bytes": 8192,
+            "birth": 43,
+            "last_use": 46,
+            "group": 53
+          },
+          {
+            "id": 59,
+            "name": "val_54",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              16384
+            ],
+            "bytes": 8388608,
+            "birth": 44,
+            "last_use": 45,
+            "group": 0
+          },
+          {
+            "id": 60,
+            "name": "layer1.weight_cotangent",
+            "dtype": "FLOAT",
+            "shape": [
+              128,
+              2048
+            ],
+            "bytes": 1048576,
+            "birth": 45,
+            "last_use": 46,
+            "group": 54
+          }
+        ],
+        "timeline": [
+          {
+            "node": 0,
+            "op_type": "MatMul",
+            "activation_bytes": 134217728
+          },
+          {
+            "node": 1,
+            "op_type": "Add",
+            "activation_bytes": 268435456
+          },
+          {
+            "node": 2,
+            "op_type": "Tanh",
+            "activation_bytes": 268435456
+          },
+          {
+            "node": 3,
+            "op_type": "MatMul",
+            "activation_bytes": 135266304
+          },
+          {
+            "node": 4,
+            "op_type": "Add",
+            "activation_bytes": 136314880
+          },
+          {
+            "node": 5,
+            "op_type": "ReduceMax",
+            "activation_bytes": 135331840
+          },
+          {
+            "node": 6,
+            "op_type": "Sub",
+            "activation_bytes": 136380416
+          },
+          {
+            "node": 7,
+            "op_type": "Exp",
+            "activation_bytes": 136314880
+          },
+          {
+            "node": 8,
+            "op_type": "ReduceSum",
+            "activation_bytes": 136380416
+          },
+          {
+            "node": 9,
+            "op_type": "Log",
+            "activation_bytes": 135397376
+          },
+          {
+            "node": 10,
+            "op_type": "Sub",
+            "activation_bytes": 136380416
+          },
+          {
+            "node": 11,
+            "op_type": "Mul",
+            "activation_bytes": 136314880
+          },
+          {
+            "node": 12,
+            "op_type": "ReduceSum",
+            "activation_bytes": 136380416
+          },
+          {
+            "node": 13,
+            "op_type": "Neg",
+            "activation_bytes": 135397376
+          },
+          {
+            "node": 14,
+            "op_type": "ReduceMean",
+            "activation_bytes": 135331844
+          },
+          {
+            "node": 15,
+            "op_type": "Div",
+            "activation_bytes": 135331844
+          },
+          {
+            "node": 16,
+            "op_type": "Neg",
+            "activation_bytes": 135397380
+          },
+          {
+            "node": 17,
+            "op_type": "Unsqueeze",
+            "activation_bytes": 135331844
+          },
+          {
+            "node": 18,
+            "op_type": "Expand",
+            "activation_bytes": 136380420
+          },
+          {
+            "node": 19,
+            "op_type": "Mul",
+            "activation_bytes": 137363460
+          },
+          {
+            "node": 20,
+            "op_type": "ReduceSum",
+            "activation_bytes": 136380420
+          },
+          {
+            "node": 21,
+            "op_type": "Exp",
+            "activation_bytes": 137428996
+          },
+          {
+            "node": 22,
+            "op_type": "Mul",
+            "activation_bytes": 137428996
+          },
+          {
+            "node": 23,
+            "op_type": "Sub",
+            "activation_bytes": 137363460
+          },
+          {
+            "node": 24,
+            "op_type": "ReduceSum",
+            "activation_bytes": 135266372
+          },
+          {
+            "node": 25,
+            "op_type": "Squeeze",
+            "activation_bytes": 135266372
+          },
+          {
+            "node": 26,
+            "op_type": "Transpose",
+            "activation_bytes": 135266372
+          },
+          {
+            "node": 27,
+            "op_type": "MatMul",
+            "activation_bytes": 269484100
+          },
+          {
+            "node": 28,
+            "op_type": "Transpose",
+            "activation_bytes": 269484100
+          },
+          {
+            "node": 29,
+            "op_type": "MatMul",
+            "activation_bytes": 269615172
+          },
+          {
+            "node": 30,
+            "op_type": "MatMul",
+            "activation_bytes": 268566596
+          },
+          {
+            "node": 31,
+            "op_type": "Add",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 32,
+            "op_type": "GreaterOrEqual",
+            "activation_bytes": 302121028
+          },
+          {
+            "node": 33,
+            "op_type": "Neg",
+            "activation_bytes": 436338756
+          },
+          {
+            "node": 34,
+            "op_type": "Where",
+            "activation_bytes": 570556484
+          },
+          {
+            "node": 35,
+            "op_type": "Mul",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 36,
+            "op_type": "Exp",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 37,
+            "op_type": "Add",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 38,
+            "op_type": "Mul",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 39,
+            "op_type": "Mul",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 40,
+            "op_type": "Div",
+            "activation_bytes": 537002052
+          },
+          {
+            "node": 41,
+            "op_type": "Mul",
+            "activation_bytes": 402784324
+          },
+          {
+            "node": 42,
+            "op_type": "ReduceSum",
+            "activation_bytes": 134357060
+          },
+          {
+            "node": 43,
+            "op_type": "Squeeze",
+            "activation_bytes": 134357060
+          },
+          {
+            "node": 44,
+            "op_type": "Transpose",
+            "activation_bytes": 134357060
+          },
+          {
+            "node": 45,
+            "op_type": "MatMul",
+            "activation_bytes": 135405636
+          }
+        ],
+        "scope": "Serialized node order; outputs allocated before last-use input release; graph outputs retained; tensor storage only"
+      }
+    }
+  },
+  "measurements": {
+    "baseline": {
+      "load_average_before": [
+        5.50341796875,
+        10.6123046875,
+        7.77099609375
+      ],
+      "load_average_after": [
+        5.50341796875,
+        10.6123046875,
+        7.77099609375
+      ],
+      "load_scope": "OS CPU load averages over 1, 5 and 15 minutes",
+      "session_creation_ms": 62.94987499131821,
+      "parameter_bytes": 1187904,
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "warmup": 10,
+      "samples": 100,
+      "first_step_ms": {
+        "execute_exchange": 48.297083005309105,
+        "accumulate_sync": 0.0,
+        "adam_sync": 21.04379198863171,
+        "step": 69.35262499609962
+      },
+      "timings_ms": {
+        "execute_exchange": {
+          "median": 7.647666992852464,
+          "p95": 8.06487709924113
+        },
+        "accumulate_sync": {
+          "median": 0.0,
+          "p95": 0.0
+        },
+        "adam_sync": {
+          "median": 0.5131875077495351,
+          "p95": 0.6491919411928393
+        },
+        "step": {
+          "median": 8.199500007322058,
+          "p95": 8.639279815542977
+        }
+      },
+      "provider_allocator": {
+        "active_bytes": 65560,
+        "cache_bytes": 418064968,
+        "peak_bytes": 428755616
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 594625520,
+        "lifetime_peak_bytes": 594625520,
+        "current_resident_bytes": 219922432,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "peak_process_rss_bytes": 219922432
+    },
+    "candidate": {
+      "load_average_before": [
+        5.50341796875,
+        10.6123046875,
+        7.77099609375
+      ],
+      "load_average_after": [
+        5.50341796875,
+        10.6123046875,
+        7.77099609375
+      ],
+      "load_scope": "OS CPU load averages over 1, 5 and 15 minutes",
+      "session_creation_ms": 30.77204100554809,
+      "parameter_bytes": 1187904,
+      "threads": {
+        "intra_op": 1,
+        "inter_op": 1
+      },
+      "warmup": 10,
+      "samples": 100,
+      "first_step_ms": {
+        "execute_exchange": 43.162040994502604,
+        "accumulate_sync": 0.0,
+        "adam_sync": 17.398208001395687,
+        "step": 60.57220799266361
+      },
+      "timings_ms": {
+        "execute_exchange": {
+          "median": 7.74229149101302,
+          "p95": 8.146110098459758
+        },
+        "accumulate_sync": {
+          "median": 0.0,
+          "p95": 0.0
+        },
+        "adam_sync": {
+          "median": 0.5609794898191467,
+          "p95": 0.7149148863391018
+        },
+        "step": {
+          "median": 8.338478990481235,
+          "p95": 8.821172613534145
+        }
+      },
+      "provider_allocator": {
+        "active_bytes": 65560,
+        "cache_bytes": 418064968,
+        "peak_bytes": 428755616
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 594068440,
+        "lifetime_peak_bytes": 594068440,
+        "current_resident_bytes": 219365376,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "peak_process_rss_bytes": 219365376
+    }
+  },
+  "onnxscript_reoptimized_nodes": 44,
+  "provider_peak_change_bytes": 0,
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "versions": {
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnxscript": "0.7.2",
+    "numpy": "2.4.6",
+    "mlx": "0.32.4",
+    "onnxruntime": "1.31.1",
+    "onnxruntime-ep-mlx": "0.31.0"
+  },
+  "hardware": "Apple M1 Max",
+  "benchmark_repetitions": [
+    {
+      "label": "native_regression",
+      "measurements": {
+        "baseline": {
+          "warmup": 10,
+          "samples": 100,
+          "first_step_ms": {
+            "execute_exchange": 45.08008301490918,
+            "accumulate_sync": 0.0,
+            "adam_sync": 38.56558300321922,
+            "step": 83.65862499340437
+          },
+          "timings_ms": {
+            "execute_exchange": {
+              "median": 7.34183301392477,
+              "p95": 7.405391662905458
+            },
+            "accumulate_sync": {
+              "median": 0.0,
+              "p95": 0.0
+            },
+            "adam_sync": {
+              "median": 0.38758300070185214,
+              "p95": 0.44276489061303437
+            },
+            "step": {
+              "median": 7.7299584954744205,
+              "p95": 7.838383654598147
+            }
+          },
+          "provider_allocator": {
+            "active_bytes": 65560,
+            "cache_bytes": 418064968,
+            "peak_bytes": 428755616
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 594363304,
+            "lifetime_peak_bytes": 594363304,
+            "current_resident_bytes": 219578368,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "peak_process_rss_bytes": 219578368
+        },
+        "candidate": {
+          "warmup": 10,
+          "samples": 100,
+          "first_step_ms": {
+            "execute_exchange": 42.26937500061467,
+            "accumulate_sync": 0.0,
+            "adam_sync": 19.96670800144784,
+            "step": 62.24679198930971
+          },
+          "timings_ms": {
+            "execute_exchange": {
+              "median": 7.246458510053344,
+              "p95": 7.390846483758651
+            },
+            "accumulate_sync": {
+              "median": 0.0,
+              "p95": 0.0
+            },
+            "adam_sync": {
+              "median": 0.3941670001950115,
+              "p95": 0.42095864919247106
+            },
+            "step": {
+              "median": 7.64556200010702,
+              "p95": 7.807857722218614
+            }
+          },
+          "provider_allocator": {
+            "active_bytes": 65560,
+            "cache_bytes": 418064968,
+            "peak_bytes": 428755616
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 594428888,
+            "lifetime_peak_bytes": 594428888,
+            "current_resident_bytes": 219627520,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "peak_process_rss_bytes": 219627520
+        }
+      }
+    },
+    {
+      "label": "repeat_1",
+      "measurements": {
+        "baseline": {
+          "session_creation_ms": 47.85149998497218,
+          "parameter_bytes": 1187904,
+          "threads": {
+            "intra_op": 1,
+            "inter_op": 1
+          },
+          "warmup": 10,
+          "samples": 100,
+          "first_step_ms": {
+            "execute_exchange": 53.336417011450976,
+            "accumulate_sync": 0.0,
+            "adam_sync": 22.851332993013784,
+            "step": 76.20149999274872
+          },
+          "timings_ms": {
+            "execute_exchange": {
+              "median": 7.752729012281634,
+              "p95": 8.441826737544034
+            },
+            "accumulate_sync": {
+              "median": 0.0,
+              "p95": 0.0
+            },
+            "adam_sync": {
+              "median": 0.5573334929067641,
+              "p95": 0.6913419405464081
+            },
+            "step": {
+              "median": 8.339583495398983,
+              "p95": 9.07275384379318
+            }
+          },
+          "provider_allocator": {
+            "active_bytes": 65560,
+            "cache_bytes": 418064968,
+            "peak_bytes": 428755616
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 595706888,
+            "lifetime_peak_bytes": 595706888,
+            "current_resident_bytes": 220971008,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "peak_process_rss_bytes": 220971008
+        },
+        "candidate": {
+          "session_creation_ms": 30.328875000122935,
+          "parameter_bytes": 1187904,
+          "threads": {
+            "intra_op": 1,
+            "inter_op": 1
+          },
+          "warmup": 10,
+          "samples": 100,
+          "first_step_ms": {
+            "execute_exchange": 48.296499997377396,
+            "accumulate_sync": 0.0,
+            "adam_sync": 19.366124994121492,
+            "step": 67.67704198136926
+          },
+          "timings_ms": {
+            "execute_exchange": {
+              "median": 10.021833499195054,
+              "p95": 135.56771185540128
+            },
+            "accumulate_sync": {
+              "median": 0.0,
+              "p95": 0.0
+            },
+            "adam_sync": {
+              "median": 1.1195834958925843,
+              "p95": 77.45690589217696
+            },
+            "step": {
+              "median": 11.579291502130218,
+              "p95": 235.9334577035042
+            }
+          },
+          "provider_allocator": {
+            "active_bytes": 65560,
+            "cache_bytes": 836129936,
+            "peak_bytes": 857445672
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 1020675104,
+            "lifetime_peak_bytes": 1020888096,
+            "current_resident_bytes": 120537088,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "peak_process_rss_bytes": 222380032
+        }
+      }
+    },
+    {
+      "label": "repeat_2",
+      "measurements": {
+        "baseline": {
+          "load_average_before": [
+            5.50341796875,
+            10.6123046875,
+            7.77099609375
+          ],
+          "load_average_after": [
+            5.50341796875,
+            10.6123046875,
+            7.77099609375
+          ],
+          "load_scope": "OS CPU load averages over 1, 5 and 15 minutes",
+          "session_creation_ms": 62.94987499131821,
+          "parameter_bytes": 1187904,
+          "threads": {
+            "intra_op": 1,
+            "inter_op": 1
+          },
+          "warmup": 10,
+          "samples": 100,
+          "first_step_ms": {
+            "execute_exchange": 48.297083005309105,
+            "accumulate_sync": 0.0,
+            "adam_sync": 21.04379198863171,
+            "step": 69.35262499609962
+          },
+          "timings_ms": {
+            "execute_exchange": {
+              "median": 7.647666992852464,
+              "p95": 8.06487709924113
+            },
+            "accumulate_sync": {
+              "median": 0.0,
+              "p95": 0.0
+            },
+            "adam_sync": {
+              "median": 0.5131875077495351,
+              "p95": 0.6491919411928393
+            },
+            "step": {
+              "median": 8.199500007322058,
+              "p95": 8.639279815542977
+            }
+          },
+          "provider_allocator": {
+            "active_bytes": 65560,
+            "cache_bytes": 418064968,
+            "peak_bytes": 428755616
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 594625520,
+            "lifetime_peak_bytes": 594625520,
+            "current_resident_bytes": 219922432,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "peak_process_rss_bytes": 219922432
+        },
+        "candidate": {
+          "load_average_before": [
+            5.50341796875,
+            10.6123046875,
+            7.77099609375
+          ],
+          "load_average_after": [
+            5.50341796875,
+            10.6123046875,
+            7.77099609375
+          ],
+          "load_scope": "OS CPU load averages over 1, 5 and 15 minutes",
+          "session_creation_ms": 30.77204100554809,
+          "parameter_bytes": 1187904,
+          "threads": {
+            "intra_op": 1,
+            "inter_op": 1
+          },
+          "warmup": 10,
+          "samples": 100,
+          "first_step_ms": {
+            "execute_exchange": 43.162040994502604,
+            "accumulate_sync": 0.0,
+            "adam_sync": 17.398208001395687,
+            "step": 60.57220799266361
+          },
+          "timings_ms": {
+            "execute_exchange": {
+              "median": 7.74229149101302,
+              "p95": 8.146110098459758
+            },
+            "accumulate_sync": {
+              "median": 0.0,
+              "p95": 0.0
+            },
+            "adam_sync": {
+              "median": 0.5609794898191467,
+              "p95": 0.7149148863391018
+            },
+            "step": {
+              "median": 8.338478990481235,
+              "p95": 8.821172613534145
+            }
+          },
+          "provider_allocator": {
+            "active_bytes": 65560,
+            "cache_bytes": 418064968,
+            "peak_bytes": 428755616
+          },
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 594068440,
+            "lifetime_peak_bytes": 594068440,
+            "current_resident_bytes": 219365376,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "peak_process_rss_bytes": 219365376
+        }
+      }
+    }
+  ],
+  "profile": "activation",
+  "precision": "fp32",
+  "initialization_seed": 20261030,
+  "host_load_observation_after_repeat_1": {
+    "averages_1_5_15_minutes": [
+      11.3408203125,
+      12.53466796875,
+      8.17236328125
+    ],
+    "scope": "Sampled after the anomalous pair, outside timed steps"
+  }
+}
