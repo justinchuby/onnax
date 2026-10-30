@@ -447,3 +447,48 @@ def test_double_derivative_uses_serialized_float_attribute(op, attributes, expec
             None, {"x": np.zeros(1), derivative.graph.inputs[-1].name: np.ones(1)}
         )[-1]
         np.testing.assert_array_equal(actual, [expected])
+
+
+@pytest.mark.parametrize("alpha", [0.3, 1.0, 2.0])
+@pytest.mark.parametrize("dtype,opset", [(ir.DataType.FLOAT, 18), (ir.DataType.DOUBLE, 28)])
+def test_celu_gradient_and_batched_curvature(alpha, dtype, opset):
+    x = _value("x", ["n"], dtype=dtype)
+    tape = ir.tape.Tape()
+    loss = tape.op("ReduceSum", [tape.op("Celu", [x], {"alpha": alpha})], {"keepdims": 0})
+    mapped = vmap(jvp(grad(_model([x], tape, [loss], opset=opset))), in_axes=(0, 0))
+    np_dtype = np.float32 if dtype == ir.DataType.FLOAT else np.float64
+    values = np.array([[-3, -0.5, 0, 0.5, 100]], dtype=np_dtype)
+    actual = (runtime_session if opset == 18 else evaluator)(mapped).run(
+        None, {"x": values, mapped.graph.inputs[-1].name: np.ones_like(values)}
+    )
+    coefficient = float(np.float32(alpha))
+    slope = np.exp(np.minimum(values, 0) / coefficient)
+    curvature = np.where(values <= 0, slope / coefficient, 0)
+    np.testing.assert_allclose(actual[-2], slope, rtol=3e-6)
+    np.testing.assert_allclose(actual[-1], curvature, rtol=3e-6)
+
+
+@pytest.mark.parametrize("alpha", [0.3, 2.0])
+def test_celu_independent_products_and_nonlinear_hvp(alpha):
+    x = _value("x", [3])
+    tape = ir.tape.Tape()
+    y = tape.op("Celu", [x], {"alpha": alpha})
+    source = _model([x], tape, [y], opset=28)
+    feeds = {"x": np.array([-0.7, -0.2, 0.5])}
+    _products(source, feeds)
+    outer = ir.tape.Tape(source.graph)
+    loss = outer.op("ReduceSum", [outer.op("Mul", [y, y])], {"keepdims": 0})
+    loss.name = "loss"
+    source.graph.outputs.clear()
+    source.graph.outputs.append(loss)
+    _hvp_check(source, feeds)
+
+
+@pytest.mark.parametrize("alpha", [0.0, -1.0, float("inf"), float("nan")])
+@pytest.mark.parametrize("transform", [jvp, vjp])
+def test_celu_rejects_invalid_shape_parameter(alpha, transform):
+    x = _value("x", [1], dtype=ir.DataType.FLOAT)
+    tape = ir.tape.Tape()
+    source = _model([x], tape, [tape.op("Celu", [x], {"alpha": alpha})])
+    with pytest.raises(ValueError, match="Celu differentiation requires finite alpha > 0"):
+        transform(source)
