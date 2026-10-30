@@ -148,7 +148,7 @@ def run(*, real=False):
         "dtype": "float32",
         "swish_decomposition": "bounded_exponential_sigmoid",
         "ort_graph_optimization": "disabled",
-        "scope": "Initial frozen base; identical observed ONNX inputs replayed with PyTorch FP32 operators. Norms in report statistics use FP64 host arithmetic only. Probes change graph outputs; this is an accuracy diagnostic, not a timing benchmark.",
+        "scope": "Initial frozen base; PyTorch FP32 operators replay identical ONNX-observed inputs. Accuracy probes expose extra graph outputs. Host-side report norms use FP64; selected dot products use scalar math.fsum.",
         "input_ids": ids.tolist(),
         "versions": {
             "torch": torch.__version__,

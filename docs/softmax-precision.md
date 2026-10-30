@@ -128,3 +128,31 @@ The before/after JSON reports in `examples/huggingface/reports/` retain source
 node names, local metrics and selected dot-product oracles. The next comparison
 is adapter-gradient propagation at fixed activations, followed by the independent
 optimizer trajectories.
+
+### Real-model training and recovery
+
+The stable-Swish Qwen3-0.6B run completed 30 updates in FP32. Validation loss
+went from **7.435994 to 6.264874**. A new process resumed checkpoint 15 and
+reproduced all 112 adapter tensors, all 113 checkpoint tensors, AdamW moments
+and scheduler state byte for byte. Both frozen ONNX exports were loaded and
+executed; logits and hidden states were byte-identical. Their 336 frozen
+initializer hashes also matched.
+
+Run and verify recovery with:
+
+```bash
+uv run python -m examples.huggingface.sft --real --steps 30 \
+  --diagnose-rounding --save-activations --peft-roundtrip --output-dir run
+uv run python -m examples.huggingface.sft --real --steps 30 \
+  --diagnose-rounding --save-activations --peft-roundtrip \
+  --resume run/checkpoint-15 --output-dir resumed
+uv run python -m examples.huggingface.replay \
+  --uninterrupted run --resumed resumed --step 30 --output replay.json
+```
+
+`qwen3-stable-swish-replay.json` records the training, recovery and original
+numerical comparisons. At the final PEFT comparison, two gradient elements
+in layer 20's q-projection B exceed `rtol=1e-4, atol=1e-6`; independent AdamW
+updates also exceed the threshold. Diagnostic mode records each failing
+parameter. Strict mode raises on the first failure. Completed training and
+export results are saved before optional audits run.

@@ -222,3 +222,16 @@ def test_completed_training_report_survives_optional_audit_failure(tmp_path, mon
     assert report["requested_audits"]["peft"]
     assert (tmp_path / "export" / "forward.onnx").is_file()
     assert (tmp_path / "adapter" / "adapter_model.safetensors").is_file()
+
+
+def test_replay_verification_checks_state_bytes():
+    from examples.huggingface.replay import _equal_array, _equal_tree
+
+    state = {"optimizer": [torch.tensor([0.0, 1.0]), {"step": 3}]}
+    _equal_tree(state, {"optimizer": [torch.tensor([0.0, 1.0]), {"step": 3}]})
+    with pytest.raises(AssertionError):
+        _equal_array(np.array([0.0], np.float32), np.array([-0.0], np.float32))
+    with pytest.raises(AssertionError):
+        _equal_tree(state, {"optimizer": [torch.tensor([-0.0, 1.0]), {"step": 3}]})
+    with pytest.raises(AssertionError):
+        _equal_tree(state, {"optimizer": [torch.tensor([0.0, 1.0]), {"step": 4}]})
