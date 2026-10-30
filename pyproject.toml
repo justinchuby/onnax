@@ -121,7 +121,7 @@ ban-relative-imports = "all"
 convention = "google"
 
 [tool.mypy]
-files = ["src"]
+files = ["src", "tests/typing"]
 check_untyped_defs = true
 show_error_codes = true
 disable_error_code = ["import-untyped"]

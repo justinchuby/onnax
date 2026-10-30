@@ -1,32 +1,84 @@
 # Copyright (c) 2026 onnax contributors
 # SPDX-License-Identifier: MIT
-"""Model-first functional graph transformations."""
+"""Container-preserving functional graph transformations."""
 
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import overload
 
+import onnx
 import onnx_ir as ir
 
 from onnax._autodiff import GradPass, JvpPass, VjpPass
 from onnax._batching import VmapPass
 
+_Input = ir.Model | ir.Graph | ir.GraphView | onnx.ModelProto
+_Output = ir.Model | ir.Graph | onnx.ModelProto
 
+
+def _apply(model: _Input, transform: ir.passes.PassBase) -> _Output:
+    if isinstance(model, ir.Model):
+        return transform(model).model
+    if isinstance(model, onnx.ModelProto):
+        return ir.to_proto(transform(ir.from_proto(model)).model)
+    if isinstance(model, (ir.Graph, ir.GraphView)):
+        graph = model.clone(deep_copy=True) if isinstance(model, ir.GraphView) else model
+        wrapped = ir.Model(graph, ir_version=onnx.IR_VERSION)
+        return transform(wrapped).model.graph
+    raise TypeError(
+        "Expected onnx_ir.Model, onnx_ir.Graph, onnx_ir.GraphView or onnx.ModelProto; "
+        f"got {type(model).__name__}"
+    )
+
+
+# Generated protobuf attributes can match IR protocols during static checking.
+# Keep ModelProto overloads first so its return type stays precise.
+@overload
+def vmap(
+    model: onnx.ModelProto,
+    in_axes: Sequence[int | None],
+    *,
+    axis_size: int | None = None,
+    out_axes: int | Sequence[int] = 0,
+) -> onnx.ModelProto: ...
+
+
+@overload
 def vmap(
     model: ir.Model,
     in_axes: Sequence[int | None],
     *,
     axis_size: int | None = None,
     out_axes: int | Sequence[int] = 0,
-) -> ir.Model:
-    """Map independent examples of an ONNX IR model, returning a new IR model.
+) -> ir.Model: ...
 
-    This is a graph-oriented adaptation of JAX's ``vmap``, not Python function
-    tracing or execution. ``model`` describes one example and is never modified.
+
+@overload
+def vmap(
+    model: ir.Graph | ir.GraphView,
+    in_axes: Sequence[int | None],
+    *,
+    axis_size: int | None = None,
+    out_axes: int | Sequence[int] = 0,
+) -> ir.Graph: ...
+
+
+def vmap(
+    model: _Input,
+    in_axes: Sequence[int | None],
+    *,
+    axis_size: int | None = None,
+    out_axes: int | Sequence[int] = 0,
+) -> _Output:
+    """Map independent examples, returning a new graph in the input container type.
+
+    ``model`` describes one example and is never modified.
     All original outputs are retained, each with a new example axis.
 
     Args:
-        model: Single-example tensor graph at standard ONNX opset 18 through 28.
+        model: Single-example model, graph or graph view at standard ONNX
+            opset 18 through 28. Graphs carry their own opset imports.
         in_axes: One axis per graph input, in graph-input order. An integer
             inserts an example axis in the resulting input; ``None`` keeps that
             input shared. Negative axes index the resulting tensor. At least
@@ -39,8 +91,9 @@ def vmap(
             Even outputs independent of mapped inputs are repeated.
 
     Returns:
-        A source-preserving ``onnx_ir.Model`` with ordinary batched ONNX nodes,
-        not a callable or an executor. Shared parameter gradients can be mapped
+        A source-preserving result with ordinary batched ONNX nodes.
+        ``onnx_ir.Model``, ``onnx_ir.Graph`` and ``onnx.ModelProto`` inputs retain
+        their container type; ``onnx_ir.GraphView`` returns an independent Graph. Shared parameter gradients can be mapped
         without reducing over examples::
 
             gradients = grad(model, inputs=["weight"], output="loss")
@@ -53,26 +106,54 @@ def vmap(
     action without modifying the source model; inference failures retain their
     original cause.
     """
-    return VmapPass(in_axes, axis_size=axis_size, out_axes=out_axes)(model).model
+    return _apply(model, VmapPass(in_axes, axis_size=axis_size, out_axes=out_axes))
 
 
+@overload
+def jvp(
+    model: onnx.ModelProto,
+    *,
+    inputs: Sequence[str] | None = None,
+    outputs: Sequence[str] | None = None,
+) -> onnx.ModelProto: ...
+
+
+@overload
 def jvp(
     model: ir.Model,
     *,
     inputs: Sequence[str] | None = None,
     outputs: Sequence[str] | None = None,
-) -> ir.Model:
+) -> ir.Model: ...
+
+
+@overload
+def jvp(
+    model: ir.Graph | ir.GraphView,
+    *,
+    inputs: Sequence[str] | None = None,
+    outputs: Sequence[str] | None = None,
+) -> ir.Graph: ...
+
+
+def jvp(
+    model: _Input,
+    *,
+    inputs: Sequence[str] | None = None,
+    outputs: Sequence[str] | None = None,
+) -> _Output:
     """Build a graph computing primal outputs and a Jacobian-vector product.
 
-    Unlike ``jax.jvp``, this does not accept primal arrays or tangent arrays and
-    does not execute anything. It returns a new ``onnx_ir.Model``, retaining all
-    original inputs/outputs and appending tangent seed inputs and tangent outputs.
+    Preserves the input container type
+    (``onnx_ir.Model``, ``onnx_ir.Graph`` or ``onnx.ModelProto``);
+    ``onnx_ir.GraphView`` returns an independent Graph. The result retains all
+    original inputs/outputs and appends tangent seed inputs and tangent outputs.
     Seeds are runtime graph inputs, one per selected input, with exactly its
     primal runtime shape/dtype (no broadcasting). Names use ``<name>_tangent``
     with collision-resolving suffixes; inspect the returned graph interface.
 
     Args:
-        model: Source IR model, never modified.
+        model: Source model, graph or graph view, never modified.
         inputs: Ordered unique graph input/initializer names to differentiate.
             Defaults to non-initializer FLOAT/DOUBLE graph inputs. Explicitly
             selected initializers stay stored and acquire only a tangent input;
@@ -97,25 +178,53 @@ def jvp(
     domain/operator, node and effective opset. Original inference errors propagate
     with graph/boundary context in their Python exception notes.
     """
-    return JvpPass(inputs=inputs, outputs=outputs)(model).model
+    return _apply(model, JvpPass(inputs=inputs, outputs=outputs))
 
 
+@overload
+def vjp(
+    model: onnx.ModelProto,
+    *,
+    inputs: Sequence[str] | None = None,
+    outputs: Sequence[str] | None = None,
+) -> onnx.ModelProto: ...
+
+
+@overload
 def vjp(
     model: ir.Model,
     *,
     inputs: Sequence[str] | None = None,
     outputs: Sequence[str] | None = None,
-) -> ir.Model:
+) -> ir.Model: ...
+
+
+@overload
+def vjp(
+    model: ir.Graph | ir.GraphView,
+    *,
+    inputs: Sequence[str] | None = None,
+    outputs: Sequence[str] | None = None,
+) -> ir.Graph: ...
+
+
+def vjp(
+    model: _Input,
+    *,
+    inputs: Sequence[str] | None = None,
+    outputs: Sequence[str] | None = None,
+) -> _Output:
     """Build a graph computing primal outputs and a vector-Jacobian product.
 
-    Returns a source-preserving ``onnx_ir.Model``, not JAX's value/pullback pair.
+    Preserves the input container type (``onnx_ir.Model``, ``onnx_ir.Graph``
+    or ``onnx.ModelProto``); ``onnx_ir.GraphView`` returns an independent Graph.
     Retains all original inputs/outputs, appends one runtime cotangent seed input
     per selected output, and appends one input cotangent output per selected
     input. Contributions from all selected outputs and repeated uses are summed.
     Disconnected selected inputs produce correctly shaped zeros.
 
     Args:
-        model: Source IR model, never modified.
+        model: Source model, graph or graph view, never modified.
         inputs: Ordered unique graph input/initializer names. Defaults to
             non-initializer FLOAT/DOUBLE graph inputs. Initializers remain fixed
             unless selected and keep their stored primal values when selected.
@@ -134,25 +243,51 @@ def vjp(
     restrictions. A subsequent ``jvp`` is the only supported higher-order mode;
     reverse-over-reverse and reverse-over-forward remain explicitly rejected.
     """
-    return VjpPass(inputs=inputs, outputs=outputs)(model).model
+    return _apply(model, VjpPass(inputs=inputs, outputs=outputs))
 
 
+@overload
+def grad(
+    model: onnx.ModelProto,
+    *,
+    inputs: Sequence[str] | None = None,
+    output: str | None = None,
+) -> onnx.ModelProto: ...
+
+
+@overload
 def grad(
     model: ir.Model,
     *,
     inputs: Sequence[str] | None = None,
     output: str | None = None,
-) -> ir.Model:
+) -> ir.Model: ...
+
+
+@overload
+def grad(
+    model: ir.Graph | ir.GraphView,
+    *,
+    inputs: Sequence[str] | None = None,
+    output: str | None = None,
+) -> ir.Graph: ...
+
+
+def grad(
+    model: _Input,
+    *,
+    inputs: Sequence[str] | None = None,
+    output: str | None = None,
+) -> _Output:
     """Build a scalar-loss gradient graph with an implicit unit cotangent seed.
 
-    Returns a new ``onnx_ir.Model``, retaining every original input and primal
-    output, then appending gradients in selected-input order. No seed inputs are
-    added. This intentionally differs from ``jax.grad``: no Python tracing,
-    array evaluation, ``argnums`` or derivative-only callable is implied.
-    A separate ``value_and_grad`` is unnecessary because primals are retained.
+    Preserves the input container type (``onnx_ir.Model``, ``onnx_ir.Graph``
+    or ``onnx.ModelProto``); ``onnx_ir.GraphView`` returns an independent Graph.
+    Retains every original input and primal output and appends gradients in
+    selected-input order. The implicit unit cotangent adds no seed inputs.
 
     Args:
-        model: Source IR model, never modified.
+        model: Source model, graph or graph view, never modified.
         inputs: Ordered unique input/initializer names to differentiate.
             Defaults to non-initializer FLOAT/DOUBLE graph inputs. Select stored
             parameters explicitly; selection does not change their primal values
@@ -174,4 +309,4 @@ def grad(
     batch-reduced loss. See :class:`GradPass` and :class:`JvpPass` for supported
     operators, real-domain/shape contracts and the bounded HVP composition.
     """
-    return GradPass(inputs=inputs, output=output)(model).model
+    return _apply(model, GradPass(inputs=inputs, output=output))

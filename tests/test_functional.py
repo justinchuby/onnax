@@ -49,6 +49,25 @@ def _loss(*, stored=True):
     )
 
 
+def _container(source, kind):
+    g = source.graph
+    if kind == "proto":
+        return ir.to_proto(source)
+    if kind == "graph":
+        return g
+    if kind == "view":
+        return ir.GraphView(
+            g.inputs,
+            g.outputs,
+            nodes=list(g),
+            initializers=list(g.initializers.values()),
+            opset_imports=dict(g.opset_imports),
+            name=g.name,
+            metadata_props=dict(g.metadata_props),
+        )
+    return source
+
+
 def _names(values):
     return [v.name for v in values]
 
@@ -77,7 +96,14 @@ def test_public_signatures_exports_and_documentation(function, parameters, defau
             assert parameter.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
             assert parameter.default == inspect.Parameter.empty
     hints = typing.get_type_hints(function)
-    assert hints["model"] is ir.Model and hints["return"] is ir.Model
+    assert set(typing.get_args(hints["model"])) == {
+        ir.Model,
+        ir.Graph,
+        ir.GraphView,
+        onnx.ModelProto,
+    }
+    assert set(typing.get_args(hints["return"])) == {ir.Model, ir.Graph, onnx.ModelProto}
+    assert len(typing.get_overloads(function)) == 3
     assert set(hints) == {*parameters, "return"}
     assert getattr(onnax, function.__name__) is function
     assert function.__name__ in onnax.__all__
@@ -301,11 +327,16 @@ def test_seed_names_are_discoverable_after_collisions_and_reload(tmp_path):
         ),
     ],
 )
-def test_functional_errors_preserve_the_source(transform, error, match):
+@pytest.mark.parametrize("kind", ["model", "graph", "view", "proto"])
+def test_functional_errors_preserve_the_source(transform, error, match, kind):
     source = _loss()
     before = ir.to_proto(source).SerializeToString()
+    container = _container(source, kind)
+    proto_before = container.SerializeToString() if kind == "proto" else None
     with pytest.raises(error, match=match):
-        transform(source)
+        transform(container)
+    if kind == "proto":
+        assert container.SerializeToString() == proto_before
     assert ir.to_proto(source).SerializeToString() == before
 
 
@@ -319,3 +350,157 @@ def test_ir_checker_pass_retains_schema_and_full_shape_checks():
     CheckerPass(full_check=False)(source)
     with pytest.raises(onnx.shape_inference.InferenceError, match="shape"):
         CheckerPass(full_check=True)(source)
+
+
+@pytest.mark.parametrize("kind", ["model", "graph", "view", "proto"])
+@pytest.mark.parametrize(
+    "function,kwargs",
+    [
+        (vmap, {"in_axes": [0, None], "axis_size": 3}),
+        (jvp, {"inputs": ["weight", "x"], "outputs": ["loss", "prediction"]}),
+        (vjp, {"inputs": ["weight", "x"], "outputs": ["loss", "prediction"]}),
+        (grad, {"inputs": ["weight", "x"], "output": "loss"}),
+    ],
+)
+def test_container_types_numerics_metadata_and_source(kind, function, kwargs):
+    source = _loss()
+    source.graph.metadata_props["custom"] = "preserved"
+    source.metadata_props["owner"] = "test"
+    source.producer_name = "functional-test"
+    source.model_version = 7
+    proto = ir.to_proto(source)
+    before = proto.SerializeToString()
+    g = source.graph
+    actual = function(proto if kind == "proto" else _container(source, kind), **kwargs)
+    assert (
+        type(actual)
+        is {"model": ir.Model, "graph": ir.Graph, "view": ir.Graph, "proto": onnx.ModelProto}[
+            kind
+        ]
+    )
+    if isinstance(actual, onnx.ModelProto):
+        onnx.checker.check_model(actual, full_check=True)
+        actual_model = ir.from_proto(actual)
+    elif isinstance(actual, ir.Graph):
+        actual_model = ir.Model(actual, ir_version=10)
+    else:
+        actual_model = actual
+    expected = function(source, **kwargs)
+    if kind in ("model", "proto"):
+        assert actual_model.ir_version == source.ir_version
+        assert actual_model.producer_name == source.producer_name
+        assert actual_model.model_version == source.model_version
+        assert actual_model.metadata_props == source.metadata_props
+    assert actual_model.graph.metadata_props == expected.graph.metadata_props
+    assert actual_model.graph.metadata_props["custom"] == "preserved"
+    assert dict(actual_model.graph.opset_imports) == dict(expected.graph.opset_imports)
+    assert _names(actual_model.graph.inputs) == _names(expected.graph.inputs)
+    assert _names(actual_model.graph.outputs) == _names(expected.graph.outputs)
+    feeds = {
+        v.name: np.ones(tuple(v.shape), dtype=v.dtype.numpy())
+        for v in actual_model.graph.inputs
+    }
+    for a, b in zip(
+        evaluator(actual_model).run(None, feeds),
+        evaluator(expected).run(None, feeds),
+        strict=True,
+    ):
+        np.testing.assert_array_equal(a, b)
+    assert ir.to_proto(source).SerializeToString() == before
+    assert proto.SerializeToString() == before
+    assert source.graph is g
+
+
+def test_graph_view_internal_boundary_and_composition():
+    source = _loss()
+    before = ir.to_proto(source).SerializeToString()
+    g = source.graph
+    prediction = g.outputs[0]
+    view = ir.GraphView(
+        [prediction, g.inputs[1]],
+        [g.outputs[1]],
+        nodes=list(g)[1:],
+        opset_imports=dict(g.opset_imports),
+        name="loss_view",
+    )
+    gradient = grad(view, inputs=["prediction"], output="loss")
+    assert type(gradient) is ir.Graph
+    result = evaluator(ir.Model(gradient, ir_version=10)).run(
+        None, {"prediction": np.array([2.0, 6.0]), "target": np.array([0.5, 1.0])}
+    )
+    np.testing.assert_allclose(result[0], 27.25)
+    np.testing.assert_array_equal(result[-1], [3.0, 10.0])
+    hvp = jvp(gradient, inputs=["prediction"])
+    assert type(hvp) is ir.Graph
+    outputs = evaluator(ir.Model(hvp, ir_version=10)).run(
+        None,
+        {
+            "prediction": np.array([2.0, 6.0]),
+            "target": np.array([0.5, 1.0]),
+            "prediction_tangent": np.array([0.1, 0.2]),
+        },
+    )
+    np.testing.assert_allclose(outputs[-1], [0.2, 0.4])
+    assert ir.to_proto(source).SerializeToString() == before
+
+
+@pytest.mark.parametrize(
+    "function,kwargs", [(vmap, {"in_axes": [0]}), (jvp, {}), (vjp, {}), (grad, {})]
+)
+def test_invalid_container_type(function, kwargs):
+    with pytest.raises(TypeError, match=r"onnx\.ModelProto"):
+        function(object(), **kwargs)
+
+
+@pytest.mark.parametrize("kind", ["graph", "proto"])
+def test_container_composition_after_serialization(kind):
+    source = _container(_loss(), kind)
+    gradient = grad(source, inputs=["weight"], output="loss")
+    if kind == "proto":
+        gradient = onnx.ModelProto.FromString(gradient.SerializeToString())
+    hvp = jvp(gradient, inputs=["weight"])
+    model = ir.from_proto(hvp) if kind == "proto" else ir.Model(hvp, ir_version=10)
+    result = evaluator(model).run(
+        None,
+        {
+            "x": np.array([2.0, 3.0]),
+            "target": np.zeros(2),
+            "weight_tangent": np.array([0.2, -0.5]),
+        },
+    )
+    np.testing.assert_allclose(result[-1], [1.6, -9.0])
+
+
+@pytest.mark.parametrize("kind", ["model", "graph", "view", "proto"])
+@pytest.mark.parametrize(
+    "function,kwargs",
+    [
+        (vmap, {"in_axes": [0], "axis_size": 3}),
+        (jvp, {"inputs": ["x"], "outputs": ["loss"]}),
+        (vjp, {"inputs": ["x"], "outputs": ["loss"]}),
+        (grad, {"inputs": ["x"], "output": "loss"}),
+    ],
+)
+def test_protobuf_backed_anonymous_constants_preserve_sources(kind, function, kwargs):
+    x = ir.val("x", dtype=ir.DataType.DOUBLE, shape=[2])
+    tape = ir.tape.Tape()
+    constant = tape.op("Constant", [], {"value": ir.tensor(np.ones(2))})
+    loss = tape.op("ReduceSum", [tape.op("Mul", [x, constant])], {"keepdims": 0})
+    loss.name = "loss"
+    source = ir.Model(
+        ir.Graph([x], [loss], nodes=tape.nodes, opset_imports={"": 18}, name="anonymous"),
+        ir_version=10,
+    )
+    proto = ir.to_proto(source)
+    before = proto.SerializeToString()
+    parsed = ir.from_proto(proto)
+    container = proto if kind == "proto" else _container(parsed, kind)
+    actual = function(container, **kwargs)
+    if isinstance(actual, onnx.ModelProto):
+        onnx.checker.check_model(actual, full_check=True)
+    else:
+        ir.to_proto(
+            actual if isinstance(actual, ir.Model) else ir.Model(actual, ir_version=10)
+        )
+    assert proto.SerializeToString() == before
+    assert ir.to_proto(parsed).SerializeToString() == before
