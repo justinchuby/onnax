@@ -53,7 +53,7 @@ class _ComposeDerivativeTransposes(RewriteRuleClassBase):
         return op.Transpose(parent.inputs[0], perm=composed)
 
 
-def split_vjp(model, joint, *, optimize_layout=True):
+def split_vjp(model, joint, *, optimize_layout=False):
     """Split top-level nodes, retaining opaque local functions in both models."""
     primal_count = len(model.graph)
     original = list(model.graph)

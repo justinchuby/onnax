@@ -76,7 +76,7 @@ def test_frozen_layout_is_not_a_residual(perm):
     joint = onnax.vjp(model, inputs=["x"], outputs=["prediction"])
     before = [ir.to_proto(value).SerializeToString() for value in (model, joint)]
     old_f, old_b, old_names = split_vjp(model, joint, optimize_layout=False)
-    forward, backward, names = split_vjp(model, joint)
+    forward, backward, names = split_vjp(model, joint, optimize_layout=True)
     assert "weight_t" in old_names
     assert not names
     assert "weight" in backward.graph.initializers
@@ -112,7 +112,7 @@ def test_frozen_layout_is_not_a_residual(perm):
 def test_overridable_frozen_input_and_extra_forward_output():
     model, weight = linear(default_input=True, output_weight=True)
     forward, backward, names = split_vjp(
-        model, onnax.vjp(model, inputs=["x"], outputs=["prediction"])
+        model, onnax.vjp(model, inputs=["x"], outputs=["prediction"]), optimize_layout=True
     )
     assert not names
     x = np.ones((2, 4), np.float32)
@@ -128,7 +128,7 @@ def test_layout_rewrite_does_not_introduce_a_new_snapshot():
     model, weight = linear(computed=True)
     joint = onnax.vjp(model, inputs=["x"], outputs=["prediction"])
     _, _, old = split_vjp(model, joint, optimize_layout=False)
-    forward, backward, names = split_vjp(model, joint)
+    forward, backward, names = split_vjp(model, joint, optimize_layout=True)
     assert names == old
     assert "weight_t" in names and "shifted_weight" not in names
     x = np.ones((2, 4), np.float32)
@@ -164,3 +164,27 @@ def test_isolated_layout_audit():
     assert all(case["logits"]["violations"] == 0 for case in report["numerical_checks"])
     assert all(case["loss"]["violations"] == 0 for case in report["numerical_checks"])
     assert all(value["process_peak_rss_bytes"] > 0 for value in (before, after))
+
+
+@pytest.mark.parametrize("optimize,reuse", [(True, False), (True, True), (False, True)])
+def test_bridge_frozen_weight_reuse_is_opt_in(optimize, reuse):
+    pytest.importorskip("torch")
+    from examples.huggingface.bridge import OnnxModule
+
+    graph, weight = linear()
+    graph.graph.inputs[0].shape = ir.Shape([2, 4])
+    inputs = np.ones((2, 4), np.float32)
+    model = OnnxModule(
+        graph,
+        {"x": inputs},
+        optimize=optimize,
+        save_activations=True,
+        reuse_frozen_weights=reuse,
+    )
+    assert ("weight_t" not in model.residual_names) == (optimize and reuse)
+    result = model()
+    np.testing.assert_allclose(result.detach(), inputs @ weight.T, rtol=1e-4, atol=1e-6)
+    result.sum().backward()
+    np.testing.assert_allclose(
+        model.adapters[0].grad, np.ones((2, 5), np.float32) @ weight, rtol=1e-4, atol=1e-6
+    )

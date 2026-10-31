@@ -148,8 +148,8 @@ with fixed forward residuals and provides reusable segmented ONNX execution.
 ## Reuse frozen weights in saved backward graphs
 
 A frozen projection often stores its weight as $W^T$ for forward execution.
-Its pullback needs $(W^T)^T=W$. Before splitting forward and backward,
-onnax composes these layouts so backward can read the original weight
+Its pullback needs $(W^T)^T=W$. With `OnnxModule(..., save_activations=True, reuse_frozen_weights=True)`,
+onnax composes these layouts before splitting so backward can read the original weight
 initializer. This removes the transposed weight from the saved activation
 boundary. Computed values are reused only when they are already available to
 backward, keeping the saved boundary from growing.
@@ -169,3 +169,30 @@ RSS. VJP timing uses fixed saved activations and a fixed cotangent. Process RSS
 includes imports, sessions and correctness checks. Reusing an initializer also
 changes what is stored in the backward model; the exported sizes and RSS show
 that storage cost alongside the smaller activation boundary.
+
+The Qwen3-0.6B audit checks all 112 adapter gradients at B=0 and B=0.01.
+Logits are bitwise equal across the two layouts; the largest gradient difference
+is 1.27e-7, within the original `rtol=1e-4, atol=1e-6` tolerance. The rewrite
+removes `v_lm_head.Transpose_824` from the saved boundary and preserves the
+forward nodes and local functions.
+
+
+On an M1 Max (32 GiB), CPU FP32 with one runtime thread and sequence length 64,
+10 warmups followed by 100 VJP executions give:
+
+| Metric | Original split | Frozen weight reuse |
+| --- | ---: | ---: |
+| Logical saved tensors (MiB) | 1336.5 | 743.0 |
+| Process peak RSS (GiB) | 8.69 | 8.97 |
+| Forward + backward exports (MiB) | 1087.4 | 1680.9 |
+| Session creation (s) | 1.85 | 2.02 |
+| VJP median (s) | 4.584 | 4.501 |
+| VJP P95 (s) | 4.646 | 4.536 |
+
+The backward session holds the original frozen weight initializer, increasing
+its model size and process RSS. Frozen weight reuse is therefore opt-in; the
+bridge keeps the original split by default. Sharing frozen storage between
+sessions is the next step for this layout. The [raw report](
+https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-residual-layout.json)
+includes all gradient comparisons, exported graph hashes and identical frozen
+forward-buffer hashes. All four exports pass the full ONNX checker.

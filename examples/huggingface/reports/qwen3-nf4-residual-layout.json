@@ -1,0 +1,1741 @@
+{
+  "model": "Qwen3-0.6B",
+  "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+  "nf4": true,
+  "variants": {
+    "baseline": {
+      "residuals": 2195,
+      "forward_nodes": 3412,
+      "backward_nodes": 32388,
+      "backward_initializer_bytes": 245624436,
+      "exported_bytes": 1140204437,
+      "construction_seconds": 1.8545360420248471,
+      "process_peak_rss_bytes": 9330802688,
+      "cases": [
+        {
+          "adapter_b": 0.0,
+          "loss": 7.00374698638916,
+          "logical_residual_bytes": 1401389056
+        },
+        {
+          "adapter_b": 0.01,
+          "loss": 7.017308235168457,
+          "logical_residual_bytes": 1401389056
+        }
+      ],
+      "backward_seconds": {
+        "warmup": 10,
+        "samples": 100,
+        "median": 4.583780583518092,
+        "p95": 4.645983291318407
+      }
+    },
+    "candidate": {
+      "residuals": 2194,
+      "forward_nodes": 3412,
+      "backward_nodes": 32387,
+      "backward_initializer_bytes": 867954292,
+      "exported_bytes": 1762535862,
+      "construction_seconds": 2.018494083022233,
+      "process_peak_rss_bytes": 9632497664,
+      "cases": [
+        {
+          "adapter_b": 0.0,
+          "loss": 7.00374698638916,
+          "logical_residual_bytes": 779059200
+        },
+        {
+          "adapter_b": 0.01,
+          "loss": 7.017308235168457,
+          "logical_residual_bytes": 779059200
+        }
+      ],
+      "backward_seconds": {
+        "warmup": 10,
+        "samples": 100,
+        "median": 4.500709916523192,
+        "p95": 4.535920960709336
+      }
+    }
+  },
+  "numerical_checks": [
+    {
+      "adapter_b": 0.0,
+      "logits": {
+        "max_abs": 0.0,
+        "relative_l2": 0.0,
+        "violations": 0,
+        "elements": 9723904
+      },
+      "failed_gradient_tensors": 0,
+      "gradients": [
+        {
+          "name": "model.layers.0.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.0.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 4.8603396862745285e-09,
+          "relative_l2": 1.2430406479758393e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.0.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.0.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.955777406692505e-08,
+          "relative_l2": 1.0296080902785393e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.1.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.1.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.6193447411060333e-09,
+          "relative_l2": 1.2706221015907868e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.1.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.1.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 4.6566128730773926e-09,
+          "relative_l2": 9.370746977824407e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.2.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.2.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.5832483768463135e-08,
+          "relative_l2": 1.5757756501302711e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.2.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.2.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.0244548320770264e-08,
+          "relative_l2": 9.301096962344944e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.3.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.3.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 3.725290298461914e-08,
+          "relative_l2": 7.635084058145755e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.3.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.3.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 7.159542292356491e-09,
+          "relative_l2": 9.527458002349232e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.4.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.4.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.7474015951156616e-08,
+          "relative_l2": 1.8002985541595465e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.4.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.4.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.1175870895385742e-08,
+          "relative_l2": 1.1813147061363986e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.5.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.5.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.421438694000244e-08,
+          "relative_l2": 1.6665970884595519e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.5.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.5.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.257285475730896e-08,
+          "relative_l2": 1.2687196967513728e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.6.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.6.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 5.4016709327697754e-08,
+          "relative_l2": 1.4985516118470993e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.6.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.6.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 8.905772119760513e-09,
+          "relative_l2": 1.2928658597240862e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.7.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.7.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 9.778887033462524e-09,
+          "relative_l2": 1.2354082794584544e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.7.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.7.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 8.731149137020111e-09,
+          "relative_l2": 1.1472877032544847e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.8.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.8.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.6763806343078613e-08,
+          "relative_l2": 1.0347982435260863e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.8.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.8.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.4668330550193787e-08,
+          "relative_l2": 1.1571597021518688e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.9.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.9.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.6763806343078613e-08,
+          "relative_l2": 8.656637728707189e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.9.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.9.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 2.9802322387695312e-08,
+          "relative_l2": 9.93522368921203e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.10.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.10.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 3.5390257835388184e-08,
+          "relative_l2": 1.2405298217543687e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.10.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.10.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 9.313225746154785e-09,
+          "relative_l2": 1.0286318693455074e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.11.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.11.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.9802322387695312e-08,
+          "relative_l2": 7.522995778404439e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.11.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.11.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.30385160446167e-08,
+          "relative_l2": 1.036458931727329e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.12.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.12.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.3969838619232178e-08,
+          "relative_l2": 1.1435360179441404e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.12.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.12.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 6.51925802230835e-09,
+          "relative_l2": 1.120280870085145e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.13.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.13.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 3.3527612686157227e-08,
+          "relative_l2": 1.3680328843727315e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.13.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.13.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 2.1420419216156006e-08,
+          "relative_l2": 1.1053153220304624e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.14.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.14.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.7695128917694092e-08,
+          "relative_l2": 1.0067441825794006e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.14.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.14.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.30385160446167e-08,
+          "relative_l2": 1.1139775716721049e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.15.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.15.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.2351741790771484e-08,
+          "relative_l2": 1.0191717264783693e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.15.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.15.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 2.2351741790771484e-08,
+          "relative_l2": 1.0525916882813848e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.16.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.16.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 3.166496753692627e-08,
+          "relative_l2": 1.151031428518354e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.16.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.16.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 3.91155481338501e-08,
+          "relative_l2": 1.0138200755192342e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.17.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.17.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 6.705522537231445e-08,
+          "relative_l2": 1.0892423416014362e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.17.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.17.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.5832483768463135e-08,
+          "relative_l2": 9.301833619844778e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.18.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.18.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 8.940696716308594e-08,
+          "relative_l2": 8.104665519308307e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.18.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.18.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 2.1886080503463745e-08,
+          "relative_l2": 9.361847587371492e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.19.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.19.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 4.470348358154297e-08,
+          "relative_l2": 7.846730377045023e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.19.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.19.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 2.3283064365386963e-08,
+          "relative_l2": 8.991135072585722e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.20.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.20.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 4.470348358154297e-08,
+          "relative_l2": 6.56712396945957e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.20.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.20.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.4435499906539917e-08,
+          "relative_l2": 6.686296085869038e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.21.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.21.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 7.697963155806065e-09,
+          "relative_l2": 5.874882994111222e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.21.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.21.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.6763806343078613e-08,
+          "relative_l2": 7.909539050145431e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.22.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.22.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.421438694000244e-08,
+          "relative_l2": 7.937150328749145e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.22.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.22.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 2.421438694000244e-08,
+          "relative_l2": 7.506601182789752e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.23.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.23.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.862645149230957e-08,
+          "relative_l2": 7.590070612275429e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.23.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.23.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.30385160446167e-08,
+          "relative_l2": 7.583892052673712e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.24.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.24.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.257285475730896e-08,
+          "relative_l2": 1.0872613634199774e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.24.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.24.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 2.421438694000244e-08,
+          "relative_l2": 7.914213570110399e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.25.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.25.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.862645149230957e-08,
+          "relative_l2": 1.0566292949398067e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.25.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.25.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 6.05359673500061e-09,
+          "relative_l2": 8.445220992077572e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.26.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.26.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.862645149230957e-08,
+          "relative_l2": 8.589449106616098e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.26.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.26.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.4901161193847656e-08,
+          "relative_l2": 8.614395697849441e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.27.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.27.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.7462298274040222e-08,
+          "relative_l2": 7.143583039056349e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.27.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.27.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 6.05359673500061e-09,
+          "relative_l2": 8.674495293116328e-07,
+          "violations": 0,
+          "elements": 4096
+        }
+      ],
+      "loss": {
+        "max_abs": 0.0,
+        "relative_l2": 0.0,
+        "violations": 0,
+        "elements": 1
+      }
+    },
+    {
+      "adapter_b": 0.01,
+      "logits": {
+        "max_abs": 0.0,
+        "relative_l2": 0.0,
+        "violations": 0,
+        "elements": 9723904
+      },
+      "failed_gradient_tensors": 0,
+      "gradients": [
+        {
+          "name": "model.layers.0.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 4.190951585769653e-09,
+          "relative_l2": 3.6285736761339677e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.0.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 4.540197551250458e-09,
+          "relative_l2": 1.607053834674932e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.0.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 3.725290298461914e-09,
+          "relative_l2": 8.015020301328925e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.0.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.3969838619232178e-08,
+          "relative_l2": 1.0598213809547887e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.1.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 1.57160684466362e-09,
+          "relative_l2": 1.7352330471545092e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.1.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.5029294192790985e-09,
+          "relative_l2": 1.1995019018489768e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.1.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 1.0244548320770264e-08,
+          "relative_l2": 1.257370328150396e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.1.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 5.3551048040390015e-09,
+          "relative_l2": 9.391250350062382e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.2.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 9.458744898438454e-10,
+          "relative_l2": 5.562261289419944e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.2.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 8.381903171539307e-09,
+          "relative_l2": 1.3060528888013758e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.2.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 1.1641532182693481e-08,
+          "relative_l2": 2.0016426900607383e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.2.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 8.381903171539307e-09,
+          "relative_l2": 9.28040452743488e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.3.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 4.190951585769653e-09,
+          "relative_l2": 9.984261416143641e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.3.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 4.284083843231201e-08,
+          "relative_l2": 9.673633759038696e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.3.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 1.1175870895385742e-08,
+          "relative_l2": 4.1557532526875726e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.3.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 5.238689482212067e-09,
+          "relative_l2": 8.489232416591765e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.4.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 6.984919309616089e-09,
+          "relative_l2": 1.3177786545096468e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.4.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.618172973394394e-08,
+          "relative_l2": 1.2959859716438801e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.4.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 5.029141902923584e-08,
+          "relative_l2": 2.618929336040515e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.4.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 9.313225746154785e-09,
+          "relative_l2": 9.866901473570385e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.5.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 1.257285475730896e-08,
+          "relative_l2": 1.3792841549295596e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.5.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.60770320892334e-08,
+          "relative_l2": 1.3337227003183669e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.5.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 1.862645149230957e-08,
+          "relative_l2": 1.3463721358007237e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.5.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.0128132998943329e-08,
+          "relative_l2": 9.575068884705422e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.6.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 3.841705620288849e-09,
+          "relative_l2": 2.292087982103319e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.6.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 3.7136487662792206e-08,
+          "relative_l2": 1.2289779806945051e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.6.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 2.2351741790771484e-08,
+          "relative_l2": 1.327376962674486e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.6.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 7.450580596923828e-09,
+          "relative_l2": 1.0695606142951753e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.7.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 5.3551048040390015e-09,
+          "relative_l2": 1.5194809848164598e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.7.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 6.984919309616089e-09,
+          "relative_l2": 9.408873015295827e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.7.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 1.1175870895385742e-08,
+          "relative_l2": 5.434549306789463e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.7.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 8.847564458847046e-09,
+          "relative_l2": 9.906914122970143e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.8.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 4.6566128730773926e-09,
+          "relative_l2": 7.996625658332821e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.8.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.3504177331924438e-08,
+          "relative_l2": 9.861209237926642e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.8.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 5.587935447692871e-09,
+          "relative_l2": 5.095903978821391e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.8.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.4901161193847656e-08,
+          "relative_l2": 1.063286646489217e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.9.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 2.7939677238464355e-09,
+          "relative_l2": 4.0563729006545785e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.9.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.60770320892334e-08,
+          "relative_l2": 9.697452492910273e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.9.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 4.889443516731262e-09,
+          "relative_l2": 4.611633340669809e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.9.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.955777406692505e-08,
+          "relative_l2": 9.357642316837764e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.10.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 5.3551048040390015e-09,
+          "relative_l2": 1.682477671652092e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.10.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 3.725290298461914e-08,
+          "relative_l2": 1.5185016355785068e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.10.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 1.5599653124809265e-08,
+          "relative_l2": 2.037622500388834e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.10.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.0244548320770264e-08,
+          "relative_l2": 9.580942931081385e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.11.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 2.7939677238464355e-09,
+          "relative_l2": 4.908326849067498e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.11.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 4.842877388000488e-08,
+          "relative_l2": 7.661904418188289e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.11.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 2.421438694000244e-08,
+          "relative_l2": 2.166727408352048e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.11.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 8.847564458847046e-09,
+          "relative_l2": 9.599820085018087e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.12.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 7.2177499532699585e-09,
+          "relative_l2": 2.689994476452307e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.12.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.60770320892334e-08,
+          "relative_l2": 1.172547889179893e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.12.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 2.0489096641540527e-08,
+          "relative_l2": 2.275584154434501e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.12.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 7.450580596923828e-09,
+          "relative_l2": 1.0189183399355333e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.13.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 5.587935447692871e-09,
+          "relative_l2": 2.554842263306438e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.13.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 4.0978193283081055e-08,
+          "relative_l2": 1.3997082964375333e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.13.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 3.725290298461914e-09,
+          "relative_l2": 3.2195054008644156e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.13.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.7695128917694092e-08,
+          "relative_l2": 9.955582049344974e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.14.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 2.0954757928848267e-09,
+          "relative_l2": 1.7019443310679125e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.14.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.7695128917694092e-08,
+          "relative_l2": 7.964218237843287e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.14.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 5.029141902923584e-08,
+          "relative_l2": 1.5793876683114886e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.14.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.30385160446167e-08,
+          "relative_l2": 1.0077274206954255e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.15.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 1.30385160446167e-08,
+          "relative_l2": 4.354605256303431e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.15.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.6298145055770874e-08,
+          "relative_l2": 8.516264817469092e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.15.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 1.30385160446167e-08,
+          "relative_l2": 9.066173421510429e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.15.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.862645149230957e-08,
+          "relative_l2": 9.649836675495633e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.16.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 1.0244548320770264e-08,
+          "relative_l2": 6.943263467781056e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.16.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.9336661100387573e-08,
+          "relative_l2": 1.0731312028044882e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.16.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 8.381903171539307e-09,
+          "relative_l2": 1.5941912052578388e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.16.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 2.2351741790771484e-08,
+          "relative_l2": 8.664900808915442e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.17.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 1.862645149230957e-08,
+          "relative_l2": 1.1766327588414827e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.17.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 5.21540641784668e-08,
+          "relative_l2": 8.996075988640198e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.17.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 1.5133991837501526e-08,
+          "relative_l2": 4.630239904413615e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.17.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.6763806343078613e-08,
+          "relative_l2": 8.252299205169923e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.18.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 1.7695128917694092e-08,
+          "relative_l2": 2.3359584446074177e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.18.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.2665987014770508e-07,
+          "relative_l2": 8.389605138783985e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.18.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 2.421438694000244e-08,
+          "relative_l2": 2.7647469669273917e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.18.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.7695128917694092e-08,
+          "relative_l2": 8.22268199216471e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.19.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 5.238689482212067e-09,
+          "relative_l2": 1.8216715601447846e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.19.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 4.0978193283081055e-08,
+          "relative_l2": 6.948671299611451e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.19.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 9.313225746154785e-09,
+          "relative_l2": 6.915746630353361e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.19.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.955777406692505e-08,
+          "relative_l2": 7.652635731411042e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.20.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 1.4901161193847656e-08,
+          "relative_l2": 1.7435220230266077e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.20.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 5.21540641784668e-08,
+          "relative_l2": 7.961825926228236e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.20.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 2.7939677238464355e-08,
+          "relative_l2": 7.428134435043743e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.20.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.210719347000122e-08,
+          "relative_l2": 5.90538002432046e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.21.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 1.3969838619232178e-09,
+          "relative_l2": 4.287556500037615e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.21.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 7.450580596923828e-09,
+          "relative_l2": 5.353025077109406e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.21.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 1.4901161193847656e-08,
+          "relative_l2": 7.651724067366412e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.21.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 2.0489096641540527e-08,
+          "relative_l2": 6.964235551939929e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.22.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 3.725290298461914e-09,
+          "relative_l2": 7.667097326606514e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.22.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.30385160446167e-08,
+          "relative_l2": 5.727401057442469e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.22.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 2.7008354663848877e-08,
+          "relative_l2": 3.401732630473796e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.22.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.862645149230957e-08,
+          "relative_l2": 6.794063262497959e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.23.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 3.259629011154175e-09,
+          "relative_l2": 6.872819433261499e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.23.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.6763806343078613e-08,
+          "relative_l2": 6.393403473551495e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.23.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 1.3969838619232178e-09,
+          "relative_l2": 2.920347011763964e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.23.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.1641532182693481e-08,
+          "relative_l2": 7.145187074771277e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.24.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 3.725290298461914e-09,
+          "relative_l2": 8.251271002855442e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.24.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.30385160446167e-08,
+          "relative_l2": 9.135107739988103e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.24.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 5.122274160385132e-09,
+          "relative_l2": 9.325842649857384e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.24.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 2.2351741790771484e-08,
+          "relative_l2": 7.64790713509768e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.25.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 5.122274160385132e-09,
+          "relative_l2": 9.679959499043634e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.25.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 2.3283064365386963e-08,
+          "relative_l2": 1.4783954994811573e-06,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.25.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 4.470348358154297e-08,
+          "relative_l2": 8.526215356357991e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.25.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 5.587935447692871e-09,
+          "relative_l2": 8.260672145599005e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.26.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 9.313225746154785e-10,
+          "relative_l2": 6.542941262261275e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.26.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 8.381903171539307e-09,
+          "relative_l2": 5.196245121116792e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.26.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 7.450580596923828e-09,
+          "relative_l2": 3.1678697712338735e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.26.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 1.1175870895385742e-08,
+          "relative_l2": 7.975180348967503e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.27.self_attn.q_proj.lora.A_cotangent",
+          "max_abs": 1.3969838619232178e-09,
+          "relative_l2": 7.637267164879556e-07,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.27.self_attn.q_proj.lora.B_cotangent",
+          "max_abs": 1.210719347000122e-08,
+          "relative_l2": 5.790423712535417e-07,
+          "violations": 0,
+          "elements": 8192
+        },
+        {
+          "name": "model.layers.27.self_attn.v_proj.lora.A_cotangent",
+          "max_abs": 1.1757947504520416e-08,
+          "relative_l2": 2.155979015547701e-06,
+          "violations": 0,
+          "elements": 4096
+        },
+        {
+          "name": "model.layers.27.self_attn.v_proj.lora.B_cotangent",
+          "max_abs": 6.984919309616089e-09,
+          "relative_l2": 8.647899492536735e-07,
+          "violations": 0,
+          "elements": 4096
+        }
+      ],
+      "loss": {
+        "max_abs": 0.0,
+        "relative_l2": 0.0,
+        "violations": 0,
+        "elements": 1
+      }
+    }
+  ],
+  "timing_scope": "VJP execution on fixed saved FP32 residuals and seed; excludes forward, loss and parameter updates",
+  "rss_scope": "isolated process including imports, runtime sessions, two correctness states and measured VJP calls",
+  "boundary_scope": "logical NumPy residual sizes; shared storage may be counted more than once",
+  "ort_graph_optimization": "disabled",
+  "ort_memory_reuse": false,
+  "threads": 1,
+  "versions": {
+    "onnax": "0.1.0",
+    "onnxruntime": "1.31.1",
+    "torch": "2.15.0",
+    "onnxscript": "0.7.2",
+    "onnx-ir": "1.1.0"
+  },
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "exported_models": {
+    "baseline": {
+      "forward": {
+        "sha256": "bef79d624f1e338f9dca23809bb22534295e4576c2770a0f67142967dd17663a",
+        "nodes": 3412,
+        "inputs": 115,
+        "outputs": 2196,
+        "initializer_bytes": 891289904
+      },
+      "backward": {
+        "sha256": "dc547c74cd4b3242f1a4b0833919c05920b4dfac4b962781f6320e640afd0e57",
+        "nodes": 32388,
+        "inputs": 2311,
+        "outputs": 112,
+        "initializer_bytes": 245624436
+      }
+    },
+    "candidate": {
+      "forward": {
+        "sha256": "f70cd028f643cc3433ca8a76f7feebf48c372842103e07069d0c2f1c22f64e37",
+        "nodes": 3412,
+        "inputs": 115,
+        "outputs": 2195,
+        "initializer_bytes": 891289904
+      },
+      "backward": {
+        "sha256": "eef788a5088672132cc9c5b3793a5e471eeac298888df25d28b9b546a065f0e5",
+        "nodes": 32387,
+        "inputs": 2310,
+        "outputs": 112,
+        "initializer_bytes": 867954292
+      }
+    }
+  },
+  "removed_forward_outputs": [
+    "v_lm_head.Transpose_824"
+  ],
+  "post_run_checks": {
+    "full_checker": {
+      "baseline-forward.onnx": true,
+      "baseline-backward.onnx": true,
+      "candidate-forward.onnx": true,
+      "candidate-backward.onnx": true
+    },
+    "frozen_forward_data_sha256": {
+      "baseline": "4c0aa74759c9162e2826ad1a498db76d6e86b8e5151c0165a0d2f4eb08e8e821",
+      "candidate": "4c0aa74759c9162e2826ad1a498db76d6e86b8e5151c0165a0d2f4eb08e8e821"
+    }
+  },
+  "full_onnx_check": true,
+  "hardware": {
+    "cpu": "Apple M1 Max",
+    "logical_cores": 10,
+    "physical_memory_bytes": 34359738368
+  },
+  "parameter_bytes": 2293760,
+  "compute_dtype": "float32",
+  "batch_size": 1,
+  "sequence_length": 64,
+  "post_run_check_scope": "Exported graph full checks, frozen data hashes, hardware metadata and scalar loss comparisons collected after timed workers completed."
+}

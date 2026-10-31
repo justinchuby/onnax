@@ -100,6 +100,8 @@ def worker(directory, variant, *, warmup, samples):
 
 
 def run(*, real=False, nf4=False, warmup=10, samples=100):
+    import onnx
+
     from examples.huggingface.benchmark import hardware
 
     if warmup < 0 or samples < 1:
@@ -187,6 +189,11 @@ def run(*, real=False, nf4=False, warmup=10, samples=100):
                     raise RuntimeError(stream.read()[-4000:])
             with open(os.path.join(directory, variant + ".json")) as stream:
                 variants[variant].update(json.load(stream))
+        for variant in variants:
+            for kind in ("forward", "backward"):
+                onnx.checker.check_model(
+                    os.path.join(directory, f"{variant}-{kind}.onnx"), full_check=True
+                )
         for index in range(2):
             with (
                 np.load(
@@ -230,6 +237,7 @@ def run(*, real=False, nf4=False, warmup=10, samples=100):
         "timing_scope": "VJP execution on fixed saved FP32 residuals and seed; excludes forward, loss and parameter updates",
         "rss_scope": "isolated process including imports, runtime sessions, two correctness states and measured VJP calls",
         "boundary_scope": "logical NumPy residual sizes; shared storage may be counted more than once",
+        "full_onnx_check": True,
         "ort_graph_optimization": "disabled",
         "ort_memory_reuse": False,
         "threads": 1,
