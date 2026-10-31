@@ -168,7 +168,10 @@ from examples.huggingface.validation import audit
 
 with pairwise_head(reference):
     result = audit(
-        model, reference, batch, reference_loss=stable_token_loss,
+        model,
+        reference,
+        batch,
+        reference_loss=stable_token_loss,
         diagnose_rounding=True,
     )
 ```
@@ -183,6 +186,13 @@ Independent fresh AdamW updates still exceed tolerance for 48 and 87 parameter
 tensors at these states with epsilon 1e-8. The
 [reference-control report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-reference-ce-m1max.json)
 retains these update failures and every original-reference comparison.
+
+For example, two gradients of 9.12e-9 and 3.73e-9 produce first updates
+-0.001431 and -0.000815. The first-step Adam formula
+$-\eta g/(|g|+\epsilon)$ reproduces their difference to about 1e-10.
+Replaying every captured component matches this formula within FP32 rounding
+bounds. Near-zero gradient sensitivity remains visible in the parameter
+comparison.
 
 The native MLX validation uses the same two-layer NF4 Qwen and independently
 updates its ONNX and Transformers adapters for four AdamW steps. It compares

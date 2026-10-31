@@ -227,7 +227,21 @@
         "independent_adamw_step": {
           "failed_parameters": 56,
           "max_abs": 0.00553085096180439,
-          "eps": 1e-08
+          "eps": 1e-08,
+          "gradients": "/tmp/onnax-native-head-initial-controls-gradients-0.npz",
+          "worst_case": {
+            "name": "model.layers.17.self_attn.v_proj.lora.B",
+            "index": [
+              3,
+              818
+            ],
+            "model_gradient": 1.2669526938680065e-07,
+            "reference_gradient": -1.1015283973847545e-07,
+            "model_after": -0.0027805333957076073,
+            "reference_after": 0.0027503175660967827,
+            "observed_delta": -0.00553085096180439,
+            "first_step_formula_delta": -0.005530851747658827
+          }
         }
       },
       "native_unit_seed/stable_ce/pairwise": {
@@ -244,7 +258,21 @@
         "independent_adamw_step": {
           "failed_parameters": 48,
           "max_abs": 0.0006159105687402189,
-          "eps": 1e-08
+          "eps": 1e-08,
+          "gradients": "/tmp/onnax-native-head-initial-controls-gradients-1.npz",
+          "worst_case": {
+            "name": "model.layers.1.self_attn.v_proj.lora.B",
+            "index": [
+              3,
+              422
+            ],
+            "model_gradient": 9.115346699672955e-09,
+            "reference_gradient": 3.727903319372672e-09,
+            "model_after": -0.0014305803924798965,
+            "reference_after": -0.0008146698237396777,
+            "observed_delta": -0.0006159105687402189,
+            "first_step_formula_delta": -0.0006159104637245575
+          }
         }
       }
     },
@@ -761,7 +789,21 @@
         "independent_adamw_step": {
           "failed_parameters": 109,
           "max_abs": 0.005571531131863594,
-          "eps": 1e-08
+          "eps": 1e-08,
+          "gradients": "/tmp/onnax-native-head-initial-controls-gradients-2.npz",
+          "worst_case": {
+            "name": "model.layers.15.self_attn.v_proj.lora.B",
+            "index": [
+              0,
+              481
+            ],
+            "model_gradient": 7.821281400310909e-08,
+            "reference_gradient": -3.294378529972164e-07,
+            "model_after": 0.014287427067756653,
+            "reference_after": 0.019858958199620247,
+            "observed_delta": -0.005571531131863594,
+            "first_step_formula_delta": -0.00557153193292888
+          }
         }
       },
       "native_unit_seed/stable_ce/pairwise": {
@@ -778,11 +820,24 @@
         "independent_adamw_step": {
           "failed_parameters": 87,
           "max_abs": 0.0016141363885253668,
-          "eps": 1e-08
+          "eps": 1e-08,
+          "gradients": "/tmp/onnax-native-head-initial-controls-gradients-3.npz",
+          "worst_case": {
+            "name": "model.layers.7.self_attn.q_proj.lora.B",
+            "index": [
+              2,
+              811
+            ],
+            "model_gradient": -4.639063355682538e-09,
+            "reference_gradient": 2.839430690571021e-09,
+            "model_after": -0.0005409938748925924,
+            "reference_after": -0.002155130263417959,
+            "observed_delta": 0.0016141363885253668,
+            "first_step_formula_delta": 0.001614136362475762
+          }
         }
       }
-    },
-    "reference_stabilizing_shift_gradient": "detached; loss invariant under the common shift"
+    }
   },
   "head_location_controls": {
     "dtype": "float32",
@@ -3080,5 +3135,91 @@
     "library_sha256": "230af4073f5846c035e4365333cfac6c5655fcc85c4ea07e57d68d433177d1c7",
     "reference_stabilizing_shift_gradient": "included in prototype autograd"
   },
-  "reference_source_sha256": "7f204e8d5b1539e6bf56f93a4874345caa09bbf9e02ddbd67852d39147c03015"
+  "reference_source_sha256": "7f204e8d5b1539e6bf56f93a4874345caa09bbf9e02ddbd67852d39147c03015",
+  "adam_conditioning": [
+    {
+      "state": "controls",
+      "reference": "native_unit_seed/torch_ce/gemm",
+      "parameters": 112,
+      "update_failures": 56,
+      "formula_max_abs_error": 1.067361405857059e-09,
+      "fp32_rounding_bound_violations": 0,
+      "worst_case": {
+        "name": "model.layers.17.self_attn.v_proj.lora.B",
+        "index": [
+          3,
+          818
+        ],
+        "model_gradient": 1.2669526938680065e-07,
+        "reference_gradient": -1.1015283973847545e-07,
+        "model_after": -0.0027805333957076073,
+        "reference_after": 0.0027503175660967827,
+        "observed_delta": -0.00553085096180439,
+        "first_step_formula_delta": -0.005530851747658827
+      }
+    },
+    {
+      "state": "controls",
+      "reference": "native_unit_seed/stable_ce/pairwise",
+      "parameters": 112,
+      "update_failures": 48,
+      "formula_max_abs_error": 1.1642022862239088e-09,
+      "fp32_rounding_bound_violations": 0,
+      "worst_case": {
+        "name": "model.layers.1.self_attn.v_proj.lora.B",
+        "index": [
+          3,
+          422
+        ],
+        "model_gradient": 9.115346699672955e-09,
+        "reference_gradient": 3.727903319372672e-09,
+        "model_after": -0.0014305803924798965,
+        "reference_after": -0.0008146698237396777,
+        "observed_delta": -0.0006159105687402189,
+        "first_step_formula_delta": -0.0006159104637245575
+      }
+    },
+    {
+      "state": "final_controls",
+      "reference": "native_unit_seed/torch_ce/gemm",
+      "parameters": 112,
+      "update_failures": 109,
+      "formula_max_abs_error": 1.4672047126285809e-08,
+      "fp32_rounding_bound_violations": 0,
+      "worst_case": {
+        "name": "model.layers.15.self_attn.v_proj.lora.B",
+        "index": [
+          0,
+          481
+        ],
+        "model_gradient": 7.821281400310909e-08,
+        "reference_gradient": -3.294378529972164e-07,
+        "model_after": 0.014287427067756653,
+        "reference_after": 0.019858958199620247,
+        "observed_delta": -0.005571531131863594,
+        "first_step_formula_delta": -0.00557153193292888
+      }
+    },
+    {
+      "state": "final_controls",
+      "reference": "native_unit_seed/stable_ce/pairwise",
+      "parameters": 112,
+      "update_failures": 87,
+      "formula_max_abs_error": 1.4910035370848534e-08,
+      "fp32_rounding_bound_violations": 0,
+      "worst_case": {
+        "name": "model.layers.7.self_attn.q_proj.lora.B",
+        "index": [
+          2,
+          811
+        ],
+        "model_gradient": -4.639063355682538e-09,
+        "reference_gradient": 2.839430690571021e-09,
+        "model_after": -0.0005409938748925924,
+        "reference_after": -0.002155130263417959,
+        "observed_delta": 0.0016141363885253668,
+        "first_step_formula_delta": 0.001614136362475762
+      }
+    }
+  ]
 }
