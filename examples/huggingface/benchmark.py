@@ -55,9 +55,9 @@ def measure(
     if projection_precision not in ("fp32", "bf16"):
         raise ValueError("Expected fp32 or bf16 projection precision")
     if projection_precision == "bf16" and (
-        nf4 or mode not in ("pytorch", "joint") or (mode == "joint" and provider != "mlx")
+        mode not in ("pytorch", "joint") or (mode == "joint" and provider != "mlx")
     ):
-        raise ValueError("BF16 measurement uses PyTorch or MLX joint mode with FP32 storage")
+        raise ValueError("BF16 measurement uses PyTorch or MLX joint mode")
     torch.set_num_threads(1)
     start = time.perf_counter()
     if mode == "pytorch":

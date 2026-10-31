@@ -95,7 +95,7 @@ def dequantize(packed, scales, shape, *, block_size=64):
     return values.reshape(-1)[:size].reshape(shape)
 
 
-def _function(k, n, block_size, *, transpose=False, opset=18):
+def _function(k, n, block_size, *, transpose=False, opset=18, precision="fp32", adjoint=False):
     blocks = math.ceil(k * n / block_size)
     x = ir.val("x", dtype=ir.DataType.FLOAT)
     p = ir.val("packed", dtype=ir.DataType.UINT8, shape=[blocks * block_size // 2])
@@ -123,12 +123,24 @@ def _function(k, n, block_size, *, transpose=False, opset=18):
     flat = tape.op("Reshape", [scaled, constant([-1])])
     trimmed = tape.op("Slice", [flat, constant([0]), constant([k * n]), constant([0])])
     weight = tape.op("Reshape", [trimmed, constant([k, n])])
+    operand = x
+    if precision == "bf16":
+        weight = tape.op("Cast", [weight], {"to": int(ir.DataType.BFLOAT16)})
+        if adjoint:
+            weight = tape.op("Cast", [weight], {"to": int(ir.DataType.FLOAT)})
+        else:
+            operand = tape.op("Cast", [x], {"to": int(ir.DataType.BFLOAT16)})
     if transpose:
         weight = tape.op("Transpose", [weight], {"perm": [1, 0]})
-    output = tape.op("MatMul", [x, weight])
+    output = tape.op("MatMul", [operand, weight])
+    if precision == "bf16" and not adjoint:
+        output = tape.op("Cast", [output], {"to": int(ir.DataType.FLOAT)})
     output.dtype = ir.DataType.FLOAT
     output.shape = None
-    name = f"{'InputGrad' if transpose else 'MatMul'}_{k}_{n}_{block_size}"
+    prefix = "InputGrad" if transpose else "MatMul"
+    if precision == "bf16":
+        prefix = "InputGradBF16" if transpose else ("TangentBF16" if adjoint else "MatMulBF16")
+    name = f"{prefix}_{k}_{n}_{block_size}"
     return ir.Function(
         DOMAIN,
         name,
@@ -139,7 +151,7 @@ def _function(k, n, block_size, *, transpose=False, opset=18):
     )
 
 
-def _rules(forward_name, backward_name):
+def _rules(forward_name, backward_name, tangent_name=None):
     @onnax.register_vjp(DOMAIN, forward_name, since_version=1, until_version=1)
     def vjp(ctx, node, cotangents, input_indices):
         if list(input_indices) != [0]:
@@ -153,27 +165,32 @@ def _rules(forward_name, backward_name):
         output.shape = ir.Shape(ctx.input(node, 0).shape)
         return {0: output}
 
-    for name in (forward_name, backward_name):
+    calls = [(forward_name, tangent_name or forward_name), (backward_name, backward_name)]
+    if tangent_name is not None:
+        calls.append((tangent_name, tangent_name))
+    for name, operation in calls:
 
-        def register(op):
+        def register(op, target):
             @onnax.register_jvp(DOMAIN, op, since_version=1, until_version=1)
             def jvp(ctx, node, tangents):
                 if set(tangents) != {0}:
                     raise ValueError("NF4 base weights and scales are frozen")
                 output = ctx.op(
-                    op, tangents[0], ctx.input(node, 1), ctx.input(node, 2), domain=DOMAIN
+                    target, tangents[0], ctx.input(node, 1), ctx.input(node, 2), domain=DOMAIN
                 )
                 output.dtype = node.outputs[0].dtype
                 output.shape = ir.Shape(node.outputs[0].shape)
                 return [output]
 
-        register(name)
+        register(name, operation)
 
 
-def lower(model, *, names=("base.W", "base.C"), block_size=64):
+def lower(model, *, names=("base.W", "base.C"), block_size=64, precision="fp32"):
     """Replace frozen FP32 matrix initializers with NF4 function calls."""
     from onnx_ir.passes.common import ShapeInferencePass
 
+    if precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 NF4 projection precision")
     if isinstance(names, str) or not names or len(set(names)) != len(names):
         raise ValueError("Select nonempty unique frozen initializer names")
     result = ShapeInferencePass()(model.clone()).model
@@ -199,11 +216,19 @@ def lower(model, *, names=("base.W", "base.C"), block_size=64):
         packed, scales = quantize(array, block_size=block_size)
         k, n = array.shape
         opset = result.graph.opset_imports[""]
-        forward = _function(k, n, block_size, opset=opset)
-        backward = _function(k, n, block_size, transpose=True, opset=opset)
+        forward = _function(k, n, block_size, opset=opset, precision=precision)
+        backward = _function(
+            k, n, block_size, transpose=True, opset=opset, precision=precision, adjoint=True
+        )
         result.functions[forward.identifier()] = forward
         result.functions[backward.identifier()] = backward
-        _rules(forward.name, backward.name)
+        tangent = None
+        if precision == "bf16":
+            tangent = _function(
+                k, n, block_size, opset=opset, precision=precision, adjoint=True
+            )
+            result.functions[tangent.identifier()] = tangent
+        _rules(forward.name, backward.name, tangent.name if tangent is not None else None)
         q = ir.val(name + ".nf4", const_value=ir.tensor(packed))
         s = ir.val(name + ".absmax", const_value=ir.tensor(scales))
         result.graph.register_initializer(q)
@@ -248,14 +273,20 @@ def lower(model, *, names=("base.W", "base.C"), block_size=64):
 def register_rules(model):
     """Install global rules for NF4 functions loaded from this example's exports."""
     for function in model.functions.values():
-        if function.domain != DOMAIN or not function.name.startswith("MatMul_"):
+        if function.domain != DOMAIN or not function.name.startswith(
+            ("MatMul_", "MatMulBF16_")
+        ):
             continue
         parts = function.name.split("_")
         if len(parts) != 4:
             raise ValueError("Unknown NF4 reference function format")
         k, n, block_size = map(int, parts[1:])
         _blocks((k, n), block_size)
-        backward = f"InputGrad_{k}_{n}_{block_size}"
+        bf16 = parts[0] == "MatMulBF16"
+        backward = f"InputGrad{'BF16' if bf16 else ''}_{k}_{n}_{block_size}"
         if (DOMAIN, backward, "") not in model.functions:
             raise ValueError("Load the NF4 forward export with input-gradient functions")
-        _rules(function.name, backward)
+        tangent = f"TangentBF16_{k}_{n}_{block_size}" if bf16 else None
+        if tangent is not None and (DOMAIN, tangent, "") not in model.functions:
+            raise ValueError("Load the NF4 BF16 export with FP32 tangent functions")
+        _rules(function.name, backward, tangent)

@@ -216,8 +216,8 @@ def prepare(
 ):
     if projection_precision not in ("fp32", "bf16"):
         raise ValueError("Expected fp32 or bf16 projection precision")
-    if projection_precision == "bf16" and (nf4 or mode != "joint"):
-        raise ValueError("BF16 projection training uses joint execution with an FP32 base")
+    if projection_precision == "bf16" and mode != "joint":
+        raise ValueError("BF16 projection training uses joint execution")
     reference = reference_model(real)
     base = build_base(reference)
     adapted, params, mapping = inject(base)
@@ -226,7 +226,7 @@ def prepare(
     if nf4:
         from examples.huggingface.nf4 import lower_decoder
 
-        graph, quantization = lower_decoder(graph, reference)
+        graph, quantization = lower_decoder(graph, reference, precision=projection_precision)
     if projection_precision == "bf16":
         from examples.huggingface.mixed_precision import bf16_projections
 
