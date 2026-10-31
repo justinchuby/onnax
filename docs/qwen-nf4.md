@@ -265,6 +265,16 @@ from 5.50393 to 4.85798. The
 [stable-reference trajectory report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-nf4-mlx-stable-reference-100.json)
 retains all step comparisons and `strict_checks_passed=false`.
 
+Run the matched CPU control with `--provider cpu` and omit `--library`. In
+its 100-step stable-reference run, all independent parameter and loss checks
+pass, as do all shared-parameter checks. Independent gradients exceed
+tolerance at steps 92–100 and logits at steps 94–100. At step 100, the largest
+parameter difference is 8.90e-7 on CPU and 2.56e-6 on MLX. The
+[CPU control report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-nf4-cpu-stable-reference-100.json)
+preserves these results. Both runtimes therefore show late independent
+gradient drift; the additional MLX parameter drift is the next comparison
+to localize.
+
 The [paired runtime audit](qwen-runtime-audit.md) compares CPU and MLX gradients
 with fixed forward residuals and provides reusable segmented ONNX execution.
 

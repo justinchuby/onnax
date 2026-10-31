@@ -74,3 +74,23 @@ def test_cli_saves_failed_report_and_exits_nonzero(monkeypatch, tmp_path):
         mlx_validation.main()
     assert error.value.code == 1
     assert json.loads(output.read_text()) == report
+
+
+def test_cpu_stable_reference_updates():
+    report = mlx_validation.run(provider="cpu", stable_reference=True, steps=2)
+    assert report["strict_checks_passed"]
+    assert report["independent_updates_passed"]
+    assert report["provider"] == "CPUExecutionProvider"
+    assert report["library"] is None
+    assert report["library_sha256"] is None
+    assert not report["cpu_fallback_disabled"]
+    assert "mlx" not in report["versions"]
+    assert report["frozen_buffers_unchanged"]
+
+
+@pytest.mark.parametrize(
+    "options", [{"provider": "invalid"}, {"provider": "cpu", "library": "unused"}]
+)
+def test_reject_invalid_runtime_options(options):
+    with pytest.raises(ValueError):
+        mlx_validation.run(**options)

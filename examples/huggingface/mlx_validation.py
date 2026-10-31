@@ -1,6 +1,6 @@
 # Copyright (c) 2026 onnax contributors
 # SPDX-License-Identifier: MIT
-"""Validate tiny NF4 Qwen forward/VJP on the native MLX execution provider."""
+"""Compare independent tiny NF4 Qwen updates on native MLX or CPU."""
 
 import argparse
 import copy
@@ -25,7 +25,7 @@ class ValidationError(AssertionError):
 
     def __init__(self, report):
         self.report = report
-        super().__init__("Native MLX validation failed; inspect the saved per-step report")
+        super().__init__("Runtime validation failed; inspect the saved per-step report")
 
 
 def _reference_audit(model, reference, batch, *, stable_reference=False, **kwargs):
@@ -57,8 +57,20 @@ def _same_parameter_control(model, reference, batch, after_updates, *, stable_re
             parameter.grad = gradient
 
 
-def run(*, library=None, segmented=False, target_nodes=1024, steps=4, stable_reference=False):
-    """Compare independent FP32 AdamW updates with CPU fallback disabled."""
+def run(
+    *,
+    library=None,
+    segmented=False,
+    target_nodes=1024,
+    steps=4,
+    stable_reference=False,
+    provider="mlx",
+):
+    """Compare independent FP32 AdamW updates on the selected runtime."""
+    if provider not in ("cpu", "mlx"):
+        raise ValueError("Expected provider 'cpu' or 'mlx'")
+    if provider == "cpu" and library is not None:
+        raise ValueError("A development MLX library requires provider='mlx'")
     if steps < 1:
         raise ValueError("Expected a positive training step count")
     if library is not None:
@@ -72,18 +84,25 @@ def run(*, library=None, segmented=False, target_nodes=1024, steps=4, stable_ref
     torch.set_num_threads(1)
     model, reference = prepare(nf4=True, save_activations=True)
     forward, _, _ = split_vjp(model.onnx.model, model.onnx.vjp_model)
+    session_factory = session
+    if provider == "cpu":
+        from examples.lora.train import session as cpu_session
+
+        session_factory = cpu_session
     if segmented:
         from examples.huggingface.segmented import SegmentedSession
 
         model.onnx.forward_session = SegmentedSession(
-            forward, target_nodes=target_nodes, session_factory=session
+            forward, target_nodes=target_nodes, session_factory=session_factory
         )
         model.onnx.backward_session = SegmentedSession(
-            model.onnx.optimized_vjp, target_nodes=target_nodes, session_factory=session
+            model.onnx.optimized_vjp,
+            target_nodes=target_nodes,
+            session_factory=session_factory,
         )
-    else:
-        model.onnx.forward_session = session(forward)
-        model.onnx.backward_session = session(model.onnx.optimized_vjp)
+    elif provider == "mlx":
+        model.onnx.forward_session = session_factory(forward)
+        model.onnx.backward_session = session_factory(model.onnx.optimized_vjp)
     reference = add_reference_adapters(reference, model)
     ids = torch.tensor([[1, 4, 5, 6, 2], [1, 7, 2, 0, 0]])
     mask = ids.ne(0).long()
@@ -183,16 +202,23 @@ def run(*, library=None, segmented=False, target_nodes=1024, steps=4, stable_ref
         "platform": platform.platform(),
         "versions": {
             name: importlib.metadata.version(name)
-            for name in ("onnxruntime", "onnxruntime-ep-mlx", "torch", "mlx")
+            for name in (
+                ("onnxruntime", "onnxruntime-ep-mlx", "torch", "mlx")
+                if provider == "mlx"
+                else ("onnxruntime", "torch")
+            )
         },
-        "library": os.path.abspath(library) if library else "installed plugin",
+        "library": os.path.abspath(library)
+        if library
+        else ("installed plugin" if provider == "mlx" else None),
         "library_sha256": library_hash,
         "checks": checks,
-        "provider": "MLXExecutionProvider",
-        "cpu_fallback_disabled": True,
+        "provider": "MLXExecutionProvider" if provider == "mlx" else "CPUExecutionProvider",
+        "cpu_fallback_disabled": provider == "mlx",
         "ort_graph_optimization": "disabled",
         "runtime_dtype": "float32",
-        "lut4_fusion_disabled": os.environ.get("ONNXRUNTIME_EP_MLX_NO_LUT4_FUSION") == "1",
+        "lut4_fusion_disabled": provider == "mlx"
+        and os.environ.get("ONNXRUNTIME_EP_MLX_NO_LUT4_FUSION") == "1",
         "boundary": "CPU PyTorch loss, parameters and AdamW; NumPy session exchange",
         "adapter_tensors": len(model.onnx.adapters),
         "steps": len(losses),
@@ -208,6 +234,7 @@ def run(*, library=None, segmented=False, target_nodes=1024, steps=4, stable_ref
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--library", help="Development MLX EP dylib")
+    parser.add_argument("--provider", choices=("cpu", "mlx"), default="mlx")
     parser.add_argument("--segmented", action="store_true")
     parser.add_argument("--segment-nodes", type=int, default=1024)
     parser.add_argument("--steps", type=int, default=4)
@@ -218,6 +245,7 @@ def main():
     try:
         result = run(
             library=args.library,
+            provider=args.provider,
             segmented=args.segmented,
             target_nodes=args.segment_nodes,
             steps=args.steps,
