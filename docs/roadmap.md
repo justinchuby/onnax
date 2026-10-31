@@ -96,8 +96,11 @@ source, precision, storage and loss policies for these measurements.
    complete 30 updates per runtime: CPU/MLX final held-out loss averages
    2.666917/2.666826, with a maximum paired gap of 0.000255. The matched BF16
    run reaches 2.673957/2.669161, with a maximum paired gap of 0.005285. All
-   sampled validation curves decrease. The earlier 18/6 split and shared-parameter replays
-   remain available for numerical diagnosis.
+   sampled validation curves decrease. Shared-parameter replay reproduces every
+   recorded validation loss on its original runtime. CPU/MLX shared-state loss
+   gaps peak at 4.60e-7 for FP32 and 0.000932 for BF16; BF16 gradient cosine is
+   at least 0.999745. The report retains all original pointwise tolerance failures.
+   The earlier 18/6 split remains available for numerical diagnosis.
 2. **Evaluation cost.** Joint mode now creates a reusable loss-only session for
    no-grad evaluation. Tiny FP32/BF16 checks cover three adapter states,
    dynamic shapes, padding and ignored labels with bitwise loss agreement.

@@ -241,7 +241,42 @@ validation losses. Cross-engine replay holds the adapters fixed while comparing
 loss and gradient direction. Evaluating both trained adapters on one engine then
 shows the effect of their different parameter trajectories.
 
-### Recorded shared-state replay
+### Shared-state replay on No Robots
+
+The three final CPU adapters and three final MLX adapters are replayed on both
+runtimes with the pinned 128/32 No Robots split. Each replay checks parameter
+and corpus identities, evaluates all 32 held-out sequences and computes the
+gradient for the final scheduled training batch. Same-engine FP32 replay
+reproduces all six recorded validation losses exactly.
+
+At shared FP32 parameters, the largest validation-loss gap is **4.60e-7**.
+Gradient cosine similarity is at least **0.99999999959**, and relative L2
+difference is at most **2.86e-5**. Four states pass every element at
+`rtol=1e-4, atol=1e-6`. Each seed-43 state has two failing elements out of
+573,440: `model.layers.26.self_attn.v_proj.lora.A[35,0]` and `[35,2]`, with
+absolute gaps of 1.64e-6 to 1.72e-6. Frozen weights remain unchanged.
+
+With BF16 projections, the largest shared-state validation-loss gap is
+**0.000932**. Gradient cosine similarity is at least **0.999745**, with relative
+L2 difference at most **0.022568**. The original pointwise tolerance flags
+408,820–443,126 of 573,440 elements per state. Same-engine replay reproduces
+every saved BF16 validation loss exactly, and frozen weights remain unchanged.
+
+The minimum BF16 gradient cosine rises from 0.846358 along independently trained
+trajectories to 0.999745 at shared parameters. Different parameter trajectories
+account for much of the observed direction gap. Evaluating both sets of final
+adapters on CPU gives mean validation losses of 2.673957 for CPU-trained
+adapters and 2.668943 for MLX-trained adapters; paired seed gaps are
+0.00445–0.00581.
+
+The {download}`No Robots shared-state report
+<../examples/huggingface/reports/qwen3-no-robots-shared-state-replay-m1max.json>`
+records all twelve paired comparisons, original tolerance checks, sample
+failing coordinates, source/capture hashes and four isolated process journals.
+Use the commands above with the No Robots corpus and its saved report/capture
+pairs to reproduce the experiment.
+
+### Shared-state replay on the 18/6 local corpus
 
 All six final adapter states were evaluated on both CPU and MLX. Same-engine
 replay reproduces every saved validation loss exactly. At shared parameters,
