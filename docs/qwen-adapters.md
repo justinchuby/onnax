@@ -142,32 +142,32 @@ ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.benchmark 
 On Apple M1 Max, with NF4 decoder weights, FP32 computation and AdamW, batch one,
 sequence length 64 and 63 valid shifted targets per update:
 
-| Measurement | Joint module |
-| --- | ---: |
-| Full construction, differentiation and initialization | 150.76 s |
-| Native session factory | 3.78 s |
-| Training step median / P95 | 1.353 / 1.388 s |
-| Valid tokens per second | 46.55 |
-| Peak process RSS | 5.84 GiB |
-| Returned adapter gradients | 2.19 MiB |
+| Path | Step median / P95 (s) | Valid tokens/s | Peak process RSS (GiB) |
+| --- | ---: | ---: | ---: |
+| Saved VJP | 1.650 / 1.717 | 38.18 | 9.79 |
+| Chunked head, recomputed body | 1.511 / 1.539 | 41.71 | 7.99 |
+| Joint loss/gradients | 1.353 / 1.388 | 46.55 | 5.84 |
 
-The run uses 10 warmups and 100 measured updates. Loss on the repeated benchmark
-text decreases from 4.56 to 0.00059 across all 110 updates. The module returns
-loss and parameter gradients through its public session boundary. ORT graph
-optimization and CPU fallback are disabled.
+The sequential runs use the same library, weights, precision, batch and thread
+settings, with 10 warmups and 100 measured updates. The joint path takes 18%
+less step time and 40% less peak RSS than saved VJP in this configuration.
+RSS includes model construction, runtime, arrays and optimizer allocations.
 
-A sequential saved-VJP run with the same provider, NF4 weights, precision,
-batch, thread settings, warmups and sample count measured 1.650 s median,
-1.717 s P95 and 9.79 GiB peak process RSS. The joint path takes 18% less step
-time and 40% less peak RSS in this configuration. Saved VJP retains 1.30 GiB
-of logical residual arrays across the public forward/backward boundary;
-the joint module returns 2.19 MiB of parameter gradients. The
-[saved-path report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-saved-eager-m1max.json)
-records the complete matched run.
+Saved VJP retains 1.30 GiB of logical residual arrays across the public
+forward/backward boundary. The joint module returns 2.19 MiB of adapter
+gradients. The chunked path uses 128 token rows per head call and recomputes
+the transformer body in backward; this batch's 63 targets fit in one head chunk.
 
-The [measurement JSON](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-joint-eager-m1max.json)
-records the model revision, source commits, library digest, thread settings,
-logical input/output bytes, individual timings and measurement observations.
+Joint construction, differentiation and initialization take 150.76 s, including
+3.78 s in the native session factory. Its loss on the repeated benchmark text
+decreases from 4.56 to 0.00059 across all 110 updates. ORT graph optimization
+and CPU fallback are disabled.
+
+The [joint](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-joint-eager-m1max.json),
+[saved](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-saved-eager-m1max.json)
+and [chunked](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-chunked-eager-m1max.json)
+measurement reports record the model revision, source commits, library digest,
+thread settings, logical input/output bytes, individual timings and observations.
 
 ## PEFT files
 
