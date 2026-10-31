@@ -103,6 +103,13 @@ Both engines complete 30 updates and preserve their frozen weights.
 | FP32 | 7.310223 ± 0.494285 | 7.310187 ± 0.494544 | 0.000327 |
 | BF16 | 7.211187 ± 0.345413 | 7.384151 ± 0.516308 | 0.424632 |
 
+```{figure} _static/qwen-precision-quality.svg
+:alt: FP32 and BF16 held-out token loss over 30 updates, comparing CPU and MLX across three seeds.
+
+Mean validation curves on the 18/6 local corpus. Shaded bands show the sample
+standard deviation across three seeds.
+```
+
 Every sampled FP32 validation gap stays below 0.000327. Sampled trajectory
 gradients have a minimum cosine similarity of **0.999991**. Final adapter vectors
 have relative L2 differences of 0.000183–0.000756; individual entries differ by
@@ -271,3 +278,19 @@ Use `--corpus no-robots.txt --train-lines 128` for training and pass the same
 file to replay. The {download}`recorded selection
 <../examples/huggingface/reports/qwen3-no-robots-quality-corpus.json>` fixes the
 160 sample IDs used by the extended experiment.
+
+
+## Plot recorded comparisons
+
+The plotting script reads the saved JSON reports in an isolated environment:
+
+```bash
+uv run --isolated --no-project --with matplotlib==3.11.2 python tools/plot_training_quality.py \
+  examples/huggingface/reports/qwen3-nf4-fp32-training-quality-m1max.json \
+  examples/huggingface/reports/qwen3-nf4-bf16-training-quality-m1max.json \
+  --output quality.svg
+```
+
+It checks matching data, optimizer settings and seeds before plotting the means
+and seed standard deviations. Matplotlib is a plotting dependency; the training
+runtime uses its existing environment.
