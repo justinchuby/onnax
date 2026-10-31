@@ -89,6 +89,19 @@ outputs byte for byte. Running either set of final parameters on both ONNX
 executors produced identical logits on the audit sample. The remaining
 five-step update discrepancy is tracked separately from checkpoint recovery.
 
+On Qwen3-0.6B, 30 native MLX updates reduced validation loss from 7.4406 to
+6.2499. Checkpoint-15 recovery reproduced all 112 adapters, Adam/scheduler
+state and loaded ONNX forward/loss/gradient outputs byte for byte. Frozen
+weights and the PEFT adapter format round trip also matched exactly.
+
+Independent forward, loss and gradient comparisons exceed the original
+tolerance on this model. The first frozen q projection already exposes four
+BF16 output differences between PyTorch and MLX with identical operands;
+ReferenceEvaluator matches MLX. [Issue #116](https://github.com/justinchuby/onnax/issues/116)
+records FP32 accumulation and BF16 rounding near midpoint boundaries. The
+complete training and recovery evidence is in
+`reports/qwen3-bf16-joint-sft-m1max.json`.
+
 Inspect projection inputs, outputs and incoming gradients at the same parameter
 state with:
 
