@@ -115,6 +115,67 @@ absolute difference is `9.71e-7` for zero B and `9.55e-7` for nonzero B.
 This report checks operation pullbacks at observed activations. The paired audit
 above tracks the complete-model gradient comparison with Transformers.
 
+## Calibrate the wide output-head reduction
+
+The frozen output head maps 1,024 hidden features to 151,936 vocabulary entries.
+Its input gradient reduces across the vocabulary. On the measured M1 Max, the
+ordinary PyTorch and NumPy products return the same values at the sampled
+coordinates. Scalar `math.fsum` references reveal substantially smaller errors
+in ORT's product and in a short-block pairwise FP32 reduction:
+
+| Head input-gradient calculation | Largest error at sampled coordinates |
+| --- | ---: |
+| ORT CPU | 2.21e-9 |
+| PyTorch CPU, `highest` precision | 9.69e-7 |
+| NumPy | 9.69e-7 |
+| PyTorch, pairwise FP32 blocks of 128 | 3.72e-10 |
+
+The {download}`head-reduction report <../examples/huggingface/reports/qwen3-nf4-head-reduction.json>`
+records the actual operands' dimensions, coordinates, scalar references,
+backend values and software versions. Reproduce it with:
+
+```bash
+uv run python -m examples.huggingface.head_reduction_audit --real --nf4 \
+  --output head-reduction.json
+```
+
+`examples.huggingface.reference_head.pairwise_head` keeps the reference model's
+ordinary Linear forward and changes its frozen-head pullback. Short vocabulary
+blocks produce FP32 matrix products, which are accumulated with a binary carry
+tree. The reference keeps its parameter names and state dict. The context restores
+the original forward method on exit. Scalar higher-precision arithmetic is used
+to inspect selected dot products; model computation and optimizer state remain FP32.
+
+## Follow independent parameter trajectories
+
+The trajectory CLI initializes two adapter copies, then executes separate AdamW
+updates. It reads the version-controlled corpus, uses right-padded sequences of
+length 64 and normalizes each group of four microbatches by its total valid token
+count. It compares gradients, parameters and both optimizer moments after each
+update. Failed final checks give a nonzero exit status after saving the report.
+
+```bash
+uv run python -m examples.huggingface.reference_trajectory --real --nf4 \
+  --steps 30 --output independent.json
+```
+
+The {download}`default-epsilon run <../examples/huggingface/reports/qwen3-nf4-independent-pairwise.json>`
+and {download}`epsilon 1e-4 run <../examples/huggingface/reports/qwen3-nf4-independent-pairwise-eps1e-4.json>`
+both completed 30 steps. The calibrated initial gradient check passes for all 112
+adapters. The initial forward comparison and independent update trajectories
+still have failures at `rtol=1e-4, atol=1e-6`; each report retains them.
+
+| AdamW epsilon | First update's maximum parameter difference | Final maximum parameter difference |
+| --- | ---: | ---: |
+| 1e-8 | 4.46e-4 | 3.42e-3 |
+| 1e-4 | 8.50e-7 | 2.51e-4 |
+
+The first default-epsilon update illustrates the sensitivity near zero: gradients
+`9.52e-9` and `5.13e-9` produce a parameter difference of `4.46e-4`. Adam's first
+step, $-\eta g/(|g|+\epsilon)$, reproduces this difference. The larger epsilon
+reduces this effect, while later trajectory checks continue to fail. Both runs
+use the same tolerances and verify unchanged frozen ONNX initializer hashes.
+
 ## Reuse smaller ONNX sessions
 
 `examples.huggingface.segmented.SegmentedSession` cuts a flat tensor graph into
