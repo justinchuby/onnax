@@ -172,3 +172,23 @@ def test_bf16_pairwise_head_preserves_forward_and_matches_scalar_adjoint():
         dtype=np.float32,
     ).reshape(2, 3, 7)
     np.testing.assert_allclose(x.grad.numpy(), expected, rtol=1e-4, atol=1e-6)
+
+
+def test_constant_bf16_reference_products_skip_backward_storage():
+    from examples.huggingface.mixed_precision import _Product
+    from examples.huggingface.reference_head import _BF16FrozenHead
+
+    class ConstantContext:
+        needs_input_grad = (False, False)
+
+        def save_for_backward(self, *args):
+            raise AssertionError("Constant products saved backward operands")
+
+    a = torch.tensor([[0.1, 0.3]], dtype=torch.float32)
+    b = torch.tensor([[0.2, 0.4], [0.5, 0.7]], dtype=torch.float32)
+    actual = _Product.forward(ConstantContext(), a, b)
+    expected = (a.bfloat16() @ b.bfloat16()).float()
+    torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+    actual = _BF16FrozenHead.forward(ConstantContext(), a, b, 128)
+    expected = (a.bfloat16() @ b.bfloat16().T).float()
+    torch.testing.assert_close(actual, expected, rtol=0, atol=0)

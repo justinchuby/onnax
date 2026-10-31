@@ -12,6 +12,7 @@ import numpy as np
 import onnx
 import onnx_ir as ir
 import torch
+from onnx_ir.passes import common
 from torch.autograd.function import once_differentiable
 
 import onnax
@@ -142,6 +143,10 @@ class JointLoss(torch.nn.Module):
         self.last_saved_gradient_bytes = 0
         self.last_input_bytes = self.last_output_bytes = 0
         self.timings = {"exchange": [], "loss_gradient": []}
+        self.evaluation_timings = {"session_creation": [], "exchange": [], "loss": []}
+        self.loss_model = self.loss_executor = None
+        self._session_factory = session_factory
+        self._closed = False
         self.gradient = onnax.grad(model, inputs=list(self.names), output=self.output)
         if optimize:
             self.gradient = optimize_training_graph(self.gradient)
@@ -156,6 +161,46 @@ class JointLoss(torch.nn.Module):
             "loss_gradient",
             session_factory=session_factory,
         )
+
+    def close(self):
+        """Release training/evaluation sessions and their temporary model files."""
+        self.executor = self.loss_executor = None
+        self.directory.cleanup()
+        self._closed = True
+
+    def _evaluate(self, feeds, preparation_seconds):
+        if self.loss_executor is None:
+            start = time.perf_counter()
+            # Keep the optimized primal exactly as used by the training graph.
+            self.loss_model = self.gradient.clone()
+            del self.loss_model.graph.outputs[1:]
+            common.RemoveUnusedNodesPass()(self.loss_model)
+            self.loss_executor = graph_session(
+                self.loss_model,
+                self.directory.name,
+                "loss",
+                session_factory=self._session_factory,
+            )
+            self._loss_inputs = {value.name for value in self.loss_model.graph.inputs}
+            self.evaluation_timings["session_creation"].append(time.perf_counter() - start)
+        start = time.perf_counter()
+        parameters = {
+            name: value.detach().numpy()
+            for name, value in zip(self.names, self.adapters, strict=True)
+        }
+        inputs = {
+            name: value
+            for name, value in {**feeds, **parameters}.items()
+            if name in self._loss_inputs
+        }
+        prepared = time.perf_counter()
+        values = self.loss_executor.run([self.loss_model.graph.outputs[0].name], inputs)
+        self.evaluation_timings["exchange"].append(preparation_seconds + prepared - start)
+        self.evaluation_timings["loss"].append(time.perf_counter() - prepared)
+        self.last_input_bytes = sum(value.nbytes for value in inputs.values())
+        self.last_output_bytes = values[0].nbytes
+        self.last_saved_gradient_bytes = 0
+        return torch.from_numpy(values[0])
 
     def _load_from_state_dict(self, state_dict, prefix, *args, **kwargs):
         identity = state_dict.get(prefix + "base_identity")
@@ -223,6 +268,8 @@ class JointLoss(torch.nn.Module):
         }
 
     def forward(self, **feeds):
+        if self._closed:
+            raise RuntimeError("JointLoss sessions are closed")
         start = time.perf_counter()
         if any(p.device.type != "cpu" or p.dtype != torch.float32 for p in self.adapters):
             raise ValueError("Expected CPU FP32 adapter parameters")
@@ -256,4 +303,7 @@ class JointLoss(torch.nn.Module):
                 ((labels < 0) & (labels != -100)) | (labels >= self.causal_loss["vocabulary"])
             ):
                 raise ValueError("Labels must be vocabulary IDs or -100")
-        return _JointFunction.apply(self, arrays, time.perf_counter() - start, *self.adapters)
+        preparation_seconds = time.perf_counter() - start
+        if not torch.is_grad_enabled():
+            return self._evaluate(arrays, preparation_seconds)
+        return _JointFunction.apply(self, arrays, preparation_seconds, *self.adapters)

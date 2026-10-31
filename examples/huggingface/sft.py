@@ -596,8 +596,7 @@ def run(
         from examples.huggingface.precision import audit64
 
         if mode == "joint":
-            model.onnx.executor = None
-            model.onnx.directory.cleanup()
+            model.onnx.close()
         else:
             model.onnx.forward_session = model.onnx.backward_session = None
             model.onnx.runtime_directory.cleanup()

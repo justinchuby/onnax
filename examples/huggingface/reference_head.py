@@ -64,7 +64,8 @@ class _BF16FrozenHead(_FrozenHead):
         if weight.requires_grad:
             raise ValueError("The reference head weight must be frozen")
         rounded = weight.to(torch.bfloat16)
-        ctx.save_for_backward(rounded.float())
+        if ctx.needs_input_grad[0]:
+            ctx.save_for_backward(rounded.float())
         ctx.block_size = block_size
         return (hidden.to(torch.bfloat16) @ rounded.T).float()
 

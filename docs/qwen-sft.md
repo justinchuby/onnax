@@ -76,6 +76,15 @@ The derivative optimizer uses ONNXScript constant folding followed by IR
 cleanup and common-subexpression elimination, sharing repeated low-rank
 products without a full-graph pattern search for every candidate node.
 
+In joint mode, `torch.no_grad()` and `torch.inference_mode()` evaluate a
+loss-only graph. The wrapper derives it from the optimized training graph by
+removing gradient outputs and unused nodes, then creates a reusable evaluation
+session on first use. Each evaluation reads the current adapters and returns
+the scalar loss. Session creation, array exchange and loss execution have
+separate `evaluation_timings` entries. The evaluation session adds its own
+runtime weight storage; call `model.onnx.close()` to release both sessions and
+their temporary model files.
+
 The tiny run trains for 100 updates. The real run uses 30 updates, microbatch
 one, four accumulation steps and a 64-token maximum length. Resume with
 `--resume qwen_real/checkpoint-15`. The wrapper recreates the base and validates

@@ -106,7 +106,8 @@ class _Product(torch.autograd.Function):
     @staticmethod
     def forward(ctx, a, b):
         qa, qb = a.to(torch.bfloat16), b.to(torch.bfloat16)
-        ctx.save_for_backward(qa.float(), qb.float())
+        if any(ctx.needs_input_grad):
+            ctx.save_for_backward(qa.float(), qb.float())
         return (qa @ qb).float()
 
     @staticmethod
