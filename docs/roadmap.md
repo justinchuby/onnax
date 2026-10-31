@@ -62,30 +62,60 @@ tools to exported ONNX derivatives. [NF4 Qwen fine-tuning](qwen-nf4.md) extends
 the same bridge to packed decoder weights, independent adapter updates and
 fresh-process checkpoint recovery.
 
-Native FP32 Qwen SFT now completes 30 updates, exchanges standard PEFT adapters
-and reproduces checkpoint-15 recovery byte for byte. The stable reference
-qualifies all 112 adapter gradients at the training endpoints and through
-standard PEFT. [Reference accuracy checks](qwen-reference-accuracy.md) retain
-the remaining pointwise-logit and independent-update differences, including
-captured Adam-state histories.
+### Qwen fine-tuning acceptance
 
-The experimental MLX packed-lookup MatMul kernel executes the ordinary NF4
-graphs. Isolated measurements compare fused/unfused MLX, ONNX CPU and PyTorch
-CPU; [runtime reports](qwen-runtime-audit.md) record the measured source,
-complete-step timing and process RSS.
+Native FP32 Qwen3-0.6B SFT completes 30 updates, exchanges standard PEFT
+adapters and reproduces checkpoint-15 recovery byte for byte. The stable
+reference qualifies all 112 adapter gradients at the training endpoints and
+through PEFT. [Reference accuracy checks](qwen-reference-accuracy.md) record
+pointwise-logit and independent-update differences with captured Adam states.
 
-The joint loss/gradient route now runs in one session and retains only adapter
-gradients across the PyTorch autograd boundary. Tiny Qwen also completes 100
-updates with BF16 projections and FP32 master adapters, gradients and Adam
-state on ReferenceEvaluator and native MLX. Both reproduce checkpoint-50
-recovery byte for byte. The [BF16 projection audit](qwen-sft.md) compares shared
-parameter states; strict independent five-step update qualification is still
-open.
+The joint loss/gradient route retains adapter gradients across the PyTorch
+autograd boundary. Tiny and real NF4/BF16 runs complete training and reproduce
+checkpoint recovery, including optimizer state and loaded ONNX execution.
+The real-model local pullback audit covers all 3,522 input contributions and
+580 fan-in additions in each of three adapter states. Pairwise FP32 output-head
+accumulation brings the saved optimized module's loss and all 112 gradients
+within the original independent-reference tolerance in those states; all 532
+frozen hashes remain unchanged. Strict independent update comparisons remain
+open: scalar Adam replay reproduces the observed parameter gap from the
+captured gradient sequences.
 
-Next, qualify BF16 on the real transformer, measure its training time and
-memory, and combine it with packed decoder storage. Use measured tensor
-lifetimes and the head memory curve to place recomputation boundaries.
-Continue independent FP32 update qualification alongside these changes.
+The MLX packed-lookup MatMul kernel executes ordinary NF4 graphs. Eager array
+lifetime correction brings the observed real NF4/BF16 full-run physical
+footprint to about 10.5 GiB on M1 Max. Matched 100-sample measurements record a
+1.873 s median ONNX/MLX training step and 3.054 s for PyTorch CPU. The
+[NF4 tutorial](qwen-nf4.md) and [runtime audit](qwen-runtime-audit.md) record the
+source, precision, storage and loss policies for these measurements.
+
+### Current qualification priorities
+
+1. **Training quality on instruction data.** The
+   [training-quality experiment](training-quality.md) now uses a pinned No Robots
+   split with 128 training and 32 official-test sequences. Three FP32 seeds
+   complete 30 updates per runtime: CPU/MLX final held-out loss averages
+   2.666917/2.666826, with a maximum paired gap of 0.000255. The matched BF16
+   run reaches 2.673957/2.669161, with a maximum paired gap of 0.005285. All
+   sampled validation curves decrease. The earlier 18/6 split and shared-parameter replays
+   remain available for numerical diagnosis.
+2. **Evaluation cost.** Joint mode now creates a reusable loss-only session for
+   no-grad evaluation. Tiny FP32/BF16 checks cover three adapter states,
+   dynamic shapes, padding and ignored labels with bitwise loss agreement.
+   The [evaluation qualification command](qwen-sft.md) passes the same checks
+   on Qwen3-0.6B. With 100 measured calls, median evaluation time falls from
+   1.375 to 0.117 s for FP32 and 1.858 to 0.359 s for BF16. Reports include
+   session creation, exchange, execution and whole-process memory with both sessions.
+3. **Platform baseline.** Run matched PyTorch CPU/CUDA training under the same
+   precision and data policies. CUDA execution remains outstanding; the
+   recorded Mac comparisons cover CPU and MLX.
+4. **Memory boundaries.** Use tensor lifetimes and the output-head memory curve
+   to choose recomputation boundaries, then validate complete training and
+   checkpoint recovery for each change.
+
+Custom UTF-8 training/validation files now work with SFTTrainer. Checkpoints
+record data and tokenizer identities and reject changed inputs before model
+construction. Optimization, scheduling and checkpoint ownership stay with
+Trainer and the external training code.
 
 ## Engineering boundaries
 

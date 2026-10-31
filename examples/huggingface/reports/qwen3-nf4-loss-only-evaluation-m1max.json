@@ -1,0 +1,582 @@
+{
+  "version": 1,
+  "measurement_source_commit": "b0415d1f79e6278fe4fccf4115cbbcf331e0e150",
+  "measurement_source_sha256": {
+    "examples/huggingface/evaluation_benchmark.py": "18ec051c8e9a85b6172e0fa40218bc76068f393b0baca6124645a6f55ba95a29",
+    "examples/huggingface/joint_loss.py": "b6edc93e34df4c3ff70973d87a9cb5dd33721de13a99f66061278b74878acfa2",
+    "examples/huggingface/sft.py": "1bf7c1065b9fa72ddcaafcfb35527c80e770182f7a511e8c7b2130ee546c34b6",
+    "examples/huggingface/mixed_precision.py": "b31f3526f8f8b8ac509c4dfcf59d5bf93b81a08fb969f95b2f92dc41a6e5ac04",
+    "examples/huggingface/nf4.py": "a374f41406ed0b8967f723873b8bb9b5a563b8350895c299137905422522d9d7"
+  },
+  "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+  "workload": {
+    "batch": 1,
+    "sequence": 64,
+    "valid_shifted_tokens": 63,
+    "data": "Uniform synthetic vocabulary IDs, seed 20261031",
+    "timed_adapter_state": 2,
+    "parameter_bytes": 2293760,
+    "metadata_source": "Derived from the immutable executed evaluation_benchmark.py source; raw component reports are preserved below"
+  },
+  "mlx_compile_disabled": true,
+  "ort_threads": {
+    "intra": 1,
+    "inter": 1
+  },
+  "components": {
+    "fp32": {
+      "model": "Qwen3-0.6B",
+      "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+      "nf4": true,
+      "projection_precision": "fp32",
+      "samples": 100,
+      "warmup": 10,
+      "checks": [
+        {
+          "state": 0,
+          "batch": "full",
+          "loss_sum": 876.333740234375
+        },
+        {
+          "state": 0,
+          "batch": "padded",
+          "loss_sum": 347.6910400390625
+        },
+        {
+          "state": 0,
+          "batch": "ignored",
+          "loss_sum": 0.0
+        },
+        {
+          "state": 1,
+          "batch": "full",
+          "loss_sum": 876.42333984375
+        },
+        {
+          "state": 1,
+          "batch": "padded",
+          "loss_sum": 347.7093505859375
+        },
+        {
+          "state": 1,
+          "batch": "ignored",
+          "loss_sum": 0.0
+        },
+        {
+          "state": 2,
+          "batch": "full",
+          "loss_sum": 876.223388671875
+        },
+        {
+          "state": 2,
+          "batch": "padded",
+          "loss_sum": 347.64605712890625
+        },
+        {
+          "state": 2,
+          "batch": "ignored",
+          "loss_sum": 0.0
+        }
+      ],
+      "timings_ms": {
+        "joint": {
+          "median": 1374.5791039837059,
+          "p95": 2319.9432624911424
+        },
+        "loss_only": {
+          "median": 116.93258347804658,
+          "p95": 123.70216458803043
+        }
+      },
+      "component_timings_ms": {
+        "joint": {
+          "exchange": {
+            "median": 0.3983539645560086,
+            "p95": 0.4439246520632878
+          },
+          "loss_gradient": {
+            "median": 1373.7610619864427,
+            "p95": 2319.1824014560552
+          }
+        },
+        "loss_only": {
+          "exchange": {
+            "median": 0.4020214546471834,
+            "p95": 0.5038857401814312
+          },
+          "loss": {
+            "median": 116.42418752308004,
+            "p95": 123.10606455721427
+          }
+        }
+      },
+      "exchange_scope": "Host input/adapter validation and NumPy view preparation; runtime transfers are included in execution",
+      "runtime_output_bytes": {
+        "joint": 2293764,
+        "loss_only": 4
+      },
+      "evaluation_session_creation_seconds": [
+        1.9961843339842744
+      ],
+      "nodes": {
+        "joint": 32729,
+        "loss_only": 3427
+      },
+      "peak_rss_bytes": 7095697408,
+      "memory_scope": "Whole process including construction, qualification and both sessions",
+      "timing_scope": "Synchronous wrapper call, input preparation and runtime output exchange; fixed final adapter state",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      },
+      "ort_optimizer": "disabled",
+      "torch_threads": 1,
+      "frozen_weights_unchanged": true,
+      "provider": "mlx",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1"
+    },
+    "bf16": {
+      "model": "Qwen3-0.6B",
+      "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+      "nf4": true,
+      "projection_precision": "bf16",
+      "samples": 100,
+      "warmup": 10,
+      "checks": [
+        {
+          "state": 0,
+          "batch": "full",
+          "loss_sum": 876.6064453125
+        },
+        {
+          "state": 0,
+          "batch": "padded",
+          "loss_sum": 347.82757568359375
+        },
+        {
+          "state": 0,
+          "batch": "ignored",
+          "loss_sum": 0.0
+        },
+        {
+          "state": 1,
+          "batch": "full",
+          "loss_sum": 876.6392822265625
+        },
+        {
+          "state": 1,
+          "batch": "padded",
+          "loss_sum": 347.789306640625
+        },
+        {
+          "state": 1,
+          "batch": "ignored",
+          "loss_sum": 0.0
+        },
+        {
+          "state": 2,
+          "batch": "full",
+          "loss_sum": 876.29296875
+        },
+        {
+          "state": 2,
+          "batch": "padded",
+          "loss_sum": 347.80023193359375
+        },
+        {
+          "state": 2,
+          "batch": "ignored",
+          "loss_sum": 0.0
+        }
+      ],
+      "timings_ms": {
+        "joint": {
+          "median": 1857.846853992669,
+          "p95": 2980.652287157136
+        },
+        "loss_only": {
+          "median": 359.2778335150797,
+          "p95": 376.3513434008928
+        }
+      },
+      "component_timings_ms": {
+        "joint": {
+          "exchange": {
+            "median": 0.6394995434675366,
+            "p95": 0.9927875304128974
+          },
+          "loss_gradient": {
+            "median": 1856.1049789714161,
+            "p95": 2979.5665548503166
+          }
+        },
+        "loss_only": {
+          "exchange": {
+            "median": 0.4960624792147428,
+            "p95": 0.80610214790795
+          },
+          "loss": {
+            "median": 358.6031039885711,
+            "p95": 375.74939019687
+          }
+        }
+      },
+      "exchange_scope": "Host input/adapter validation and NumPy view preparation; runtime transfers are included in execution",
+      "runtime_output_bytes": {
+        "joint": 2293764,
+        "loss_only": 4
+      },
+      "evaluation_session_creation_seconds": [
+        1.8691821669926867
+      ],
+      "nodes": {
+        "joint": 33797,
+        "loss_only": 3880
+      },
+      "peak_rss_bytes": 7448444928,
+      "memory_scope": "Whole process including construction, qualification and both sessions",
+      "timing_scope": "Synchronous wrapper call, input preparation and runtime output exchange; fixed final adapter state",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      },
+      "ort_optimizer": "disabled",
+      "torch_threads": 1,
+      "frozen_weights_unchanged": true,
+      "provider": "mlx",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1"
+    }
+  },
+  "executions": [
+    {
+      "precision": "fp32",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.evaluation_benchmark",
+        "--real",
+        "--precision",
+        "fp32",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+        "--warmup",
+        "10",
+        "--samples",
+        "100",
+        "--output",
+        "/tmp/onnax-real-evaluation/fp32.json"
+      ],
+      "started": "2026-10-31T21:25:03.672762+00:00",
+      "source_commit": "b0415d1f79e6278fe4fccf4115cbbcf331e0e150",
+      "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "operational_memory_limit_bytes": 25769803776,
+      "observations": [
+        {
+          "utc": "2026-10-31T21:25:04.240409+00:00",
+          "current_bytes": 12687769.6,
+          "peak_bytes": 12897484.8
+        },
+        {
+          "utc": "2026-10-31T21:25:20.101241+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 3543348019.2
+        },
+        {
+          "utc": "2026-10-31T21:25:36.018012+00:00",
+          "current_bytes": 4294967296.0,
+          "peak_bytes": 4294967296.0
+        },
+        {
+          "utc": "2026-10-31T21:25:51.922247+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:26:07.778598+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:26:23.642182+00:00",
+          "current_bytes": 3865470566.4,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:26:39.530866+00:00",
+          "current_bytes": 3865470566.4,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:26:55.423462+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:27:11.300421+00:00",
+          "current_bytes": 3435973836.8,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:27:27.173053+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:27:43.077377+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:27:59.196071+00:00",
+          "current_bytes": 7086696038.4,
+          "peak_bytes": 7086696038.4
+        },
+        {
+          "utc": "2026-10-31T21:28:15.318647+00:00",
+          "current_bytes": 7086696038.4,
+          "peak_bytes": 7086696038.4
+        },
+        {
+          "utc": "2026-10-31T21:28:31.446580+00:00",
+          "current_bytes": 7086696038.4,
+          "peak_bytes": 7086696038.4
+        },
+        {
+          "utc": "2026-10-31T21:28:47.637271+00:00",
+          "current_bytes": 7086696038.4,
+          "peak_bytes": 7086696038.4
+        },
+        {
+          "utc": "2026-10-31T21:29:03.747773+00:00",
+          "current_bytes": 7086696038.4,
+          "peak_bytes": 7086696038.4
+        },
+        {
+          "utc": "2026-10-31T21:29:19.865547+00:00",
+          "current_bytes": 7086696038.4,
+          "peak_bytes": 7086696038.4
+        },
+        {
+          "utc": "2026-10-31T21:29:35.973172+00:00",
+          "current_bytes": 7086696038.4,
+          "peak_bytes": 7086696038.4
+        },
+        {
+          "utc": "2026-10-31T21:29:52.083427+00:00",
+          "current_bytes": 6979321856.0,
+          "peak_bytes": 7086696038.4
+        },
+        {
+          "utc": "2026-10-31T21:30:08.171974+00:00",
+          "current_bytes": 6979321856.0,
+          "peak_bytes": 7086696038.4
+        },
+        {
+          "utc": "2026-10-31T21:30:24.269565+00:00",
+          "current_bytes": 6979321856.0,
+          "peak_bytes": 7086696038.4
+        },
+        {
+          "utc": "2026-10-31T21:30:40.393034+00:00",
+          "current_bytes": 6979321856.0,
+          "peak_bytes": 7086696038.4
+        },
+        {
+          "utc": "2026-10-31T21:30:56.503546+00:00",
+          "current_bytes": 6979321856.0,
+          "peak_bytes": 7086696038.4
+        }
+      ],
+      "pid": 76553,
+      "returncode": 0,
+      "finished": "2026-10-31T21:31:11.514634+00:00"
+    },
+    {
+      "precision": "bf16",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.evaluation_benchmark",
+        "--real",
+        "--precision",
+        "bf16",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+        "--warmup",
+        "10",
+        "--samples",
+        "100",
+        "--output",
+        "/tmp/onnax-real-evaluation/bf16.json"
+      ],
+      "started": "2026-10-31T21:31:11.558824+00:00",
+      "source_commit": "b0415d1f79e6278fe4fccf4115cbbcf331e0e150",
+      "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "operational_memory_limit_bytes": 25769803776,
+      "observations": [
+        {
+          "utc": "2026-10-31T21:31:27.426217+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 3543348019.2
+        },
+        {
+          "utc": "2026-10-31T21:31:43.307164+00:00",
+          "current_bytes": 4402341478.4,
+          "peak_bytes": 4402341478.4
+        },
+        {
+          "utc": "2026-10-31T21:31:59.185701+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:32:15.080248+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:32:30.932222+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:32:46.798808+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:33:02.671840+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:33:18.540364+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:33:34.425801+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:33:50.343403+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:34:06.652183+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:34:22.918798+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:34:39.174426+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:34:55.471766+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:35:11.742683+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:35:28.008171+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:35:44.282396+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:36:00.596734+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:36:16.880296+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:36:33.149903+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:36:49.431687+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:37:05.725677+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:37:21.991044+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:37:38.263790+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:37:54.530013+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:38:10.806535+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        },
+        {
+          "utc": "2026-10-31T21:38:27.076370+00:00",
+          "current_bytes": 9878424780.8,
+          "peak_bytes": 9878424780.8
+        }
+      ],
+      "pid": 77358,
+      "returncode": 0,
+      "finished": "2026-10-31T21:38:42.087387+00:00"
+    }
+  ]
+}

@@ -17,6 +17,7 @@ huggingface
 qwen-sft
 qwen-adapters
 qwen-nf4
+training-quality
 qwen-runtime-audit
 qwen-reference-accuracy
 mlp

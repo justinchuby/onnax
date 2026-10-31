@@ -38,6 +38,76 @@ models contain standard ONNX function bodies. ONNXScript preserves these functio
 boundaries during optimization. The runtime uses ORT graph optimization disabled.
 Saved-activation splitting retains function calls and saves their output boundary.
 
+## BF16 projection compute
+
+Combine packed decoder storage with BF16 projection products through joint
+loss/gradient execution:
+
+```bash
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.sft \
+  --nf4 --mode joint --projection-precision bf16 --provider mlx \
+  --steps 100 --diagnose-rounding --stable-reference --peft-roundtrip \
+  --output-dir tiny_nf4_bf16
+```
+
+For each frozen projection, the function decodes the NF4 matrix in FP32,
+rounds it and the activation to BF16, computes the BF16 product, then returns
+FP32. Its input adjoint multiplies the FP32 cotangent by the rounded matrix
+in FP32. JVP uses the same rounded matrix with an FP32 direction. Packed codes
+and scales stay frozen. LoRA products and the output head also compute in
+BF16; master adapters, gradients, loss and Adam state stay FP32.
+
+The tiny native run reduced validation loss from 5.5429 to 5.4111 in 100 updates.
+Initial/final independent logits, loss and all adapter gradients passed the
+original tolerances, as did the final stable PEFT loss, gradient and fresh-update
+checks. The decoder retains 41,472 packed/scales bytes in its exported graphs.
+The strict five-step independent update test also passes on ReferenceEvaluator
+and MLX with the original tolerances and Adam settings. A fresh-process
+checkpoint-50 resume reproduces all adapter/Adam/scheduler state and loaded
+ONNX forward/loss/gradient outputs byte for byte. Results are recorded in
+`reports/qwen-nf4-bf16-tiny-sft-recovery.json`.
+The [BF16 Qwen tutorial](qwen-sft.md) records real-model precision qualification.
+
+The combined Qwen3-0.6B run completes 30 updates with the eager array-lifetime
+fix in [MLX EP PR #97](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/97).
+Validation loss decreases from 7.7479 to 6.1986, frozen weights remain unchanged,
+and exports pass the full ONNX checker. The observed process-reported peak
+physical footprint is about 10.5 GiB, including GPU mappings, construction,
+validation, training and adapter audits. An earlier run retained translation
+intermediates and reached 54.5G before initial validation completed.
+Checkpoint-15 recovery in a new process reproduces all 112 adapters, all 113
+checkpoint tensors, Adam/scheduler state, 532 frozen-buffer hashes and loaded
+ONNX forward/loss/all-gradient outputs byte for byte.
+
+The matched benchmark uses batch one, sequence length 64 and 63 valid shifted
+tokens, with 10 warmups and 100 measured updates in separate processes:
+
+| Execution | Step median (s) | P95 (s) | Effective tokens/s | Peak RSS (GiB) |
+| --- | ---: | ---: | ---: | ---: |
+| PyTorch CPU, reconstructed FP32 base | 3.054 | 3.112 | 20.63 | 6.52 |
+| ONNX / MLX GPU, packed NF4 decoder | 1.873 | 1.947 | 33.63 | 6.06 |
+
+Both compute projection products in BF16 and keep adapters, gradients and Adam
+state in FP32. PyTorch uses standard causal cross entropy; ONNX uses the
+stable target-excluded form, with the same valid-token mean. Initialization takes
+12.22 s for PyTorch and 152.08 s for ONNX / MLX, outside measured updates.
+The ONNX CPU array-view boundary has a median cost of 0.690 ms; runtime execution
+includes internal provider transfers. Peak RSS covers each isolated process,
+including construction and runtime. Full phase timings and provenance are in
+`reports/qwen3-nf4-bf16-matched-m1max.json`.
+
+Independent real-model forward, loss and gradient checks exceed the original
+tolerances; the report preserves each failure in
+`reports/qwen3-nf4-bf16-joint-sft-m1max.json`.
+
+The tiny run uses the library from
+[MLX EP PR #96](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/96);
+the real-model run uses PR #97 with the eager lifetime fix. Select the library
+with `--library /path/to/libonnxruntime_mlx_ep.dylib`.
+Use `--provider reference` for offline BF16 execution. To resume, add
+`--resume tiny_nf4_bf16/checkpoint-50` and select a new output directory; pass
+the same provider to the [replay verifier](qwen-sft.md).
+
 ## Independent validation and adapter exchange
 
 The Transformers reference uses exactly the stored NF4 values, independently

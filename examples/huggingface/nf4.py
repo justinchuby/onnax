@@ -8,7 +8,7 @@ import torch
 from examples.lora.nf4 import CODEBOOK, dequantize, lower, quantize
 
 
-def lower_decoder(model, reference, *, block_size=64):
+def lower_decoder(model, reference, *, block_size=64, precision="fp32"):
     names = sorted(
         {
             node.inputs[1].name
@@ -25,7 +25,7 @@ def lower_decoder(model, reference, *, block_size=64):
         raise ValueError(
             f"Expected {expected} Qwen decoder Linear weights, found {len(names)}"
         )
-    quantized, manifest = lower(model, names=names, block_size=block_size)
+    quantized, manifest = lower(model, names=names, block_size=block_size, precision=precision)
     # Replay the exact stored quantization in the independent Transformers model.
     # ONNX stores Linear's transposed matrix in row-major NF4 blocks.
     with torch.no_grad():
@@ -44,7 +44,7 @@ def lower_decoder(model, reference, *, block_size=64):
         "codebook": CODEBOOK.tolist(),
         "packing": "high nibble first; row-major transposed Linear weight",
         "block_size": block_size,
-        "compute_dtype": "float32",
+        "compute_dtype": "bfloat16" if precision == "bf16" else "float32",
         "adapter_dtype": "float32",
         "embedding_dtype": "float32",
         "lm_head_dtype": "float32",

@@ -10,6 +10,34 @@ uv run python -m examples.huggingface.sft --output-dir qwen_tiny
 uv run python -m examples.huggingface.sft --real --diagnose-rounding --output-dir qwen_real
 ```
 
+Compare held-out loss across runtimes and independent seeds with the
+[training-quality experiment](training-quality.md). Its paired runs match the
+frozen base, initial adapters and data schedule.
+
+## Train on your own text
+
+Provide separate UTF-8 training and validation files, with one sequence per
+nonempty line:
+
+```bash
+uv run python -m examples.huggingface.sft --mode joint --nf4 \
+  --train-file train.txt --validation-file validation.txt \
+  --output-dir qwen_custom
+```
+
+TRL handles batches, AdamW and checkpoints. Sequences use right padding and a
+64-token limit; loss covers all shifted nonpadding text tokens. The tiny model
+builds its tokenizer from the training file. `--real` uses the pinned Qwen3-0.6B
+model and tokenizer.
+
+Resume with the same data options and `--resume qwen_custom/checkpoint-50`.
+Each checkpoint includes `onnax_data.json`; the CLI checks its training,
+validation and tokenizer identities before rebuilding the graph. Reports record
+the same identities, and the final ONNX export includes the tokenizer.
+
+The [pinned instruction-corpus preparation](pinned-instruction-corpus)
+provides a reproducible source of training and official-test examples.
+
 ## Model and training graph
 
 The offline model has two layers, hidden size 64, intermediate size 128,
@@ -47,6 +75,48 @@ Large models use external-data ONNX files to avoid protobuf size limits.
 The derivative optimizer uses ONNXScript constant folding followed by IR
 cleanup and common-subexpression elimination, sharing repeated low-rank
 products without a full-graph pattern search for every candidate node.
+
+In joint mode, `torch.no_grad()` and `torch.inference_mode()` evaluate a
+loss-only graph. The wrapper derives it from the optimized training graph by
+removing gradient outputs and unused nodes, then creates a reusable evaluation
+session on first use. Each evaluation reads the current adapters and returns
+the scalar loss. Session creation, array exchange and loss execution have
+separate `evaluation_timings` entries. The evaluation session adds its own
+runtime weight storage; call `model.onnx.close()` to release both sessions and
+their temporary model files.
+
+Compare evaluation paths at identical adapter states:
+
+```bash
+uv run python -m examples.huggingface.evaluation_benchmark \
+  --samples 100 --warmup 10 --output evaluation.json
+```
+
+Add `--real --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib`
+for Qwen3-0.6B, and `--precision bf16` for BF16 projections. The command checks
+bitwise loss agreement at three adapter states with full, padded and ignored
+label batches, then measures median/P95 wrapper time at a fixed state. It
+records the lazy evaluation-session construction separately. Peak RSS covers
+the whole process, including both sessions and the correctness checks.
+
+On Apple M1 Max, Qwen3-0.6B NF4 evaluation records the following wrapper times
+after 10 warmups and 100 measured calls per path:
+
+| Projections | Full loss/gradient median / P95 | Loss-only median / P95 | Evaluation session creation |
+| --- | ---: | ---: | ---: |
+| FP32 | 1.375 / 2.320 s | 0.117 / 0.124 s | 1.996 s |
+| BF16 | 1.858 / 2.981 s | 0.359 / 0.376 s | 1.869 s |
+
+The timed input has batch one, 64 synthetic vocabulary IDs and 63 valid shifted
+targets, with a fixed nonzero adapter state. Both projection policies pass all
+nine bitwise loss checks and preserve frozen weights. Each loss-only call
+returns 4 bytes, compared with 2,293,764 bytes for loss and all adapter
+gradients. Whole-process peak RSS is 6.61 GiB for FP32 and 6.94 GiB for BF16,
+including construction, both sessions and the qualification calls. These runs
+use native MLX, disabled MLX compilation and disabled ORT optimization.
+The {download}`measurement report
+<../examples/huggingface/reports/qwen3-nf4-loss-only-evaluation-m1max.json>`
+includes component timings, source/runtime hashes and process memory journals.
 
 The tiny run trains for 100 updates. The real run uses 30 updates, microbatch
 one, four accumulation steps and a 64-token maximum length. Resume with
@@ -102,6 +172,52 @@ records FP32 accumulation and BF16 rounding near midpoint boundaries. The
 complete training and recovery evidence is in
 `reports/qwen3-bf16-joint-sft-m1max.json`.
 
+For a captured projection, compare native BF16 multiplication with FP32
+accumulation followed by BF16 rounding:
+
+```bash
+uv run python -m examples.huggingface.bf16_accumulation \
+  --capture projection.npz --output accumulation.json
+```
+
+The capture contains FP32 `reference_input`, `weight` and `mlx_output` arrays.
+Both products use the same BF16-rounded operands. On the first real-model
+projection, the FP32-accumulation control matches all 22,528 captured MLX outputs;
+the native PyTorch BF16 product differs at four entries. The command records
+shapes, the capture hash, thread count and comparison errors.
+
+Applying this accumulation control throughout the real NF4/BF16 transformer
+still leaves 56 failing gradient tensors at initialization and 112 after
+30 updates. Logit maximum differences remain 0.125 and 0.3125 respectively.
+The control changes loss and gradient errors in both directions; a common
+accumulation policy alone does not align the full model. The shared-state
+results, original tolerances and experiment script are in
+`reports/qwen3-nf4-bf16-accumulation-control-m1max.json`.
+The [local derivative audit](qwen-runtime-audit.md) then checks identical
+intermediate inputs and incoming cotangents. All 3,522 local input contributions
+pass at zero B, nonzero B and the trained step-30 adapter state. Pairwise FP32 accumulation in the independent frozen-head adjoint aligns all
+112 composed adapter gradients in each state at the original tolerance. A
+scalar dot-product audit identifies the ordinary CPU reference's long-reduction
+error. SFT and PEFT stable controls preserve BF16 forward computation while
+using this pairwise adjoint. Independent full-model forward and loss comparisons
+remain recorded in the reports.
+
+A separate tiny PEFT check fills B with 0.01. Logits and loss match exactly and
+all gradients pass; the stable fresh AdamW update has a maximum parameter gap
+of 3.89e-6 and exceeds the original tolerance. The
+{download}`nonzero-B report <../examples/huggingface/reports/tiny-nf4-bf16-peft-nonzero-b-update.json>`
+records both ordinary and stable comparisons. The preservation regression checks
+that enabling the stable control leaves the original report and parameter bytes
+unchanged.
+
+At the two failing coordinates, gradients around 3.4e-10 differ by 1.39e-11.
+For zero initial moments, Adam's first update is
+$\Delta\theta=-\eta g/(|g|+\epsilon)$. With the original learning rate 0.003
+and epsilon 1e-8, these gradients produce a parameter gap of 3.88e-6. An
+isolated FP32 scalar AdamW step reproduces both full-tensor updated values
+exactly. The {download}`conditioning report <../examples/huggingface/reports/tiny-nf4-bf16-adam-conditioning.json>`
+records the gradients, initial parameters and scalar replay.
+
 Inspect projection inputs, outputs and incoming gradients at the same parameter
 state with:
 
@@ -145,8 +261,10 @@ The report is `reports/qwen3-bf16-matched-m1max.json`. Independent numerical
 qualification remains open as described above.
 
 For native execution select `--provider mlx`. The tested macOS ORT CPU backend
-has no BF16 MatMul kernel. This experiment uses FP32 weight storage; NF4 and
-BF16 projection compute currently have separate CLI paths.
+has no BF16 MatMul kernel. The default experiment uses FP32 weight storage.
+Add `--nf4` to combine BF16 products with
+[packed frozen decoder weights](qwen-nf4.md); embeddings and the head retain
+FP32 storage.
 
 ## Validation
 

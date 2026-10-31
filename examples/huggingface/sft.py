@@ -3,7 +3,6 @@
 """Mobius Qwen3 ONNX fine-tuning through TRL SFTTrainer."""
 
 import argparse
-import contextlib
 import functools
 import hashlib
 import json
@@ -13,7 +12,13 @@ import tempfile
 import torch
 from datasets import Dataset
 from tokenizers import Tokenizer, models, pre_tokenizers, processors, trainers
-from transformers import AutoTokenizer, PreTrainedModel, PreTrainedTokenizerFast, Qwen3Config
+from transformers import (
+    AutoTokenizer,
+    PreTrainedModel,
+    PreTrainedTokenizerFast,
+    Qwen3Config,
+    TrainerCallback,
+)
 from transformers.modeling_outputs import CausalLMOutput
 from trl import SFTConfig, SFTTrainer
 
@@ -29,12 +34,13 @@ from examples.huggingface.qwen import (
 from examples.lora.train import session
 
 
-def texts():
-    with open(os.path.join(os.path.dirname(__file__), "corpus.txt")) as stream:
+def texts(path=None):
+    path = os.path.join(os.path.dirname(__file__), "corpus.txt") if path is None else path
+    with open(path, encoding="utf-8") as stream:
         return [line.strip() for line in stream if line.strip()]
 
 
-def tokenizer(real=False):
+def tokenizer(real=False, *, training_texts=None):
     if real:
         result = AutoTokenizer.from_pretrained(MODEL_ID, revision=REVISION)
         result.pad_token = result.eos_token
@@ -43,7 +49,7 @@ def tokenizer(real=False):
     backend = Tokenizer(models.WordLevel(unk_token="<unk>"))
     backend.pre_tokenizer = pre_tokenizers.Whitespace()
     backend.train_from_iterator(
-        texts(),
+        texts() if training_texts is None else training_texts,
         trainers.WordLevelTrainer(
             vocab_size=256,
             special_tokens=["<pad>", "<s>", "</s>", "<unk>"],
@@ -61,6 +67,19 @@ def tokenizer(real=False):
         model_max_length=64,
         padding_side="right",
     )
+
+
+def _tokenizer_digest(tok):
+    backend = json.loads(tok.backend_tokenizer.to_str())
+    # Hash encoding semantics independently of per-batch padding and truncation.
+    backend.pop("padding", None)
+    backend.pop("truncation", None)
+    identity = {
+        "backend": backend,
+        "special_tokens": tok.special_tokens_map,
+        "padding_side": tok.padding_side,
+    }
+    return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
 
 
 def token_loss(logits, labels, num_items=None):
@@ -203,6 +222,26 @@ class OnnxQwen3(PreTrainedModel):
         return CausalLMOutput(loss=loss, logits=logits)
 
 
+def _prepare_graph(real=False, *, nf4=False, projection_precision="fp32"):
+    """Build one canonical Mobius source and matching reconstructed reference."""
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 projection precision")
+    reference = reference_model(real)
+    base = build_base(reference)
+    adapted, params, mapping = inject(base)
+    graph = decompose(adapted)
+    quantization = None
+    if nf4:
+        from examples.huggingface.nf4 import lower_decoder
+
+        graph, quantization = lower_decoder(graph, reference, precision=projection_precision)
+    if projection_precision == "bf16":
+        from examples.huggingface.mixed_precision import bf16_projections
+
+        graph = bf16_projections(graph)
+    return reference, graph, params, mapping, quantization
+
+
 def prepare(
     real=False,
     *,
@@ -216,21 +255,11 @@ def prepare(
 ):
     if projection_precision not in ("fp32", "bf16"):
         raise ValueError("Expected fp32 or bf16 projection precision")
-    if projection_precision == "bf16" and (nf4 or mode != "joint"):
-        raise ValueError("BF16 projection training uses joint execution with an FP32 base")
-    reference = reference_model(real)
-    base = build_base(reference)
-    adapted, params, mapping = inject(base)
-    graph = decompose(adapted)
-    quantization = None
-    if nf4:
-        from examples.huggingface.nf4 import lower_decoder
-
-        graph, quantization = lower_decoder(graph, reference)
-    if projection_precision == "bf16":
-        from examples.huggingface.mixed_precision import bf16_projections
-
-        graph = bf16_projections(graph)
+    if projection_precision == "bf16" and mode != "joint":
+        raise ValueError("BF16 projection training uses joint execution")
+    reference, graph, params, mapping, quantization = _prepare_graph(
+        real, nf4=nf4, projection_precision=projection_precision
+    )
     model = OnnxQwen3(
         reference.config,
         graph,
@@ -258,8 +287,62 @@ class OnnxSFTTrainer(SFTTrainer):
         return Trainer.compute_loss(self, model, inputs, return_outputs, num_items_in_batch)
 
 
-def make_trainer(model, tok, directory, *, real=False, steps=None, callbacks=None):
-    lines = texts()
+def _training_texts(train_file=None, validation_file=None):
+    if (train_file is None) != (validation_file is None):
+        raise ValueError("Provide both training and validation text files")
+    if train_file is None:
+        lines = texts()
+        train, validation = lines[:-4] * 8, lines[-4:]
+    else:
+        train, validation = texts(train_file), texts(validation_file)
+    if not train or not validation:
+        raise ValueError("Training and validation text must both be nonempty")
+    return train, validation
+
+
+def _data_identity(train, validation, tok):
+    return {
+        "version": 1,
+        "train_lines": len(train),
+        "validation_lines": len(validation),
+        "train_sha256": hashlib.sha256("\n".join(train).encode()).hexdigest(),
+        "validation_sha256": hashlib.sha256("\n".join(validation).encode()).hexdigest(),
+        "tokenizer_sha256": _tokenizer_digest(tok),
+        "max_length": 64,
+    }
+
+
+class _DataIdentityCallback(TrainerCallback):
+    def __init__(self, identity):
+        self.identity = identity
+
+    def on_save(self, args, state, control, **kwargs):
+        if state.is_world_process_zero:
+            path = os.path.join(
+                args.output_dir, f"checkpoint-{state.global_step}", "onnax_data.json"
+            )
+            with open(path, "w", encoding="utf-8") as stream:
+                json.dump(self.identity, stream, indent=2)
+        return control
+
+
+def make_trainer(
+    model,
+    tok,
+    directory,
+    *,
+    real=False,
+    steps=None,
+    callbacks=None,
+    train_texts=None,
+    eval_texts=None,
+):
+    if (train_texts is None) != (eval_texts is None):
+        raise ValueError("Provide both training and evaluation texts")
+    if train_texts is None:
+        train_texts, eval_texts = _training_texts()
+    if not train_texts or not eval_texts:
+        raise ValueError("Training and evaluation texts must both be nonempty")
     args = SFTConfig(
         output_dir=directory,
         use_cpu=True,
@@ -289,9 +372,12 @@ def make_trainer(model, tok, directory, *, real=False, steps=None, callbacks=Non
         model=model,
         args=args,
         processing_class=tok,
-        train_dataset=Dataset.from_dict({"text": lines[:-4] * 8}),
-        eval_dataset=Dataset.from_dict({"text": lines[-4:]}),
-        callbacks=callbacks,
+        train_dataset=Dataset.from_dict({"text": train_texts}),
+        eval_dataset=Dataset.from_dict({"text": eval_texts}),
+        callbacks=[
+            *(callbacks or ()),
+            _DataIdentityCallback(_data_identity(train_texts, eval_texts, tok)),
+        ],
     )
 
 
@@ -314,6 +400,8 @@ def run(
     segment_nodes=None,
     stable_reference=False,
     projection_precision="fp32",
+    train_file=None,
+    validation_file=None,
 ):
     if provider not in ("cpu", "mlx", "reference"):
         raise ValueError("Expected cpu, mlx or reference provider")
@@ -339,6 +427,23 @@ def run(
         raise ValueError("FP64 diagnostics require the FP32 projection policy")
     if projection_precision == "bf16" and provider == "cpu":
         raise ValueError("Select mlx or reference for BF16 projection execution")
+    train_lines, validation_lines = _training_texts(train_file, validation_file)
+    tok = tokenizer(real, training_texts=train_lines if train_file is not None else None)
+    data_identity = _data_identity(train_lines, validation_lines, tok)
+    if resume is True:
+        from transformers.trainer_utils import get_last_checkpoint
+
+        resume = get_last_checkpoint(directory) if os.path.isdir(directory) else None
+        if resume is None:
+            raise ValueError("No checkpoint found to resume")
+    if resume:
+        path = os.path.join(resume, "onnax_data.json")
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as stream:
+                if json.load(stream) != data_identity:
+                    raise ValueError("Checkpoint training data or tokenizer differs")
+        elif train_file is not None:
+            raise ValueError("Custom-text resume requires checkpoint data identity metadata")
     torch.set_num_threads(4 if real else 1)
     model, reference = prepare(
         real,
@@ -351,7 +456,6 @@ def run(
         session_factory=runtime,
     )
     initial_frozen = frozen_hashes(model.forward_graph)
-    tok = tokenizer(real)
     from examples.huggingface.validation import add_reference_adapters, audit
 
     reference = add_reference_adapters(reference, model)
@@ -359,7 +463,7 @@ def run(
         from examples.huggingface.mixed_precision import reference_projections
 
         reference = reference_projections(reference)
-    sample = tok(texts()[0], return_tensors="pt")
+    sample = tok(train_lines[0], truncation=True, max_length=64, return_tensors="pt")
     sample = {k: v for k, v in sample.items() if k in ("input_ids", "attention_mask")}
     sample["labels"] = sample["input_ids"].clone()
     initial_params = model.onnx.arrays()
@@ -369,12 +473,7 @@ def run(
         from examples.huggingface.reference_head import pairwise_head
         from examples.huggingface.reference_losses import stable_token_loss
 
-        control = (
-            contextlib.nullcontext()
-            if projection_precision == "bf16"
-            else pairwise_head(reference)
-        )
-        with control:
+        with pairwise_head(reference, projection_precision=projection_precision):
             return audit(
                 model,
                 reference,
@@ -384,7 +483,15 @@ def run(
             )
 
     initial_stable = stable_control() if stable_reference else None
-    trainer = make_trainer(model, tok, directory, real=real, steps=steps)
+    trainer = make_trainer(
+        model,
+        tok,
+        directory,
+        real=real,
+        steps=steps,
+        train_texts=train_lines,
+        eval_texts=validation_lines,
+    )
     before = trainer.evaluate()["eval_loss"]
     trainer.train(resume_from_checkpoint=resume)
     after = trainer.evaluate()["eval_loss"]
@@ -402,6 +509,7 @@ def run(
         "model": MODEL_ID if real else "tiny-qwen3",
         "revision": REVISION if real else None,
         "steps": trainer.state.global_step,
+        "data": data_identity,
         "mode": mode,
         "projection_precision": projection_precision,
         "validation_loss": [before, after],
@@ -428,7 +536,7 @@ def run(
         report["stable_reference_audits"] = {
             "loss": "target-excluded stable CE",
             "head_backward": (
-                "FP32 adjoint using BF16-rounded operands"
+                "FP32 pairwise K blocks of 128 using BF16-rounded weights"
                 if projection_precision == "bf16"
                 else "FP32 pairwise K blocks of 128"
             ),
@@ -488,8 +596,7 @@ def run(
         from examples.huggingface.precision import audit64
 
         if mode == "joint":
-            model.onnx.executor = None
-            model.onnx.directory.cleanup()
+            model.onnx.close()
         else:
             model.onnx.forward_session = model.onnx.backward_session = None
             model.onnx.runtime_directory.cleanup()
@@ -504,6 +611,10 @@ if __name__ == "__main__":
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--steps", type=int)
     parser.add_argument("--resume")
+    parser.add_argument(
+        "--train-file", help="UTF-8 training text, one sequence per nonempty line"
+    )
+    parser.add_argument("--validation-file", help="UTF-8 held-out text file")
     parser.add_argument("--mode", choices=["full", "chunked", "joint"], default="full")
     parser.add_argument("--chunk-size", type=int, default=128)
     parser.add_argument("--diagnose-rounding", action="store_true")
@@ -528,6 +639,8 @@ if __name__ == "__main__":
                 real=args.real,
                 steps=args.steps,
                 resume=args.resume,
+                train_file=args.train_file,
+                validation_file=args.validation_file,
                 mode=args.mode,
                 chunk_size=args.chunk_size,
                 diagnose_rounding=args.diagnose_rounding,

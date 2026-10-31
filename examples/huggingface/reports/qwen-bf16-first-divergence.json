@@ -504,5 +504,63 @@
     "result": "112 passed, 5 skipped in 165.47s",
     "strict_reference_bf16_update_test": "passed; test_qwen_bf16.py included explicitly, native MLX case opt-in skipped",
     "local_macos_control": "Both ReferenceEvaluator and native MLX strict five-step updates still fail at step five"
+  },
+  "real_first_projection_accumulation_control": {
+    "scope": "Identical BF16 operands from the first frozen q projection of the unquantized real Qwen BF16 workload",
+    "shape": [
+      [
+        11,
+        1024
+      ],
+      [
+        1024,
+        2048
+      ]
+    ],
+    "against_mlx": {
+      "torch_bf16_native": {
+        "mismatches": 4,
+        "max_abs": 0.000244140625,
+        "tolerance_violations": 4
+      },
+      "torch_fp32_accumulation_emulation": {
+        "mismatches": 0,
+        "max_abs": 0.0,
+        "tolerance_violations": 0
+      }
+    },
+    "emulation": "(qa.float() @ qb.float()).bfloat16().float(), after qa/qb have been rounded to BF16",
+    "production_policy_changed": false,
+    "original_strict_checks_retained": true
+  },
+  "reproducible_accumulation_control": {
+    "capture_sha256": "c1366c51b4d1ffddfe5d6b02a9c6d8e9cc51752f7ca71aa8ff82bee140d15ddd",
+    "input_shape": [
+      11,
+      1024
+    ],
+    "weight_shape": [
+      1024,
+      2048
+    ],
+    "output_elements": 22528,
+    "torch_version": "2.15.0",
+    "torch_threads": 1,
+    "rtol": 0.0001,
+    "atol": 1e-06,
+    "scope": "Shared rounded operands; captured MLX output is the comparison target",
+    "comparisons": {
+      "torch_bf16_native": {
+        "mismatches": 4,
+        "max_abs": 0.000244140625,
+        "tolerance_violations": 4
+      },
+      "torch_fp32_accumulation_emulation": {
+        "mismatches": 0,
+        "max_abs": 0.0,
+        "tolerance_violations": 0
+      }
+    },
+    "command": "python -m examples.huggingface.bf16_accumulation --capture projection.npz --output accumulation.json"
   }
 }

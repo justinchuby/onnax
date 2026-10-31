@@ -18,9 +18,21 @@ def bf16_projections(model):
 
     Each product rounds its operands and result to BF16. The shared registered
     rules compute straight-through adjoints in FP32 using rounded operands.
-    Parameters, frozen storage and external optimizer state remain FP32.
+    Parameters and external optimizer state remain FP32. Packed NF4 decoder
+    calls retain their storage and supply BF16 forward/FP32 derivative rules.
     """
     result = model.clone()
+    from examples.lora.nf4 import DOMAIN as NF4_DOMAIN
+
+    if any(
+        node.domain == NF4_DOMAIN and node.op_type.startswith("MatMul_")
+        for node in result.graph
+    ):
+        raise ValueError("Lower NF4 projections with precision='bf16' before BF16 conversion")
+    packed_count = sum(
+        node.domain == NF4_DOMAIN and node.op_type.startswith("MatMulBF16_")
+        for node in result.graph
+    )
     function = matmul_function(result.graph.opset_imports[""])
     if function.identifier() in result.functions:
         raise ValueError("The model already defines the BF16 product function")
@@ -68,7 +80,7 @@ def bf16_projections(model):
             result.graph, node, [node], tape.nodes, [node.outputs[0]], [output]
         )
         count += 1
-    if count == 0:
+    if count == 0 and packed_count == 0:
         raise ValueError("No FP32 matrix projections found")
     result.functions[function.identifier()] = function
     result.graph.opset_imports[DOMAIN] = 1
@@ -76,9 +88,13 @@ def bf16_projections(model):
         {
             "version": 1,
             "projection_compute": "bfloat16",
-            "projection_products": count,
+            "projection_products": count + packed_count,
             "attention_and_normalization": "float32",
-            "parameters_and_storage": "float32",
+            "parameters_and_storage": (
+                "FP32 adapters; packed NF4 decoder; FP32 embedding and head"
+                if packed_count
+                else "float32"
+            ),
             "adjoints": "float32 straight-through using rounded operands",
         }
     )
@@ -90,7 +106,8 @@ class _Product(torch.autograd.Function):
     @staticmethod
     def forward(ctx, a, b):
         qa, qb = a.to(torch.bfloat16), b.to(torch.bfloat16)
-        ctx.save_for_backward(qa.float(), qb.float())
+        if any(ctx.needs_input_grad):
+            ctx.save_for_backward(qa.float(), qb.float())
         return (qa @ qb).float()
 
     @staticmethod

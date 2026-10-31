@@ -1,0 +1,695 @@
+{
+  "model": "Qwen3-0.6B",
+  "nf4": true,
+  "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+  "base_seed": 20261029,
+  "projection_precision": "bf16",
+  "library_sha256": null,
+  "mlx_compile_disabled": true,
+  "capture": {
+    "version": 1,
+    "sha256": "4f3e1429083739edbdd6aabb4f306890893b3e5c574e8f4ccff9e67d916dc023",
+    "parameter_order": [
+      "model.layers.0.self_attn.q_proj.lora.A",
+      "model.layers.0.self_attn.q_proj.lora.B",
+      "model.layers.0.self_attn.v_proj.lora.A",
+      "model.layers.0.self_attn.v_proj.lora.B",
+      "model.layers.1.self_attn.q_proj.lora.A",
+      "model.layers.1.self_attn.q_proj.lora.B",
+      "model.layers.1.self_attn.v_proj.lora.A",
+      "model.layers.1.self_attn.v_proj.lora.B",
+      "model.layers.10.self_attn.q_proj.lora.A",
+      "model.layers.10.self_attn.q_proj.lora.B",
+      "model.layers.10.self_attn.v_proj.lora.A",
+      "model.layers.10.self_attn.v_proj.lora.B",
+      "model.layers.11.self_attn.q_proj.lora.A",
+      "model.layers.11.self_attn.q_proj.lora.B",
+      "model.layers.11.self_attn.v_proj.lora.A",
+      "model.layers.11.self_attn.v_proj.lora.B",
+      "model.layers.12.self_attn.q_proj.lora.A",
+      "model.layers.12.self_attn.q_proj.lora.B",
+      "model.layers.12.self_attn.v_proj.lora.A",
+      "model.layers.12.self_attn.v_proj.lora.B",
+      "model.layers.13.self_attn.q_proj.lora.A",
+      "model.layers.13.self_attn.q_proj.lora.B",
+      "model.layers.13.self_attn.v_proj.lora.A",
+      "model.layers.13.self_attn.v_proj.lora.B",
+      "model.layers.14.self_attn.q_proj.lora.A",
+      "model.layers.14.self_attn.q_proj.lora.B",
+      "model.layers.14.self_attn.v_proj.lora.A",
+      "model.layers.14.self_attn.v_proj.lora.B",
+      "model.layers.15.self_attn.q_proj.lora.A",
+      "model.layers.15.self_attn.q_proj.lora.B",
+      "model.layers.15.self_attn.v_proj.lora.A",
+      "model.layers.15.self_attn.v_proj.lora.B",
+      "model.layers.16.self_attn.q_proj.lora.A",
+      "model.layers.16.self_attn.q_proj.lora.B",
+      "model.layers.16.self_attn.v_proj.lora.A",
+      "model.layers.16.self_attn.v_proj.lora.B",
+      "model.layers.17.self_attn.q_proj.lora.A",
+      "model.layers.17.self_attn.q_proj.lora.B",
+      "model.layers.17.self_attn.v_proj.lora.A",
+      "model.layers.17.self_attn.v_proj.lora.B",
+      "model.layers.18.self_attn.q_proj.lora.A",
+      "model.layers.18.self_attn.q_proj.lora.B",
+      "model.layers.18.self_attn.v_proj.lora.A",
+      "model.layers.18.self_attn.v_proj.lora.B",
+      "model.layers.19.self_attn.q_proj.lora.A",
+      "model.layers.19.self_attn.q_proj.lora.B",
+      "model.layers.19.self_attn.v_proj.lora.A",
+      "model.layers.19.self_attn.v_proj.lora.B",
+      "model.layers.2.self_attn.q_proj.lora.A",
+      "model.layers.2.self_attn.q_proj.lora.B",
+      "model.layers.2.self_attn.v_proj.lora.A",
+      "model.layers.2.self_attn.v_proj.lora.B",
+      "model.layers.20.self_attn.q_proj.lora.A",
+      "model.layers.20.self_attn.q_proj.lora.B",
+      "model.layers.20.self_attn.v_proj.lora.A",
+      "model.layers.20.self_attn.v_proj.lora.B",
+      "model.layers.21.self_attn.q_proj.lora.A",
+      "model.layers.21.self_attn.q_proj.lora.B",
+      "model.layers.21.self_attn.v_proj.lora.A",
+      "model.layers.21.self_attn.v_proj.lora.B",
+      "model.layers.22.self_attn.q_proj.lora.A",
+      "model.layers.22.self_attn.q_proj.lora.B",
+      "model.layers.22.self_attn.v_proj.lora.A",
+      "model.layers.22.self_attn.v_proj.lora.B",
+      "model.layers.23.self_attn.q_proj.lora.A",
+      "model.layers.23.self_attn.q_proj.lora.B",
+      "model.layers.23.self_attn.v_proj.lora.A",
+      "model.layers.23.self_attn.v_proj.lora.B",
+      "model.layers.24.self_attn.q_proj.lora.A",
+      "model.layers.24.self_attn.q_proj.lora.B",
+      "model.layers.24.self_attn.v_proj.lora.A",
+      "model.layers.24.self_attn.v_proj.lora.B",
+      "model.layers.25.self_attn.q_proj.lora.A",
+      "model.layers.25.self_attn.q_proj.lora.B",
+      "model.layers.25.self_attn.v_proj.lora.A",
+      "model.layers.25.self_attn.v_proj.lora.B",
+      "model.layers.26.self_attn.q_proj.lora.A",
+      "model.layers.26.self_attn.q_proj.lora.B",
+      "model.layers.26.self_attn.v_proj.lora.A",
+      "model.layers.26.self_attn.v_proj.lora.B",
+      "model.layers.27.self_attn.q_proj.lora.A",
+      "model.layers.27.self_attn.q_proj.lora.B",
+      "model.layers.27.self_attn.v_proj.lora.A",
+      "model.layers.27.self_attn.v_proj.lora.B",
+      "model.layers.3.self_attn.q_proj.lora.A",
+      "model.layers.3.self_attn.q_proj.lora.B",
+      "model.layers.3.self_attn.v_proj.lora.A",
+      "model.layers.3.self_attn.v_proj.lora.B",
+      "model.layers.4.self_attn.q_proj.lora.A",
+      "model.layers.4.self_attn.q_proj.lora.B",
+      "model.layers.4.self_attn.v_proj.lora.A",
+      "model.layers.4.self_attn.v_proj.lora.B",
+      "model.layers.5.self_attn.q_proj.lora.A",
+      "model.layers.5.self_attn.q_proj.lora.B",
+      "model.layers.5.self_attn.v_proj.lora.A",
+      "model.layers.5.self_attn.v_proj.lora.B",
+      "model.layers.6.self_attn.q_proj.lora.A",
+      "model.layers.6.self_attn.q_proj.lora.B",
+      "model.layers.6.self_attn.v_proj.lora.A",
+      "model.layers.6.self_attn.v_proj.lora.B",
+      "model.layers.7.self_attn.q_proj.lora.A",
+      "model.layers.7.self_attn.q_proj.lora.B",
+      "model.layers.7.self_attn.v_proj.lora.A",
+      "model.layers.7.self_attn.v_proj.lora.B",
+      "model.layers.8.self_attn.q_proj.lora.A",
+      "model.layers.8.self_attn.q_proj.lora.B",
+      "model.layers.8.self_attn.v_proj.lora.A",
+      "model.layers.8.self_attn.v_proj.lora.B",
+      "model.layers.9.self_attn.q_proj.lora.A",
+      "model.layers.9.self_attn.q_proj.lora.B",
+      "model.layers.9.self_attn.v_proj.lora.A",
+      "model.layers.9.self_attn.v_proj.lora.B"
+    ]
+  },
+  "engines": [
+    "torch_cpu"
+  ],
+  "unavailable_engines": [],
+  "seeds": [
+    17,
+    29,
+    43
+  ],
+  "steps": 30,
+  "microbatch": 1,
+  "accumulation": 4,
+  "evaluation_interval": 10,
+  "optimizer": {
+    "name": "AdamW",
+    "lr": 0.003,
+    "eps": 1e-08,
+    "weight_decay": 0,
+    "foreach": false
+  },
+  "precision_policy": "FP32 adapters, gradients, Adam; BF16 projection operands/results",
+  "reference_head": "FP32 pairwise K=128; stable target-excluded CE",
+  "frozen_unchanged": true,
+  "source_base_sha256": "ee56ddf076607e03dd0af3071323f7e75889806ad12221bf8a626cefa464e721",
+  "corpus_sha256": "0dd44097dde8fb9c996d3f6c9d979b2a4235ad9816fbb024b206c9eb86f98619",
+  "train_lines": 18,
+  "heldout_lines": 6,
+  "gradient_scope": "Independent trajectory states before indicated update; identical batch schedule for each seed",
+  "measurement_scope": "Training-quality experiment with host snapshots for gradient comparison",
+  "ort_optimizer": "disabled",
+  "torch_float32_matmul_precision": "highest",
+  "cuda_bf16_reduced_precision_reduction": null,
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "versions": {
+    "onnax": "0.1.0",
+    "torch": "2.15.0",
+    "numpy": "2.4.6",
+    "onnxruntime": "1.31.1",
+    "onnxscript": "0.7.2",
+    "transformers": "5.22.1",
+    "mobius-onnx": "0.1.0",
+    "onnxruntime-ep-mlx": "0.31.0",
+    "mlx": "0.32.4"
+  },
+  "hardware": {
+    "cpu_architecture": "arm64",
+    "logical_cpu_count": 10,
+    "cuda_device": null
+  },
+  "validation_summary": {
+    "torch_cpu": {
+      "values": [
+        6.893252193927765,
+        7.161592364311218,
+        7.578715920448303
+      ],
+      "mean": 7.2111868262290955,
+      "std": 0.3454125621391739,
+      "min": 6.893252193927765,
+      "max": 7.578715920448303
+    }
+  },
+  "comparisons": [],
+  "trials": [
+    {
+      "engine": "torch_cpu",
+      "seed": 17,
+      "initial_adapter_sha256": "790c2169ec37a6db8de318ddef49e17fc047a004c8fcebd0af84142f7e23f1af",
+      "schedule_sha256": "f0399f910a34bdf5740000f85dcf8b0e2461062b131de5c63907db90d525696b",
+      "training_loss": [
+        6.717962145805359,
+        6.045214653015137,
+        5.728413820266724,
+        5.3540231585502625,
+        6.176278829574585,
+        5.173371076583862,
+        4.332991063594818,
+        4.587050557136536,
+        5.135478734970093,
+        4.156585931777954,
+        3.621133863925934,
+        3.36601185798645,
+        3.211443245410919,
+        3.2755146622657776,
+        2.9315367937088013,
+        2.2969205379486084,
+        2.5098935961723328,
+        2.5242987871170044,
+        2.42286416888237,
+        1.7975245416164398,
+        2.102985769510269,
+        1.6337645947933197,
+        1.7995903491973877,
+        1.6756874322891235,
+        1.4077183902263641,
+        1.543432205915451,
+        1.5406492352485657,
+        1.237355351448059,
+        1.4360671937465668,
+        1.459332674741745
+      ],
+      "gradient_norm": [
+        0.27406951785087585,
+        0.3391396403312683,
+        0.5761083960533142,
+        0.9980897307395935,
+        1.2442020177841187,
+        2.0138978958129883,
+        1.1966567039489746,
+        1.4045718908309937,
+        1.8942331075668335,
+        1.4429000616073608,
+        1.5887209177017212,
+        1.3206406831741333,
+        2.0382275581359863,
+        1.6490801572799683,
+        1.7514241933822632,
+        1.269012451171875,
+        1.2375388145446777,
+        1.9079608917236328,
+        1.6752690076828003,
+        1.382098913192749,
+        1.4484825134277344,
+        1.3030391931533813,
+        1.579254150390625,
+        1.598268747329712,
+        1.5817421674728394,
+        1.7724497318267822,
+        1.5694074630737305,
+        0.7102655172348022,
+        2.9536569118499756,
+        0.39597347378730774
+      ],
+      "validation_curve": [
+        {
+          "step": 0,
+          "loss": 6.748693287372589
+        },
+        {
+          "step": 10,
+          "loss": 5.217939257621765
+        },
+        {
+          "step": 20,
+          "loss": 6.126589596271515
+        },
+        {
+          "step": 30,
+          "loss": 6.893252193927765
+        }
+      ],
+      "initial_training_loss": 6.317881181836128,
+      "final_training_loss": 1.3478450924158096,
+      "initial_validation_loss": 6.748693287372589,
+      "final_validation_loss": 6.893252193927765
+    },
+    {
+      "engine": "torch_cpu",
+      "seed": 29,
+      "initial_adapter_sha256": "f95a97a209757d5c00a880c59b6e8d61bca6472d8907581049fe4d70985a175b",
+      "schedule_sha256": "2c53d406e9771073a5b7f19349f137bee53494deee0498a25055d214d45ed8e1",
+      "training_loss": [
+        5.7640655636787415,
+        6.200415253639221,
+        7.007188081741333,
+        5.996668219566345,
+        5.48249876499176,
+        4.508809685707092,
+        4.804725527763367,
+        4.066610634326935,
+        5.306919574737549,
+        3.2326583862304688,
+        3.7247520089149475,
+        3.680043339729309,
+        3.6389294266700745,
+        2.8979790806770325,
+        2.950409471988678,
+        3.224344313144684,
+        2.58080917596817,
+        2.17422753572464,
+        2.0393282175064087,
+        1.8178931176662445,
+        1.8173418045043945,
+        1.9660096168518066,
+        1.9058602452278137,
+        1.7400363385677338,
+        1.545586347579956,
+        1.363610863685608,
+        1.7415918707847595,
+        1.2495054304599762,
+        1.4479206502437592,
+        1.4694339632987976
+      ],
+      "gradient_norm": [
+        0.30613160133361816,
+        0.3503091335296631,
+        0.7639546990394592,
+        0.8916379809379578,
+        0.8395140171051025,
+        1.246579647064209,
+        1.417519211769104,
+        1.182065486907959,
+        2.178046464920044,
+        1.4307498931884766,
+        1.9063390493392944,
+        2.006746768951416,
+        1.7756755352020264,
+        1.4540960788726807,
+        1.5724538564682007,
+        1.5083726644515991,
+        1.6620619297027588,
+        1.5530176162719727,
+        1.0938915014266968,
+        0.9386312961578369,
+        1.689874291419983,
+        1.8253601789474487,
+        1.9806801080703735,
+        1.0529239177703857,
+        1.809587836265564,
+        1.0304100513458252,
+        3.871210813522339,
+        1.8290616273880005,
+        1.094519853591919,
+        1.202957272529602
+      ],
+      "validation_curve": [
+        {
+          "step": 0,
+          "loss": 6.748693287372589
+        },
+        {
+          "step": 10,
+          "loss": 5.325381100177765
+        },
+        {
+          "step": 20,
+          "loss": 6.095898866653442
+        },
+        {
+          "step": 30,
+          "loss": 7.161592364311218
+        }
+      ],
+      "initial_training_loss": 6.317881181836128,
+      "final_training_loss": 1.355151493102312,
+      "initial_validation_loss": 6.748693287372589,
+      "final_validation_loss": 7.161592364311218
+    },
+    {
+      "engine": "torch_cpu",
+      "seed": 43,
+      "initial_adapter_sha256": "7ff22f1b8567a47cae57e7f0513f848d1847dd28000ca0714046428984126c30",
+      "schedule_sha256": "fb27cbf038e34464005d486d2ef3d3ef49acf7d1a1a54476072cdc751c625c49",
+      "training_loss": [
+        7.441550850868225,
+        5.777899622917175,
+        6.221150159835815,
+        5.886469483375549,
+        5.780927538871765,
+        4.230002343654633,
+        5.082128405570984,
+        4.61771023273468,
+        4.471333146095276,
+        3.4589568376541138,
+        3.8806209564208984,
+        3.6645084023475647,
+        3.0058136582374573,
+        2.9336152374744415,
+        2.8665556609630585,
+        2.644609570503235,
+        2.619551658630371,
+        2.387603998184204,
+        1.5824179649353027,
+        2.2503561973571777,
+        1.7084607183933258,
+        2.103680282831192,
+        1.686949610710144,
+        1.5669803619384766,
+        1.7359957993030548,
+        1.2917450666427612,
+        1.5811632871627808,
+        1.5428099930286407,
+        1.1795240938663483,
+        1.4990291595458984
+      ],
+      "gradient_norm": [
+        0.3153384327888489,
+        0.3461765944957733,
+        0.6208980679512024,
+        0.9506998658180237,
+        1.276289463043213,
+        1.4700250625610352,
+        1.4672664403915405,
+        1.2040969133377075,
+        1.8615282773971558,
+        1.6011637449264526,
+        1.4468879699707031,
+        1.6881734132766724,
+        1.5122262239456177,
+        1.3643890619277954,
+        1.395472764968872,
+        2.2160117626190186,
+        2.0198850631713867,
+        2.5882651805877686,
+        1.2328671216964722,
+        2.3201239109039307,
+        1.515245795249939,
+        2.0030415058135986,
+        1.5800272226333618,
+        2.6894538402557373,
+        1.9710320234298706,
+        1.2945291996002197,
+        1.4729379415512085,
+        0.5466651916503906,
+        0.4448205232620239,
+        1.0523639917373657
+      ],
+      "validation_curve": [
+        {
+          "step": 0,
+          "loss": 6.748693287372589
+        },
+        {
+          "step": 10,
+          "loss": 5.252579927444458
+        },
+        {
+          "step": 20,
+          "loss": 6.556578636169434
+        },
+        {
+          "step": 30,
+          "loss": 7.578715920448303
+        }
+      ],
+      "initial_training_loss": 6.317881181836128,
+      "final_training_loss": 1.3656985983252525,
+      "initial_validation_loss": 6.748693287372589,
+      "final_validation_loss": 7.578715920448303
+    }
+  ],
+  "execution": {
+    "command": [
+      "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+      "-m",
+      "examples.huggingface.training_impact",
+      "--real",
+      "--engines",
+      "torch_cpu",
+      "--steps",
+      "30",
+      "--seeds",
+      "17",
+      "29",
+      "43",
+      "--interval",
+      "10",
+      "--capture",
+      "/tmp/onnax-real-nf4-bf16-quality-torch-cpu.npz",
+      "--output",
+      "/tmp/onnax-real-nf4-bf16-quality-torch-cpu.json"
+    ],
+    "source_commit": "4e145afe37d20045d32cebcfab21f16b5e267853",
+    "engine": "torch_cpu",
+    "seeds": [
+      17,
+      29,
+      43
+    ],
+    "steps": 30,
+    "microbatch": 1,
+    "accumulation": 4,
+    "capture": "/tmp/onnax-real-nf4-bf16-quality-torch-cpu.npz",
+    "operational_memory_limit_bytes": 25769803776,
+    "memory_guard_scope": "Safety guard for this 32 GiB machine, not a performance acceptance threshold; observations use vmmap physical footprint including GPU mappings",
+    "observations": [
+      {
+        "utc": "2026-10-31T17:11:30.614474+00:00",
+        "current_bytes": 13316915.2,
+        "peak_bytes": 13316915.2
+      },
+      {
+        "utc": "2026-10-31T17:11:46.558582+00:00",
+        "current_bytes": 3650722201.6,
+        "peak_bytes": 3650722201.6
+      },
+      {
+        "utc": "2026-10-31T17:12:02.431536+00:00",
+        "current_bytes": 4509715660.8,
+        "peak_bytes": 4509715660.8
+      },
+      {
+        "utc": "2026-10-31T17:12:18.343086+00:00",
+        "current_bytes": 5476083302.4,
+        "peak_bytes": 5476083302.4
+      },
+      {
+        "utc": "2026-10-31T17:12:34.319570+00:00",
+        "current_bytes": 6227702579.2,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:12:50.239607+00:00",
+        "current_bytes": 4617089843.2,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:13:06.150955+00:00",
+        "current_bytes": 4509715660.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:13:22.077465+00:00",
+        "current_bytes": 4617089843.2,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:13:38.003499+00:00",
+        "current_bytes": 4939212390.4,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:13:53.933046+00:00",
+        "current_bytes": 5261334937.6,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:14:09.837867+00:00",
+        "current_bytes": 4080218931.2,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:14:25.760328+00:00",
+        "current_bytes": 5368709120.0,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:14:41.698974+00:00",
+        "current_bytes": 6120328396.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:14:57.617946+00:00",
+        "current_bytes": 4831838208.0,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:15:13.560843+00:00",
+        "current_bytes": 4831838208.0,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:15:29.458225+00:00",
+        "current_bytes": 4080218931.2,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:15:45.363807+00:00",
+        "current_bytes": 4509715660.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:16:01.318206+00:00",
+        "current_bytes": 6012954214.4,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:16:17.265608+00:00",
+        "current_bytes": 6120328396.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:16:33.174931+00:00",
+        "current_bytes": 5046586572.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:16:49.060693+00:00",
+        "current_bytes": 3972844748.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:17:04.998623+00:00",
+        "current_bytes": 4831838208.0,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:17:20.960494+00:00",
+        "current_bytes": 6120328396.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:17:36.855067+00:00",
+        "current_bytes": 4187593113.6,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:17:52.755443+00:00",
+        "current_bytes": 4831838208.0,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:18:08.669411+00:00",
+        "current_bytes": 4831838208.0,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:18:24.558091+00:00",
+        "current_bytes": 4617089843.2,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:18:40.450852+00:00",
+        "current_bytes": 3972844748.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:18:56.397336+00:00",
+        "current_bytes": 6120328396.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:19:12.360906+00:00",
+        "current_bytes": 6120328396.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:19:28.266197+00:00",
+        "current_bytes": 4402341478.4,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:19:44.239473+00:00",
+        "current_bytes": 6120328396.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:20:00.195033+00:00",
+        "current_bytes": 6120328396.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:20:16.135796+00:00",
+        "current_bytes": 4939212390.4,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:20:32.038235+00:00",
+        "current_bytes": 3972844748.8,
+        "peak_bytes": 7301444403.2
+      },
+      {
+        "utc": "2026-10-31T17:20:47.942318+00:00",
+        "current_bytes": 4939212390.4,
+        "peak_bytes": 7301444403.2
+      }
+    ],
+    "pid": 45782,
+    "started": "2026-10-31T17:11:30.038693+00:00",
+    "returncode": 0,
+    "finished": "2026-10-31T17:21:02.953052+00:00"
+  },
+  "source_commit": "4e145afe37d20045d32cebcfab21f16b5e267853",
+  "source_sha256": {
+    "examples/huggingface/training_impact.py": "63478dcff4fedbb9f08adff8345039f2268c4e4a1433dd8c8052581231336fb4",
+    "examples/huggingface/sft.py": "15a845c839f8e9118d98588f755a038dc8b3dceab9cf0cd4589760fb156bf083",
+    "examples/huggingface/validation.py": "e6e7d3047bce7083ad073148ce7c7df876979e401908f7159d5e45e8b906362d"
+  }
+}

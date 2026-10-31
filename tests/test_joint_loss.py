@@ -287,3 +287,87 @@ def test_joint_checkpoint_precision_policy(tmp_path):
     restored.load_state_dict(precise.state_dict())
     precise.export(tmp_path)
     assert json.loads((tmp_path / "interface.json").read_text())["precision"] == policy
+
+
+@pytest.mark.parametrize(
+    "nf4,precision,native",
+    [
+        (False, "fp32", False),
+        (True, "fp32", False),
+        (False, "bf16", False),
+        (True, "bf16", False),
+        (True, "fp32", True),
+        (True, "bf16", True),
+    ],
+)
+def test_no_grad_uses_reused_loss_only_session(nf4, precision, native, monkeypatch):
+    from examples.huggingface.serialization import reference_session
+    from examples.huggingface.sft import prepare
+    from examples.lora.train import session
+
+    torch.set_num_threads(1)
+    factory = (
+        selected_factory(native)
+        if native
+        else (reference_session if precision == "bf16" else session)
+    )
+    creations = []
+
+    def counted(source):
+        executor = factory(source)
+        creations.append(id(executor))
+        return executor
+
+    model, _ = prepare(
+        mode="joint", nf4=nf4, projection_precision=precision, session_factory=counted
+    )
+    joint = model.onnx
+    sample = batch()
+    training = joint(**sample)
+    expected = training.detach().numpy().copy()
+    assert joint.last_saved_gradient_bytes > 0
+    assert joint.loss_executor is None and len(creations) == 1
+    executor = joint.executor
+
+    class Unreachable:
+        def run(self, *args, **kwargs):
+            raise AssertionError("Evaluation reached the gradient executor")
+
+    monkeypatch.setattr(joint, "executor", Unreachable())
+    for context in (torch.no_grad, torch.inference_mode):
+        with context():
+            result = joint(**sample)
+        assert not result.requires_grad
+        assert result.numpy().tobytes() == expected.tobytes()
+        assert joint.last_saved_gradient_bytes == 0
+        assert joint.last_output_bytes == np.dtype(np.float32).itemsize
+        assert all(parameter.grad is None for parameter in joint.parameters())
+    assert len(creations) == 2
+    assert len(joint.loss_model.graph.outputs) == 1
+    assert len(joint.loss_model.graph) < len(joint.gradient.graph)
+    assert len(joint.evaluation_timings["session_creation"]) == 1
+    monkeypatch.setattr(joint, "executor", executor)
+    training.backward()
+    assert all(parameter.grad is not None for parameter in joint.parameters())
+    with torch.no_grad():
+        joint.adapters[-1].add_(0.03)
+    updated = joint(**sample).detach().numpy().copy()
+    assert updated.tobytes() != expected.tobytes()
+    with torch.no_grad():
+        evaluated = joint(**sample)
+    assert evaluated.numpy().tobytes() == updated.tobytes()
+    assert len(creations) == 2 and joint.executor is executor
+    short = {name: value[:1, :3].clone() for name, value in sample.items()}
+    ignored = {name: value[:1, :1].clone() for name, value in sample.items()}
+    ignored["labels"].fill_(-100)
+    for current in (short, ignored):
+        expected_loss = joint(**current).detach().numpy().copy()
+        with torch.no_grad():
+            actual_loss = joint(**current)
+        assert actual_loss.numpy().tobytes() == expected_loss.tobytes()
+        assert joint.last_saved_gradient_bytes == 0
+    assert len(creations) == 2
+    joint.close()
+    assert joint.executor is joint.loss_executor is None
+    with pytest.raises(RuntimeError, match="sessions are closed"):
+        joint(**sample)

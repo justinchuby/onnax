@@ -1,0 +1,65 @@
+{
+  "scope": "First failing tensor in five-step FP32-storage BF16 control with pairwise FP32 reference head; original rtol=1e-4 atol=1e-6, AdamW lr=.003 eps=1e-8 weight_decay=0",
+  "strict_check_passed": false,
+  "failure": "step 5: model.layers.0.self_attn.q_proj.lora.A parameter",
+  "step": 5,
+  "parameter": "model.layers.0.self_attn.q_proj.lora.A",
+  "failed_coordinates": [
+    {
+      "coordinate": [
+        40,
+        1
+      ],
+      "parameter_gap": 2.51084566116333e-06,
+      "onnx": {
+        "gradients": [
+          0.0,
+          1.6264725672954228e-06,
+          2.0396998934302246e-06,
+          1.7998704606725369e-06,
+          -6.8286535679362714e-06
+        ],
+        "full_parameter": -0.004435200244188309,
+        "scalar_parameter": -0.004435200244188309,
+        "scalar_matches_full": true,
+        "exp_avg": -2.3709148422312865e-07,
+        "exp_avg_sq": 5.66563533284728e-14
+      },
+      "reference": {
+        "gradients": [
+          0.0,
+          1.6263609268207802e-06,
+          2.040208528342191e-06,
+          1.8000405361817684e-06,
+          -6.845366897323402e-06
+        ],
+        "full_parameter": -0.004432689398527145,
+        "scalar_parameter": -0.004432689398527145,
+        "scalar_matches_full": true,
+        "exp_avg": -2.38714449096733e-07,
+        "exp_avg_sq": 5.688721385231285e-14
+      }
+    }
+  ],
+  "max_parameter_gap": 2.51084566116333e-06,
+  "source_sha256": {
+    "tests/test_qwen_bf16.py": "17cee3acc7a002e95ac4e4c43ef1345750e152afef316263c845de6635d006cd",
+    "examples/huggingface/reference_head.py": "6cc8741c38b89f74f8d98081567e4a76b2febc8ca233c6f11f3dc0e5db009097",
+    "examples/huggingface/mixed_precision.py": "0571d1d70aa307a65aef1413049a1f1b25d30227a425bbe889e59141a375bc08"
+  },
+  "experiment_script": "import contextlib,hashlib,json,runpy,traceback\nfrom pathlib import Path\nfrom unittest.mock import patch\nimport numpy as np\nimport torch\nfrom examples.huggingface.reference_head import pairwise_head\nm=runpy.run_path('tests/test_qwen_bf16.py')\nAdam=torch.optim.AdamW\noptimizers=[]\nclass TracedAdam(Adam):\n def __init__(self,*a,**kw):\n  super().__init__(*a,**kw);self.history={};optimizers.append(self)\n def step(self,*a,**kw):\n  saved=[]\n  for group in self.param_groups:\n   for p in group['params']:\n    if p.grad is not None:\n     saved.append((p,p.detach().numpy().copy(),p.grad.detach().numpy().copy()))\n  result=super().step(*a,**kw)\n  for p,before,g in saved:self.history.setdefault(id(p),[]).append((before,g,p.detach().numpy().copy()))\n  return result\noriginal=m['reference_projections']\nwith contextlib.ExitStack() as stack:\n def stable(model):\n  model=original(model);stack.enter_context(pairwise_head(model,projection_precision='bf16'));return model\n m['test_qwen_bf16_forward_gradients_and_updates'].__globals__['reference_projections']=stable\n try:\n  with patch.object(torch.optim,'AdamW',TracedAdam):\n   m['test_qwen_bf16_forward_gradients_and_updates'](False,False)\n except AssertionError as error:\n  frames=list(traceback.walk_tb(error.__traceback__))\n  frame=next(f for f,_ in frames if f.f_code.co_name=='test_qwen_bf16_forward_gradients_and_updates')\n  local=frame.f_locals;a,b=local['actual'],local['expected']\n  aa,bb=a.detach().numpy(),b.detach().numpy();bad=np.abs(aa-bb)>1e-6+1e-4*np.abs(bb)\n  rows=[]\n  for index in zip(*np.nonzero(bad),strict=True):\n   sides=[]\n   for p,opt in [(a,local['actual_optimizer']),(b,local['expected_optimizer'])]:\n    history=opt.history[id(p)]\n    scalar=torch.nn.Parameter(torch.tensor([history[0][0][index]],dtype=torch.float32))\n    optimizer=Adam([scalar],lr=0.003,weight_decay=0)\n    gradients=[]\n    for _,g,_ in history:\n     grad=float(g[index]);gradients.append(grad)\n     scalar.grad=torch.tensor([grad],dtype=torch.float32);optimizer.step()\n    sides.append({'gradients':gradients,'full_parameter':float(p.detach()[index]),'scalar_parameter':float(scalar.detach()[0]),'scalar_matches_full':float(scalar.detach()[0])==float(p.detach()[index]),'exp_avg':float(opt.state[p]['exp_avg'][index]),'exp_avg_sq':float(opt.state[p]['exp_avg_sq'][index])})\n   rows.append({'coordinate':[int(i) for i in index],'parameter_gap':float(abs(aa[index]-bb[index])),'onnx':sides[0],'reference':sides[1]})\n  report={'scope':'First failing tensor in five-step FP32-storage BF16 control with pairwise FP32 reference head; original rtol=1e-4 atol=1e-6, AdamW lr=.003 eps=1e-8 weight_decay=0','strict_check_passed':False,'failure':str(error),'step':local['step']+1,'parameter':local['row'][local['key']],'failed_coordinates':rows,'max_parameter_gap':float(np.abs(aa-bb).max()),'source_sha256':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in ['tests/test_qwen_bf16.py','examples/huggingface/reference_head.py','examples/huggingface/mixed_precision.py']},'experiment_script':Path(__file__).read_text()}\n  Path('/tmp/onnax-tiny-bf16-pairwise-adam-trace.json').write_text(json.dumps(report,indent=2)+'\\n')\n  print(json.dumps({k:v for k,v in report.items() if k not in ('experiment_script','source_sha256')},indent=2))\n  raise\n",
+  "source_commit": "48a04f50c8436c690f1845d1132f1dc90a9aea84",
+  "preceding_loss_and_gradient_checks_passed": true,
+  "execution": {
+    "returncode": 1,
+    "reason": "The original strict parameter check fails; the diagnostic preserves its failure",
+    "log_sha256": "d324dd2a12a4f85fafaee9d0f3ed099bee70570da2086bace13d2064791f3986"
+  },
+  "versions": {
+    "torch": "2.15.0",
+    "numpy": "2.4.6",
+    "onnx": "1.23.2",
+    "onnxscript": "0.7.2",
+    "onnx-ir": "1.1.0"
+  }
+}

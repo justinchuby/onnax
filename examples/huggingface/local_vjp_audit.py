@@ -3,6 +3,8 @@
 """Compare local Qwen pullbacks at observed activations and loss cotangents."""
 
 import argparse
+import gc
+import hashlib
 import importlib.metadata
 import json
 import os
@@ -12,6 +14,7 @@ from collections import Counter
 from unittest.mock import patch
 
 import numpy as np
+import onnx_ir as ir
 import torch
 
 import onnax
@@ -21,6 +24,8 @@ from examples.huggingface.qwen import REVISION, build_base, decompose, inject, r
 from examples.huggingface.rms_audit import diagnostic_session
 from examples.huggingface.serialization import save_graph
 from examples.huggingface.sft import token_loss
+from examples.lora.bf16_rules import DOMAIN as BF16_DOMAIN
+from examples.lora.bf16_rules import OP as BF16_OP
 from examples.lora.nf4 import DOMAIN, dequantize
 from onnax._autodiff._registry import _VjpRegistry
 
@@ -45,7 +50,7 @@ LAYOUT = frozenset(
 
 
 def operation(node):
-    return "NF4MatMul" if node.domain == DOMAIN else node.op_type
+    return "NF4" + node.op_type.split("_")[0] if node.domain == DOMAIN else node.op_type
 
 
 def trace(model, names):
@@ -58,8 +63,13 @@ def trace(model, names):
 
         def observe(context, node, seeds, indices):
             contributions = rule(context, node, seeds, indices)
-            if (not node.domain and node.op_type in ARITHMETIC | LAYOUT) or (
-                node.domain == DOMAIN and node.op_type.startswith("MatMul_")
+            if (
+                (not node.domain and node.op_type in ARITHMETIC | LAYOUT)
+                or (
+                    node.domain == DOMAIN
+                    and node.op_type.startswith(("MatMul_", "MatMulBF16_"))
+                )
+                or (node.domain == BF16_DOMAIN and node.op_type == BF16_OP)
             ):
                 probes.append((node, tuple(seeds), dict(contributions)))
             else:
@@ -81,6 +91,8 @@ def trace(model, names):
             exposed.add(value.name)
 
     for node, seeds, contributions in probes:
+        for output in node.outputs:
+            expose(output, output)
         for value in node.inputs:
             if value is not None:
                 expose(value, value)
@@ -91,14 +103,27 @@ def trace(model, names):
     return joint, seed_name, probes, unchecked
 
 
-def reference_output(node, operands):
+def reference_output(node, operands, *, pairwise_head=False):
     """Evaluate each observed operation using PyTorch's own autograd rules."""
+    if pairwise_head:
+        from examples.huggingface.reference_head import _BF16FrozenHead, _FrozenHead
+
+        product = _BF16FrozenHead if node.domain == BF16_DOMAIN else _FrozenHead
+        return product.apply(operands[0], operands[1].T, 128)
     if node.domain == DOMAIN:
         _, k, n, block = node.op_type.split("_")
         weight = dequantize(
             operands[1].numpy(), operands[2].numpy(), (int(k), int(n)), block_size=int(block)
         )
+        if node.op_type.startswith("MatMulBF16_"):
+            from examples.huggingface.mixed_precision import _Product
+
+            return _Product.apply(operands[0], torch.from_numpy(weight))
         return operands[0] @ torch.from_numpy(weight)
+    if node.domain == BF16_DOMAIN and node.op_type == BF16_OP:
+        from examples.huggingface.mixed_precision import _Product
+
+        return _Product.apply(*operands)
     op = node.op_type
     x = operands[0]
     if op == "MatMul":
@@ -214,65 +239,364 @@ def check(probes, observed, constants):
     return {"operators": summaries, "failed_partials": len(failures), "failures": failures}
 
 
-def run(*, real=False, nf4=False, b_values=(0.0, 0.01)):
+def compose(
+    model,
+    names,
+    observed,
+    constants,
+    seed,
+    derivative_outputs,
+    *,
+    pairwise_head=False,
+    reference_gradients=None,
+):
+    """Independently reverse the primal graph using captured operand values.
+
+    Reachability and fan-in are computed from the primal graph. Generated rule
+    contributions and observed intermediate cotangents are not used.
+    """
+
+    def array(value):
+        return (
+            observed[value.name] if value.name in observed else constants[value.name].numpy()
+        )
+
+    active = set(names)
+    for node in model.graph:
+        if any(value is not None and value.name in active for value in node.inputs):
+            active.update(
+                value.name
+                for value in node.outputs
+                if value.dtype in (ir.DataType.FLOAT, ir.DataType.DOUBLE)
+            )
+    pending = {"logits": torch.tensor(seed)}
+    nodes = additions = heads = 0
+    vocab = next(value for value in model.graph.outputs if value.name == "logits").shape[-1]
+    for node in reversed(list(model.graph)):
+        if not any(value.name in pending for value in node.outputs):
+            continue
+        indices = [
+            i
+            for i, value in enumerate(node.inputs)
+            if value is not None and value.name in active
+        ]
+        seeds = tuple(pending.pop(value.name, None) for value in node.outputs)
+        if not indices:
+            continue
+        seeds = tuple(
+            value if value is not None else torch.zeros_like(torch.tensor(array(output)))
+            for value, output in zip(seeds, node.outputs, strict=True)
+        )
+        operands = [
+            torch.tensor(array(value), requires_grad=i in indices)
+            if value is not None
+            else None
+            for i, value in enumerate(node.inputs)
+        ]
+        is_head = bool(
+            pairwise_head
+            and len(operands) == 2
+            and operands[1] is not None
+            and operands[1].ndim == 2
+            and operands[1].shape[-1] == vocab
+            and 1 not in indices
+            and (
+                (not node.domain and node.op_type == "MatMul")
+                or (node.domain == BF16_DOMAIN and node.op_type == BF16_OP)
+            )
+        )
+        heads += is_head
+        output = reference_output(node, operands, pairwise_head=is_head)
+        gradients = torch.autograd.grad(
+            (output,) if isinstance(output, torch.Tensor) else tuple(output),
+            [operands[i] for i in indices],
+            seeds,
+        )
+        nodes += 1
+        for index, gradient in zip(indices, gradients, strict=True):
+            name = node.inputs[index].name
+            if name in pending:
+                pending[name] = pending[name] + gradient
+                additions += 1
+            else:
+                pending[name] = gradient
+    rows = []
+    for name, output in zip(names, derivative_outputs, strict=True):
+        actual = observed[output.name]
+        expected = pending[name].numpy() if name in pending else np.zeros_like(actual)
+        if actual.shape != expected.shape or actual.dtype != expected.dtype:
+            raise AssertionError(f"Composed gradient interface mismatch: {name}")
+        if not np.isfinite(actual).all() or not np.isfinite(expected).all():
+            raise AssertionError(f"Nonfinite composed gradient: {name}")
+        if reference_gradients is not None:
+            reference_gradients[name] = expected.copy()
+        rows.append({"parameter": name, **compare(actual, expected)})
+    return {
+        "active_nodes": nodes,
+        "fan_in_additions": additions,
+        "pairwise_head_nodes": heads,
+        "parameters": len(rows),
+        "failed_parameters": sum(row["violations"] > 0 for row in rows),
+        "rows": rows,
+    }
+
+
+def run(
+    *,
+    real=False,
+    nf4=False,
+    b_values=(0.0, 0.01),
+    projection_precision="fp32",
+    provider="cpu",
+    library=None,
+    adapter=None,
+    pairwise_head=False,
+    training_export=None,
+):
     if not b_values or not all(np.isfinite(value) for value in b_values):
         raise ValueError("Expected finite adapter B values")
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 projection precision")
+    if provider not in ("cpu", "reference", "mlx"):
+        raise ValueError("Expected cpu, reference or mlx provider")
+    if projection_precision == "bf16" and provider == "cpu":
+        raise ValueError("BF16 requires reference or mlx execution")
+    if library is not None and provider != "mlx":
+        raise ValueError("A development library requires the mlx provider")
+    factory = diagnostic_session
+    library_hash = None
+    if provider == "reference":
+        from examples.huggingface.serialization import reference_session
+
+        factory = reference_session
+    elif provider == "mlx":
+        from examples.lora.mlx_runtime import register_library, session
+
+        factory = session
+        if library is not None:
+            register_library(library)
+            with open(library, "rb") as stream:
+                library_hash = hashlib.file_digest(stream, "sha256").hexdigest()
     torch.set_num_threads(1)
     reference = reference_model(real)
     model, params, _ = inject(build_base(reference))
     model = decompose(model)
     if nf4:
-        model, _ = lower_decoder(model, reference)
+        model, _ = lower_decoder(model, reference, precision=projection_precision)
+    if projection_precision == "bf16":
+        from examples.huggingface.mixed_precision import bf16_projections
+
+        model = bf16_projections(model)
     del reference
+    export_interface = None
+    if training_export is not None:
+        if not pairwise_head:
+            raise ValueError("Exported training checks require --pairwise-head")
+        from examples.huggingface.bridge import frozen_hashes
+        from examples.huggingface.joint_loss import causal_loss_graph
+
+        with open(os.path.join(training_export, "interface.json")) as stream:
+            export_interface = json.load(stream)
+        if (
+            export_interface.get("version") != 1
+            or export_interface.get("kind") != "loss_gradient"
+        ):
+            raise ValueError("Expected a version-one loss/gradient export")
+        if export_interface.get("frozen") != frozen_hashes(causal_loss_graph(model)):
+            raise ValueError("Exported frozen weights differ from the source model")
+        policy = json.loads(model.metadata_props.get("onnax.example.precision", "null"))
+        if export_interface.get("precision") != policy:
+            raise ValueError("Exported precision policy differs from the source model")
+        rows = export_interface["parameters"]
+        if len(rows) != len(params) or {row["name"] for row in rows} != set(params):
+            raise ValueError("Exported parameter names differ from the source model")
+        for row in rows:
+            if row["shape"] != list(params[row["name"]].shape) or row["dtype"] != "float32":
+                raise ValueError("Exported parameter shapes or dtypes differ")
+        if export_interface["causal_loss"]["reduction"] != "sum":
+            raise ValueError("Expected a summed causal loss export")
     joint, seed_name, probes, unchecked = trace(model, params)
     constants = {name: value.const_value for name, value in joint.graph.initializers.items()}
+    derivative_outputs = list(joint.graph.outputs)[
+        len(model.graph.outputs) : len(model.graph.outputs) + len(params)
+    ]
     ids = np.arange(3, 67, dtype=np.int64)[None]
     feeds = {
         "input_ids": ids,
         "attention_mask": np.ones_like(ids),
         "position_ids": np.arange(64, dtype=np.int64)[None],
     }
-    states = []
+    state_inputs = [
+        (
+            {"adapter_b": b},
+            {
+                name: np.full_like(value, b) if name.endswith(".B") else value
+                for name, value in params.items()
+            },
+        )
+        for b in b_values
+    ]
+    if adapter is not None:
+        with np.load(adapter, allow_pickle=False) as archive:
+            if set(archive.files) != set(params):
+                raise ValueError("Adapter parameter names differ from the model")
+            trained = {name: archive[name].copy() for name in params}
+        for name, value in trained.items():
+            if (
+                value.shape != params[name].shape
+                or value.dtype != np.float32
+                or not np.isfinite(value).all()
+            ):
+                raise ValueError(f"Invalid adapter array: {name}")
+        with open(adapter, "rb") as stream:
+            digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        state_inputs.append(({"adapter_archive_sha256": digest}, trained))
+    states, export_references = [], []
+    covered_nodes = len(probes)
     with tempfile.TemporaryDirectory(prefix="onnax-local-vjp-") as directory:
         for name, graph in (("forward", model), ("joint", joint)):
             save_graph(
                 graph, os.path.join(directory, name + ".onnx"), data_name=name + ".data"
             )
-        forward = diagnostic_session(os.path.join(directory, "forward.onnx"))
-        backward = diagnostic_session(os.path.join(directory, "joint.onnx"))
-        for b in b_values:
-            arrays = {
-                name: np.full_like(value, b) if name.endswith(".B") else value
-                for name, value in params.items()
-            }
+        forward = factory(os.path.join(directory, "forward.onnx"))
+        backward = factory(os.path.join(directory, "joint.onnx"))
+        for state, arrays in state_inputs:
             arguments = {**feeds, **arrays}
             logits = torch.tensor(forward.run(["logits"], arguments)[0], requires_grad=True)
-            loss = token_loss(logits, torch.from_numpy(ids))
+            loss_function = token_loss
+            if export_interface is not None:
+                from examples.huggingface.reference_losses import stable_token_loss
+
+                loss_function = stable_token_loss
+            loss = loss_function(logits, torch.from_numpy(ids))
             loss.backward()
             arguments[seed_name] = logits.grad.numpy()
             values = backward.run(None, arguments)
             observed = dict(zip([v.name for v in joint.graph.outputs], values, strict=True))
             np.testing.assert_array_equal(observed["logits"], logits.detach().numpy())
+            stable = {}
+            reference_gradients = {} if export_interface is not None else None
+            if pairwise_head:
+                stable["pairwise_head_composition"] = compose(
+                    model,
+                    params,
+                    observed,
+                    constants,
+                    arguments[seed_name],
+                    derivative_outputs,
+                    pairwise_head=True,
+                    reference_gradients=reference_gradients,
+                )
+            if export_interface is not None:
+                export_references.append((arrays, reference_gradients, float(loss.detach())))
             states.append(
                 {
-                    "adapter_b": b,
+                    **stable,
+                    **state,
                     "loss": float(loss.detach()),
                     **check(probes, observed, constants),
+                    "composition": compose(
+                        model,
+                        params,
+                        observed,
+                        constants,
+                        arguments[seed_name],
+                        derivative_outputs,
+                    ),
                 }
             )
+        del forward, backward
+    export_info = None
+    if export_interface is not None:
+        del (
+            model,
+            joint,
+            graph,
+            probes,
+            constants,
+            derivative_outputs,
+            observed,
+            values,
+            logits,
+            loss,
+            arguments,
+        )
+        gc.collect()
+        path = os.path.join(training_export, export_interface["model"])
+        executor = factory(path)
+        count = np.float32(ids[:, 1:].size)
+        names = [
+            export_interface["output"],
+            *(row["gradient"] for row in export_interface["parameters"]),
+        ]
+        for state, (arrays, expected, reference_loss) in zip(
+            states, export_references, strict=True
+        ):
+            arguments = {
+                **feeds,
+                **arrays,
+                export_interface["causal_loss"]["labels"]: ids.copy(),
+            }
+            results = executor.run(names, arguments)
+            if (
+                results[0].shape != ()
+                or results[0].dtype != np.float32
+                or not np.isfinite(results[0])
+            ):
+                raise AssertionError("Invalid exported loss interface")
+            actual_loss = float(results[0] / count)
+            comparisons = []
+            for row, gradient in zip(export_interface["parameters"], results[1:], strict=True):
+                target = expected[row["name"]]
+                if (
+                    gradient.shape != target.shape
+                    or gradient.dtype != target.dtype
+                    or not np.isfinite(gradient).all()
+                ):
+                    raise AssertionError(f"Invalid exported gradient interface: {row['name']}")
+                comparisons.append(
+                    {"parameter": row["name"], **compare(gradient / count, target)}
+                )
+            state["exported_training"] = {
+                "loss": actual_loss,
+                "reference_loss": reference_loss,
+                "loss_check_passed": bool(
+                    np.isclose(actual_loss, reference_loss, rtol=1e-4, atol=1e-6)
+                ),
+                "parameters": len(comparisons),
+                "failed_parameters": sum(row["violations"] > 0 for row in comparisons),
+                "rows": comparisons,
+            }
+        with open(path, "rb") as stream:
+            digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        export_info = {
+            "model_sha256": digest,
+            "frozen_buffers": len(export_interface["frozen"]),
+            "normalization": "Exported loss/gradients divided by valid shifted-token count",
+        }
     return {
         "model": "Qwen3-0.6B" if real else "tiny Qwen3",
         "revision": REVISION if real else None,
         "nf4": nf4,
         "dtype": "float32",
+        "projection_precision": projection_precision,
+        "provider": provider,
+        "library_sha256": library_hash,
+        "adjoints": "FP32 with BF16-rounded operands"
+        if projection_precision == "bf16"
+        else "FP32",
         "rtol": 1e-4,
         "atol": 1e-6,
         "input_ids": ids.tolist(),
         "trainable_tensors": len(params),
-        "covered_nodes": len(probes),
+        "covered_nodes": covered_nodes,
+        "training_export": export_info,
+        "loss_seed": "target-excluded stable CE"
+        if export_interface is not None
+        else "standard causal CE",
         "unchecked_active_nodes": dict(sorted(unchecked.items())),
         "ort_graph_optimization": "disabled",
-        "ort_memory_reuse": False,
+        "ort_memory_reuse": False if provider == "cpu" else None,
         "threads": 1,
         "versions": {
             name: importlib.metadata.version(name)
@@ -288,9 +612,32 @@ def main():
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--b-values", type=float, nargs="+", default=[0.0, 0.01])
+    parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
+    parser.add_argument("--provider", choices=["cpu", "reference", "mlx"], default="cpu")
+    parser.add_argument("--library")
+    parser.add_argument("--adapter", help="Also audit parameters from an exported adapter.npz")
+    parser.add_argument(
+        "--pairwise-head",
+        action="store_true",
+        help="Also compose with FP32 pairwise frozen-head accumulation",
+    )
+    parser.add_argument(
+        "--training-export",
+        help="Compare an exported joint loss/gradient module with the independent composition",
+    )
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
-    report = run(real=args.real, nf4=args.nf4, b_values=args.b_values)
+    report = run(
+        real=args.real,
+        nf4=args.nf4,
+        b_values=args.b_values,
+        projection_precision=args.projection_precision,
+        provider=args.provider,
+        library=args.library,
+        adapter=args.adapter,
+        pairwise_head=args.pairwise_head,
+        training_export=args.training_export,
+    )
     with open(args.output, "w") as stream:
         json.dump(report, stream, indent=2, allow_nan=False)
         stream.write("\n")

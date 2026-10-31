@@ -93,6 +93,49 @@ uv run python -m examples.huggingface.local_vjp_audit --real --nf4 \
   --b-values 0 0.01 --output local-vjp.json
 ```
 
+For BF16 projection products and FP32 surrogate adjoints, select a BF16-capable
+provider:
+
+```bash
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.local_vjp_audit \
+  --real --nf4 --projection-precision bf16 --provider mlx \
+  --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --pairwise-head --adapter trained/export/adapter.npz \
+  --training-export trained/export --output bf16-local-vjp.json
+```
+
+`--adapter` adds the exported trained parameters as a third state and records
+the archive hash. Use `--provider reference` for offline tiny-model checks.
+The BF16 oracle rounds captured primal operands before FP32 adjoint arithmetic;
+NF4 weights are decoded from the captured packed codes and scales.
+
+The report also independently composes the local pullbacks. Starting from the
+logits' loss seed, it traverses the primal graph in reverse, computes PyTorch
+input gradients at captured forward values and accumulates shared-input
+contributions. Reachability comes from the primal graph; intermediate ONNX
+cotangents and generated local contributions are excluded from this calculation.
+`composition` records active nodes, fan-in additions and every adapter comparison.
+A branch regression verifies that this check catches a missing final contribution
+even when all local contributions are correct.
+
+`--training-export` executes the saved, optimized joint loss/gradient model too.
+The interface must match the source's frozen hashes, precision policy, parameter
+names, shapes and dtypes. This mode seeds the independent reverse traversal with
+the target-excluded stable token loss. The exported summed loss and gradients
+are divided by the valid shifted-token count before comparison. Each state's
+`exported_training` section records the loss and every adapter gradient.
+The diagnostic sessions are released before loading the exported module; only
+FP32 adapter gradients and scalar reference losses cross that boundary.
+
+The {download}`exported-training report <../examples/huggingface/reports/qwen3-nf4-bf16-exported-training-vjp-m1max.json>`
+validates the actual Qwen3-0.6B optimized module in all three states. Its 532
+frozen hashes and precision/parameter interface match the source. Each state's
+loss and all 112 adapter gradients pass the original tolerance. Maximum gradient
+absolute differences are 3.43e-7, 4.57e-7 and 4.59e-6 for zero B, B=0.01 and
+the step-30 adapter respectively. The report records model/interface hashes and
+every parameter comparison. A regression doubles one gradient in an exported
+graph and verifies that this check detects it.
+
 The command builds one derivative graph and reuses its forward and reverse
 sessions for both adapter states. B starts at zero in the first state; the
 second fills B with 0.01, activating gradients for A as well. The upstream
@@ -112,8 +155,57 @@ matrix products. Each state checks 3,298 input contributions with zero failures
 at `rtol=1e-4, atol=1e-6`; `unchecked_active_nodes` is empty. The largest local
 absolute difference is `9.71e-7` for zero B and `9.55e-7` for nonzero B.
 
+The BF16 {download}`paired report <../examples/huggingface/reports/qwen3-nf4-bf16-pairwise-vjp-m1max.json>`
+checks zero B, B filled with 0.01 and the exported step-30 adapters. Each state
+covers 2,776 active operations, 3,522 local input contributions, 580 fan-in
+additions and all 112 adapter gradients. Local checks pass at
+`rtol=1e-4, atol=1e-6`, with no unchecked active nodes.
+
+Using short-block FP32 accumulation for the independent frozen-head adjoint
+aligns every composed adapter gradient at the original tolerance:
+
+| State | Failing tensors, ordinary reference | Failing tensors, pairwise head | Pairwise maximum absolute error |
+| --- | ---: | ---: | ---: |
+| Zero B | 39 | 0 | 3.87e-7 |
+| B = 0.01 | 51 | 0 | 3.61e-7 |
+| Step-30 adapter | 108 | 0 | 4.35e-6 |
+
+The ordinary and pairwise references use identical captured forward values,
+parameters and loss seeds. The independent [head accumulator](#calibrate-the-wide-output-head-reduction)
+uses a binary tree of 128-element FP32 products; BF16 projection computation is
+preserved. SFT and PEFT `--stable-reference` checks use this head adjoint too.
+
+The output-layer audit isolates its long-dimension matrix accumulation:
+
+```bash
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.head_reduction_audit \
+  --real --nf4 --projection-precision bf16 --provider mlx \
+  --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --capture head-operands.npz --output head-reduction.json
+```
+
+The product uses FP32 cotangents and BF16-rounded weights, with the same
+rank-two/transposed layout as the reverse graph. For eight selected discrepancy
+coordinates, scalar dot products show these maximum absolute errors:
+
+| Implementation | Maximum error against scalar sum |
+| --- | ---: |
+| MLX | 7.42e-9 |
+| PyTorch CPU | 9.60e-7 |
+| NumPy | 9.60e-7 |
+| Pairwise FP32, K-block 128 | 7.85e-10 |
+
+The {download}`head report <../examples/huggingface/reports/qwen3-nf4-bf16-head-reduction-m1max.json>`
+contains each sampled dot product, the capture hash and comparisons across all
+65,536 outputs against pairwise FP32. The scalar check identifies a long-reduction
+error in the ordinary CPU reference. `--pairwise-head` adds a second independent
+full-graph composition using the short-block frozen-head adjoint, while retaining
+the ordinary reference results. Both retain the BF16 forward product.
+
 This report checks operation pullbacks at observed activations. The paired audit
 above tracks the complete-model gradient comparison with Transformers.
+
+(calibrate-the-wide-output-head-reduction)=
 
 ## Calibrate the wide output-head reduction
 

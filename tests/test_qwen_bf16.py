@@ -35,13 +35,74 @@ def test_shared_state_projection_primals_and_cotangents():
         assert row.get("gradient_violations", 0) == 0, row["matrix"]
 
 
+@pytest.mark.parametrize("native", [False, True])
+def test_qwen_nf4_bf16_fixed_state_gradients(native):
+    if native and os.environ.get("ONNAX_TEST_MLX_EP") != "1":
+        pytest.skip("Native MLX opt-in")
+    from examples.huggingface.sft import prepare
+    from examples.huggingface.validation import audit
+
+    factory = reference_session
+    if native:
+        from examples.lora.mlx_runtime import register_library, session
+
+        if library := os.environ.get("ONNAX_MLX_EP_LIBRARY"):
+            register_library(library)
+        factory = session
+    torch.set_num_threads(1)
+    model, reference = prepare(
+        mode="joint", nf4=True, projection_precision="bf16", session_factory=factory
+    )
+    reference = reference_projections(add_reference_adapters(reference, model))
+    policy = json.loads(model.forward_graph.metadata_props["onnax.example.precision"])
+    assert policy["projection_products"] == 23
+    assert model.quantization["compute_dtype"] == "bfloat16"
+    assert (
+        model.quantization["packed_decoder_bytes"]
+        < model.quantization["original_decoder_bytes"]
+    )
+    for name in model.quantization["weights"]:
+        assert name not in model.onnx.gradient.graph.initializers
+    onnx.checker.check_model(ir.to_proto(model.onnx.gradient), full_check=True)
+    inlined = ShapeInferencePass()(InlinePass()(model.forward_graph.clone()).model).model
+    products = [
+        n
+        for n in inlined.graph
+        if n.op_type == "MatMul" and n.inputs[0].dtype == ir.DataType.BFLOAT16
+    ]
+    assert len(products) == 23
+    assert all(
+        n.inputs[1].dtype == n.outputs[0].dtype == ir.DataType.BFLOAT16 for n in products
+    )
+    ids = torch.tensor([[1, 4, 5, 6, 2], [1, 7, 2, 0, 0]])
+    mask = ids.ne(0).long()
+    labels = ids.clone()
+    labels[mask == 0] = -100
+    batch = dict(
+        input_ids=ids,
+        attention_mask=mask,
+        position_ids=(mask.cumsum(-1) - 1).clamp(min=0),
+        labels=labels,
+    )
+    for offset in (0, 0.01):
+        with torch.no_grad():
+            for name, p in zip(model.onnx.names, model.onnx.adapters, strict=True):
+                if name.endswith(".B"):
+                    p.fill_(offset)
+        audit(model, reference, batch, reference_loss=stable_token_loss)
+        assert all(p.dtype == p.grad.dtype == torch.float32 for p in model.onnx.adapters)
+
+
 def reference_session(source):
     source = onnx.load_model_from_string(source) if isinstance(source, bytes) else str(source)
     return ReferenceEvaluator(source)
 
 
 @pytest.mark.parametrize("native", [False, True])
-def test_qwen_bf16_forward_gradients_and_updates(native):
+@pytest.mark.parametrize(
+    "nf4", [pytest.param(False, id="fp32-storage"), pytest.param(True, id="nf4-storage")]
+)
+def test_qwen_bf16_forward_gradients_and_updates(native, nf4):
     if native and os.environ.get("ONNAX_TEST_MLX_EP") != "1":
         pytest.skip("Native MLX opt-in")
     factory = reference_session
@@ -55,6 +116,10 @@ def test_qwen_bf16_forward_gradients_and_updates(native):
     reference = reference_model()
     source, params, mapping = inject(build_base(reference))
     source = decompose(source)
+    if nf4:
+        from examples.huggingface.nf4 import lower_decoder
+
+        source, _ = lower_decoder(source, reference, precision="bf16")
     before = ir.to_proto(source).SerializeToString()
     graph = bf16_projections(source)
     assert ir.to_proto(source).SerializeToString() == before

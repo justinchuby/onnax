@@ -1,0 +1,1284 @@
+{
+  "model": "Qwen3-0.6B",
+  "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+  "nf4": true,
+  "dtype": "float32",
+  "projection_precision": "bf16",
+  "provider": "mlx",
+  "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+  "adjoints": "FP32 with BF16-rounded operands",
+  "rtol": 0.0001,
+  "atol": 1e-06,
+  "input_ids": [
+    [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66
+    ]
+  ],
+  "trainable_tensors": 112,
+  "covered_nodes": 2776,
+  "unchecked_active_nodes": {},
+  "ort_graph_optimization": "disabled",
+  "ort_memory_reuse": null,
+  "threads": 1,
+  "versions": {
+    "onnax": "0.1.0",
+    "onnxruntime": "1.31.1",
+    "torch": "2.15.0",
+    "mobius-onnx": "0.1.0"
+  },
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "states": [
+    {
+      "adapter_b": 0.0,
+      "loss": 7.005996227264404,
+      "operators": {
+        "Reshape": {
+          "nodes": 610,
+          "input_partials": 610,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "bf16.projection_1129",
+            "input": 0,
+            "shape": [
+              64,
+              151936
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 9723904
+          }
+        },
+        "MatMulBF16": {
+          "nodes": 113,
+          "input_partials": 223,
+          "failed_partials": 0,
+          "max_abs": 9.570503607392311e-07,
+          "worst_partial": {
+            "node": "bf16.projection_1122",
+            "input": 0,
+            "shape": [
+              64,
+              1024
+            ],
+            "max_abs": 9.570503607392311e-07,
+            "relative_l2": 0.00011813817724061819,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Mul": {
+          "nodes": 472,
+          "input_partials": 639,
+          "failed_partials": 0,
+          "max_abs": 1.1698942016394598e-38,
+          "worst_partial": {
+            "node": "training.decompose.3478.13",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 1.1698942016394598e-38,
+            "relative_l2": 5.718910270276493e-37,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Div": {
+          "nodes": 167,
+          "input_partials": 306,
+          "failed_partials": 0,
+          "max_abs": 2.384185791015625e-07,
+          "worst_partial": {
+            "node": "training.decompose.1392.6",
+            "input": 1,
+            "shape": [
+              1,
+              64,
+              8,
+              1
+            ],
+            "max_abs": 2.384185791015625e-07,
+            "relative_l2": 8.343356055910569e-08,
+            "violations": 0,
+            "elements": 512
+          }
+        },
+        "Sqrt": {
+          "nodes": 111,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 9.5367431640625e-07,
+          "worst_partial": {
+            "node": "training.decompose.400.5",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              8,
+              1
+            ],
+            "max_abs": 9.5367431640625e-07,
+            "relative_l2": 5.260452734058056e-08,
+            "violations": 0,
+            "elements": 512
+          }
+        },
+        "Add": {
+          "nodes": 362,
+          "input_partials": 526,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3483.4",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              1
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 64
+          }
+        },
+        "ReduceMean": {
+          "nodes": 111,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3483.2",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              1024
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "NF4MatMulBF16": {
+          "nodes": 193,
+          "input_partials": 193,
+          "failed_partials": 0,
+          "max_abs": 1.4901161193847656e-07,
+          "worst_partial": {
+            "node": "model/layers.3/self_attn/v_proj/MatMul_node_104",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              1024
+            ],
+            "max_abs": 1.4901161193847656e-07,
+            "relative_l2": 4.784171303727404e-07,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Where": {
+          "nodes": 56,
+          "input_partials": 112,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3478.12",
+            "input": 1,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Exp": {
+          "nodes": 28,
+          "input_partials": 28,
+          "failed_partials": 0,
+          "max_abs": 9.313225746154785e-10,
+          "worst_partial": {
+            "node": "training.decompose.1866.8",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 9.313225746154785e-10,
+            "relative_l2": 5.0190608196746765e-08,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Neg": {
+          "nodes": 111,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3478.7",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Transpose": {
+          "nodes": 138,
+          "input_partials": 138,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Transpose_2517",
+            "input": 0,
+            "shape": [
+              1,
+              16,
+              64,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 131072
+          }
+        },
+        "MatMul": {
+          "nodes": 56,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_MatMul_2516",
+            "input": 0,
+            "shape": [
+              1,
+              16,
+              64,
+              64
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Softmax": {
+          "nodes": 28,
+          "input_partials": 28,
+          "failed_partials": 0,
+          "max_abs": 1.4901161193847656e-08,
+          "worst_partial": {
+            "node": "node_Softmax_2425",
+            "input": 0,
+            "shape": [
+              1,
+              16,
+              64,
+              64
+            ],
+            "max_abs": 1.4901161193847656e-08,
+            "relative_l2": 2.513006110836046e-07,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Expand": {
+          "nodes": 55,
+          "input_partials": 55,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Expand_2471",
+            "input": 0,
+            "shape": [
+              1,
+              8,
+              1,
+              64,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Unsqueeze": {
+          "nodes": 55,
+          "input_partials": 55,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Unsqueeze_2458",
+            "input": 0,
+            "shape": [
+              1,
+              8,
+              64,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Concat": {
+          "nodes": 55,
+          "input_partials": 110,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3380.11",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              8,
+              64
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 32768
+          }
+        },
+        "Split": {
+          "nodes": 55,
+          "input_partials": 55,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Split_2714",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              8,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        }
+      },
+      "failed_partials": 0,
+      "failures": []
+    },
+    {
+      "adapter_b": 0.01,
+      "loss": 7.012309551239014,
+      "operators": {
+        "Reshape": {
+          "nodes": 610,
+          "input_partials": 610,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "bf16.projection_1129",
+            "input": 0,
+            "shape": [
+              64,
+              151936
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 9723904
+          }
+        },
+        "MatMulBF16": {
+          "nodes": 113,
+          "input_partials": 223,
+          "failed_partials": 0,
+          "max_abs": 9.50181856751442e-07,
+          "worst_partial": {
+            "node": "bf16.projection_1122",
+            "input": 0,
+            "shape": [
+              64,
+              1024
+            ],
+            "max_abs": 9.50181856751442e-07,
+            "relative_l2": 0.00011770913087660218,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Mul": {
+          "nodes": 472,
+          "input_partials": 639,
+          "failed_partials": 0,
+          "max_abs": 1.0361504926984456e-38,
+          "worst_partial": {
+            "node": "model/layers.27/mlp/Mul_node_819",
+            "input": 1,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 1.0361504926984456e-38,
+            "relative_l2": 4.8426750529373035e-37,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Div": {
+          "nodes": 167,
+          "input_partials": 306,
+          "failed_partials": 0,
+          "max_abs": 2.384185791015625e-07,
+          "worst_partial": {
+            "node": "training.decompose.1392.6",
+            "input": 1,
+            "shape": [
+              1,
+              64,
+              8,
+              1
+            ],
+            "max_abs": 2.384185791015625e-07,
+            "relative_l2": 7.350597854078413e-08,
+            "violations": 0,
+            "elements": 512
+          }
+        },
+        "Sqrt": {
+          "nodes": 111,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 4.76837158203125e-07,
+          "worst_partial": {
+            "node": "training.decompose.772.5",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              8,
+              1
+            ],
+            "max_abs": 4.76837158203125e-07,
+            "relative_l2": 4.4192473476951995e-08,
+            "violations": 0,
+            "elements": 512
+          }
+        },
+        "Add": {
+          "nodes": 362,
+          "input_partials": 526,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3483.4",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              1
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 64
+          }
+        },
+        "ReduceMean": {
+          "nodes": 111,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3483.2",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              1024
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "NF4MatMulBF16": {
+          "nodes": 193,
+          "input_partials": 193,
+          "failed_partials": 0,
+          "max_abs": 1.6391277313232422e-07,
+          "worst_partial": {
+            "node": "model/layers.3/self_attn/v_proj/MatMul_node_104",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              1024
+            ],
+            "max_abs": 1.6391277313232422e-07,
+            "relative_l2": 4.794849337145862e-07,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Where": {
+          "nodes": 56,
+          "input_partials": 112,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3478.12",
+            "input": 1,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Exp": {
+          "nodes": 28,
+          "input_partials": 28,
+          "failed_partials": 0,
+          "max_abs": 1.862645149230957e-09,
+          "worst_partial": {
+            "node": "training.decompose.130.8",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 1.862645149230957e-09,
+            "relative_l2": 4.777213303388477e-08,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Neg": {
+          "nodes": 111,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3478.7",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Transpose": {
+          "nodes": 138,
+          "input_partials": 138,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Transpose_2517",
+            "input": 0,
+            "shape": [
+              1,
+              16,
+              64,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 131072
+          }
+        },
+        "MatMul": {
+          "nodes": 56,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_MatMul_2516",
+            "input": 0,
+            "shape": [
+              1,
+              16,
+              64,
+              64
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Softmax": {
+          "nodes": 28,
+          "input_partials": 28,
+          "failed_partials": 0,
+          "max_abs": 1.1757947504520416e-08,
+          "worst_partial": {
+            "node": "node_Softmax_85",
+            "input": 0,
+            "shape": [
+              1,
+              16,
+              64,
+              64
+            ],
+            "max_abs": 1.1757947504520416e-08,
+            "relative_l2": 4.3407727641419503e-07,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Expand": {
+          "nodes": 55,
+          "input_partials": 55,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Expand_2471",
+            "input": 0,
+            "shape": [
+              1,
+              8,
+              1,
+              64,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Unsqueeze": {
+          "nodes": 55,
+          "input_partials": 55,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Unsqueeze_2458",
+            "input": 0,
+            "shape": [
+              1,
+              8,
+              64,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Concat": {
+          "nodes": 55,
+          "input_partials": 110,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3380.11",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              8,
+              64
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 32768
+          }
+        },
+        "Split": {
+          "nodes": 55,
+          "input_partials": 55,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Split_2714",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              8,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        }
+      },
+      "failed_partials": 0,
+      "failures": []
+    },
+    {
+      "adapter_archive_sha256": "a00d995b37f9bb0c4bdfe7038bcd3f1563e1d82cf7f3f16d2b9e59a9cc6eb1ef",
+      "loss": 9.793191909790039,
+      "operators": {
+        "Reshape": {
+          "nodes": 610,
+          "input_partials": 610,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "bf16.projection_1129",
+            "input": 0,
+            "shape": [
+              64,
+              151936
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 9723904
+          }
+        },
+        "MatMulBF16": {
+          "nodes": 113,
+          "input_partials": 223,
+          "failed_partials": 0,
+          "max_abs": 7.392372936010361e-07,
+          "worst_partial": {
+            "node": "bf16.projection_1122",
+            "input": 0,
+            "shape": [
+              64,
+              1024
+            ],
+            "max_abs": 7.392372936010361e-07,
+            "relative_l2": 0.0001117077137310845,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Mul": {
+          "nodes": 472,
+          "input_partials": 639,
+          "failed_partials": 0,
+          "max_abs": 1.1497595045249622e-38,
+          "worst_partial": {
+            "node": "model/layers.27/mlp/Mul_node_819",
+            "input": 1,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 1.1497595045249622e-38,
+            "relative_l2": 4.144500367466588e-37,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Div": {
+          "nodes": 167,
+          "input_partials": 306,
+          "failed_partials": 0,
+          "max_abs": 9.5367431640625e-07,
+          "worst_partial": {
+            "node": "training.decompose.400.6",
+            "input": 1,
+            "shape": [
+              1,
+              64,
+              8,
+              1
+            ],
+            "max_abs": 9.5367431640625e-07,
+            "relative_l2": 1.118795410778316e-07,
+            "violations": 0,
+            "elements": 512
+          }
+        },
+        "Sqrt": {
+          "nodes": 111,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 1.9073486328125e-06,
+          "worst_partial": {
+            "node": "training.decompose.400.5",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              8,
+              1
+            ],
+            "max_abs": 1.9073486328125e-06,
+            "relative_l2": 5.7895476111652154e-08,
+            "violations": 0,
+            "elements": 512
+          }
+        },
+        "Add": {
+          "nodes": 362,
+          "input_partials": 526,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3483.4",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              1
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 64
+          }
+        },
+        "ReduceMean": {
+          "nodes": 111,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3483.2",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              1024
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "NF4MatMulBF16": {
+          "nodes": 193,
+          "input_partials": 193,
+          "failed_partials": 0,
+          "max_abs": 3.5762786865234375e-07,
+          "worst_partial": {
+            "node": "model/layers.3/self_attn/v_proj/MatMul_node_104",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              1024
+            ],
+            "max_abs": 3.5762786865234375e-07,
+            "relative_l2": 4.911690708237076e-07,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Where": {
+          "nodes": 56,
+          "input_partials": 112,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3478.12",
+            "input": 1,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Exp": {
+          "nodes": 28,
+          "input_partials": 28,
+          "failed_partials": 0,
+          "max_abs": 3.725290298461914e-09,
+          "worst_partial": {
+            "node": "training.decompose.378.8",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 3.725290298461914e-09,
+            "relative_l2": 4.984532088091446e-08,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Neg": {
+          "nodes": 111,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3478.7",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              3072
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 196608
+          }
+        },
+        "Transpose": {
+          "nodes": 138,
+          "input_partials": 138,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Transpose_2517",
+            "input": 0,
+            "shape": [
+              1,
+              16,
+              64,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 131072
+          }
+        },
+        "MatMul": {
+          "nodes": 56,
+          "input_partials": 111,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_MatMul_2516",
+            "input": 0,
+            "shape": [
+              1,
+              16,
+              64,
+              64
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Softmax": {
+          "nodes": 28,
+          "input_partials": 28,
+          "failed_partials": 0,
+          "max_abs": 2.7939677238464355e-08,
+          "worst_partial": {
+            "node": "node_Softmax_85",
+            "input": 0,
+            "shape": [
+              1,
+              16,
+              64,
+              64
+            ],
+            "max_abs": 2.7939677238464355e-08,
+            "relative_l2": 2.396814254855156e-07,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Expand": {
+          "nodes": 55,
+          "input_partials": 55,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Expand_2471",
+            "input": 0,
+            "shape": [
+              1,
+              8,
+              1,
+              64,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Unsqueeze": {
+          "nodes": 55,
+          "input_partials": 55,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Unsqueeze_2458",
+            "input": 0,
+            "shape": [
+              1,
+              8,
+              64,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        },
+        "Concat": {
+          "nodes": 55,
+          "input_partials": 110,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "training.decompose.3380.11",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              8,
+              64
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 32768
+          }
+        },
+        "Split": {
+          "nodes": 55,
+          "input_partials": 55,
+          "failed_partials": 0,
+          "max_abs": 0.0,
+          "worst_partial": {
+            "node": "node_Split_2714",
+            "input": 0,
+            "shape": [
+              1,
+              64,
+              8,
+              128
+            ],
+            "max_abs": 0.0,
+            "relative_l2": 0.0,
+            "violations": 0,
+            "elements": 65536
+          }
+        }
+      },
+      "failed_partials": 0,
+      "failures": []
+    }
+  ],
+  "execution": {
+    "command": [
+      "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+      "-m",
+      "examples.huggingface.local_vjp_audit",
+      "--real",
+      "--nf4",
+      "--projection-precision",
+      "bf16",
+      "--provider",
+      "mlx",
+      "--library",
+      "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+      "--adapter",
+      "/tmp/onnax-qwen-real-nf4-bf16-lifetimes-30/export/adapter.npz",
+      "--output",
+      "/tmp/onnax-real-nf4-bf16-local-vjp.json"
+    ],
+    "source_commit": "f0869b0178b6e99c07ff42302e10507423ce8536",
+    "backend_commit": "dcee032",
+    "backend_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+    "operational_memory_limit_bytes": 25769803776,
+    "memory_guard_scope": "Safety guard for this 32 GiB machine, not a performance acceptance threshold; observations use vmmap physical footprint including GPU mappings",
+    "observations": [
+      {
+        "utc": "2026-10-31T15:49:14.553503+00:00",
+        "current_bytes": 3543348019.2,
+        "peak_bytes": 3543348019.2
+      },
+      {
+        "utc": "2026-10-31T15:49:30.431530+00:00",
+        "current_bytes": 4294967296.0,
+        "peak_bytes": 4294967296.0
+      },
+      {
+        "utc": "2026-10-31T15:49:46.364945+00:00",
+        "current_bytes": 3758096384.0,
+        "peak_bytes": 4831838208.0
+      },
+      {
+        "utc": "2026-10-31T15:50:02.227300+00:00",
+        "current_bytes": 3758096384.0,
+        "peak_bytes": 4831838208.0
+      },
+      {
+        "utc": "2026-10-31T15:50:18.107611+00:00",
+        "current_bytes": 3758096384.0,
+        "peak_bytes": 4831838208.0
+      },
+      {
+        "utc": "2026-10-31T15:50:33.970693+00:00",
+        "current_bytes": 3758096384.0,
+        "peak_bytes": 4831838208.0
+      },
+      {
+        "utc": "2026-10-31T15:50:49.841337+00:00",
+        "current_bytes": 3758096384.0,
+        "peak_bytes": 4831838208.0
+      },
+      {
+        "utc": "2026-10-31T15:51:05.692865+00:00",
+        "current_bytes": 3758096384.0,
+        "peak_bytes": 4831838208.0
+      },
+      {
+        "utc": "2026-10-31T15:51:21.581462+00:00",
+        "current_bytes": 3758096384.0,
+        "peak_bytes": 4831838208.0
+      },
+      {
+        "utc": "2026-10-31T15:51:37.522382+00:00",
+        "current_bytes": 5046586572.8,
+        "peak_bytes": 5261334937.6
+      },
+      {
+        "utc": "2026-10-31T15:51:54.020647+00:00",
+        "current_bytes": 15247133900.8,
+        "peak_bytes": 15247133900.8
+      },
+      {
+        "utc": "2026-10-31T15:52:10.539595+00:00",
+        "current_bytes": 15247133900.8,
+        "peak_bytes": 15247133900.8
+      },
+      {
+        "utc": "2026-10-31T15:52:27.067415+00:00",
+        "current_bytes": 18360985190.4,
+        "peak_bytes": 18360985190.4
+      },
+      {
+        "utc": "2026-10-31T15:52:43.626093+00:00",
+        "current_bytes": 18360985190.4,
+        "peak_bytes": 18360985190.4
+      },
+      {
+        "utc": "2026-10-31T15:53:00.172275+00:00",
+        "current_bytes": 18683107737.6,
+        "peak_bytes": 18683107737.6
+      },
+      {
+        "utc": "2026-10-31T15:53:16.686595+00:00",
+        "current_bytes": 18683107737.6,
+        "peak_bytes": 18683107737.6
+      }
+    ],
+    "pid": 38483,
+    "started": "2026-10-31T15:48:58.694446+00:00",
+    "returncode": 0,
+    "finished": "2026-10-31T15:53:31.697185+00:00"
+  },
+  "working_tree_source_sha256": {
+    "examples/huggingface/local_vjp_audit.py": "d04850e36159a4fbe26105e07f9080fc76fbaf67400096a87c038e00639f5c51",
+    "tests/test_qwen_local_vjp.py": "f7a7f996f2c8162e66fcce274e9a6a26a10e4b37cd26d8bb9f35dfd82f7dbce0"
+  },
+  "scope": "Local VJP contributions at observed ONNX activations and cotangents, from shifted-token cross entropy on the fixed 64-token sequence; includes zero B, nonzero B and trained step-30 adapters."
+}

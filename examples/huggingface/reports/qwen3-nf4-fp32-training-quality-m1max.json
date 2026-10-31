@@ -1,0 +1,1633 @@
+{
+  "settings": {
+    "model": "Qwen3-0.6B",
+    "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "nf4": true,
+    "projection_precision": "fp32",
+    "base_seed": 20261029,
+    "steps": 30,
+    "microbatch": 1,
+    "accumulation": 4,
+    "evaluation_interval": 10,
+    "optimizer": {
+      "name": "AdamW",
+      "lr": 0.003,
+      "eps": 1e-08,
+      "weight_decay": 0,
+      "foreach": false
+    },
+    "precision_policy": "FP32 computation and state",
+    "reference_head": "FP32 pairwise K=128; stable target-excluded CE",
+    "source_base_sha256": "ee56ddf076607e03dd0af3071323f7e75889806ad12221bf8a626cefa464e721",
+    "corpus_sha256": "0dd44097dde8fb9c996d3f6c9d979b2a4235ad9816fbb024b206c9eb86f98619",
+    "train_lines": 18,
+    "heldout_lines": 6,
+    "gradient_scope": "Independent trajectory states before indicated update; identical batch schedule for each seed",
+    "ort_optimizer": "disabled",
+    "torch_float32_matmul_precision": "highest"
+  },
+  "seeds": [
+    17,
+    29,
+    43
+  ],
+  "engines": [
+    "torch_cpu",
+    "mlx"
+  ],
+  "cuda_executed": false,
+  "validation_summary": {
+    "torch_cpu": {
+      "values": [
+        6.769622266292572,
+        7.421998500823975,
+        7.7390496134758
+      ],
+      "mean": 7.310223460197449,
+      "std": 0.49428492810015323
+    },
+    "mlx": {
+      "values": [
+        6.769295394420624,
+        7.422042012214661,
+        7.7392237186431885
+      ],
+      "mean": 7.310187041759491,
+      "std": 0.49454412274734727
+    }
+  },
+  "comparisons": [
+    {
+      "left": "torch_cpu",
+      "right": "mlx",
+      "seed": 17,
+      "final_validation_loss_gap": 0.0003268718719482422,
+      "validation_curve": [
+        {
+          "step": 0,
+          "left": 6.751584708690643,
+          "right": 6.751583695411682,
+          "gap": 1.0132789611816406e-06
+        },
+        {
+          "step": 10,
+          "left": 5.216670334339142,
+          "right": 5.21666818857193,
+          "gap": 2.1457672119140625e-06
+        },
+        {
+          "step": 20,
+          "left": 6.115160763263702,
+          "right": 6.115161299705505,
+          "gap": -5.364418029785156e-07
+        },
+        {
+          "step": 30,
+          "left": 6.769622266292572,
+          "right": 6.769295394420624,
+          "gap": 0.0003268718719482422
+        }
+      ],
+      "parameters": {
+        "cosine": 0.99999994919891,
+        "relative_l2": 0.0003187512960311725,
+        "max_abs": 0.0025320136919617653
+      },
+      "gradient_snapshots": [
+        {
+          "step": 1,
+          "cosine": 0.9999999999220434,
+          "relative_l2": 1.249766636370007e-05,
+          "max_abs": 2.086162567138672e-07
+        },
+        {
+          "step": 10,
+          "cosine": 0.9999999949885079,
+          "relative_l2": 0.00010020162182318986,
+          "max_abs": 6.203353404998779e-05
+        },
+        {
+          "step": 20,
+          "cosine": 0.9999999892377899,
+          "relative_l2": 0.00014671475844419413,
+          "max_abs": 2.5910325348377228e-05
+        },
+        {
+          "step": 30,
+          "cosine": 0.9999998509156812,
+          "relative_l2": 0.0006700930707872379,
+          "max_abs": 2.269633114337921e-05
+        }
+      ]
+    },
+    {
+      "left": "torch_cpu",
+      "right": "mlx",
+      "seed": 29,
+      "final_validation_loss_gap": -4.3511390686035156e-05,
+      "validation_curve": [
+        {
+          "step": 0,
+          "left": 6.751584708690643,
+          "right": 6.751583695411682,
+          "gap": 1.0132789611816406e-06
+        },
+        {
+          "step": 10,
+          "left": 5.307334899902344,
+          "right": 5.307336330413818,
+          "gap": -1.430511474609375e-06
+        },
+        {
+          "step": 20,
+          "left": 6.043648660182953,
+          "right": 6.043642640113831,
+          "gap": 6.020069122314453e-06
+        },
+        {
+          "step": 30,
+          "left": 7.421998500823975,
+          "right": 7.422042012214661,
+          "gap": -4.3511390686035156e-05
+        }
+      ],
+      "parameters": {
+        "cosine": 0.9999999831988353,
+        "relative_l2": 0.00018333117134894608,
+        "max_abs": 0.0005120646092109382
+      },
+      "gradient_snapshots": [
+        {
+          "step": 1,
+          "cosine": 0.9999999999531146,
+          "relative_l2": 9.681892647901076e-06,
+          "max_abs": 2.2351741790771484e-07
+        },
+        {
+          "step": 10,
+          "cosine": 0.9999999984526797,
+          "relative_l2": 5.5701360650354654e-05,
+          "max_abs": 7.018446922302246e-06
+        },
+        {
+          "step": 20,
+          "cosine": 0.9999999824181518,
+          "relative_l2": 0.0001902140439188106,
+          "max_abs": 1.1825934052467346e-05
+        },
+        {
+          "step": 30,
+          "cosine": 0.9999999171911721,
+          "relative_l2": 0.0004120086523546357,
+          "max_abs": 2.9381364583969116e-05
+        }
+      ]
+    },
+    {
+      "left": "torch_cpu",
+      "right": "mlx",
+      "seed": 43,
+      "final_validation_loss_gap": -0.00017410516738891602,
+      "validation_curve": [
+        {
+          "step": 0,
+          "left": 6.751584708690643,
+          "right": 6.751583695411682,
+          "gap": 1.0132789611816406e-06
+        },
+        {
+          "step": 10,
+          "left": 5.276712238788605,
+          "right": 5.276701033115387,
+          "gap": 1.1205673217773438e-05
+        },
+        {
+          "step": 20,
+          "left": 6.5754434466362,
+          "right": 6.5753127336502075,
+          "gap": 0.00013071298599243164
+        },
+        {
+          "step": 30,
+          "left": 7.7390496134758,
+          "right": 7.7392237186431885,
+          "gap": -0.00017410516738891602
+        }
+      ],
+      "parameters": {
+        "cosine": 0.9999997139848322,
+        "relative_l2": 0.0007563971350768203,
+        "max_abs": 0.0026376135647296906
+      },
+      "gradient_snapshots": [
+        {
+          "step": 1,
+          "cosine": 0.9999999999179622,
+          "relative_l2": 1.2807295588584018e-05,
+          "max_abs": 2.630986273288727e-07
+        },
+        {
+          "step": 10,
+          "cosine": 0.9999999920654707,
+          "relative_l2": 0.0001268339495262629,
+          "max_abs": 5.878182128071785e-05
+        },
+        {
+          "step": 20,
+          "cosine": 0.9999999592465078,
+          "relative_l2": 0.0003069630456838062,
+          "max_abs": 9.639258496463299e-05
+        },
+        {
+          "step": 30,
+          "cosine": 0.9999911354625975,
+          "relative_l2": 0.005202816379025202,
+          "max_abs": 0.0005617141723632812
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "model": "Qwen3-0.6B",
+      "nf4": true,
+      "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+      "base_seed": 20261029,
+      "projection_precision": "fp32",
+      "library_sha256": null,
+      "mlx_compile_disabled": true,
+      "capture": {
+        "version": 1,
+        "sha256": "c1ddc89521af34c38b9a0cf2fbcafcbec62fe66a6a10b08c56320ee388c60228",
+        "parameter_order": [
+          "model.layers.0.self_attn.q_proj.lora.A",
+          "model.layers.0.self_attn.q_proj.lora.B",
+          "model.layers.0.self_attn.v_proj.lora.A",
+          "model.layers.0.self_attn.v_proj.lora.B",
+          "model.layers.1.self_attn.q_proj.lora.A",
+          "model.layers.1.self_attn.q_proj.lora.B",
+          "model.layers.1.self_attn.v_proj.lora.A",
+          "model.layers.1.self_attn.v_proj.lora.B",
+          "model.layers.10.self_attn.q_proj.lora.A",
+          "model.layers.10.self_attn.q_proj.lora.B",
+          "model.layers.10.self_attn.v_proj.lora.A",
+          "model.layers.10.self_attn.v_proj.lora.B",
+          "model.layers.11.self_attn.q_proj.lora.A",
+          "model.layers.11.self_attn.q_proj.lora.B",
+          "model.layers.11.self_attn.v_proj.lora.A",
+          "model.layers.11.self_attn.v_proj.lora.B",
+          "model.layers.12.self_attn.q_proj.lora.A",
+          "model.layers.12.self_attn.q_proj.lora.B",
+          "model.layers.12.self_attn.v_proj.lora.A",
+          "model.layers.12.self_attn.v_proj.lora.B",
+          "model.layers.13.self_attn.q_proj.lora.A",
+          "model.layers.13.self_attn.q_proj.lora.B",
+          "model.layers.13.self_attn.v_proj.lora.A",
+          "model.layers.13.self_attn.v_proj.lora.B",
+          "model.layers.14.self_attn.q_proj.lora.A",
+          "model.layers.14.self_attn.q_proj.lora.B",
+          "model.layers.14.self_attn.v_proj.lora.A",
+          "model.layers.14.self_attn.v_proj.lora.B",
+          "model.layers.15.self_attn.q_proj.lora.A",
+          "model.layers.15.self_attn.q_proj.lora.B",
+          "model.layers.15.self_attn.v_proj.lora.A",
+          "model.layers.15.self_attn.v_proj.lora.B",
+          "model.layers.16.self_attn.q_proj.lora.A",
+          "model.layers.16.self_attn.q_proj.lora.B",
+          "model.layers.16.self_attn.v_proj.lora.A",
+          "model.layers.16.self_attn.v_proj.lora.B",
+          "model.layers.17.self_attn.q_proj.lora.A",
+          "model.layers.17.self_attn.q_proj.lora.B",
+          "model.layers.17.self_attn.v_proj.lora.A",
+          "model.layers.17.self_attn.v_proj.lora.B",
+          "model.layers.18.self_attn.q_proj.lora.A",
+          "model.layers.18.self_attn.q_proj.lora.B",
+          "model.layers.18.self_attn.v_proj.lora.A",
+          "model.layers.18.self_attn.v_proj.lora.B",
+          "model.layers.19.self_attn.q_proj.lora.A",
+          "model.layers.19.self_attn.q_proj.lora.B",
+          "model.layers.19.self_attn.v_proj.lora.A",
+          "model.layers.19.self_attn.v_proj.lora.B",
+          "model.layers.2.self_attn.q_proj.lora.A",
+          "model.layers.2.self_attn.q_proj.lora.B",
+          "model.layers.2.self_attn.v_proj.lora.A",
+          "model.layers.2.self_attn.v_proj.lora.B",
+          "model.layers.20.self_attn.q_proj.lora.A",
+          "model.layers.20.self_attn.q_proj.lora.B",
+          "model.layers.20.self_attn.v_proj.lora.A",
+          "model.layers.20.self_attn.v_proj.lora.B",
+          "model.layers.21.self_attn.q_proj.lora.A",
+          "model.layers.21.self_attn.q_proj.lora.B",
+          "model.layers.21.self_attn.v_proj.lora.A",
+          "model.layers.21.self_attn.v_proj.lora.B",
+          "model.layers.22.self_attn.q_proj.lora.A",
+          "model.layers.22.self_attn.q_proj.lora.B",
+          "model.layers.22.self_attn.v_proj.lora.A",
+          "model.layers.22.self_attn.v_proj.lora.B",
+          "model.layers.23.self_attn.q_proj.lora.A",
+          "model.layers.23.self_attn.q_proj.lora.B",
+          "model.layers.23.self_attn.v_proj.lora.A",
+          "model.layers.23.self_attn.v_proj.lora.B",
+          "model.layers.24.self_attn.q_proj.lora.A",
+          "model.layers.24.self_attn.q_proj.lora.B",
+          "model.layers.24.self_attn.v_proj.lora.A",
+          "model.layers.24.self_attn.v_proj.lora.B",
+          "model.layers.25.self_attn.q_proj.lora.A",
+          "model.layers.25.self_attn.q_proj.lora.B",
+          "model.layers.25.self_attn.v_proj.lora.A",
+          "model.layers.25.self_attn.v_proj.lora.B",
+          "model.layers.26.self_attn.q_proj.lora.A",
+          "model.layers.26.self_attn.q_proj.lora.B",
+          "model.layers.26.self_attn.v_proj.lora.A",
+          "model.layers.26.self_attn.v_proj.lora.B",
+          "model.layers.27.self_attn.q_proj.lora.A",
+          "model.layers.27.self_attn.q_proj.lora.B",
+          "model.layers.27.self_attn.v_proj.lora.A",
+          "model.layers.27.self_attn.v_proj.lora.B",
+          "model.layers.3.self_attn.q_proj.lora.A",
+          "model.layers.3.self_attn.q_proj.lora.B",
+          "model.layers.3.self_attn.v_proj.lora.A",
+          "model.layers.3.self_attn.v_proj.lora.B",
+          "model.layers.4.self_attn.q_proj.lora.A",
+          "model.layers.4.self_attn.q_proj.lora.B",
+          "model.layers.4.self_attn.v_proj.lora.A",
+          "model.layers.4.self_attn.v_proj.lora.B",
+          "model.layers.5.self_attn.q_proj.lora.A",
+          "model.layers.5.self_attn.q_proj.lora.B",
+          "model.layers.5.self_attn.v_proj.lora.A",
+          "model.layers.5.self_attn.v_proj.lora.B",
+          "model.layers.6.self_attn.q_proj.lora.A",
+          "model.layers.6.self_attn.q_proj.lora.B",
+          "model.layers.6.self_attn.v_proj.lora.A",
+          "model.layers.6.self_attn.v_proj.lora.B",
+          "model.layers.7.self_attn.q_proj.lora.A",
+          "model.layers.7.self_attn.q_proj.lora.B",
+          "model.layers.7.self_attn.v_proj.lora.A",
+          "model.layers.7.self_attn.v_proj.lora.B",
+          "model.layers.8.self_attn.q_proj.lora.A",
+          "model.layers.8.self_attn.q_proj.lora.B",
+          "model.layers.8.self_attn.v_proj.lora.A",
+          "model.layers.8.self_attn.v_proj.lora.B",
+          "model.layers.9.self_attn.q_proj.lora.A",
+          "model.layers.9.self_attn.q_proj.lora.B",
+          "model.layers.9.self_attn.v_proj.lora.A",
+          "model.layers.9.self_attn.v_proj.lora.B"
+        ]
+      },
+      "engines": [
+        "torch_cpu"
+      ],
+      "unavailable_engines": [],
+      "seeds": [
+        17,
+        29,
+        43
+      ],
+      "steps": 30,
+      "microbatch": 1,
+      "accumulation": 4,
+      "evaluation_interval": 10,
+      "optimizer": {
+        "name": "AdamW",
+        "lr": 0.003,
+        "eps": 1e-08,
+        "weight_decay": 0,
+        "foreach": false
+      },
+      "precision_policy": "FP32 computation and state",
+      "reference_head": "FP32 pairwise K=128; stable target-excluded CE",
+      "frozen_unchanged": true,
+      "source_base_sha256": "ee56ddf076607e03dd0af3071323f7e75889806ad12221bf8a626cefa464e721",
+      "corpus_sha256": "0dd44097dde8fb9c996d3f6c9d979b2a4235ad9816fbb024b206c9eb86f98619",
+      "train_lines": 18,
+      "heldout_lines": 6,
+      "gradient_scope": "Independent trajectory states before indicated update; identical batch schedule for each seed",
+      "measurement_scope": "Training-quality experiment with host snapshots for gradient comparison",
+      "ort_optimizer": "disabled",
+      "torch_float32_matmul_precision": "highest",
+      "cuda_bf16_reduced_precision_reduction": null,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "onnax": "0.1.0",
+        "torch": "2.15.0",
+        "numpy": "2.4.6",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "transformers": "5.22.1",
+        "mobius-onnx": "0.1.0",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "mlx": "0.32.4"
+      },
+      "hardware": {
+        "cpu_architecture": "arm64",
+        "logical_cpu_count": 10,
+        "cuda_device": null
+      },
+      "validation_summary": {
+        "torch_cpu": {
+          "values": [
+            6.769622266292572,
+            7.421998500823975,
+            7.7390496134758
+          ],
+          "mean": 7.310223460197449,
+          "std": 0.49428492810015323,
+          "min": 6.769622266292572,
+          "max": 7.7390496134758
+        }
+      },
+      "comparisons": [],
+      "trials": [
+        {
+          "engine": "torch_cpu",
+          "seed": 17,
+          "initial_adapter_sha256": "790c2169ec37a6db8de318ddef49e17fc047a004c8fcebd0af84142f7e23f1af",
+          "schedule_sha256": "f0399f910a34bdf5740000f85dcf8b0e2461062b131de5c63907db90d525696b",
+          "training_loss": [
+            6.718171238899231,
+            6.045078158378601,
+            5.724211692810059,
+            5.347705841064453,
+            6.174461126327515,
+            5.175221562385559,
+            4.33098042011261,
+            4.587885916233063,
+            5.1283979415893555,
+            4.155733525753021,
+            3.6213826537132263,
+            3.3717558085918427,
+            3.2048941254615784,
+            3.2780981063842773,
+            2.9259907603263855,
+            2.3004528284072876,
+            2.512970745563507,
+            2.5274394154548645,
+            2.4249584078788757,
+            1.7900832891464233,
+            2.0952601432800293,
+            1.6304538249969482,
+            1.801854521036148,
+            1.6984703242778778,
+            1.4179855287075043,
+            1.5245538353919983,
+            1.5661739706993103,
+            1.2231768369674683,
+            1.5034399330615997,
+            1.4625859260559082
+          ],
+          "gradient_norm": [
+            0.2728404104709625,
+            0.3404817283153534,
+            0.5773816704750061,
+            0.9955921769142151,
+            1.243614673614502,
+            2.034853935241699,
+            1.1944910287857056,
+            1.4098588228225708,
+            1.9306554794311523,
+            1.4465559720993042,
+            1.608471155166626,
+            1.3274524211883545,
+            2.019254207611084,
+            1.6464979648590088,
+            1.7544355392456055,
+            1.276926040649414,
+            1.2486279010772705,
+            1.9137077331542969,
+            1.6881648302078247,
+            1.3850164413452148,
+            1.4499437808990479,
+            1.3025766611099243,
+            1.627077341079712,
+            1.7647801637649536,
+            1.6104438304901123,
+            1.281264066696167,
+            2.4804041385650635,
+            0.7320274114608765,
+            2.9628233909606934,
+            0.46778884530067444
+          ],
+          "validation_curve": [
+            {
+              "step": 0,
+              "loss": 6.751584708690643
+            },
+            {
+              "step": 10,
+              "loss": 5.216670334339142
+            },
+            {
+              "step": 20,
+              "loss": 6.115160763263702
+            },
+            {
+              "step": 30,
+              "loss": 6.769622266292572
+            }
+          ],
+          "initial_training_loss": 6.322220668196678,
+          "final_training_loss": 1.346866849809885,
+          "initial_validation_loss": 6.751584708690643,
+          "final_validation_loss": 6.769622266292572
+        },
+        {
+          "engine": "torch_cpu",
+          "seed": 29,
+          "initial_adapter_sha256": "f95a97a209757d5c00a880c59b6e8d61bca6472d8907581049fe4d70985a175b",
+          "schedule_sha256": "2c53d406e9771073a5b7f19349f137bee53494deee0498a25055d214d45ed8e1",
+          "training_loss": [
+            5.784492671489716,
+            6.197870254516602,
+            7.008042812347412,
+            5.997136473655701,
+            5.476528763771057,
+            4.513824105262756,
+            4.813143014907837,
+            4.062963128089905,
+            5.300089716911316,
+            3.21874737739563,
+            3.725144922733307,
+            3.690113842487335,
+            3.6344246864318848,
+            2.877215564250946,
+            2.9635751843452454,
+            3.185938775539398,
+            2.572342038154602,
+            2.1891554296016693,
+            2.044874608516693,
+            1.8176560699939728,
+            1.7902806997299194,
+            1.9907512068748474,
+            1.8982635736465454,
+            1.7352350056171417,
+            1.5612752735614777,
+            1.348874419927597,
+            1.668020635843277,
+            1.2611790001392365,
+            1.4108472168445587,
+            1.4991275072097778
+          ],
+          "gradient_norm": [
+            0.3074456453323364,
+            0.3501143157482147,
+            0.7619971632957458,
+            0.8853721618652344,
+            0.8392515182495117,
+            1.2457960844039917,
+            1.4151893854141235,
+            1.1655597686767578,
+            2.076817035675049,
+            1.4343767166137695,
+            1.841896653175354,
+            2.0038952827453613,
+            1.800784707069397,
+            1.4465572834014893,
+            1.5514755249023438,
+            1.4766837358474731,
+            1.5923064947128296,
+            1.5968676805496216,
+            1.292288064956665,
+            0.9535360932350159,
+            1.4615659713745117,
+            1.9309792518615723,
+            1.9504566192626953,
+            0.9566551446914673,
+            1.9675296545028687,
+            0.7765096426010132,
+            4.319146156311035,
+            1.16355299949646,
+            0.7209284901618958,
+            1.1377559900283813
+          ],
+          "validation_curve": [
+            {
+              "step": 0,
+              "loss": 6.751584708690643
+            },
+            {
+              "step": 10,
+              "loss": 5.307334899902344
+            },
+            {
+              "step": 20,
+              "loss": 6.043648660182953
+            },
+            {
+              "step": 30,
+              "loss": 7.421998500823975
+            }
+          ],
+          "initial_training_loss": 6.322220668196678,
+          "final_training_loss": 1.369369801133871,
+          "initial_validation_loss": 6.751584708690643,
+          "final_validation_loss": 7.421998500823975
+        },
+        {
+          "engine": "torch_cpu",
+          "seed": 43,
+          "initial_adapter_sha256": "7ff22f1b8567a47cae57e7f0513f848d1847dd28000ca0714046428984126c30",
+          "schedule_sha256": "fb27cbf038e34464005d486d2ef3d3ef49acf7d1a1a54476072cdc751c625c49",
+          "training_loss": [
+            7.440256357192993,
+            5.7844120264053345,
+            6.22908079624176,
+            5.890826225280762,
+            5.777785360813141,
+            4.235962212085724,
+            5.090908885002136,
+            4.617110073566437,
+            4.4656025767326355,
+            3.4654117226600647,
+            3.890384316444397,
+            3.6553120017051697,
+            3.004228413105011,
+            2.930640786886215,
+            2.8627584874629974,
+            2.6469510197639465,
+            2.6218301951885223,
+            2.365887075662613,
+            1.584763377904892,
+            2.2395428121089935,
+            1.7184685468673706,
+            2.0897803604602814,
+            1.6822558641433716,
+            1.5138431191444397,
+            1.7334188520908356,
+            1.304627239704132,
+            1.632960557937622,
+            1.5423222482204437,
+            1.185252696275711,
+            1.556139588356018
+          ],
+          "gradient_norm": [
+            0.31645357608795166,
+            0.3458070755004883,
+            0.6237951517105103,
+            0.9463822245597839,
+            1.2697218656539917,
+            1.4766746759414673,
+            1.4694210290908813,
+            1.1912270784378052,
+            1.8584544658660889,
+            1.584556221961975,
+            1.4490073919296265,
+            1.7030601501464844,
+            1.5083256959915161,
+            1.3636683225631714,
+            1.3773829936981201,
+            2.2546145915985107,
+            1.975864052772522,
+            2.451948642730713,
+            1.2207212448120117,
+            2.3046185970306396,
+            1.4822108745574951,
+            1.9725193977355957,
+            1.5357829332351685,
+            2.6424198150634766,
+            1.594304084777832,
+            1.4571828842163086,
+            1.695106863975525,
+            0.5325984954833984,
+            0.46167615056037903,
+            1.7301381826400757
+          ],
+          "validation_curve": [
+            {
+              "step": 0,
+              "loss": 6.751584708690643
+            },
+            {
+              "step": 10,
+              "loss": 5.276712238788605
+            },
+            {
+              "step": 20,
+              "loss": 6.5754434466362
+            },
+            {
+              "step": 30,
+              "loss": 7.7390496134758
+            }
+          ],
+          "initial_training_loss": 6.322220668196678,
+          "final_training_loss": 1.3756351098418236,
+          "initial_validation_loss": 6.751584708690643,
+          "final_validation_loss": 7.7390496134758
+        }
+      ]
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "nf4": true,
+      "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+      "base_seed": 20261029,
+      "projection_precision": "fp32",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "mlx_compile_disabled": true,
+      "capture": {
+        "version": 1,
+        "sha256": "090a0fabc685770bd2ece18651cbcd922c4ad3b44247f1ed6413daf3146906e6",
+        "parameter_order": [
+          "model.layers.0.self_attn.q_proj.lora.A",
+          "model.layers.0.self_attn.q_proj.lora.B",
+          "model.layers.0.self_attn.v_proj.lora.A",
+          "model.layers.0.self_attn.v_proj.lora.B",
+          "model.layers.1.self_attn.q_proj.lora.A",
+          "model.layers.1.self_attn.q_proj.lora.B",
+          "model.layers.1.self_attn.v_proj.lora.A",
+          "model.layers.1.self_attn.v_proj.lora.B",
+          "model.layers.10.self_attn.q_proj.lora.A",
+          "model.layers.10.self_attn.q_proj.lora.B",
+          "model.layers.10.self_attn.v_proj.lora.A",
+          "model.layers.10.self_attn.v_proj.lora.B",
+          "model.layers.11.self_attn.q_proj.lora.A",
+          "model.layers.11.self_attn.q_proj.lora.B",
+          "model.layers.11.self_attn.v_proj.lora.A",
+          "model.layers.11.self_attn.v_proj.lora.B",
+          "model.layers.12.self_attn.q_proj.lora.A",
+          "model.layers.12.self_attn.q_proj.lora.B",
+          "model.layers.12.self_attn.v_proj.lora.A",
+          "model.layers.12.self_attn.v_proj.lora.B",
+          "model.layers.13.self_attn.q_proj.lora.A",
+          "model.layers.13.self_attn.q_proj.lora.B",
+          "model.layers.13.self_attn.v_proj.lora.A",
+          "model.layers.13.self_attn.v_proj.lora.B",
+          "model.layers.14.self_attn.q_proj.lora.A",
+          "model.layers.14.self_attn.q_proj.lora.B",
+          "model.layers.14.self_attn.v_proj.lora.A",
+          "model.layers.14.self_attn.v_proj.lora.B",
+          "model.layers.15.self_attn.q_proj.lora.A",
+          "model.layers.15.self_attn.q_proj.lora.B",
+          "model.layers.15.self_attn.v_proj.lora.A",
+          "model.layers.15.self_attn.v_proj.lora.B",
+          "model.layers.16.self_attn.q_proj.lora.A",
+          "model.layers.16.self_attn.q_proj.lora.B",
+          "model.layers.16.self_attn.v_proj.lora.A",
+          "model.layers.16.self_attn.v_proj.lora.B",
+          "model.layers.17.self_attn.q_proj.lora.A",
+          "model.layers.17.self_attn.q_proj.lora.B",
+          "model.layers.17.self_attn.v_proj.lora.A",
+          "model.layers.17.self_attn.v_proj.lora.B",
+          "model.layers.18.self_attn.q_proj.lora.A",
+          "model.layers.18.self_attn.q_proj.lora.B",
+          "model.layers.18.self_attn.v_proj.lora.A",
+          "model.layers.18.self_attn.v_proj.lora.B",
+          "model.layers.19.self_attn.q_proj.lora.A",
+          "model.layers.19.self_attn.q_proj.lora.B",
+          "model.layers.19.self_attn.v_proj.lora.A",
+          "model.layers.19.self_attn.v_proj.lora.B",
+          "model.layers.2.self_attn.q_proj.lora.A",
+          "model.layers.2.self_attn.q_proj.lora.B",
+          "model.layers.2.self_attn.v_proj.lora.A",
+          "model.layers.2.self_attn.v_proj.lora.B",
+          "model.layers.20.self_attn.q_proj.lora.A",
+          "model.layers.20.self_attn.q_proj.lora.B",
+          "model.layers.20.self_attn.v_proj.lora.A",
+          "model.layers.20.self_attn.v_proj.lora.B",
+          "model.layers.21.self_attn.q_proj.lora.A",
+          "model.layers.21.self_attn.q_proj.lora.B",
+          "model.layers.21.self_attn.v_proj.lora.A",
+          "model.layers.21.self_attn.v_proj.lora.B",
+          "model.layers.22.self_attn.q_proj.lora.A",
+          "model.layers.22.self_attn.q_proj.lora.B",
+          "model.layers.22.self_attn.v_proj.lora.A",
+          "model.layers.22.self_attn.v_proj.lora.B",
+          "model.layers.23.self_attn.q_proj.lora.A",
+          "model.layers.23.self_attn.q_proj.lora.B",
+          "model.layers.23.self_attn.v_proj.lora.A",
+          "model.layers.23.self_attn.v_proj.lora.B",
+          "model.layers.24.self_attn.q_proj.lora.A",
+          "model.layers.24.self_attn.q_proj.lora.B",
+          "model.layers.24.self_attn.v_proj.lora.A",
+          "model.layers.24.self_attn.v_proj.lora.B",
+          "model.layers.25.self_attn.q_proj.lora.A",
+          "model.layers.25.self_attn.q_proj.lora.B",
+          "model.layers.25.self_attn.v_proj.lora.A",
+          "model.layers.25.self_attn.v_proj.lora.B",
+          "model.layers.26.self_attn.q_proj.lora.A",
+          "model.layers.26.self_attn.q_proj.lora.B",
+          "model.layers.26.self_attn.v_proj.lora.A",
+          "model.layers.26.self_attn.v_proj.lora.B",
+          "model.layers.27.self_attn.q_proj.lora.A",
+          "model.layers.27.self_attn.q_proj.lora.B",
+          "model.layers.27.self_attn.v_proj.lora.A",
+          "model.layers.27.self_attn.v_proj.lora.B",
+          "model.layers.3.self_attn.q_proj.lora.A",
+          "model.layers.3.self_attn.q_proj.lora.B",
+          "model.layers.3.self_attn.v_proj.lora.A",
+          "model.layers.3.self_attn.v_proj.lora.B",
+          "model.layers.4.self_attn.q_proj.lora.A",
+          "model.layers.4.self_attn.q_proj.lora.B",
+          "model.layers.4.self_attn.v_proj.lora.A",
+          "model.layers.4.self_attn.v_proj.lora.B",
+          "model.layers.5.self_attn.q_proj.lora.A",
+          "model.layers.5.self_attn.q_proj.lora.B",
+          "model.layers.5.self_attn.v_proj.lora.A",
+          "model.layers.5.self_attn.v_proj.lora.B",
+          "model.layers.6.self_attn.q_proj.lora.A",
+          "model.layers.6.self_attn.q_proj.lora.B",
+          "model.layers.6.self_attn.v_proj.lora.A",
+          "model.layers.6.self_attn.v_proj.lora.B",
+          "model.layers.7.self_attn.q_proj.lora.A",
+          "model.layers.7.self_attn.q_proj.lora.B",
+          "model.layers.7.self_attn.v_proj.lora.A",
+          "model.layers.7.self_attn.v_proj.lora.B",
+          "model.layers.8.self_attn.q_proj.lora.A",
+          "model.layers.8.self_attn.q_proj.lora.B",
+          "model.layers.8.self_attn.v_proj.lora.A",
+          "model.layers.8.self_attn.v_proj.lora.B",
+          "model.layers.9.self_attn.q_proj.lora.A",
+          "model.layers.9.self_attn.q_proj.lora.B",
+          "model.layers.9.self_attn.v_proj.lora.A",
+          "model.layers.9.self_attn.v_proj.lora.B"
+        ]
+      },
+      "engines": [
+        "mlx"
+      ],
+      "unavailable_engines": [],
+      "seeds": [
+        17,
+        29,
+        43
+      ],
+      "steps": 30,
+      "microbatch": 1,
+      "accumulation": 4,
+      "evaluation_interval": 10,
+      "optimizer": {
+        "name": "AdamW",
+        "lr": 0.003,
+        "eps": 1e-08,
+        "weight_decay": 0,
+        "foreach": false
+      },
+      "precision_policy": "FP32 computation and state",
+      "reference_head": "FP32 pairwise K=128; stable target-excluded CE",
+      "frozen_unchanged": true,
+      "source_base_sha256": "ee56ddf076607e03dd0af3071323f7e75889806ad12221bf8a626cefa464e721",
+      "corpus_sha256": "0dd44097dde8fb9c996d3f6c9d979b2a4235ad9816fbb024b206c9eb86f98619",
+      "train_lines": 18,
+      "heldout_lines": 6,
+      "gradient_scope": "Independent trajectory states before indicated update; identical batch schedule for each seed",
+      "measurement_scope": "Training-quality experiment with host snapshots for gradient comparison",
+      "ort_optimizer": "disabled",
+      "torch_float32_matmul_precision": "highest",
+      "cuda_bf16_reduced_precision_reduction": null,
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "versions": {
+        "onnax": "0.1.0",
+        "torch": "2.15.0",
+        "numpy": "2.4.6",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "transformers": "5.22.1",
+        "mobius-onnx": "0.1.0",
+        "onnxruntime-ep-mlx": "0.31.0",
+        "mlx": "0.32.4"
+      },
+      "hardware": {
+        "cpu_architecture": "arm64",
+        "logical_cpu_count": 10,
+        "cuda_device": null
+      },
+      "validation_summary": {
+        "mlx": {
+          "values": [
+            6.769295394420624,
+            7.422042012214661,
+            7.7392237186431885
+          ],
+          "mean": 7.310187041759491,
+          "std": 0.49454412274734727,
+          "min": 6.769295394420624,
+          "max": 7.7392237186431885
+        }
+      },
+      "comparisons": [],
+      "trials": [
+        {
+          "engine": "mlx",
+          "seed": 17,
+          "initial_adapter_sha256": "790c2169ec37a6db8de318ddef49e17fc047a004c8fcebd0af84142f7e23f1af",
+          "schedule_sha256": "f0399f910a34bdf5740000f85dcf8b0e2461062b131de5c63907db90d525696b",
+          "training_loss": [
+            6.718172907829285,
+            6.04507577419281,
+            5.724211931228638,
+            5.347703039646149,
+            6.174458265304565,
+            5.175229907035828,
+            4.330980598926544,
+            4.58787727355957,
+            5.128382384777069,
+            4.155726790428162,
+            3.6213756799697876,
+            3.3717461228370667,
+            3.204897403717041,
+            3.278089702129364,
+            2.925982028245926,
+            2.3004523515701294,
+            2.512962222099304,
+            2.5274198055267334,
+            2.4249342679977417,
+            1.7900685667991638,
+            2.0952587723731995,
+            1.630466103553772,
+            1.8018655180931091,
+            1.6985052824020386,
+            1.4179978370666504,
+            1.5245294272899628,
+            1.5663054585456848,
+            1.2231918275356293,
+            1.5035835802555084,
+            1.4625996351242065
+          ],
+          "gradient_norm": [
+            0.2728406488895416,
+            0.3404790163040161,
+            0.5773833394050598,
+            0.9955883622169495,
+            1.2436186075210571,
+            2.034841299057007,
+            1.1944828033447266,
+            1.4098552465438843,
+            1.930634617805481,
+            1.4465502500534058,
+            1.6084604263305664,
+            1.3274569511413574,
+            2.019242286682129,
+            1.6464800834655762,
+            1.7544382810592651,
+            1.2769321203231812,
+            1.24871027469635,
+            1.9136531352996826,
+            1.6882109642028809,
+            1.3850176334381104,
+            1.4499456882476807,
+            1.3026982545852661,
+            1.6272627115249634,
+            1.7649704217910767,
+            1.6104305982589722,
+            1.2805297374725342,
+            2.483121156692505,
+            0.7324404120445251,
+            2.9617843627929688,
+            0.46797069907188416
+          ],
+          "validation_curve": [
+            {
+              "step": 0,
+              "loss": 6.751583695411682
+            },
+            {
+              "step": 10,
+              "loss": 5.21666818857193
+            },
+            {
+              "step": 20,
+              "loss": 6.115161299705505
+            },
+            {
+              "step": 30,
+              "loss": 6.769295394420624
+            }
+          ],
+          "initial_training_loss": 6.322221085429192,
+          "final_training_loss": 1.3468514643609524,
+          "initial_validation_loss": 6.751583695411682,
+          "final_validation_loss": 6.769295394420624
+        },
+        {
+          "engine": "mlx",
+          "seed": 29,
+          "initial_adapter_sha256": "f95a97a209757d5c00a880c59b6e8d61bca6472d8907581049fe4d70985a175b",
+          "schedule_sha256": "2c53d406e9771073a5b7f19349f137bee53494deee0498a25055d214d45ed8e1",
+          "training_loss": [
+            5.784492790699005,
+            6.197869658470154,
+            7.0080448389053345,
+            5.997138857841492,
+            5.476528525352478,
+            4.513824939727783,
+            4.813149571418762,
+            4.062957942485809,
+            5.30008339881897,
+            3.2187488675117493,
+            3.7251489758491516,
+            3.6901254057884216,
+            3.6344187259674072,
+            2.877233326435089,
+            2.963598906993866,
+            3.185940980911255,
+            2.5723735094070435,
+            2.189141720533371,
+            2.0449021458625793,
+            1.8176727592945099,
+            1.7902942299842834,
+            1.990738183259964,
+            1.8982634246349335,
+            1.7352401316165924,
+            1.5612953901290894,
+            1.3488918840885162,
+            1.6680472493171692,
+            1.2611985504627228,
+            1.410854160785675,
+            1.499165952205658
+          ],
+          "gradient_norm": [
+            0.3074456453323364,
+            0.3501150608062744,
+            0.761998176574707,
+            0.8853723406791687,
+            0.83924800157547,
+            1.245793342590332,
+            1.4151830673217773,
+            1.1655601263046265,
+            2.076791524887085,
+            1.4343724250793457,
+            1.8418883085250854,
+            2.003870725631714,
+            1.8007657527923584,
+            1.4465502500534058,
+            1.5514657497406006,
+            1.4766665697097778,
+            1.5922462940216064,
+            1.596789002418518,
+            1.2924840450286865,
+            0.9535667300224304,
+            1.4615700244903564,
+            1.930790901184082,
+            1.9505629539489746,
+            0.9567500948905945,
+            1.9676990509033203,
+            0.7767885327339172,
+            4.320708274841309,
+            1.1657323837280273,
+            0.7210245728492737,
+            1.1378285884857178
+          ],
+          "validation_curve": [
+            {
+              "step": 0,
+              "loss": 6.751583695411682
+            },
+            {
+              "step": 10,
+              "loss": 5.307336330413818
+            },
+            {
+              "step": 20,
+              "loss": 6.043642640113831
+            },
+            {
+              "step": 30,
+              "loss": 7.422042012214661
+            }
+          ],
+          "initial_training_loss": 6.322221085429192,
+          "final_training_loss": 1.3693874813616276,
+          "initial_validation_loss": 6.751583695411682,
+          "final_validation_loss": 7.422042012214661
+        },
+        {
+          "engine": "mlx",
+          "seed": 43,
+          "initial_adapter_sha256": "7ff22f1b8567a47cae57e7f0513f848d1847dd28000ca0714046428984126c30",
+          "schedule_sha256": "fb27cbf038e34464005d486d2ef3d3ef49acf7d1a1a54476072cdc751c625c49",
+          "training_loss": [
+            7.440255522727966,
+            5.784412980079651,
+            6.229081630706787,
+            5.890823721885681,
+            5.777785301208496,
+            4.235965549945831,
+            5.090911030769348,
+            4.617103934288025,
+            4.465600967407227,
+            3.4654215574264526,
+            3.8903740644454956,
+            3.6553298234939575,
+            3.004231870174408,
+            2.930640310049057,
+            2.862755000591278,
+            2.646988570690155,
+            2.6218158900737762,
+            2.365904062986374,
+            1.5847895443439484,
+            2.2395106852054596,
+            1.7185193002223969,
+            2.089761197566986,
+            1.6822665631771088,
+            1.5137981176376343,
+            1.7334094941616058,
+            1.3045327067375183,
+            1.632949322462082,
+            1.5422822535037994,
+            1.1852328181266785,
+            1.5558743476867676
+          ],
+          "gradient_norm": [
+            0.3164535462856293,
+            0.3458057940006256,
+            0.6238082051277161,
+            0.9463776350021362,
+            1.269720435142517,
+            1.4766714572906494,
+            1.4694240093231201,
+            1.191220998764038,
+            1.8584126234054565,
+            1.5845322608947754,
+            1.4490019083023071,
+            1.7030267715454102,
+            1.5083273649215698,
+            1.3636523485183716,
+            1.3773860931396484,
+            2.2546956539154053,
+            1.975777506828308,
+            2.4517853260040283,
+            1.220718264579773,
+            2.3043570518493652,
+            1.482908844947815,
+            1.9722893238067627,
+            1.5357129573822021,
+            2.6432106494903564,
+            1.5941356420516968,
+            1.4562926292419434,
+            1.6983602046966553,
+            0.532084047794342,
+            0.4615956246852875,
+            1.7248823642730713
+          ],
+          "validation_curve": [
+            {
+              "step": 0,
+              "loss": 6.751583695411682
+            },
+            {
+              "step": 10,
+              "loss": 5.276701033115387
+            },
+            {
+              "step": 20,
+              "loss": 6.5753127336502075
+            },
+            {
+              "step": 30,
+              "loss": 7.7392237186431885
+            }
+          ],
+          "initial_training_loss": 6.322221085429192,
+          "final_training_loss": 1.3755984008312225,
+          "initial_validation_loss": 6.751583695411682,
+          "final_validation_loss": 7.7392237186431885
+        }
+      ]
+    }
+  ],
+  "executions": [
+    {
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.training_impact",
+        "--real",
+        "--engines",
+        "torch_cpu",
+        "--projection-precision",
+        "fp32",
+        "--steps",
+        "30",
+        "--seeds",
+        "17",
+        "29",
+        "43",
+        "--interval",
+        "10",
+        "--capture",
+        "/tmp/onnax-real-nf4-fp32-quality-torch-cpu.npz",
+        "--output",
+        "/tmp/onnax-real-nf4-fp32-quality-torch-cpu.json"
+      ],
+      "source_commit": "8bb01b7e906e1fcc5dbb0b4e9c99fe6722f728f1",
+      "engine": "torch_cpu",
+      "seeds": [
+        17,
+        29,
+        43
+      ],
+      "steps": 30,
+      "microbatch": 1,
+      "accumulation": 4,
+      "capture": "/tmp/onnax-real-nf4-fp32-quality-torch-cpu.npz",
+      "operational_memory_limit_bytes": 25769803776,
+      "memory_guard_scope": "Safety guard for this 32 GiB machine, not a performance acceptance threshold; observations use vmmap physical footprint including GPU mappings",
+      "observations": [
+        {
+          "utc": "2026-10-31T17:53:15.147123+00:00",
+          "current_bytes": 13212057.6,
+          "peak_bytes": 13212057.6
+        },
+        {
+          "utc": "2026-10-31T17:53:31.006728+00:00",
+          "current_bytes": 3650722201.6,
+          "peak_bytes": 3650722201.6
+        },
+        {
+          "utc": "2026-10-31T17:53:46.903050+00:00",
+          "current_bytes": 4509715660.8,
+          "peak_bytes": 4509715660.8
+        },
+        {
+          "utc": "2026-10-31T17:54:02.859011+00:00",
+          "current_bytes": 5261334937.6,
+          "peak_bytes": 5261334937.6
+        },
+        {
+          "utc": "2026-10-31T17:54:18.755797+00:00",
+          "current_bytes": 4402341478.4,
+          "peak_bytes": 5261334937.6
+        },
+        {
+          "utc": "2026-10-31T17:54:34.614703+00:00",
+          "current_bytes": 3435973836.8,
+          "peak_bytes": 5261334937.6
+        },
+        {
+          "utc": "2026-10-31T17:54:50.479324+00:00",
+          "current_bytes": 3435973836.8,
+          "peak_bytes": 5261334937.6
+        },
+        {
+          "utc": "2026-10-31T17:55:06.336414+00:00",
+          "current_bytes": 3435973836.8,
+          "peak_bytes": 5261334937.6
+        },
+        {
+          "utc": "2026-10-31T17:55:22.199280+00:00",
+          "current_bytes": 3435973836.8,
+          "peak_bytes": 5261334937.6
+        },
+        {
+          "utc": "2026-10-31T17:55:38.292183+00:00",
+          "current_bytes": 3435973836.8,
+          "peak_bytes": 5261334937.6
+        },
+        {
+          "utc": "2026-10-31T17:55:54.335791+00:00",
+          "current_bytes": 3435973836.8,
+          "peak_bytes": 5261334937.6
+        },
+        {
+          "utc": "2026-10-31T17:56:10.363692+00:00",
+          "current_bytes": 3435973836.8,
+          "peak_bytes": 5261334937.6
+        },
+        {
+          "utc": "2026-10-31T17:56:26.236580+00:00",
+          "current_bytes": 3435973836.8,
+          "peak_bytes": 5261334937.6
+        }
+      ],
+      "pid": 52901,
+      "started": "2026-10-31T17:53:14.551241+00:00",
+      "returncode": 0,
+      "finished": "2026-10-31T17:56:41.248236+00:00"
+    },
+    {
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.training_impact",
+        "--real",
+        "--engines",
+        "mlx",
+        "--library",
+        "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+        "--projection-precision",
+        "fp32",
+        "--steps",
+        "30",
+        "--seeds",
+        "17",
+        "29",
+        "43",
+        "--interval",
+        "10",
+        "--capture",
+        "/tmp/onnax-real-nf4-fp32-quality-mlx.npz",
+        "--output",
+        "/tmp/onnax-real-nf4-fp32-quality-mlx.json"
+      ],
+      "source_commit": "8bb01b7e906e1fcc5dbb0b4e9c99fe6722f728f1",
+      "engine": "mlx",
+      "backend_commit": "dcee032537044cd73e026a75283a63e470ef2232",
+      "backend_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "seeds": [
+        17,
+        29,
+        43
+      ],
+      "steps": 30,
+      "microbatch": 1,
+      "accumulation": 4,
+      "capture": "/tmp/onnax-real-nf4-fp32-quality-mlx.npz",
+      "operational_memory_limit_bytes": 25769803776,
+      "memory_guard_scope": "Safety guard for this 32 GiB machine, not a performance acceptance threshold; observations use vmmap physical footprint including GPU mappings",
+      "observations": [
+        {
+          "utc": "2026-10-31T17:57:08.474986+00:00",
+          "current_bytes": 3650722201.6,
+          "peak_bytes": 3650722201.6
+        },
+        {
+          "utc": "2026-10-31T17:57:24.357126+00:00",
+          "current_bytes": 4402341478.4,
+          "peak_bytes": 4402341478.4
+        },
+        {
+          "utc": "2026-10-31T17:57:40.263433+00:00",
+          "current_bytes": 4509715660.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T17:57:56.134312+00:00",
+          "current_bytes": 3865470566.4,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T17:58:12.075875+00:00",
+          "current_bytes": 3865470566.4,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T17:58:28.010489+00:00",
+          "current_bytes": 3865470566.4,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T17:58:43.889645+00:00",
+          "current_bytes": 3972844748.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T17:58:59.783393+00:00",
+          "current_bytes": 3865470566.4,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T17:59:15.649058+00:00",
+          "current_bytes": 3865470566.4,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T17:59:31.549807+00:00",
+          "current_bytes": 3972844748.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T17:59:47.632172+00:00",
+          "current_bytes": 5905580032.0,
+          "peak_bytes": 5905580032.0
+        },
+        {
+          "utc": "2026-10-31T18:00:03.699803+00:00",
+          "current_bytes": 6120328396.8,
+          "peak_bytes": 6120328396.8
+        },
+        {
+          "utc": "2026-10-31T18:00:19.789234+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6227702579.2
+        },
+        {
+          "utc": "2026-10-31T18:00:35.876588+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:00:51.994869+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:01:08.089327+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:01:24.170092+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:01:40.268852+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:01:56.370368+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:02:12.465003+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:02:28.558005+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:02:44.646708+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:03:00.729438+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:03:16.792853+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:03:32.847995+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:03:48.924013+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:04:05.005011+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:04:21.080581+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:04:37.136849+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:04:53.198570+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:05:09.268156+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:05:25.346315+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:05:41.431553+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:05:57.515209+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:06:13.583807+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:06:29.666023+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:06:45.747309+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:07:01.816845+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:07:17.898310+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:07:33.970932+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:07:50.101579+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:08:06.182749+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:08:22.260769+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:08:38.350761+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:08:54.415190+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:09:10.493485+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:09:26.554371+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:09:42.647013+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:09:58.736185+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:10:14.819385+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:10:30.907244+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:10:46.972659+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:11:03.029300+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:11:19.080951+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T18:11:35.148151+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        }
+      ],
+      "pid": 53417,
+      "started": "2026-10-31T17:56:52.598776+00:00",
+      "returncode": 0,
+      "finished": "2026-10-31T18:11:50.158758+00:00"
+    }
+  ],
+  "execution_scope": "Quality runs including construction, training, evaluation and host snapshots",
+  "training_source_commit": "8bb01b7e906e1fcc5dbb0b4e9c99fe6722f728f1",
+  "training_source_sha256": {
+    "examples/huggingface/training_impact.py": "63478dcff4fedbb9f08adff8345039f2268c4e4a1433dd8c8052581231336fb4",
+    "examples/huggingface/sft.py": "15a845c839f8e9118d98588f755a038dc8b3dceab9cf0cd4589760fb156bf083",
+    "examples/huggingface/nf4.py": "a374f41406ed0b8967f723873b8bb9b5a563b8350895c299137905422522d9d7",
+    "examples/huggingface/mixed_precision.py": "0571d1d70aa307a65aef1413049a1f1b25d30227a425bbe889e59141a375bc08",
+    "examples/huggingface/reference_head.py": "6cc8741c38b89f74f8d98081567e4a76b2febc8ca233c6f11f3dc0e5db009097",
+    "examples/huggingface/reference_losses.py": "7f204e8d5b1539e6bf56f93a4874345caa09bbf9e02ddbd67852d39147c03015",
+    "examples/huggingface/validation.py": "e6e7d3047bce7083ad073148ce7c7df876979e401908f7159d5e45e8b906362d"
+  },
+  "comparison_source_commit": "8bd274a1173cd59669c50d295eaee070d270a094",
+  "comparison_source_sha256": "4b1e0663ae31032861f003b5da608f26b67b4347b1f1b2dff360be4dcd42d92d"
+}
