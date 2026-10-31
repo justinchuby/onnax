@@ -129,3 +129,28 @@ def test_paired_primal_vjp_audit():
     assert report["frozen_buffers_unchanged"]
     assert report["segments"]["vjp"] > 1
     assert report["logical_vjp_boundary_bytes"] > 0
+
+
+@pytest.mark.skipif(
+    os.environ.get("ONNAX_TEST_MLX_EP") != "1", reason="Native MLX Qwen opt-in"
+)
+@pytest.mark.parametrize("forward,backward", [("cpu", "mlx"), ("mlx", "cpu")])
+def test_hybrid_stable_reference_updates(forward, backward):
+    pytest.importorskip("mobius")
+    pytest.importorskip("trl")
+    pytest.importorskip("peft")
+    pytest.importorskip("onnxruntime_ep_mlx")
+    from examples.huggingface.mlx_validation import run
+
+    report = run(
+        library=os.environ.get("ONNAX_MLX_EP_LIBRARY"),
+        provider=forward,
+        backward_provider=backward,
+        stable_reference=True,
+        steps=4,
+    )
+    assert report["strict_checks_passed"]
+    assert report["provider"] == "hybrid"
+    assert report["forward_provider"] == forward
+    assert report["backward_provider"] == backward
+    assert report["cpu_fallback_scope"] == "MLX sessions"

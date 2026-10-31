@@ -65,12 +65,15 @@ def run(
     steps=4,
     stable_reference=False,
     provider="mlx",
+    backward_provider=None,
 ):
     """Compare independent FP32 AdamW updates on the selected runtime."""
-    if provider not in ("cpu", "mlx"):
+    backward_provider = provider if backward_provider is None else backward_provider
+    if provider not in ("cpu", "mlx") or backward_provider not in ("cpu", "mlx"):
         raise ValueError("Expected provider 'cpu' or 'mlx'")
-    if provider == "cpu" and library is not None:
-        raise ValueError("A development MLX library requires provider='mlx'")
+    uses_mlx = "mlx" in (provider, backward_provider)
+    if not uses_mlx and library is not None:
+        raise ValueError("A development MLX library requires an MLX session")
     if steps < 1:
         raise ValueError("Expected a positive training step count")
     if library is not None:
@@ -84,25 +87,25 @@ def run(
     torch.set_num_threads(1)
     model, reference = prepare(nf4=True, save_activations=True)
     forward, _, _ = split_vjp(model.onnx.model, model.onnx.vjp_model)
-    session_factory = session
-    if provider == "cpu":
-        from examples.lora.train import session as cpu_session
+    from examples.lora.train import session as cpu_session
 
-        session_factory = cpu_session
+    factories = {"mlx": session, "cpu": cpu_session}
     if segmented:
         from examples.huggingface.segmented import SegmentedSession
 
         model.onnx.forward_session = SegmentedSession(
-            forward, target_nodes=target_nodes, session_factory=session_factory
+            forward, target_nodes=target_nodes, session_factory=factories[provider]
         )
         model.onnx.backward_session = SegmentedSession(
             model.onnx.optimized_vjp,
             target_nodes=target_nodes,
-            session_factory=session_factory,
+            session_factory=factories[backward_provider],
         )
-    elif provider == "mlx":
-        model.onnx.forward_session = session_factory(forward)
-        model.onnx.backward_session = session_factory(model.onnx.optimized_vjp)
+    else:
+        if provider == "mlx":
+            model.onnx.forward_session = session(forward)
+        if backward_provider == "mlx":
+            model.onnx.backward_session = session(model.onnx.optimized_vjp)
     reference = add_reference_adapters(reference, model)
     ids = torch.tensor([[1, 4, 5, 6, 2], [1, 7, 2, 0, 0]])
     mask = ids.ne(0).long()
@@ -204,20 +207,29 @@ def run(
             name: importlib.metadata.version(name)
             for name in (
                 ("onnxruntime", "onnxruntime-ep-mlx", "torch", "mlx")
-                if provider == "mlx"
+                if uses_mlx
                 else ("onnxruntime", "torch")
             )
         },
         "library": os.path.abspath(library)
         if library
-        else ("installed plugin" if provider == "mlx" else None),
+        else ("installed plugin" if uses_mlx else None),
         "library_sha256": library_hash,
         "checks": checks,
-        "provider": "MLXExecutionProvider" if provider == "mlx" else "CPUExecutionProvider",
-        "cpu_fallback_disabled": provider == "mlx",
+        "provider": (
+            "hybrid"
+            if provider != backward_provider
+            else "MLXExecutionProvider"
+            if uses_mlx
+            else "CPUExecutionProvider"
+        ),
+        "forward_provider": provider,
+        "backward_provider": backward_provider,
+        "cpu_fallback_disabled": uses_mlx,
+        "cpu_fallback_scope": "MLX sessions" if uses_mlx else None,
         "ort_graph_optimization": "disabled",
         "runtime_dtype": "float32",
-        "lut4_fusion_disabled": provider == "mlx"
+        "lut4_fusion_disabled": uses_mlx
         and os.environ.get("ONNXRUNTIME_EP_MLX_NO_LUT4_FUSION") == "1",
         "boundary": "CPU PyTorch loss, parameters and AdamW; NumPy session exchange",
         "adapter_tensors": len(model.onnx.adapters),
@@ -235,6 +247,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--library", help="Development MLX EP dylib")
     parser.add_argument("--provider", choices=("cpu", "mlx"), default="mlx")
+    parser.add_argument(
+        "--backward-provider",
+        choices=("cpu", "mlx"),
+        help="Override the backward runtime to isolate forward and VJP rounding",
+    )
     parser.add_argument("--segmented", action="store_true")
     parser.add_argument("--segment-nodes", type=int, default=1024)
     parser.add_argument("--steps", type=int, default=4)
@@ -246,6 +263,7 @@ def main():
         result = run(
             library=args.library,
             provider=args.provider,
+            backward_provider=args.backward_provider,
             segmented=args.segmented,
             target_nodes=args.segment_nodes,
             steps=args.steps,

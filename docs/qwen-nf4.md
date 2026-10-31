@@ -275,6 +275,24 @@ preserves these results. Both runtimes therefore show late independent
 gradient drift; the additional MLX parameter drift is the next comparison
 to localize.
 
+Use `--backward-provider` to choose the VJP runtime separately. In matched
+100-step controls, changing either forward or backward to CPU reduces parameter
+failures to steps 96 and 99. All shared-parameter checks pass in all four
+combinations:
+
+| Forward | VJP | Parameter failure steps | Step 100 maximum parameter difference |
+| --- | --- | --- | ---: |
+| CPU | CPU | none | 8.90e-7 |
+| CPU | MLX | 96, 99 | 1.87e-6 |
+| MLX | CPU | 96, 99 | 1.70e-6 |
+| MLX | MLX | 95–100 | 2.56e-6 |
+
+The comparison uses elementwise relative and absolute tolerances; maximum
+absolute difference alone does not determine a failure. Both forward residuals
+and backward arithmetic contribute to the independent update drift. The
+[runtime trajectory matrix](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-nf4-runtime-trajectory-matrix.json)
+includes full hybrid results and commands to reproduce each combination.
+
 The [paired runtime audit](qwen-runtime-audit.md) compares CPU and MLX gradients
 with fixed forward residuals and provides reusable segmented ONNX execution.
 

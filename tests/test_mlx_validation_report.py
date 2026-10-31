@@ -89,7 +89,12 @@ def test_cpu_stable_reference_updates():
 
 
 @pytest.mark.parametrize(
-    "options", [{"provider": "invalid"}, {"provider": "cpu", "library": "unused"}]
+    "options",
+    [
+        {"provider": "invalid"},
+        {"provider": "cpu", "library": "unused"},
+        {"backward_provider": "invalid"},
+    ],
 )
 def test_reject_invalid_runtime_options(options):
     with pytest.raises(ValueError):
