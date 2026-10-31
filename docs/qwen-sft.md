@@ -99,6 +99,25 @@ label batches, then measures median/P95 wrapper time at a fixed state. It
 records the lazy evaluation-session construction separately. Peak RSS covers
 the whole process, including both sessions and the correctness checks.
 
+On Apple M1 Max, Qwen3-0.6B NF4 evaluation records the following wrapper times
+after 10 warmups and 100 measured calls per path:
+
+| Projections | Full loss/gradient median / P95 | Loss-only median / P95 | Evaluation session creation |
+| --- | ---: | ---: | ---: |
+| FP32 | 1.375 / 2.320 s | 0.117 / 0.124 s | 1.996 s |
+| BF16 | 1.858 / 2.981 s | 0.359 / 0.376 s | 1.869 s |
+
+The timed input has batch one, 64 synthetic vocabulary IDs and 63 valid shifted
+targets, with a fixed nonzero adapter state. Both projection policies pass all
+nine bitwise loss checks and preserve frozen weights. Each loss-only call
+returns 4 bytes, compared with 2,293,764 bytes for loss and all adapter
+gradients. Whole-process peak RSS is 6.61 GiB for FP32 and 6.94 GiB for BF16,
+including construction, both sessions and the qualification calls. These runs
+use native MLX, disabled MLX compilation and disabled ORT optimization.
+The {download}`measurement report
+<../examples/huggingface/reports/qwen3-nf4-loss-only-evaluation-m1max.json>`
+includes component timings, source/runtime hashes and process memory journals.
+
 The tiny run trains for 100 updates. The real run uses 30 updates, microbatch
 one, four accumulation steps and a 64-token maximum length. Resume with
 `--resume qwen_real/checkpoint-15`. The wrapper recreates the base and validates

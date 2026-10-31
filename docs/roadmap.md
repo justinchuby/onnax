@@ -101,9 +101,10 @@ source, precision, storage and loss policies for these measurements.
 2. **Evaluation cost.** Joint mode now creates a reusable loss-only session for
    no-grad evaluation. Tiny FP32/BF16 checks cover three adapter states,
    dynamic shapes, padding and ignored labels with bitwise loss agreement.
-   The [evaluation qualification command](qwen-sft.md) is running on Qwen3-0.6B,
-   measuring session creation, execution and
-   the memory cost of keeping both sessions.
+   The [evaluation qualification command](qwen-sft.md) passes the same checks
+   on Qwen3-0.6B. With 100 measured calls, median evaluation time falls from
+   1.375 to 0.117 s for FP32 and 1.858 to 0.359 s for BF16. Reports include
+   session creation, exchange, execution and whole-process memory with both sessions.
 3. **Platform baseline.** Run matched PyTorch CPU/CUDA training under the same
    precision and data policies. CUDA execution remains outstanding; the
    recorded Mac comparisons cover CPU and MLX.
