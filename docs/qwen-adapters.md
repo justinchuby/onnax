@@ -86,6 +86,14 @@ input/output bytes. It constructs the selected provider's sessions directly.
 Run each path in its own process with the same provider, weights, batch and
 thread settings to compare time and memory.
 
+A native MLX run on Apple M1 Max used tiny NF4 Qwen3, batch four, sequence
+length 64 and 252 valid targets per update. After 10 warmups, 100 measured
+updates took 87.14 ms median and 95.62 ms P95; process peak RSS was 633.5 MiB.
+The loss decreased from 5.55 to 5.09 over all 110 updates. The session accepted
+15,360 logical input bytes and returned 7,172 bytes, including 7,168 bytes of
+adapter gradients. The [measurement JSON](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-qwen-joint-native-m1max.json)
+records the source commit, native library digest, versions and timing scope.
+
 ## PEFT files
 
 The SFT command writes `adapter/adapter_model.safetensors`, `adapter_config.json`
