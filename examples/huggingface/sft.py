@@ -3,6 +3,8 @@
 """Mobius Qwen3 ONNX fine-tuning through TRL SFTTrainer."""
 
 import argparse
+import functools
+import hashlib
 import json
 import os
 
@@ -22,6 +24,7 @@ from examples.huggingface.qwen import (
     inject,
     reference_model,
 )
+from examples.lora.train import session
 
 
 def texts():
@@ -86,6 +89,7 @@ class OnnxQwen3(PreTrainedModel):
         chunk_size=128,
         optimize=True,
         save_activations=False,
+        session_factory=session,
     ):
         super().__init__(config)
         self.loss_type = "ForCausalLM"
@@ -105,7 +109,9 @@ class OnnxQwen3(PreTrainedModel):
                 weight = rhs.producer().inputs[0].const_value.numpy().T
             else:
                 raise ValueError("Expected a frozen output projection")
-            self.head = ChunkedHead(weight, chunk_size=chunk_size)
+            self.head = ChunkedHead(
+                weight, chunk_size=chunk_size, session_factory=session_factory
+            )
             body = model.clone()
             hidden = body.graph.outputs[1]
             body.graph.outputs.clear()
@@ -117,6 +123,7 @@ class OnnxQwen3(PreTrainedModel):
                 output=hidden.name,
                 optimize=optimize,
                 save_activations=save_activations,
+                session_factory=session_factory,
             )
         else:
             self.onnx = OnnxModule(
@@ -125,6 +132,7 @@ class OnnxQwen3(PreTrainedModel):
                 output="logits",
                 optimize=optimize,
                 save_activations=save_activations,
+                session_factory=session_factory,
             )
         self.mapping = mapping
         self.config.use_cache = False
@@ -166,6 +174,7 @@ def prepare(
     optimize=True,
     save_activations=False,
     nf4=False,
+    session_factory=session,
 ):
     reference = reference_model(real)
     base = build_base(reference)
@@ -185,6 +194,7 @@ def prepare(
         chunk_size=chunk_size,
         optimize=optimize,
         save_activations=save_activations,
+        session_factory=session_factory,
     )
     model.quantization = quantization
     return model, reference
@@ -252,7 +262,22 @@ def run(
     fp64_audit=False,
     nf4=False,
     peft_roundtrip=False,
+    provider="cpu",
+    library=None,
+    segment_nodes=None,
 ):
+    if provider not in ("cpu", "mlx"):
+        raise ValueError("Expected cpu or mlx provider")
+    if provider == "cpu" and (library is not None or segment_nodes is not None):
+        raise ValueError("Library and segmentation options require the mlx provider")
+    runtime = session
+    if provider == "mlx":
+        from examples.lora.mlx_runtime import register_library
+        from examples.lora.mlx_runtime import session as mlx_session
+
+        if library is not None:
+            register_library(library)
+        runtime = functools.partial(mlx_session, target_nodes=segment_nodes)
     if fp64_audit and nf4:
         raise ValueError(
             "FP64 oracle expects an FP32 base; use the dequantized FP32 NF4 reference"
@@ -265,6 +290,7 @@ def run(
         optimize=optimize,
         save_activations=save_activations,
         nf4=nf4,
+        session_factory=runtime,
     )
     tok = tokenizer(real)
     from examples.huggingface.validation import add_reference_adapters, audit
@@ -295,7 +321,16 @@ def run(
         "validation_loss": [before, after],
         "audits": [initial_audit, final_audit],
         "quantization": model.quantization,
+        "provider": provider,
+        "segment_target_nodes": segment_nodes,
+        "ort_graph_optimization": "disabled",
     }
+    if provider == "mlx":
+        report["cpu_fallback_disabled"] = True
+        report["library"] = os.path.abspath(library) if library else "installed plugin"
+        if library:
+            with open(library, "rb") as stream:
+                report["library_sha256"] = hashlib.file_digest(stream, "sha256").hexdigest()
     final_params = model.onnx.arrays()
     report["artifact_bytes"] = {
         name: os.path.getsize(os.path.join(directory, "export", name))
@@ -357,6 +392,9 @@ if __name__ == "__main__":
     parser.add_argument("--fp64-audit", action="store_true")
     parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--peft-roundtrip", action="store_true")
+    parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
+    parser.add_argument("--library")
+    parser.add_argument("--segment-nodes", type=int)
     args = parser.parse_args()
     print(
         json.dumps(
@@ -372,6 +410,9 @@ if __name__ == "__main__":
                 fp64_audit=args.fp64_audit,
                 nf4=args.nf4,
                 peft_roundtrip=args.peft_roundtrip,
+                provider=args.provider,
+                library=args.library,
+                segment_nodes=args.segment_nodes,
             ),
             indent=2,
         )

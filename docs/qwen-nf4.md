@@ -116,6 +116,24 @@ and decoding lifetime are the next performance targets.
 
 ## Run forward and VJP on Apple GPUs
 
+SFTTrainer can create MLX execution sessions directly for the body and the
+chunked output head. Trainer continues to own CPU PyTorch adapters, AdamW,
+gradient accumulation and checkpoints; NumPy carries values across runtime
+boundaries.
+
+```bash
+uv run python -m examples.huggingface.sft --nf4 --save-activations \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --segment-nodes 1024 --mode chunked --output-dir native-sft
+```
+
+Use `--resume native-sft/checkpoint-50` to restore a tiny training run. The
+report records the selected provider and development library hash. Every
+native session disables ORT graph optimization and CPU fallback. In Python,
+`prepare(session_factory=...)` accepts a runtime constructor receiving ONNX
+bytes or an external-data model path; the same factory handles forward, VJP,
+head prediction and head loss sessions.
+
 The native MLX validation uses the same two-layer NF4 Qwen and independently
 updates its ONNX and Transformers adapters for four AdamW steps. It compares
 logits, token loss, all adapter gradients and parameters at every step. ONNX

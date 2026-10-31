@@ -27,14 +27,14 @@ def frozen_hashes(model):
     }
 
 
-def graph_session(model, directory, name):
+def graph_session(model, directory, name, *, session_factory=session):
     """Use external data for large graphs and in-memory protobufs for small ones."""
     size = sum(v.const_value.nbytes for v in model.graph.initializers.values())
     if size < 64 * 1024**2:
-        return session(ir.to_proto(model).SerializeToString())
+        return session_factory(ir.to_proto(model).SerializeToString())
     path = os.path.join(directory, name + ".onnx")
     save_graph(model, path, data_name=name + ".data")
-    return session(path)
+    return session_factory(path)
 
 
 class _OnnxFunction(torch.autograd.Function):
@@ -83,6 +83,7 @@ class OnnxModule(torch.nn.Module):
         optimize=True,
         save_activations=False,
         reuse_frozen_weights=False,
+        session_factory=session,
     ):
         super().__init__()
         self.model = model
@@ -128,10 +129,16 @@ class OnnxModule(torch.nn.Module):
         self.runtime_directory = tempfile.TemporaryDirectory(prefix="onnax-runtime-")
 
         self.forward_session = graph_session(
-            forward_model, self.runtime_directory.name, "forward"
+            forward_model,
+            self.runtime_directory.name,
+            "forward",
+            session_factory=session_factory,
         )
         self.backward_session = graph_session(
-            self.optimized_vjp, self.runtime_directory.name, "backward"
+            self.optimized_vjp,
+            self.runtime_directory.name,
+            "backward",
+            session_factory=session_factory,
         )
         self.timings = {n: [] for n in ("forward", "backward", "exchange")}
 

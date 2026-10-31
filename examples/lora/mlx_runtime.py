@@ -22,8 +22,22 @@ def register_library(path):
     _development_library = path
 
 
-def session(graph, *, profile_prefix=None):
+def session(graph, *, profile_prefix=None, target_nodes=None):
     """Load the optional plugin and require complete MLX provider assignment."""
+    if target_nodes is not None:
+        import onnx
+
+        from examples.huggingface.segmented import SegmentedSession
+
+        if profile_prefix is not None:
+            raise ValueError("Select per-segment profiling explicitly through session_factory")
+        if not isinstance(graph, ir.Model):
+            graph = (
+                ir.from_proto(onnx.load_model_from_string(graph))
+                if isinstance(graph, bytes)
+                else ir.load(graph)
+            )
+        return SegmentedSession(graph, target_nodes=target_nodes, session_factory=session)
     import onnxruntime_ep_mlx
 
     if not any(device.ep_name == "MLXExecutionProvider" for device in ort.get_ep_devices()):
