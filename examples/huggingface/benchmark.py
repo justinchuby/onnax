@@ -156,6 +156,8 @@ def measure(
         if mode != "pytorch" and provider == "mlx"
         else None,
         "lut4_fusion_disabled": os.environ.get("ONNXRUNTIME_EP_MLX_NO_LUT4_FUSION") == "1",
+        "mlx_compile_disabled": os.environ.get("ONNXRUNTIME_EP_MLX_NO_COMPILE", "")
+        not in ("", "0"),
         "real": real,
         "weight_values": "nf4_reconstructed_fp32" if nf4 else "fp32",
         "base_storage": "packed_nf4_decoder" if nf4 and mode != "pytorch" else "fp32",
