@@ -156,6 +156,15 @@ text decreases from 4.56 to 0.00059 across all 110 updates. The module returns
 loss and parameter gradients through its public session boundary. ORT graph
 optimization and CPU fallback are disabled.
 
+A sequential saved-VJP run with the same provider, NF4 weights, precision,
+batch, thread settings, warmups and sample count measured 1.650 s median,
+1.717 s P95 and 9.79 GiB peak process RSS. The joint path takes 18% less step
+time and 40% less peak RSS in this configuration. Saved VJP retains 1.30 GiB
+of logical residual arrays across the public forward/backward boundary;
+the joint module returns 2.19 MiB of parameter gradients. The
+[saved-path report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-saved-eager-m1max.json)
+records the complete matched run.
+
 The [measurement JSON](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-joint-eager-m1max.json)
 records the model revision, source commits, library digest, thread settings,
 logical input/output bytes, individual timings and measurement observations.
