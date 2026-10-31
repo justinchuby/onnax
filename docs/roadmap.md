@@ -110,8 +110,12 @@ as amplification of a 1.39e-11 gradient difference.
 The [training-quality baseline](training-quality.md) now compares five independent
 seeds across PyTorch CPU, ReferenceEvaluator CPU and MLX for 100 tiny NF4/BF16
 updates. The maximum paired PyTorch/MLX held-out loss gap is 0.000209, compared
-with a seed standard deviation around 0.0037. Next measure the real model and
-CPU/CUDA baseline under matched training settings. Component-level numerical
+with a seed standard deviation around 0.0037. Three real-model seeds complete
+30 updates per engine: final validation loss averages 7.211 on CPU and 7.384 on
+MLX, with a maximum paired gap of 0.425. Both curves improve through step 10
+and then overfit the small corpus. Next replay shared parameter snapshots to
+separate evaluation differences from trajectory divergence, and measure the
+CPU/CUDA baseline. Component-level numerical
 checks remain available alongside validation quality and seed variation.
 Measured tensor lifetimes
 and the head memory curve will guide recomputation boundaries.

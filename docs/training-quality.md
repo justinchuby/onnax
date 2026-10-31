@@ -53,12 +53,44 @@ remain unchanged. Final adapter entries differ by as much as 0.00336 between
 PyTorch CPU and MLX while their held-out losses remain close.
 
 This experiment finds similar training outcomes across the three engines on the
-tiny workload. CUDA was unavailable on the recorded Mac. Real-model and CUDA
-comparisons are the next quality measurements.
+tiny workload. CUDA was unavailable on the recorded Mac. The real-model comparison follows below; CUDA remains a separate measurement.
 
 The {download}`recorded report <../examples/huggingface/reports/tiny-nf4-bf16-training-impact-m1max.json>`
 contains every seed, training loss, validation curve, gradient norm and paired
 snapshot comparison, with source hashes, versions and the MLX library digest.
+
+## Recorded Qwen3-0.6B comparison
+
+Three seeds ran 30 updates with the same NF4/BF16 policy and optimizer settings.
+The two processes used identical base weights, initial adapters and data schedules.
+
+| Seed | CPU validation loss, step 10 | MLX validation loss, step 10 | CPU final validation loss | MLX final validation loss |
+| --- | ---: | ---: | ---: | ---: |
+| 17 | 5.217939 | 5.222630 | 6.893252 | 6.797369 |
+| 29 | 5.325381 | 5.312928 | 7.161592 | 7.586224 |
+| 43 | 5.252580 | 5.280543 | 7.578716 | 7.768860 |
+
+Final held-out loss averages **7.211187** on PyTorch CPU and **7.384151** on MLX,
+with seed standard deviations of 0.345413 and 0.516308. The largest paired final
+loss gap is **0.424632**. At step 10, the largest gap is 0.027963. Both runtimes
+start near 6.749 and reach their lowest sampled held-out loss at step 10. Training
+loss continues down to 1.35–1.38 while held-out loss rises over the remaining
+updates: this 18-line training split overfits the six-line held-out split.
+
+The independently evolving trajectories diverge more than in the tiny experiment.
+Gradient cosine similarities start above 0.9997; by step 30 they are 0.892, 0.877
+and -0.076 for seeds 17, 29 and 43. These snapshots evaluate different parameter
+states. The [fixed-primal audit](qwen-runtime-audit.md) compares derivatives at a
+shared state. A shared-parameter replay of the quality snapshots is the next step
+to separate evaluation differences from trajectory divergence.
+
+All frozen-base checks pass. Both runs exit successfully. CUDA was unavailable
+on this host. The {download}`full comparison report
+<../examples/huggingface/reports/qwen3-nf4-bf16-training-quality-m1max.json>` records
+every validation checkpoint, paired gradient and parameter metric, source and
+capture hashes, and process memory observations. Its memory observations include
+model construction, evaluation and host snapshots; use the dedicated benchmark
+for step timing and throughput.
 
 ## Compare trajectories and checkpoint replay
 
