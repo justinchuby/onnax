@@ -98,14 +98,20 @@ Equal teacher and student logits produce zero gradients. Analytic function rules
 preserve curvature at zero. Keep local functions intact while optimizing before
 further differentiation. Exported function bodies use standard ONNX operations.
 
-## Acceptance work remaining
+## Workload acceptance
 
 | Workload | Completed | Next acceptance |
 | --- | --- | --- |
 | External regression LoRA + Trainer | 200 steps, checkpoint replay, export | Maintain regression coverage |
-| Tiny Qwen3 | Training, masking, adapter exchange, chunked head; rounded BF16/FP16 logits with FP32 loss tests | Full mixed-precision model execution |
-| Qwen3-0.6B FP32 | 30 updates, loss decrease, checkpoint replay, export | Locate layerwise FP32 differences at identical intermediate inputs; repeat paired updates at the original tolerance |
-| BF16 Qwen3 | Dtype policy and smaller mixed-precision examples | Full model gradients and optimizer trajectory |
+| Tiny Qwen3 | 100-step BF16 training, masking, PEFT exchange, chunked head, fresh-process recovery and loaded ONNX execution | Maintain precision and recovery regressions |
+| Qwen3-0.6B FP32 | 30 updates, checkpoint replay, export and matched three-seed instruction-data training | Continue strict independent-update diagnosis in [#116](https://github.com/justinchuby/onnax/issues/116) |
+| Qwen3-0.6B BF16/NF4 | 30 updates, recovery, saved-module loss/all-gradient qualification at three shared states, and matched three-seed instruction-data training | Compare the matched PyTorch CPU/CUDA baseline when CUDA is available |
+
+The [training-quality report](training-quality.md) compares FP32 and BF16 CPU/MLX
+validation curves on the pinned No Robots split. The [Qwen SFT tutorial](qwen-sft.md)
+records full-model precision policies and the measured loss-only evaluation path.
+Pointwise forward and independent-update differences remain in #116, alongside
+the reference-reduction controls and captured Adam trajectories.
 | NF4 | Tiny Qwen SFT/recovery/PEFT; real Qwen 30-step training; isolated tiny benchmarks | Real-model gradient qualification, decoding lifetime and fused backend |
 
 The real-model FP32 elementwise comparison remains open. FP64 diagnostics help
