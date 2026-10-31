@@ -1,0 +1,65 @@
+{
+  "vocab": 151936,
+  "logits_dtype": "float32",
+  "source_commit": "7fb2e66",
+  "baseline_commit": "4b6661ac10c2e8b2db3a6591f5eabdace5e73888",
+  "ort_graph_optimization": "disabled",
+  "threads": 1,
+  "library_sha256": "230af4073f5846c035e4365333cfac6c5655fcc85c4ea07e57d68d433177d1c7",
+  "oracle": {
+    "loss": 0.11897194279234723,
+    "target_gradient": -0.11216728948078071,
+    "other_gradient": 7.382583965562952e-07
+  },
+  "runs": {
+    "before/cpu": {
+      "loss": 0.11897189170122147,
+      "target_gradient": -0.11216724663972855,
+      "chosen_other_pivot_gradient": -1.174891531263711e-05,
+      "other_gradient_max_abs_error": 1.2487173709193405e-05,
+      "negative_other_gradients": 1,
+      "ignored_row_nonfinite_gradients": 151936,
+      "ignored_row_nonzero_gradients": 151936,
+      "full_onnx_checker": true
+    },
+    "before/mlx": {
+      "loss": 0.1189718246459961,
+      "target_gradient": -0.11216724663972855,
+      "chosen_other_pivot_gradient": 9.096214625969878e-07,
+      "other_gradient_max_abs_error": 1.7136306604069265e-07,
+      "negative_other_gradients": 0,
+      "ignored_row_nonfinite_gradients": 151936,
+      "ignored_row_nonzero_gradients": 151936,
+      "full_onnx_checker": true
+    },
+    "after/cpu": {
+      "loss": 0.11897189170122147,
+      "target_gradient": -0.11216724663972855,
+      "chosen_other_pivot_gradient": 7.382581088677398e-07,
+      "other_gradient_max_abs_error": 2.8768855539446314e-13,
+      "negative_other_gradients": 0,
+      "ignored_row_nonfinite_gradients": 0,
+      "ignored_row_nonzero_gradients": 0,
+      "full_onnx_checker": true
+    },
+    "after/mlx": {
+      "loss": 0.1189718246459961,
+      "target_gradient": -0.11216724663972855,
+      "chosen_other_pivot_gradient": 7.382581088677398e-07,
+      "other_gradient_max_abs_error": 2.8768855539446314e-13,
+      "negative_other_gradients": 0,
+      "ignored_row_nonfinite_gradients": 0,
+      "ignored_row_nonzero_gradients": 0,
+      "full_onnx_checker": true
+    }
+  },
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "python": "3.11.17",
+  "versions": {
+    "numpy": "2.4.6",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.31.1",
+    "onnxruntime-ep-mlx": "0.31.0"
+  },
+  "reproduce": "ONNAX_TEST_MLX_EP=1 ONNAX_MLX_EP_LIBRARY=/path/to/libonnxruntime_mlx_ep.dylib PYTHONPATH=src python -m pytest tests/test_stable_losses.py -q"
+}

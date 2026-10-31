@@ -83,6 +83,8 @@ sign and match every component against a scalar oracle on CPU and MLX. Ignored
 rows are replaced by zeros before arithmetic, producing zero loss and gradients
 even when their input logits contain NaNs. JVP, HVP and vmap checks cover the
 composed rules.
+The [CPU/MLX before-and-after report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/hard-ce-fp32-pivot.json)
+records the scalar oracle, all checks, runtime versions and library hash.
 
 Call `stable_losses.install(model)` to attach the standard-ONNX function bodies
 after building a graph with these helpers. The chunked head installs them
