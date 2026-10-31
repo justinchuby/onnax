@@ -28,13 +28,28 @@ class ValidationError(AssertionError):
         super().__init__("Native MLX validation failed; inspect the saved per-step report")
 
 
-def _same_parameter_control(model, reference, batch, after_updates):
+def _reference_audit(model, reference, batch, *, stable_reference=False, **kwargs):
+    if not stable_reference:
+        return audit(model, reference, batch, **kwargs)
+    from examples.huggingface.reference_head import pairwise_head
+    from examples.huggingface.reference_losses import stable_token_loss
+
+    with pairwise_head(reference):
+        return audit(model, reference, batch, reference_loss=stable_token_loss, **kwargs)
+
+
+def _same_parameter_control(model, reference, batch, after_updates, *, stable_reference=False):
     gradients = [
         None if p.grad is None else p.grad.detach().clone() for p in model.parameters()
     ]
     try:
-        control = audit(
-            model, copy.deepcopy(reference), batch, sync=True, diagnose_rounding=True
+        control = _reference_audit(
+            model,
+            copy.deepcopy(reference),
+            batch,
+            stable_reference=stable_reference,
+            sync=True,
+            diagnose_rounding=True,
         )
         return {"after_updates": after_updates, **control}
     finally:
@@ -42,7 +57,7 @@ def _same_parameter_control(model, reference, batch, after_updates):
             parameter.grad = gradient
 
 
-def run(*, library=None, segmented=False, target_nodes=1024, steps=4):
+def run(*, library=None, segmented=False, target_nodes=1024, steps=4, stable_reference=False):
     """Compare independent FP32 AdamW updates with CPU fallback disabled."""
     if steps < 1:
         raise ValueError("Expected a positive training step count")
@@ -88,8 +103,17 @@ def run(*, library=None, segmented=False, target_nodes=1024, steps=4):
         "strict_gradient_check_passed",
     )
     for step in range(steps):
-        result = audit(model, reference, batch, sync=False, diagnose_rounding=True)
-        point = _same_parameter_control(model, reference, batch, step)
+        result = _reference_audit(
+            model,
+            reference,
+            batch,
+            stable_reference=stable_reference,
+            sync=False,
+            diagnose_rounding=True,
+        )
+        point = _same_parameter_control(
+            model, reference, batch, step, stable_reference=stable_reference
+        )
         result["same_parameter"] = point
         if same_parameters is None and not all(result[key] for key in criteria):
             same_parameters = point
@@ -120,7 +144,9 @@ def run(*, library=None, segmented=False, target_nodes=1024, steps=4):
             row["violations"] for row in parameters
         )
         if same_parameters is None and not result["strict_parameter_check_passed"]:
-            same_parameters = _same_parameter_control(model, reference, batch, step + 1)
+            same_parameters = _same_parameter_control(
+                model, reference, batch, step + 1, stable_reference=stable_reference
+            )
         checks.append(result)
         if (step + 1) % 10 == 0:
             print(json.dumps({"step": step + 1, "loss": result["loss"]}), flush=True)
@@ -147,6 +173,11 @@ def run(*, library=None, segmented=False, target_nodes=1024, steps=4):
         ),
         "same_parameter_control": same_parameters,
         "model": "tiny-qwen3-nf4",
+        "reference_computation": (
+            "target-excluded stable CE; FP32 pairwise head backward, K blocks 128"
+            if stable_reference
+            else "standard PyTorch token loss and head backward"
+        ),
         "execution": "segmented" if segmented else "whole_graph",
         "segment_target_nodes": target_nodes if segmented else None,
         "platform": platform.platform(),
@@ -180,6 +211,7 @@ def main():
     parser.add_argument("--segmented", action="store_true")
     parser.add_argument("--segment-nodes", type=int, default=1024)
     parser.add_argument("--steps", type=int, default=4)
+    parser.add_argument("--stable-reference", action="store_true")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     failed = False
@@ -189,6 +221,7 @@ def main():
             segmented=args.segmented,
             target_nodes=args.segment_nodes,
             steps=args.steps,
+            stable_reference=args.stable_reference,
         )
     except ValidationError as error:
         result = error.report

@@ -244,6 +244,20 @@ writes the report and exits with status 1. The
 [100-step comparison report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-nf4-mlx-100-comparison.json)
 records the per-step checks and runtime library hash.
 
+Use `--stable-reference` in the same validator to run an independent trajectory
+with the target-excluded CE and pairwise frozen-head backward:
+
+```bash
+uv run python -m examples.huggingface.mlx_validation \
+  --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --steps 100 --stable-reference --output stable-reference-100.json
+```
+
+The report identifies the reference computation. Learning rate, Adam epsilon
+and comparison tolerances match the default run. Each step also compares
+gradients at shared parameters while preserving the independent optimizer
+states. A failed comparison saves the complete report and exits with status 1.
+
 The [paired runtime audit](qwen-runtime-audit.md) compares CPU and MLX gradients
 with fixed forward residuals and provides reusable segmented ONNX execution.
 
