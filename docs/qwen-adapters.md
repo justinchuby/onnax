@@ -132,51 +132,54 @@ records the source commit, native library digest, versions and timing scope.
 
 ### Real Qwen3-0.6B training measurements
 
-The whole-graph joint module runs with the development provider in
-[MLX EP PR #96](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/96).
-`NO_COMPILE` merges compatible eager regions; the packed lookup-matrix kernel
-continues to execute inside those regions.
+The matched execution-path comparison uses Qwen3-0.6B with NF4 decoder values,
+FP32 computation and AdamW on Apple M1 Max. Every path uses batch one,
+sequence length 64 and 63 valid shifted targets per update. Ten warmup updates
+precede 100 measured updates. Each path runs in a separate process; all native
+ONNX paths use the same MLX EP binary with compilation and ORT optimization
+disabled. PyTorch CPU stores reconstructed FP32 weights; ONNX stores packed NF4.
 
 ```bash
-ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.benchmark --mode joint --real --nf4 --batch-size 1 --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib --warmup 10 --samples 100
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.benchmark \
+  --mode optimized --real --nf4 --batch-size 1 --provider mlx \
+  --library /path/to/libonnxruntime_mlx_ep.dylib --warmup 10 --samples 100
 ```
 
-On Apple M1 Max, all paths use the same NF4-reconstructed weight values, FP32
-computation and AdamW, batch one, sequence length 64 and 63 valid shifted targets
-per update. ONNX stores packed NF4 decoder matrices; PyTorch stores their FP32
-reconstructions.
+Use `--mode pytorch`, `raw`, `chunked` or `joint` for the other paths.
 
 | Path | Step median / P95 (s) | Valid tokens/s | Peak process RSS (GiB) |
 | --- | ---: | ---: | ---: |
-| PyTorch CPU, reconstructed FP32 base | 0.355 / 0.368 | 177.40 | 4.72 |
-| Saved VJP | 1.650 / 1.717 | 38.18 | 9.79 |
-| Chunked head, recomputed body | 1.511 / 1.539 | 41.71 | 7.99 |
-| Joint loss/gradients | 1.353 / 1.388 | 46.55 | 5.84 |
+| PyTorch CPU, reconstructed FP32 base | 0.359 / 0.375 | 175.38 | 4.72 |
+| ONNX raw VJP | 1.631 / 2.572 | 38.64 | 6.97 |
+| ONNXScript-optimized VJP | 1.490 / 2.417 | 42.28 | 6.82 |
+| Chunked head, recomputed body | 1.512 / 2.520 | 41.67 | 7.85 |
+| Joint loss/gradients | 1.366 / 2.282 | 46.12 | 5.85 |
 
-The native ONNX runs use the same provider library. All runs use the same
-weight values, precision and batch, with 10 warmups and 100 measured updates.
-Public runtime thread counts
-are one; BLAS environment variables are unset and process CPU time is recorded.
-PyTorch CPU is fastest in this configuration. The joint path takes 18%
-less step time and 40% less peak RSS than saved VJP in this configuration.
-RSS includes model construction, runtime, arrays and optimizer allocations.
+ONNXScript cleanup, common-expression reuse and gradient-only backward outputs
+reduce the executed VJP from 46,024 nodes to 32,649. Raw and optimized paths
+produce **bitwise-identical losses at all 110 updates**. Optimization lowers
+median step time by 8.6% in this run. Joint execution has the lowest ONNX step
+time and peak RSS; PyTorch CPU is fastest overall in this FP32 configuration.
 
-Saved VJP retains 1.30 GiB of logical residual arrays across the public
-forward/backward boundary. The joint module returns 2.19 MiB of adapter
-gradients. The chunked path uses 128 token rows per head call and recomputes
-the transformer body in backward; this batch's 63 targets fit in one head chunk.
+All paths start near loss 4.562 and finish below 0.0006 on the repeated benchmark
+text. PyTorch/raw/optimized use standard causal cross-entropy, while chunked and
+joint use the target-excluded stable loss with the same mean normalization.
+The chunked head processes 128 token rows per call; this batch fits in one chunk.
 
-Joint construction, differentiation and initialization take 150.76 s, including
-3.78 s in the native session factory. Its loss on the repeated benchmark text
-decreases from 4.56 to 0.00059 across all 110 updates. ORT graph optimization
-and CPU fallback are disabled.
+Peak RSS includes model construction, runtime, arrays and optimizer allocations.
+Physical footprint is also sampled every 15 seconds. Public runtime thread
+counts are one; BLAS environment variables are unset. Initialization takes
+12.995 s for PyTorch and 156.192–161.122 s for the ONNX paths, including graph
+construction and differentiation. Reports separate execution, input-view
+preparation and AdamW timing, and record session initializer bytes and node counts.
 
-The [PyTorch](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-pytorch-matched-m1max.json),
-[joint](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-joint-eager-m1max.json),
-[saved](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-saved-eager-m1max.json)
-and [chunked](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-chunked-eager-m1max.json)
-measurement reports record the model revision, source commits, library digest,
-thread settings, logical input/output bytes, individual timings and observations.
+The {download}`matched execution report
+<../examples/huggingface/reports/qwen3-nf4-execution-matrix-m1max.json>` preserves
+all five loss traces, component measurements, source/runtime hashes and process
+journals. The earlier [saved-activation experiment
+report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-saved-eager-m1max.json)
+records the full primal/derivative cut, including 1.30 GiB of logical residual
+arrays. The joint module returns 2.19 MiB of adapter gradients across that boundary.
 
 ### Real joint SFT and checkpoint recovery
 
