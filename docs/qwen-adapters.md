@@ -125,6 +125,38 @@ The loss decreased from 5.55 to 5.09 over all 110 updates. The session accepted
 adapter gradients. The [measurement JSON](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-qwen-joint-native-m1max.json)
 records the source commit, native library digest, versions and timing scope.
 
+### Real Qwen3-0.6B native eager execution
+
+The whole-graph joint module runs with the development provider in
+[MLX EP PR #96](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/96).
+`NO_COMPILE` merges compatible eager regions; the packed lookup-matrix kernel
+continues to execute inside those regions.
+
+```bash
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.benchmark --mode joint --real --nf4 --batch-size 1 --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib --warmup 10 --samples 100
+```
+
+On Apple M1 Max, with NF4 decoder weights, FP32 computation and AdamW, batch one,
+sequence length 64 and 63 valid shifted targets per update:
+
+| Measurement | Joint module |
+| --- | ---: |
+| Full construction, differentiation and initialization | 150.76 s |
+| Native session factory | 3.78 s |
+| Training step median / P95 | 1.353 / 1.388 s |
+| Valid tokens per second | 46.55 |
+| Peak process RSS | 5.84 GiB |
+| Returned adapter gradients | 2.19 MiB |
+
+The run uses 10 warmups and 100 measured updates. Loss on the repeated benchmark
+text decreases from 4.56 to 0.00059 across all 110 updates. The module returns
+loss and parameter gradients through its public session boundary. ORT graph
+optimization and CPU fallback are disabled.
+
+The [measurement JSON](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-joint-eager-m1max.json)
+records the model revision, source commits, library digest, thread settings,
+logical input/output bytes, individual timings and measurement observations.
+
 ## PEFT files
 
 The SFT command writes `adapter/adapter_model.safetensors`, `adapter_config.json`
