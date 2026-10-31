@@ -1,0 +1,374 @@
+{
+  "source_commit": "c62f16f33a082661fce23db9c5035d5053e7ffcd",
+  "scope": "Offline tiny Qwen3: packed NF4 decoder, BF16 projection compute and FP32 surrogate adjoints/master adapters/Adam",
+  "training": {
+    "model": "tiny-qwen3",
+    "revision": null,
+    "steps": 100,
+    "mode": "joint",
+    "projection_precision": "bf16",
+    "validation_loss": [
+      5.542887210845947,
+      5.411116600036621
+    ],
+    "audits": [
+      {
+        "strict_loss_check_passed": true,
+        "reference_loss": 5.577329635620117,
+        "strict_logit_check_passed": true,
+        "logit_violations": 0,
+        "logits_relative_l2": 6.439397015611803e-09,
+        "logits_max_abs": 5.960464477539063e-08,
+        "gradients_max_abs": 2.7939677238464355e-09,
+        "strict_gradient_check_passed": true,
+        "gradient_failures": {},
+        "loss": 5.577329635620117
+      },
+      {
+        "strict_loss_check_passed": true,
+        "reference_loss": 5.1975932121276855,
+        "strict_logit_check_passed": true,
+        "logit_violations": 0,
+        "logits_relative_l2": 0.0,
+        "logits_max_abs": 0.0,
+        "gradients_max_abs": 3.3527612686157227e-08,
+        "strict_gradient_check_passed": true,
+        "gradient_failures": {},
+        "loss": 5.197593688964844
+      }
+    ],
+    "quantization": {
+      "format": "onnax-row-major-nf4-v1",
+      "codebook": [
+        -1.0,
+        -0.6961928009986877,
+        -0.5250730514526367,
+        -0.39491748809814453,
+        -0.28444138169288635,
+        -0.18477343022823334,
+        -0.09105003625154495,
+        0.0,
+        0.07958029955625534,
+        0.16093020141124725,
+        0.24611230194568634,
+        0.33791524171829224,
+        0.44070982933044434,
+        0.5626170039176941,
+        0.7229568362236023,
+        1.0
+      ],
+      "packing": "high nibble first; row-major transposed Linear weight",
+      "block_size": 64,
+      "compute_dtype": "bfloat16",
+      "adapter_dtype": "float32",
+      "embedding_dtype": "float32",
+      "lm_head_dtype": "float32",
+      "weights": {
+        "model.layers.0.mlp.down_proj.weight_t": {
+          "packed": "model.layers.0.mlp.down_proj.weight_t.nf4",
+          "scales": "model.layers.0.mlp.down_proj.weight_t.absmax",
+          "shape": [
+            128,
+            64
+          ],
+          "block_size": 64,
+          "packed_bytes": 4096,
+          "scale_bytes": 512,
+          "original_bytes": 32768
+        },
+        "model.layers.0.mlp.gate_proj.weight_t": {
+          "packed": "model.layers.0.mlp.gate_proj.weight_t.nf4",
+          "scales": "model.layers.0.mlp.gate_proj.weight_t.absmax",
+          "shape": [
+            64,
+            128
+          ],
+          "block_size": 64,
+          "packed_bytes": 4096,
+          "scale_bytes": 512,
+          "original_bytes": 32768
+        },
+        "model.layers.0.mlp.up_proj.weight_t": {
+          "packed": "model.layers.0.mlp.up_proj.weight_t.nf4",
+          "scales": "model.layers.0.mlp.up_proj.weight_t.absmax",
+          "shape": [
+            64,
+            128
+          ],
+          "block_size": 64,
+          "packed_bytes": 4096,
+          "scale_bytes": 512,
+          "original_bytes": 32768
+        },
+        "model.layers.0.self_attn.k_proj.weight_t": {
+          "packed": "model.layers.0.self_attn.k_proj.weight_t.nf4",
+          "scales": "model.layers.0.self_attn.k_proj.weight_t.absmax",
+          "shape": [
+            64,
+            32
+          ],
+          "block_size": 64,
+          "packed_bytes": 1024,
+          "scale_bytes": 128,
+          "original_bytes": 8192
+        },
+        "model.layers.0.self_attn.o_proj.weight_t": {
+          "packed": "model.layers.0.self_attn.o_proj.weight_t.nf4",
+          "scales": "model.layers.0.self_attn.o_proj.weight_t.absmax",
+          "shape": [
+            64,
+            64
+          ],
+          "block_size": 64,
+          "packed_bytes": 2048,
+          "scale_bytes": 256,
+          "original_bytes": 16384
+        },
+        "model.layers.0.self_attn.q_proj.weight_t": {
+          "packed": "model.layers.0.self_attn.q_proj.weight_t.nf4",
+          "scales": "model.layers.0.self_attn.q_proj.weight_t.absmax",
+          "shape": [
+            64,
+            64
+          ],
+          "block_size": 64,
+          "packed_bytes": 2048,
+          "scale_bytes": 256,
+          "original_bytes": 16384
+        },
+        "model.layers.0.self_attn.v_proj.weight_t": {
+          "packed": "model.layers.0.self_attn.v_proj.weight_t.nf4",
+          "scales": "model.layers.0.self_attn.v_proj.weight_t.absmax",
+          "shape": [
+            64,
+            32
+          ],
+          "block_size": 64,
+          "packed_bytes": 1024,
+          "scale_bytes": 128,
+          "original_bytes": 8192
+        },
+        "model.layers.1.mlp.down_proj.weight_t": {
+          "packed": "model.layers.1.mlp.down_proj.weight_t.nf4",
+          "scales": "model.layers.1.mlp.down_proj.weight_t.absmax",
+          "shape": [
+            128,
+            64
+          ],
+          "block_size": 64,
+          "packed_bytes": 4096,
+          "scale_bytes": 512,
+          "original_bytes": 32768
+        },
+        "model.layers.1.mlp.gate_proj.weight_t": {
+          "packed": "model.layers.1.mlp.gate_proj.weight_t.nf4",
+          "scales": "model.layers.1.mlp.gate_proj.weight_t.absmax",
+          "shape": [
+            64,
+            128
+          ],
+          "block_size": 64,
+          "packed_bytes": 4096,
+          "scale_bytes": 512,
+          "original_bytes": 32768
+        },
+        "model.layers.1.mlp.up_proj.weight_t": {
+          "packed": "model.layers.1.mlp.up_proj.weight_t.nf4",
+          "scales": "model.layers.1.mlp.up_proj.weight_t.absmax",
+          "shape": [
+            64,
+            128
+          ],
+          "block_size": 64,
+          "packed_bytes": 4096,
+          "scale_bytes": 512,
+          "original_bytes": 32768
+        },
+        "model.layers.1.self_attn.k_proj.weight_t": {
+          "packed": "model.layers.1.self_attn.k_proj.weight_t.nf4",
+          "scales": "model.layers.1.self_attn.k_proj.weight_t.absmax",
+          "shape": [
+            64,
+            32
+          ],
+          "block_size": 64,
+          "packed_bytes": 1024,
+          "scale_bytes": 128,
+          "original_bytes": 8192
+        },
+        "model.layers.1.self_attn.o_proj.weight_t": {
+          "packed": "model.layers.1.self_attn.o_proj.weight_t.nf4",
+          "scales": "model.layers.1.self_attn.o_proj.weight_t.absmax",
+          "shape": [
+            64,
+            64
+          ],
+          "block_size": 64,
+          "packed_bytes": 2048,
+          "scale_bytes": 256,
+          "original_bytes": 16384
+        },
+        "model.layers.1.self_attn.q_proj.weight_t": {
+          "packed": "model.layers.1.self_attn.q_proj.weight_t.nf4",
+          "scales": "model.layers.1.self_attn.q_proj.weight_t.absmax",
+          "shape": [
+            64,
+            64
+          ],
+          "block_size": 64,
+          "packed_bytes": 2048,
+          "scale_bytes": 256,
+          "original_bytes": 16384
+        },
+        "model.layers.1.self_attn.v_proj.weight_t": {
+          "packed": "model.layers.1.self_attn.v_proj.weight_t.nf4",
+          "scales": "model.layers.1.self_attn.v_proj.weight_t.absmax",
+          "shape": [
+            64,
+            32
+          ],
+          "block_size": 64,
+          "packed_bytes": 1024,
+          "scale_bytes": 128,
+          "original_bytes": 8192
+        }
+      },
+      "original_decoder_bytes": 294912,
+      "packed_decoder_bytes": 41472
+    },
+    "provider": "mlx",
+    "segment_target_nodes": null,
+    "ort_graph_optimization": "disabled",
+    "frozen_buffers_unchanged": true,
+    "cpu_fallback_disabled": true,
+    "mlx_compile_disabled": true,
+    "lut4_fusion_disabled": false,
+    "library": "/tmp/onnax-eager-target/release/libonnxruntime_mlx_ep.dylib",
+    "library_sha256": "1c9e7c0b40449408caf300d7da42cee8b4b50f0e1dc2564c30170eee2dcbdf20",
+    "stable_reference_audits": {
+      "loss": "target-excluded stable CE",
+      "head_backward": "FP32 adjoint using BF16-rounded operands",
+      "checks": [
+        {
+          "strict_loss_check_passed": true,
+          "reference_loss": 5.577329635620117,
+          "strict_logit_check_passed": true,
+          "logit_violations": 0,
+          "logits_relative_l2": 6.439397015611803e-09,
+          "logits_max_abs": 5.960464477539063e-08,
+          "gradients_max_abs": 2.3283064365386963e-09,
+          "strict_gradient_check_passed": true,
+          "gradient_failures": {},
+          "loss": 5.577329635620117
+        },
+        {
+          "strict_loss_check_passed": true,
+          "reference_loss": 5.1975932121276855,
+          "strict_logit_check_passed": true,
+          "logit_violations": 0,
+          "logits_relative_l2": 0.0,
+          "logits_max_abs": 0.0,
+          "gradients_max_abs": 2.9802322387695312e-08,
+          "strict_gradient_check_passed": true,
+          "gradient_failures": {},
+          "loss": 5.197593688964844
+        }
+      ]
+    },
+    "artifact_bytes": {
+      "forward.onnx": 91969,
+      "forward.data": 116736,
+      "adapter.npz": 9654,
+      "interface.json": 8288,
+      "loss_gradient.onnx": 244073,
+      "loss_gradient.data": 109568,
+      "quantization.json": 5482
+    },
+    "forward_nodes": 347,
+    "adapter_parameter_bytes": 7168,
+    "requested_audits": {
+      "peft": true,
+      "fp64": false,
+      "stable_reference": true
+    },
+    "peft": {
+      "adapter_tensors": 8,
+      "format_roundtrip_bitwise": true,
+      "loss_check_passed": true,
+      "loss": 5.197593688964844,
+      "reference_loss": 5.1975932121276855,
+      "loss_abs_difference": 4.76837158203125e-07,
+      "gradient_check_passed": true,
+      "gradient_failures": {},
+      "update_check_passed": true,
+      "update_failures": {},
+      "logit_violations": 0,
+      "logits_max_abs": 0.0,
+      "stable_reference_audit": {
+        "reference_loss": 5.1975932121276855,
+        "reference_computation": "target-excluded stable CE; BF16 projection forward and FP32 surrogate adjoints",
+        "loss_check_passed": true,
+        "adapter_tensors": 8,
+        "rtol": 0.0001,
+        "atol": 1e-06,
+        "optimizer": {
+          "name": "AdamW",
+          "lr": 0.003,
+          "eps": 1e-08,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "weight_decay": 0
+        },
+        "gradient_check_passed": true,
+        "gradients_max_abs": 2.60770320892334e-08,
+        "gradient_failures": {},
+        "update_check_passed": true,
+        "updates_max_abs": 5.960464477539063e-08,
+        "update_failures": {}
+      }
+    }
+  },
+  "recovery": {
+    "step": 100,
+    "adapter_tensors": 8,
+    "checkpoint_tensors": 9,
+    "frozen_initializers": 56,
+    "adapter_bitwise_equal": true,
+    "checkpoint_bitwise_equal": true,
+    "optimizer_bitwise_equal": true,
+    "scheduler_equal": true,
+    "frozen_hashes_equal": true,
+    "export_load_outputs_bitwise_equal": true,
+    "provider": "mlx",
+    "ort_memory_reuse": null,
+    "export_load_loss_gradients_bitwise_equal": true,
+    "exported_gradient_tensors": 8
+  },
+  "resume_from": 50,
+  "commands": {
+    "train": "ONNXRUNTIME_EP_MLX_NO_COMPILE=1 HF_HUB_OFFLINE=1 PYTHONPATH=src python -m examples.huggingface.sft --mode joint --nf4 --projection-precision bf16 --provider mlx --library LIBRARY --steps 100 --diagnose-rounding --stable-reference --peft-roundtrip --output-dir OUTPUT",
+    "resume": "Same training arguments, --resume ORIGINAL/checkpoint-50, new OUTPUT",
+    "replay": "ONNXRUNTIME_EP_MLX_NO_COMPILE=1 PYTHONPATH=src python -m examples.huggingface.replay --uninterrupted ORIGINAL --resumed RESUMED --step 100 --provider mlx --library LIBRARY --output REPORT"
+  },
+  "storage_scope": "Packed/scales byte counts cover frozen decoder matrices; embeddings/head retain FP32 storage",
+  "performance": "Not measured for the combined NF4/BF16 path in this acceptance run",
+  "real_model_qualification": "Pending; real BF16 arithmetic qualification is tracked in #116 and the BF16 SFT report",
+  "strict_independent_update_control": {
+    "steps": 5,
+    "backends": {
+      "reference": "passed",
+      "native_mlx": "passed"
+    },
+    "rtol": 0.0001,
+    "atol": 1e-06,
+    "optimizer": {
+      "name": "AdamW",
+      "lr": 0.003,
+      "eps": 1e-08,
+      "weight_decay": 0
+    },
+    "scope": "Same independent forward/loss/all-adapter-gradient/parameter-update test as the unquantized BF16 case, with NF4 reconstruction applied to both bases"
+  }
+}

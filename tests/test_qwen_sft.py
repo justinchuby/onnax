@@ -112,6 +112,7 @@ def test_independent_multi_step_updates():
         ("full", False, "fp32", "cpu"),
         ("joint", True, "fp32", "cpu"),
         ("joint", False, "bf16", "reference"),
+        ("joint", True, "bf16", "reference"),
     ],
 )
 def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4, precision, provider):

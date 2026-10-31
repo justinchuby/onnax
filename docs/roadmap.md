@@ -82,8 +82,12 @@ recovery byte for byte. The [BF16 projection audit](qwen-sft.md) compares shared
 parameter states; strict independent five-step update qualification is still
 open.
 
-Next, qualify BF16 on the real transformer, measure its training time and
-memory, and combine it with packed decoder storage. Use measured tensor
+Tiny Qwen now combines packed NF4 decoder storage with BF16 products. The
+strict five-step independent updates, 100-step native training, PEFT controls
+and checkpoint recovery pass for this workload.
+
+Next, qualify the combined NF4/BF16 path on the real transformer and measure
+its training time and memory. Use measured tensor
 lifetimes and the head memory curve to place recomputation boundaries.
 Continue independent FP32 update qualification alongside these changes.
 

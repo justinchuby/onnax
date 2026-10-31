@@ -145,8 +145,10 @@ The report is `reports/qwen3-bf16-matched-m1max.json`. Independent numerical
 qualification remains open as described above.
 
 For native execution select `--provider mlx`. The tested macOS ORT CPU backend
-has no BF16 MatMul kernel. This experiment uses FP32 weight storage; NF4 and
-BF16 projection compute currently have separate CLI paths.
+has no BF16 MatMul kernel. The default experiment uses FP32 weight storage.
+Add `--nf4` to combine BF16 products with
+[packed frozen decoder weights](qwen-nf4.md); embeddings and the head retain
+FP32 storage.
 
 ## Validation
 

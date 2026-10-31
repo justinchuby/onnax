@@ -96,6 +96,7 @@ def dequantize(packed, scales, shape, *, block_size=64):
 
 
 def _function(k, n, block_size, *, transpose=False, opset=18, precision="fp32", adjoint=False):
+    """Decode frozen weights; linearizations use FP32 with rounded BF16 weights."""
     blocks = math.ceil(k * n / block_size)
     x = ir.val("x", dtype=ir.DataType.FLOAT)
     p = ir.val("packed", dtype=ir.DataType.UINT8, shape=[blocks * block_size // 2])

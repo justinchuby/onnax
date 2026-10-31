@@ -18,7 +18,8 @@ def bf16_projections(model):
 
     Each product rounds its operands and result to BF16. The shared registered
     rules compute straight-through adjoints in FP32 using rounded operands.
-    Parameters, frozen storage and external optimizer state remain FP32.
+    Parameters and external optimizer state remain FP32. Packed NF4 decoder
+    calls retain their storage and supply BF16 forward/FP32 derivative rules.
     """
     result = model.clone()
     from examples.lora.nf4 import DOMAIN as NF4_DOMAIN
