@@ -504,5 +504,33 @@
     "result": "112 passed, 5 skipped in 165.47s",
     "strict_reference_bf16_update_test": "passed; test_qwen_bf16.py included explicitly, native MLX case opt-in skipped",
     "local_macos_control": "Both ReferenceEvaluator and native MLX strict five-step updates still fail at step five"
+  },
+  "real_first_projection_accumulation_control": {
+    "scope": "Identical BF16 operands from the first frozen q projection of the unquantized real Qwen BF16 workload",
+    "shape": [
+      [
+        11,
+        1024
+      ],
+      [
+        1024,
+        2048
+      ]
+    ],
+    "against_mlx": {
+      "torch_bf16_native": {
+        "mismatches": 4,
+        "max_abs": 0.000244140625,
+        "tolerance_violations": 4
+      },
+      "torch_fp32_accumulation_emulation": {
+        "mismatches": 0,
+        "max_abs": 0.0,
+        "tolerance_violations": 0
+      }
+    },
+    "emulation": "(qa.float() @ qb.float()).bfloat16().float(), after qa/qb have been rounded to BF16",
+    "production_policy_changed": false,
+    "original_strict_checks_retained": true
   }
 }

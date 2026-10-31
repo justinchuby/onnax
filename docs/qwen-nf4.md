@@ -75,6 +75,9 @@ and exports pass the full ONNX checker. The observed process-reported peak
 physical footprint is about 10.5 GiB, including GPU mappings, construction,
 validation, training and adapter audits. An earlier run retained translation
 intermediates and reached 54.5G before initial validation completed.
+Checkpoint-15 recovery in a new process reproduces all 112 adapters, all 113
+checkpoint tensors, Adam/scheduler state, 532 frozen-buffer hashes and loaded
+ONNX forward/loss/all-gradient outputs byte for byte.
 
 Independent real-model forward, loss and gradient checks exceed the original
 tolerances; the report preserves each failure in
