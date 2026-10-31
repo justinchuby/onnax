@@ -65,10 +65,13 @@ def measure(*, real=False, precision="fp32", samples=100, warmup=10, factory=Non
                 if baseline.tobytes() != actual.tobytes() or not np.isfinite(actual).all():
                     raise AssertionError(f"Loss-only mismatch at state {state}, {shape}")
                 checks.append({"state": state, "batch": shape, "loss_sum": float(actual)})
-        timings = {}
+        timings, components = {}, {}
         output_bytes = {}
         for path in ("joint", "loss_only"):
             records = []
+            counters = joint.timings if path == "joint" else joint.evaluation_timings
+            execution_key = "loss_gradient" if path == "joint" else "loss"
+            offset = len(counters[execution_key]) + warmup
             for index in range(warmup + samples):
                 before = time.perf_counter()
                 with torch.set_grad_enabled(path == "joint"):
@@ -83,6 +86,13 @@ def measure(*, real=False, precision="fp32", samples=100, warmup=10, factory=Non
                 "median": float(np.median(records)),
                 "p95": float(np.percentile(records, 95)),
             }
+            components[path] = {
+                key: {
+                    "median": float(np.median(counters[key][offset:]) * 1000),
+                    "p95": float(np.percentile(counters[key][offset:], 95) * 1000),
+                }
+                for key in ("exchange", execution_key)
+            }
             output_bytes[path] = joint.last_output_bytes
         if frozen_hashes(joint.gradient) != frozen:
             raise AssertionError("Frozen weights changed")
@@ -95,6 +105,8 @@ def measure(*, real=False, precision="fp32", samples=100, warmup=10, factory=Non
             "warmup": warmup,
             "checks": checks,
             "timings_ms": timings,
+            "component_timings_ms": components,
+            "exchange_scope": "Host input/adapter validation and NumPy view preparation; runtime transfers are included in execution",
             "runtime_output_bytes": output_bytes,
             "evaluation_session_creation_seconds": joint.evaluation_timings[
                 "session_creation"

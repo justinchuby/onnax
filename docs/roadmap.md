@@ -62,65 +62,58 @@ tools to exported ONNX derivatives. [NF4 Qwen fine-tuning](qwen-nf4.md) extends
 the same bridge to packed decoder weights, independent adapter updates and
 fresh-process checkpoint recovery.
 
-Native FP32 Qwen SFT now completes 30 updates, exchanges standard PEFT adapters
-and reproduces checkpoint-15 recovery byte for byte. The stable reference
-qualifies all 112 adapter gradients at the training endpoints and through
-standard PEFT. [Reference accuracy checks](qwen-reference-accuracy.md) retain
-the remaining pointwise-logit and independent-update differences, including
-captured Adam-state histories.
+### Qwen fine-tuning acceptance
 
-The experimental MLX packed-lookup MatMul kernel executes the ordinary NF4
-graphs. Isolated measurements compare fused/unfused MLX, ONNX CPU and PyTorch
-CPU; [runtime reports](qwen-runtime-audit.md) record the measured source,
-complete-step timing and process RSS.
+Native FP32 Qwen3-0.6B SFT completes 30 updates, exchanges standard PEFT
+adapters and reproduces checkpoint-15 recovery byte for byte. The stable
+reference qualifies all 112 adapter gradients at the training endpoints and
+through PEFT. [Reference accuracy checks](qwen-reference-accuracy.md) record
+pointwise-logit and independent-update differences with captured Adam states.
 
-The joint loss/gradient route now runs in one session and retains only adapter
-gradients across the PyTorch autograd boundary. Tiny Qwen also completes 100
-updates with BF16 projections and FP32 master adapters, gradients and Adam
-state on ReferenceEvaluator and native MLX. Both reproduce checkpoint-50
-recovery byte for byte. The [BF16 projection audit](qwen-sft.md) compares shared
-parameter states; strict independent five-step update qualification is still
-open.
+The joint loss/gradient route retains adapter gradients across the PyTorch
+autograd boundary. Tiny and real NF4/BF16 runs complete training and reproduce
+checkpoint recovery, including optimizer state and loaded ONNX execution.
+The real-model local pullback audit covers all 3,522 input contributions and
+580 fan-in additions in each of three adapter states. Pairwise FP32 output-head
+accumulation brings the saved optimized module's loss and all 112 gradients
+within the original independent-reference tolerance in those states; all 532
+frozen hashes remain unchanged. Strict independent update comparisons remain
+open: scalar Adam replay reproduces the observed parameter gap from the
+captured gradient sequences.
 
-Tiny Qwen now combines packed NF4 decoder storage with BF16 products. The
-strict five-step independent updates, 100-step native training, PEFT controls
-and checkpoint recovery pass for this workload.
+The MLX packed-lookup MatMul kernel executes ordinary NF4 graphs. Eager array
+lifetime correction brings the observed real NF4/BF16 full-run physical
+footprint to about 10.5 GiB on M1 Max. Matched 100-sample measurements record a
+1.873 s median ONNX/MLX training step and 3.054 s for PyTorch CPU. The
+[NF4 tutorial](qwen-nf4.md) and [runtime audit](qwen-runtime-audit.md) record the
+source, precision, storage and loss policies for these measurements.
 
-The real NF4/BF16 transformer completes 30 updates and fresh-process
-checkpoint-15 recovery, with exact adapter/state/export replay. Eager array
-lifetime correction reduces its observed full-run physical footprint to about
-10.5 GiB on M1 Max. Matched 100-sample measurements record a 1.873 s median
-ONNX/MLX training step and 3.054 s for PyTorch CPU, with source, precision,
-storage and loss policies in the [NF4 tutorial](qwen-nf4.md).
+### Current qualification priorities
 
-Next, resolve the real-model independent BF16 logits, loss and gradient
-differences and complete independent FP32 update qualification. Shared-input
-projection controls distinguish product accumulation from upstream rounding;
-all comparisons retain their original tolerances. The real NF4/BF16 local
-pullback audit passes all 3,522 input contributions in three adapter states.
-Independent full-graph recomposition covers 580 fan-in additions per state.
-A scalar-oracle audit identifies ordinary CPU reference error in the long
-output-head reduction. With pairwise FP32 head accumulation, all 112 adapter
-gradients pass in all three states at the original tolerance. The saved,
-optimized joint loss/gradient module now also matches the independent stable
-loss and all 112 gradients across these states, with its 532 frozen hashes
-verified. Scalar Adam replay identifies the tiny nonzero-B fresh-update gap
-as amplification of a 1.39e-11 gradient difference.
+1. **Training quality on instruction data.** The
+   [training-quality experiment](training-quality.md) now uses a pinned No Robots
+   split with 128 training and 32 official-test sequences. Three FP32 seeds
+   complete 30 updates per runtime: CPU/MLX final held-out loss averages
+   2.666917/2.666826, with a maximum paired gap of 0.000255. The matched BF16
+   experiment is running. The earlier 18/6 split and shared-parameter replays
+   remain available for numerical diagnosis.
+2. **Evaluation cost.** Joint mode now creates a reusable loss-only session for
+   no-grad evaluation. Tiny FP32/BF16 checks cover three adapter states,
+   dynamic shapes, padding and ignored labels with bitwise loss agreement.
+   Run the [evaluation qualification command](qwen-sft.md) on Qwen3-0.6B after
+   the instruction-data experiment, measuring session creation, execution and
+   the memory cost of keeping both sessions.
+3. **Platform baseline.** Run matched PyTorch CPU/CUDA training under the same
+   precision and data policies. CUDA execution remains outstanding; the
+   recorded Mac comparisons cover CPU and MLX.
+4. **Memory boundaries.** Use tensor lifetimes and the output-head memory curve
+   to choose recomputation boundaries, then validate complete training and
+   checkpoint recovery for each change.
 
-The [training-quality baseline](training-quality.md) now compares five independent
-seeds across PyTorch CPU, ReferenceEvaluator CPU and MLX for 100 tiny NF4/BF16
-updates. The maximum paired PyTorch/MLX held-out loss gap is 0.000209, compared
-with a seed standard deviation around 0.0037. Three real-model seeds complete
-30 updates per engine: final validation loss averages 7.211 on CPU and 7.384 on
-MLX, with a maximum paired gap of 0.425. Both curves improve through step 10
-and then overfit the small corpus. Shared-parameter replay limits the largest evaluation loss gap to 0.0142;
-shared-state gradient cosine ranges from 0.9889 to 0.9997. The matched FP32 control completes all three seeds with a maximum paired
-validation gap of 0.000327 and minimum sampled gradient cosine of 0.999991.
-Next measure the CPU/CUDA baseline and extend held-out evaluation beyond the
-small local corpus. Component-level numerical
-checks remain available alongside validation quality and seed variation.
-Measured tensor lifetimes
-and the head memory curve will guide recomputation boundaries.
+Custom UTF-8 training/validation files now work with SFTTrainer. Checkpoints
+record data and tokenizer identities and reject changed inputs before model
+construction. Optimization, scheduling and checkpoint ownership stay with
+Trainer and the external training code.
 
 ## Engineering boundaries
 
