@@ -24,6 +24,17 @@ from examples.huggingface.reference_losses import stable_token_loss
 from examples.huggingface.validation import add_reference_adapters
 
 
+def test_shared_state_projection_primals_and_cotangents():
+    from examples.huggingface.bf16_audit import audit
+
+    result = audit()
+    assert result["projection_count"] == 23
+    for row in result["rows"]:
+        assert row["rounded_input_mismatches"] == 0, row["matrix"]
+        assert row["output_mismatches"] == 0, row["matrix"]
+        assert row.get("gradient_violations", 0) == 0, row["matrix"]
+
+
 def reference_session(source):
     source = onnx.load_model_from_string(source) if isinstance(source, bytes) else str(source)
     return ReferenceEvaluator(source)

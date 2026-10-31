@@ -89,6 +89,18 @@ outputs byte for byte. Running either set of final parameters on both ONNX
 executors produced identical logits on the audit sample. The remaining
 five-step update discrepancy is tracked separately from checkpoint recovery.
 
+Inspect projection inputs, outputs and incoming gradients at the same parameter
+state with:
+
+```bash
+uv run python -m examples.huggingface.bf16_audit --output projection-audit.json
+```
+
+This runs one AdamW update, copies its parameters into the independent reference,
+and audits the second gradient evaluation. All 23 rounded projection inputs and
+outputs match exactly. Incoming gradients meet the original tolerance, with
+FP32 arithmetic differences recorded for each projection.
+
 For native execution select `--provider mlx`. The tested macOS ORT CPU backend
 has no BF16 MatMul kernel. This experiment uses FP32 weight storage; NF4 and
 BF16 projection compute currently have separate CLI paths.
