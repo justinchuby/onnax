@@ -1,12 +1,17 @@
 # Copyright (c) 2026 onnax contributors
 # SPDX-License-Identifier: MIT
 """Keep diagnostic controls separate from independent training state."""
+# ruff: file-ignore[module-import-not-at-top-of-file] - Optional dependencies.
 
 import json
 import sys
 
 import pytest
-import torch
+
+pytest.importorskip("mobius")
+pytest.importorskip("trl")
+pytest.importorskip("peft")
+torch = pytest.importorskip("torch")
 
 from examples.huggingface import mlx_validation
 
