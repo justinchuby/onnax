@@ -89,6 +89,24 @@ def compare(reports, captures, *, executions=None):
             or any(row["engine"] != engine for row in rows)
         ):
             raise ValueError("Expected one trial per engine and seed")
+        for row in rows:
+            curve = row["validation_curve"]
+            steps = [point["step"] for point in curve]
+            losses = [point["loss"] for point in curve]
+            if (
+                not steps
+                or steps[0] != 0
+                or steps[-1] != component["steps"]
+                or any(a >= b for a, b in itertools.pairwise(steps))
+            ):
+                raise ValueError("Incomplete or unordered validation curve")
+            if not np.isfinite(losses).all():
+                raise ValueError("Nonfinite validation curve")
+            if (
+                losses[0] != row["initial_validation_loss"]
+                or losses[-1] != row["final_validation_loss"]
+            ):
+                raise ValueError("Validation endpoints differ from trial summary")
         trials.update({(engine, row["seed"]): row for row in rows})
     comparisons = []
     for i, j in itertools.combinations(range(len(engines)), 2):

@@ -66,6 +66,19 @@ def test_independent_quality_runs_share_initialization_and_data(tmp_path):
     for actual, expected in zip(combined["comparisons"], report["comparisons"], strict=True):
         assert actual["gradient_snapshots"] == expected["gradient_snapshots"]
         assert actual["parameters"] == expected["parameters"]
+    curve = component["trials"][0]["validation_curve"]
+    original = curve[1]["loss"]
+    curve[1]["loss"] = float("nan")
+    paths[-1].write_text(json.dumps(component))
+    with pytest.raises(ValueError, match="Nonfinite validation curve"):
+        compare(paths, [tmp_path / "snapshots.npz"] * 2)
+    curve[1]["loss"] = original
+    final_loss = component["trials"][0]["final_validation_loss"]
+    component["trials"][0]["final_validation_loss"] = final_loss + 1
+    paths[-1].write_text(json.dumps(component))
+    with pytest.raises(ValueError, match="Validation endpoints"):
+        compare(paths, [tmp_path / "snapshots.npz"] * 2)
+    component["trials"][0]["final_validation_loss"] = final_loss
     component["trials"][0]["schedule_sha256"] = "different schedule"
     paths[-1].write_text(json.dumps(component))
     with pytest.raises(ValueError, match="schedule_sha256"):
