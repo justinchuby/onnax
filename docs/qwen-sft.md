@@ -85,6 +85,20 @@ separate `evaluation_timings` entries. The evaluation session adds its own
 runtime weight storage; call `model.onnx.close()` to release both sessions and
 their temporary model files.
 
+Compare evaluation paths at identical adapter states:
+
+```bash
+uv run python -m examples.huggingface.evaluation_benchmark \
+  --samples 100 --warmup 10 --output evaluation.json
+```
+
+Add `--real --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib`
+for Qwen3-0.6B, and `--precision bf16` for BF16 projections. The command checks
+bitwise loss agreement at three adapter states with full, padded and ignored
+label batches, then measures median/P95 wrapper time at a fixed state. It
+records the lazy evaluation-session construction separately. Peak RSS covers
+the whole process, including both sessions and the correctness checks.
+
 The tiny run trains for 100 updates. The real run uses 30 updates, microbatch
 one, four accumulation steps and a 64-token maximum length. Resume with
 `--resume qwen_real/checkpoint-15`. The wrapper recreates the base and validates
