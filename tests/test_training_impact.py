@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 """Exercise independent training-quality comparisons and paired initialization."""
 
+import json
+
 import numpy as np
 import pytest
 
@@ -41,6 +43,33 @@ def test_independent_quality_runs_share_initialization_and_data(tmp_path):
         assert comparison["gradient_snapshots"][0]["cosine"] > 0.9999
         assert np.isfinite(comparison["parameters"]["relative_l2"])
     assert len(report["validation_summary"]["torch_cpu"]["values"]) == 2
+
+    from examples.huggingface.training_quality_compare import compare
+
+    paths = []
+    for engine in report["engines"]:
+        component = {
+            **report,
+            "engines": [engine],
+            "trials": [row for row in report["trials"] if row["engine"] == engine],
+        }
+        path = tmp_path / f"{engine}.json"
+        path.write_text(json.dumps(component))
+        paths.append(path)
+    combined = compare(paths, [tmp_path / "snapshots.npz"] * 2)
+    assert combined["validation_summary"] == {
+        engine: {
+            key: report["validation_summary"][engine][key] for key in ("values", "mean", "std")
+        }
+        for engine in report["engines"]
+    }
+    for actual, expected in zip(combined["comparisons"], report["comparisons"], strict=True):
+        assert actual["gradient_snapshots"] == expected["gradient_snapshots"]
+        assert actual["parameters"] == expected["parameters"]
+    component["trials"][0]["schedule_sha256"] = "different schedule"
+    paths[-1].write_text(json.dumps(component))
+    with pytest.raises(ValueError, match="schedule_sha256"):
+        compare(paths, [tmp_path / "snapshots.npz"] * 2)
 
 
 def test_gradient_direction_distinguishes_scale_and_sign():

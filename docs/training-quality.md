@@ -77,3 +77,24 @@ Add `--real --steps 30` for the pinned Qwen3-0.6B model. A matched comparison us
 the same precision, data schedule, effective batch and optimizer on each engine.
 Validation curves and seed variation provide the training-quality baseline;
 pointwise numerical checks provide diagnostic detail.
+
+
+## Run large-model engines in separate processes
+
+Each engine can write its own report and snapshot file, keeping runtime caches
+within one process at a time:
+
+```bash
+uv run python -m examples.huggingface.training_impact --real --steps 30 \
+  --seeds 17 29 43 --engines torch_cpu --capture cpu.npz --output cpu.json
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.training_impact \
+  --real --steps 30 --seeds 17 29 43 --engines mlx \
+  --library /path/to/libonnxruntime_mlx_ep.dylib --capture mlx.npz --output mlx.json
+uv run python -m examples.huggingface.training_quality_compare \
+  --reports cpu.json mlx.json --captures cpu.npz mlx.npz --output comparison.json
+```
+
+The comparison verifies matching model/data/precision/optimizer settings, source
+weights, initial adapters, schedules and snapshot checksums. It reports every
+seed's validation-curve gap, gradient direction and parameter difference. Replacing
+`mlx` with `torch_cuda` selects a CUDA component on a CUDA-equipped host.
