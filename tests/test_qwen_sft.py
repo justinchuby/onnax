@@ -78,8 +78,9 @@ def test_token_normalization_and_all_ignored(workload):
     assert loss.item() == 0 and logits.grad.count_nonzero() == 0
 
 
-def test_tiny_sft_complete_training(tmp_path):
-    result = run(str(tmp_path))
+@pytest.mark.parametrize("mode,nf4", [("full", False), ("joint", True)])
+def test_tiny_sft_complete_training(tmp_path, mode, nf4):
+    result = run(str(tmp_path), mode=mode, nf4=nf4)
     assert result["steps"] == 100
     assert result["validation_loss"][1] < result["validation_loss"][0]
     assert tokenizer().padding_side == "right"
@@ -105,12 +106,14 @@ def test_independent_multi_step_updates():
                 )
 
 
-def test_sft_fresh_process_checkpoint_resume(tmp_path):
+@pytest.mark.parametrize("mode,nf4", [("full", False), ("joint", True)])
+def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4):
     import os
     import subprocess
     import sys
 
-    run(str(tmp_path))
+    run(str(tmp_path), mode=mode, nf4=nf4)
+    resumed = tmp_path / "resumed"
     with np.load(tmp_path / "export" / "adapter.npz") as data:
         expected = {n: data[n].copy() for n in data.files}
     subprocess.run(
@@ -119,17 +122,29 @@ def test_sft_fresh_process_checkpoint_resume(tmp_path):
             "-m",
             "examples.huggingface.sft",
             "--output-dir",
-            str(tmp_path),
+            str(resumed),
             "--resume",
             os.fspath(tmp_path / "checkpoint-50"),
+            "--mode",
+            mode,
+            *(["--nf4"] if nf4 else []),
         ],
         check=True,
         capture_output=True,
         text=True,
     )
-    with np.load(tmp_path / "export" / "adapter.npz") as data:
+    with np.load(resumed / "export" / "adapter.npz") as data:
         for n, value in expected.items():
             np.testing.assert_array_equal(data[n], value)
+
+    from examples.huggingface.replay import verify
+
+    replay = verify(str(tmp_path), str(resumed), step=100)
+    assert replay["optimizer_bitwise_equal"]
+    assert replay["export_load_outputs_bitwise_equal"]
+    if mode == "joint":
+        assert replay["export_load_loss_gradients_bitwise_equal"]
+        assert replay["exported_gradient_tensors"] == len(expected)
 
 
 def test_noncontiguous_position_ids(workload):

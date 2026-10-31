@@ -7,6 +7,7 @@ import functools
 import hashlib
 import json
 import os
+import tempfile
 
 import torch
 from datasets import Dataset
@@ -15,7 +16,7 @@ from transformers import AutoTokenizer, PreTrainedModel, PreTrainedTokenizerFast
 from transformers.modeling_outputs import CausalLMOutput
 from trl import SFTConfig, SFTTrainer
 
-from examples.huggingface.bridge import OnnxModule, frozen_hashes
+from examples.huggingface.bridge import OnnxModule, frozen_hashes, graph_session
 from examples.huggingface.qwen import (
     MODEL_ID,
     REVISION,
@@ -93,11 +94,21 @@ class OnnxQwen3(PreTrainedModel):
     ):
         super().__init__(config)
         self.loss_type = "ForCausalLM"
-        if mode not in ("full", "chunked"):
-            raise ValueError("Expected full or chunked training")
+        if mode not in ("full", "chunked", "joint"):
+            raise ValueError("Expected full, chunked or joint training")
         self.mode = mode
         self.forward_graph = model
-        if mode == "chunked":
+        if mode == "joint":
+            from examples.huggingface.joint_loss import JointLoss, causal_loss_graph
+
+            self._joint_session_factory = session_factory
+            self.onnx = JointLoss(
+                causal_loss_graph(model),
+                params,
+                optimize=optimize,
+                session_factory=session_factory,
+            )
+        elif mode == "chunked":
             from onnxscript import optimizer
 
             from examples.huggingface.chunked_loss import ChunkedHead
@@ -153,9 +164,34 @@ class OnnxQwen3(PreTrainedModel):
             attention_mask = torch.ones_like(input_ids)
         if position_ids is None:
             position_ids = (attention_mask.cumsum(-1) - 1).clamp(min=0)
-        value = self.onnx(
-            input_ids=input_ids, attention_mask=attention_mask, position_ids=position_ids
-        )
+        feeds = {
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "position_ids": position_ids,
+        }
+        if self.mode == "joint":
+            if labels is not None:
+                total = self.onnx(**feeds, labels=labels)
+                count = (
+                    labels[:, 1:].ne(-100).sum()
+                    if num_items_in_batch is None
+                    else torch.as_tensor(num_items_in_batch)
+                )
+                return CausalLMOutput(loss=total / count.clamp(min=1))
+            # Prediction sessions are short-lived; training reuses its sole loss/gradient session.
+            with tempfile.TemporaryDirectory(prefix="onnax-joint-predict-") as directory:
+                executor = graph_session(
+                    self.forward_graph,
+                    directory,
+                    "forward",
+                    session_factory=self._joint_session_factory,
+                )
+                arrays = {
+                    name: value.detach().contiguous().numpy() for name, value in feeds.items()
+                }
+                logits = executor.run(["logits"], {**arrays, **self.onnx.arrays()})[0]
+            return CausalLMOutput(logits=torch.from_numpy(logits))
+        value = self.onnx(**feeds)
         if self.mode == "chunked":
             if labels is not None:
                 return CausalLMOutput(loss=self.head(value, labels, num_items_in_batch))
@@ -336,6 +372,7 @@ def run(
         "model": MODEL_ID if real else "tiny-qwen3",
         "revision": REVISION if real else None,
         "steps": trainer.state.global_step,
+        "mode": mode,
         "validation_loss": [before, after],
         "audits": [initial_audit, final_audit],
         "quantization": model.quantization,
@@ -346,6 +383,12 @@ def run(
     }
     if provider == "mlx":
         report["cpu_fallback_disabled"] = True
+        report["mlx_compile_disabled"] = os.environ.get(
+            "ONNXRUNTIME_EP_MLX_NO_COMPILE", ""
+        ) not in ("", "0")
+        report["lut4_fusion_disabled"] = os.environ.get(
+            "ONNXRUNTIME_EP_MLX_NO_LUT4_FUSION", ""
+        ) not in ("", "0")
         report["library"] = os.path.abspath(library) if library else "installed plugin"
         if library:
             with open(library, "rb") as stream:
@@ -361,6 +404,11 @@ def run(
         name: os.path.getsize(os.path.join(directory, "export", name))
         for name in ("forward.onnx", "forward.data", "adapter.npz", "interface.json")
     }
+    if mode == "joint":
+        for name in ("loss_gradient.onnx", "loss_gradient.data"):
+            report["artifact_bytes"][name] = os.path.getsize(
+                os.path.join(directory, "export", name)
+            )
     if model.quantization is not None:
         report["artifact_bytes"]["quantization.json"] = os.path.getsize(
             os.path.join(directory, "export", "quantization.json")
@@ -404,8 +452,12 @@ def run(
     if fp64_audit:
         from examples.huggingface.precision import audit64
 
-        model.onnx.forward_session = model.onnx.backward_session = None
-        model.onnx.runtime_directory.cleanup()
+        if mode == "joint":
+            model.onnx.executor = None
+            model.onnx.directory.cleanup()
+        else:
+            model.onnx.forward_session = model.onnx.backward_session = None
+            model.onnx.runtime_directory.cleanup()
         report["fp64"] = audit64(model, reference, sample, [initial_params, final_params])
     persist()
     return report
@@ -417,7 +469,7 @@ if __name__ == "__main__":
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--steps", type=int)
     parser.add_argument("--resume")
-    parser.add_argument("--mode", choices=["full", "chunked"], default="full")
+    parser.add_argument("--mode", choices=["full", "chunked", "joint"], default="full")
     parser.add_argument("--chunk-size", type=int, default=128)
     parser.add_argument("--diagnose-rounding", action="store_true")
     parser.add_argument("--save-activations", action="store_true")

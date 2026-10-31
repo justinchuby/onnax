@@ -1,0 +1,44 @@
+{
+  "source_commit": "f6f18525b91a26df3677b3ed2babebd8cb6f12f7",
+  "command": "/opt/homebrew/Cellar/python@3.11/3.11.17_2/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python -m examples.huggingface.benchmark --mode joint --real --batch-size 1 --nf4 --provider mlx --library /tmp/onnax-scatternd-target/release/libonnxruntime_mlx_ep.dylib --warmup 10 --samples 100",
+  "model": "Qwen3-0.6B NF4 joint loss/adapter gradients",
+  "nodes": 32729,
+  "library_sha256": "82dfe70bd5685d3a6f6390e29ac8424709c32cb95f9a7a86521b5232edb1ad56",
+  "ort_graph_optimization": "disabled",
+  "mlx_compilation_disabled": false,
+  "observed_process_elapsed_seconds": 2284,
+  "diagnostic_pause_seconds": 999.478077173233,
+  "observed_active_elapsed_seconds": 1284.521922826767,
+  "observed_stages": [
+    "ORT partition GraphViewer construction (earlier native samples)",
+    "ORT SequentialPlanner ComputeReusePlan (final native sample)"
+  ],
+  "final_native_frames": [
+    "+                                                                                     649 onnxruntime::SequentialPlanner::CreatePlan(onnxruntime::Node const*, onnxruntime::GraphViewer const&, gsl::span<onnxruntime::NodeArg const* const, 18446744073709551615ul>, onnxruntime::ExecutionProviders const&, std::unordered_map<unsigned long, gsl::not_null<onnxruntime::KernelCreateInfo const*>> const&, std::unordered_map<std::basic_string<char>, std::unordered_map<unsigned long, gsl::not_null<onnxruntime::KernelCreateInfo const*>>> const&, onnxruntime::InlinedHashMap<std::basic_string<char>, OrtDevice> const&, onnxruntime::OrtValueNameIdxMap const&, onnxruntime::ISequentialPlannerContext const&, onnxruntime::IStreamCommandHandleRegistry const&, std::basic_string<char> const&, onnxruntime::logging::Logger const&, std::optional<onnxruntime::SequentialExecutionPlan>&)  (in onnxruntime_pybind11_state.so) + 348  [0x1470c4950]",
+    "+                                                                                       649 onnxruntime::PlannerImpl::CreatePlan(onnxruntime::IStreamCommandHandleRegistry const&, std::basic_string<char> const&)  (in onnxruntime_pybind11_state.so) + 352  [0x1470bdfcc]",
+    "+                                                                                         649 onnxruntime::PlannerImpl::ComputeReusePlan()  (in onnxruntime_pybind11_state.so) + 384  [0x1470c3c0c]",
+    "+                                                                                           649 onnxruntime::PlannerImpl::ComputeSingleStreamReusePlan(unsigned long)  (in onnxruntime_pybind11_state.so) + 1188  [0x1470ccf2c]",
+    "+                                                                                             632 onnxruntime::PlannerImpl::FindReusableTensor(onnxruntime::NodeArg const&, int*)  (in onnxruntime_pybind11_state.so) + 388  [0x1470cfa58]",
+    "+                                                                                             ! 215 onnxruntime::PlannerImpl::SameSize(onnx::TensorShapeProto const&, onnxruntime::NodeArg const&, onnx::TensorShapeProto const&, onnxruntime::NodeArg const&)  (in onnxruntime_pybind11_state.so) + 92  [0x1470cfc98]",
+    "+                                                                                             ! 147 onnxruntime::PlannerImpl::SameSize(onnx::TensorShapeProto const&, onnxruntime::NodeArg const&, onnx::TensorShapeProto const&, onnxruntime::NodeArg const&)  (in onnxruntime_pybind11_state.so) + 236  [0x1470cfd28]",
+    "+                                                                                             ! 131 onnxruntime::PlannerImpl::SameSize(onnx::TensorShapeProto const&, onnxruntime::NodeArg const&, onnx::TensorShapeProto const&, onnxruntime::NodeArg const&)  (in onnxruntime_pybind11_state.so) + 268  [0x1470cfd48]"
+  ],
+  "result": "diagnostic cancelled after capturing both initialization hotspots; no training measurements",
+  "tracking_issues": [
+    "https://github.com/justinchuby/onnax/issues/101",
+    "https://github.com/justinchuby/onnax/issues/103"
+  ],
+  "termination_requested_at": 1793450078.975075,
+  "active_elapsed_scope": "Process age less recorded diagnostic pauses; includes model construction, differentiation, export and session creation",
+  "termination_exit_code": 143,
+  "versions": {
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnxruntime": "1.31.1",
+    "onnxscript": "0.7.2",
+    "numpy": "2.4.6",
+    "torch": "2.15.0",
+    "mlx": "0.32.4",
+    "mobius-onnx": "0.1.0"
+  }
+}
