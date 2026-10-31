@@ -6,7 +6,6 @@
 import os
 from types import SimpleNamespace
 
-import numpy as np
 import onnx
 import onnx_ir as ir
 import pytest
