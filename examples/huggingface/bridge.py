@@ -74,7 +74,16 @@ class _OnnxFunction(torch.autograd.Function):
 class OnnxModule(torch.nn.Module):
     """Own trainable CPU FP32 parameters while ONNX computes values and VJPs."""
 
-    def __init__(self, model, params, *, output=None, optimize=True, save_activations=False):
+    def __init__(
+        self,
+        model,
+        params,
+        *,
+        output=None,
+        optimize=True,
+        save_activations=False,
+        reuse_frozen_weights=False,
+    ):
         super().__init__()
         self.model = model
         self.names = tuple(params)
@@ -104,7 +113,9 @@ class OnnxModule(torch.nn.Module):
         if save_activations:
             from examples.huggingface.residuals import split_vjp
 
-            forward_model, vjp, self.residual_names = split_vjp(model, vjp)
+            forward_model, vjp, self.residual_names = split_vjp(
+                model, vjp, optimize_layout=optimize and reuse_frozen_weights
+            )
         self.execution_vjp = vjp
         if optimize:
             executable = vjp.clone()
