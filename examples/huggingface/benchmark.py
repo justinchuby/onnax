@@ -1,8 +1,9 @@
 # Copyright (c) 2026 onnax contributors
 # SPDX-License-Identifier: MIT
-"""Isolated PyTorch/raw ONNX/optimized ONNX/chunked training measurements."""
+"""Isolated PyTorch and ONNX training measurements."""
 
 import argparse
+import functools
 import hashlib
 import json
 import os
@@ -19,43 +20,6 @@ import torch
 from examples.huggingface.qwen import reference_model
 from examples.huggingface.sft import prepare, texts, token_loss, tokenizer
 from examples.huggingface.validation import TorchLora
-
-
-def native_sessions(model, *, saved, library=None, segment_nodes=None):
-    """Replace CPU construction sessions with reusable native graph executors."""
-    from examples.huggingface.residuals import split_vjp
-    from examples.huggingface.segmented import SegmentedSession
-    from examples.huggingface.serialization import save_graph
-    from examples.lora.mlx_runtime import register_library, session
-
-    if library:
-        register_library(library)
-    measurements = {}
-
-    def create(graph, name):
-        start = time.perf_counter()
-        if segment_nodes is not None:
-            executor = SegmentedSession(
-                graph, target_nodes=segment_nodes, session_factory=session
-            )
-        else:
-            path = os.path.join(model.onnx.runtime_directory.name, name + ".onnx")
-            save_graph(graph, path, data_name=name + ".data")
-            executor = session(path)
-        measurements[name] = {
-            "export_and_session_seconds": time.perf_counter() - start,
-            "segments": len(executor.segments) if segment_nodes is not None else 1,
-        }
-        return executor
-
-    forward = model.onnx.model
-    if saved:
-        forward, _, _ = split_vjp(forward, model.onnx.vjp_model)
-    model.onnx.forward_session = create(forward, "native-forward")
-    model.onnx.backward_session = create(model.onnx.optimized_vjp, "native-backward")
-    if model.mode == "chunked":
-        model.head.executor = create(model.head.gradient, "native-head-gradient")
-    return measurements
 
 
 def hardware():
@@ -107,18 +71,39 @@ def measure(
                 setattr(model.get_submodule(parent), child, TorchLora(layer, a, b, 0.25))
                 count += 2
     else:
+        from examples.lora.train import session as cpu_session
+
+        factory = cpu_session
+        native_construction = {}
+        if provider == "mlx":
+            from examples.lora.mlx_runtime import register_library
+            from examples.lora.mlx_runtime import session as mlx_session
+
+            if library:
+                register_library(library)
+            selected = functools.partial(mlx_session, target_nodes=segment_nodes)
+
+            def factory(source):
+                before = time.perf_counter()
+                executor = selected(source)
+                native_construction[f"session_{len(native_construction)}"] = {
+                    "factory_seconds": time.perf_counter() - before,
+                    "segments": len(executor.segments) if segment_nodes is not None else 1,
+                    "source": "protobuf bytes"
+                    if isinstance(source, bytes)
+                    else os.path.basename(source),
+                }
+                return executor
+
         model, reference = prepare(
             real,
-            mode="chunked" if mode == "chunked" else "full",
+            mode=mode if mode in ("chunked", "joint") else "full",
             optimize=mode != "raw",
             save_activations=mode == "saved",
             nf4=nf4,
+            session_factory=factory,
         )
         del reference
-        if provider == "mlx":
-            native_construction = native_sessions(
-                model, saved=mode == "saved", library=library, segment_nodes=segment_nodes
-            )
     params = [p for p in model.parameters() if p.requires_grad]
     update = torch.optim.AdamW(params, lr=0.003, weight_decay=0)
     initialized = time.perf_counter()
@@ -138,6 +123,7 @@ def measure(
     losses = []
     for index in range(warmup + samples):
         before = time.perf_counter()
+        cpu_before = time.process_time()
         update.zero_grad(set_to_none=True)
         if mode == "pytorch":
             prediction = model(**batch, use_cache=False).logits
@@ -155,8 +141,10 @@ def measure(
         if index >= warmup:
             records.append(
                 {
-                    "forward_and_loss": forward - before,
-                    "backward": backward - forward,
+                    "loss_and_gradients" if mode == "joint" else "forward_and_loss": forward
+                    - before,
+                    "gradient_scaling" if mode == "joint" else "backward": backward - forward,
+                    "process_cpu": time.process_time() - cpu_before,
                     "adamw": finished - backward,
                     "step": finished - before,
                 }
@@ -164,8 +152,12 @@ def measure(
     report = {
         "mode": mode,
         "provider": "pytorch_cpu" if mode == "pytorch" else provider,
-        "segment_target_nodes": segment_nodes if mode != "pytorch" else None,
+        "segment_target_nodes": segment_nodes
+        if mode != "pytorch" and provider == "mlx"
+        else None,
         "lut4_fusion_disabled": os.environ.get("ONNXRUNTIME_EP_MLX_NO_LUT4_FUSION") == "1",
+        "mlx_compile_disabled": os.environ.get("ONNXRUNTIME_EP_MLX_NO_COMPILE", "")
+        not in ("", "0"),
         "real": real,
         "weight_values": "nf4_reconstructed_fp32" if nf4 else "fp32",
         "base_storage": "packed_nf4_decoder" if nf4 and mode != "pytorch" else "fp32",
@@ -190,10 +182,19 @@ def measure(
         "initialization_scope": (
             "PyTorch model construction and FP32 base reconstruction"
             if mode == "pytorch"
-            else "Model construction, initial CPU sessions, and selected execution sessions"
+            else "Model construction, differentiation, export and selected execution sessions"
         ),
         "parameter_bytes": sum(p.numel() * p.element_size() for p in params),
-        "threads": {"torch": 1, "ort_intra": 1, "ort_inter": 1},
+        "threads": {"torch": torch.get_num_threads(), "ort_intra": 1, "ort_inter": 1},
+        "thread_environment": {
+            name: os.environ.get(name)
+            for name in (
+                "OMP_NUM_THREADS",
+                "OPENBLAS_NUM_THREADS",
+                "MKL_NUM_THREADS",
+                "VECLIB_MAXIMUM_THREADS",
+            )
+        },
         "ort_optimizer": "disabled",
         "platform": platform.platform(),
         "hardware": hardware(),
@@ -210,7 +211,11 @@ def measure(
             with open(library, "rb") as stream:
                 report["library_sha256"] = hashlib.file_digest(stream, "sha256").hexdigest()
     if mode != "pytorch":
-        executed_graphs = {"forward": model.onnx.model, "backward": model.onnx.optimized_vjp}
+        executed_graphs = (
+            {"loss_gradient": model.onnx.gradient}
+            if mode == "joint"
+            else {"forward": model.onnx.model, "backward": model.onnx.optimized_vjp}
+        )
         if mode == "chunked":
             executed_graphs.update(
                 head_forward=model.head.model, head_backward=model.head.gradient
@@ -227,18 +232,48 @@ def measure(
                 "original": model.quantization["original_decoder_bytes"],
                 "packed": model.quantization["packed_decoder_bytes"],
             }
-        report["nodes"] = {
-            "forward": len(model.onnx.model.graph),
-            "raw_vjp": len(model.onnx.vjp_model.graph),
-            "executed_vjp": len(model.onnx.optimized_vjp.graph),
-        }
+        report["nodes"] = (
+            {
+                "forward": len(model.forward_graph.graph),
+                "loss_gradient": len(model.onnx.gradient.graph),
+            }
+            if mode == "joint"
+            else {
+                "forward": len(model.onnx.model.graph),
+                "raw_vjp": len(model.onnx.vjp_model.graph),
+                "executed_vjp": len(model.onnx.optimized_vjp.graph),
+            }
+        )
         report["logical_saved_activation_bytes"] = getattr(
             model.onnx, "last_residual_bytes", 0
         )
-        report["saved_activation_count"] = len(model.onnx.residual_names)
+        report["saved_activation_count"] = (
+            0 if mode == "joint" else len(model.onnx.residual_names)
+        )
         report["input_view_median_us"] = float(
             np.median(model.onnx.timings["exchange"][warmup:]) * 1e6
         )
+        report["input_view_scope"] = (
+            "Host data/adapter preparation and validation; runtime transfers are included in execution"
+            if mode == "joint"
+            else "Host data-input preparation; adapter preparation is included in forward"
+        )
+        if mode == "joint":
+            report["autograd_saved_gradient_bytes"] = model.onnx.last_saved_gradient_bytes
+            report["public_session_payload_bytes"] = {
+                "inputs": model.onnx.last_input_bytes,
+                "outputs": model.onnx.last_output_bytes,
+                "scope": "Logical NumPy session arguments and results; excludes internal EP transfers",
+            }
+            durations = np.asarray(model.onnx.timings["loss_gradient"][warmup:]) * 1000
+            report["session_execution_ms"] = {
+                "median": float(np.median(durations)),
+                "p95": float(np.percentile(durations, 95)),
+            }
+            report["timing_scope"] = (
+                "Forward computes loss and gradients; PyTorch backward scales returned gradients"
+            )
+
         report["exchange_scope"] = (
             "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
         )
@@ -247,7 +282,9 @@ def measure(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=["pytorch", "raw", "optimized", "saved", "chunked"])
+    parser.add_argument(
+        "--mode", choices=["pytorch", "raw", "optimized", "saved", "chunked", "joint"]
+    )
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
@@ -282,7 +319,7 @@ if __name__ == "__main__":
         )
     else:
         reports = []
-        for mode in ("pytorch", "raw", "optimized", "saved", "chunked"):
+        for mode in ("pytorch", "raw", "optimized", "saved", "chunked", "joint"):
             cmd = [
                 sys.executable,
                 "-m",

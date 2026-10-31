@@ -218,9 +218,10 @@ uv run python -m examples.huggingface.mlx_validation --segmented \
 
 ## Measure complete native training steps
 
-The training benchmark also accepts `--provider mlx`. It executes ONNX forward
-and VJP graphs on MLX, with CPU PyTorch token loss and AdamW connected through
-NumPy arrays. `--segment-nodes` uses the reusable subgraph sessions above.
+The training benchmark accepts `--provider mlx`. It executes ONNX forward
+and VJP graphs on MLX, with CPU PyTorch AdamW connected through NumPy arrays.
+The joint path also computes token loss inside ONNX. `--segment-nodes` uses
+the reusable subgraph sessions above.
 
 ```bash
 uv run python -m examples.huggingface.benchmark \
@@ -231,13 +232,17 @@ uv run python -m examples.huggingface.benchmark \
 
 Each measured step includes forward/loss, backward and AdamW. The report records
 median/P95, valid shifted tokens per second, input-view exchange time, loss
-sequence, saved activation bytes and whole-process peak RSS. Construction starts
-with the common CPU model setup, then replaces execution sessions with MLX;
-native export/session times are recorded separately. RSS includes that setup.
+sequence, saved activation bytes and whole-process peak RSS. Construction creates
+the selected provider's sessions directly; native factory times are recorded
+separately. RSS includes model construction, runtime and optimizer allocations.
 MLX execution disables CPU fallback and ORT graph optimization.
 
-Omit `--mode` to run PyTorch CPU, raw ONNX, optimized ONNX, saved-activation ONNX
-and chunked loss in separate processes and write the matrix to `--output`.
+Older reports below include an initial CPU session setup before MLX replacement.
+Their recorded source commits identify that construction path. Repeat both
+variants with the current benchmark when comparing construction time or peak RSS.
+
+Omit `--mode` to run PyTorch CPU, raw ONNX, optimized ONNX, saved-activation ONNX,
+chunked loss and joint loss/gradients in separate processes and write the matrix to `--output`.
 For a fusion comparison, repeat the same command with
 `ONNXRUNTIME_EP_MLX_NO_LUT4_FUSION=1`. Keep batch size, sample count, segmentation
 and library identical; the report records the library hash and fusion switch.
