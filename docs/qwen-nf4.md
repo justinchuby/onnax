@@ -79,13 +79,31 @@ Checkpoint-15 recovery in a new process reproduces all 112 adapters, all 113
 checkpoint tensors, Adam/scheduler state, 532 frozen-buffer hashes and loaded
 ONNX forward/loss/all-gradient outputs byte for byte.
 
+The matched benchmark uses batch one, sequence length 64 and 63 valid shifted
+tokens, with 10 warmups and 100 measured updates in separate processes:
+
+| Execution | Step median (s) | P95 (s) | Effective tokens/s | Peak RSS (GiB) |
+| --- | ---: | ---: | ---: | ---: |
+| PyTorch CPU, reconstructed FP32 base | 3.054 | 3.112 | 20.63 | 6.52 |
+| ONNX / MLX GPU, packed NF4 decoder | 1.873 | 1.947 | 33.63 | 6.06 |
+
+Both compute projection products in BF16 and keep adapters, gradients and Adam
+state in FP32. PyTorch uses standard causal cross entropy; ONNX uses the
+stable target-excluded form, with the same valid-token mean. Initialization takes
+12.22 s for PyTorch and 152.08 s for ONNX / MLX, outside measured updates.
+The ONNX CPU array-view boundary has a median cost of 0.690 ms; runtime execution
+includes internal provider transfers. Peak RSS covers each isolated process,
+including construction and runtime. Full phase timings and provenance are in
+`reports/qwen3-nf4-bf16-matched-m1max.json`.
+
 Independent real-model forward, loss and gradient checks exceed the original
 tolerances; the report preserves each failure in
 `reports/qwen3-nf4-bf16-joint-sft-m1max.json`.
 
-The recorded native run uses the development library from
-[MLX EP PR #96](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/96),
-selected with `--library /path/to/libonnxruntime_mlx_ep.dylib`.
+The tiny run uses the library from
+[MLX EP PR #96](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/96);
+the real-model run uses PR #97 with the eager lifetime fix. Select the library
+with `--library /path/to/libonnxruntime_mlx_ep.dylib`.
 Use `--provider reference` for offline BF16 execution. To resume, add
 `--resume tiny_nf4_bf16/checkpoint-50` and select a new output directory; pass
 the same provider to the [replay verifier](qwen-sft.md).

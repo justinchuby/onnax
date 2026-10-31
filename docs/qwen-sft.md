@@ -102,6 +102,20 @@ records FP32 accumulation and BF16 rounding near midpoint boundaries. The
 complete training and recovery evidence is in
 `reports/qwen3-bf16-joint-sft-m1max.json`.
 
+For a captured projection, compare native BF16 multiplication with FP32
+accumulation followed by BF16 rounding:
+
+```bash
+uv run python -m examples.huggingface.bf16_accumulation \
+  --capture projection.npz --output accumulation.json
+```
+
+The capture contains FP32 `reference_input`, `weight` and `mlx_output` arrays.
+Both products use the same BF16-rounded operands. On the first real-model
+projection, the FP32-accumulation control matches all 22,528 captured MLX outputs;
+the native PyTorch BF16 product differs at four entries. The command records
+shapes, the capture hash, thread count and comparison errors.
+
 Inspect projection inputs, outputs and incoming gradients at the same parameter
 state with:
 
