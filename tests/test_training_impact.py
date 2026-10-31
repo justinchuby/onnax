@@ -81,6 +81,7 @@ def test_independent_quality_runs_share_initialization_and_data(tmp_path):
         for state in result["states"]:
             if state["source_engine"] == engine:
                 assert state["validation_loss_gap_from_source"] == pytest.approx(0, abs=1e-6)
+        (tmp_path / f"{engine}-replay.json").write_text(json.dumps(result))
         replays.append(result)
     with (
         np.load(tmp_path / "torch_cpu-replay.npz") as a,
@@ -92,6 +93,17 @@ def test_independent_quality_runs_share_initialization_and_data(tmp_path):
             assert left["parameter_sha256"] == right["parameter_sha256"]
             key = left["gradient_key"]
             assert _vector_metrics(a[key], b[key])["cosine"] > 0.9999
+    from examples.huggingface.training_quality_replay_compare import compare_replays
+
+    replay_paths = [tmp_path / f"{engine}-replay.json" for engine in report["engines"]]
+    capture_paths = [tmp_path / f"{engine}-replay.npz" for engine in report["engines"]]
+    shared = compare_replays(replay_paths, capture_paths)
+    assert len(shared["comparisons"]) == 4
+    assert all(row["gradient"]["cosine"] > 0.9999 for row in shared["comparisons"])
+    replays[1]["states"][0]["parameter_sha256"] = "different parameters"
+    replay_paths[1].write_text(json.dumps(replays[1]))
+    with pytest.raises(ValueError, match="different parameter states"):
+        compare_replays(replay_paths, capture_paths)
     curve = component["trials"][0]["validation_curve"]
     original = curve[1]["loss"]
     curve[1]["loss"] = float("nan")

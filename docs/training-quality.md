@@ -130,3 +130,30 @@ The comparison verifies matching model/data/precision/optimizer settings, source
 weights, initial adapters, schedules and snapshot checksums. It reports every
 seed's validation-curve gap, gradient direction and parameter difference. Replacing
 `mlx` with `torch_cuda` selects a CUDA component on a CUDA-equipped host.
+
+## Replay both adapters at a shared state
+
+Cross-evaluate the final adapters from both training paths on each engine:
+
+```bash
+uv run python -m examples.huggingface.training_quality_replay \
+  --reports cpu.json mlx.json --captures cpu.npz mlx.npz \
+  --engine torch_cpu --capture replay-cpu.npz --output replay-cpu.json
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.training_quality_replay \
+  --reports cpu.json mlx.json --captures cpu.npz mlx.npz \
+  --engine mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --capture replay-mlx.npz --output replay-mlx.json
+uv run python -m examples.huggingface.training_quality_replay_compare \
+  --reports replay-cpu.json replay-mlx.json \
+  --captures replay-cpu.npz replay-mlx.npz --output shared-states.json
+```
+
+Each process reuses one model and evaluates every saved final adapter. The report
+records its parameter checksum, held-out loss and gradient on the final scheduled
+training batch. Gradients use the saved post-update parameters. The comparison
+requires matching parameter checksums, data, source weights and gradient scope.
+
+Same-engine replay checks whether the saved adapters reproduce their recorded
+validation losses. Cross-engine replay holds the adapters fixed while comparing
+loss and gradient direction. Evaluating both trained adapters on one engine then
+shows the effect of their different parameter trajectories.
