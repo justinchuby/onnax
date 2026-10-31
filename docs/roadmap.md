@@ -114,8 +114,10 @@ with a seed standard deviation around 0.0037. Three real-model seeds complete
 30 updates per engine: final validation loss averages 7.211 on CPU and 7.384 on
 MLX, with a maximum paired gap of 0.425. Both curves improve through step 10
 and then overfit the small corpus. Shared-parameter replay limits the largest evaluation loss gap to 0.0142;
-shared-state gradient cosine ranges from 0.9889 to 0.9997. Next complete the
-matched FP32 training control and measure the CPU/CUDA baseline. Component-level numerical
+shared-state gradient cosine ranges from 0.9889 to 0.9997. The matched FP32 control completes all three seeds with a maximum paired
+validation gap of 0.000327 and minimum sampled gradient cosine of 0.999991.
+Next measure the CPU/CUDA baseline and extend held-out evaluation beyond the
+small local corpus. Component-level numerical
 checks remain available alongside validation quality and seed variation.
 Measured tensor lifetimes
 and the head memory curve will guide recomputation boundaries.

@@ -92,6 +92,33 @@ capture hashes, and process memory observations. Its memory observations include
 model construction, evaluation and host snapshots; use the dedicated benchmark
 for step timing and throughput.
 
+## Recorded FP32 control
+
+The FP32 control keeps the same three seeds, data, adapter initialization,
+schedules and Adam settings, and uses FP32 projection operands and results.
+Both engines complete 30 updates and preserve their frozen weights.
+
+| Projection precision | CPU final held-out mean ± seed std | MLX final held-out mean ± seed std | Largest paired loss gap |
+| --- | ---: | ---: | ---: |
+| FP32 | 7.310223 ± 0.494285 | 7.310187 ± 0.494544 | 0.000327 |
+| BF16 | 7.211187 ± 0.345413 | 7.384151 ± 0.516308 | 0.424632 |
+
+Every sampled FP32 validation gap stays below 0.000327. Sampled trajectory
+gradients have a minimum cosine similarity of **0.999991**. Final adapter vectors
+have relative L2 differences of 0.000183–0.000756; individual entries differ by
+up to 0.002638. These parameter differences coexist with closely aligned
+validation curves. Both FP32 curves also reach their lowest sampled held-out
+loss at step 10 and then overfit the small corpus.
+
+The BF16 experiment shows substantially greater cross-runtime trajectory
+variation on this workload. Use FP32 as the comparison baseline when developing
+or testing a training path, then evaluate BF16 with the same data and optimizer.
+The {download}`FP32 report
+<../examples/huggingface/reports/qwen3-nf4-fp32-training-quality-m1max.json>`
+contains all paired losses, gradients, parameter metrics, execution journals and
+source/capture hashes. The CPU/CUDA baseline remains a measurement for a
+CUDA-equipped host.
+
 ## Compare trajectories and checkpoint replay
 
 `--interval` controls held-out evaluations and gradient snapshot spacing. Snapshot
@@ -172,8 +199,8 @@ seed's final quality gap therefore persists under a common evaluator.
 Shared-state gradient cosine similarities range from **0.988867 to 0.999676**;
 relative L2 differences range from **0.025454 to 0.151191**. These common-parameter
 gradients differ less in direction than the independently evolving step-30
-trajectories. The FP32 training control keeps the data and optimizer fixed while
-changing projection precision to examine the role of BF16 computation.
+trajectories. The FP32 control above keeps the data and optimizer fixed and produces
+closely aligned validation curves across the two runtimes.
 
 The {download}`shared-state report
 <../examples/huggingface/reports/qwen3-nf4-bf16-shared-state-replay-m1max.json>`
