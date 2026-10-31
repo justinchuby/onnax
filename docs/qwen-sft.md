@@ -129,6 +129,21 @@ Reports include the projection policy, step median/P95, tokens per second,
 initialization time and peak process RSS. Both paths retain FP32 base storage
 and FP32 surrogate adjoints.
 
+On an M1 Max, the real model with batch 1, sequence length 64 and 63 shifted
+targets produced the following measurements (10 warmups, 100 measured steps):
+
+| Path | Step median / P95 | Tokens/s | Peak process RSS |
+| --- | ---: | ---: | ---: |
+| PyTorch CPU BF16 | 3.071 / 3.135 s | 20.52 | 6.06 GiB |
+| MLX joint BF16 | 1.399 / 1.466 s | 45.04 | 10.36 GiB |
+
+Session/model initialization took 0.414 s for PyTorch and 35.432 s for the
+ONNX construction, differentiation, export and MLX session path. RSS includes
+construction, runtime, arrays and Adam state. PyTorch uses its standard causal
+CE; ONNX uses the stable target-excluded CE, with the same valid-token mean.
+The report is `reports/qwen3-bf16-matched-m1max.json`. Independent numerical
+qualification remains open as described above.
+
 For native execution select `--provider mlx`. The tested macOS ORT CPU backend
 has no BF16 MatMul kernel. This experiment uses FP32 weight storage; NF4 and
 BF16 projection compute currently have separate CLI paths.

@@ -497,5 +497,12 @@
       "atol": 1e-06,
       "production_change_applied": false
     }
+  },
+  "linux_ci_control": {
+    "source_commit": "04ee2735d86445873a2b240ddf0c5ec06862ae9b",
+    "job": "https://github.com/justinchuby/onnax/actions/runs/41208456069/job/124558268313",
+    "result": "112 passed, 5 skipped in 165.47s",
+    "strict_reference_bf16_update_test": "passed; test_qwen_bf16.py included explicitly, native MLX case opt-in skipped",
+    "local_macos_control": "Both ReferenceEvaluator and native MLX strict five-step updates still fail at step five"
   }
 }
