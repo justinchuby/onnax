@@ -96,7 +96,10 @@ storage and loss policies in the [NF4 tutorial](qwen-nf4.md).
 Next, resolve the real-model independent BF16 logits, loss and gradient
 differences and complete independent FP32 update qualification. Shared-input
 projection controls distinguish product accumulation from upstream rounding;
-all comparisons retain their original tolerances. Measured tensor lifetimes
+all comparisons retain their original tolerances. The real NF4/BF16 local
+pullback audit passes all 3,522 input contributions in three adapter states.
+Next compare their full-graph composition and accumulation at fixed primals.
+Measured tensor lifetimes
 and the head memory curve will guide recomputation boundaries.
 
 ## Engineering boundaries

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 """Validate the local derivative oracle, including an intentionally broken rule."""
 
+import os
 from unittest.mock import patch
 
 import numpy as np
@@ -26,7 +27,8 @@ def test_tiny_nf4_all_active_pullbacks():
     assert [state["adapter_b"] for state in report["states"]] == [0.0, 0.01]
 
 
-def test_local_oracle_detects_wrong_rule_and_nonfinite_gradient():
+@pytest.mark.parametrize("bf16", [False, True])
+def test_local_oracle_detects_wrong_rule_and_nonfinite_gradient(bf16):
     from examples.huggingface.local_vjp_audit import check, trace
     from examples.huggingface.rms_audit import diagnostic_session
     from onnax._autodiff._registry import _VjpRegistry
@@ -34,12 +36,18 @@ def test_local_oracle_detects_wrong_rule_and_nonfinite_gradient():
     x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[2, 3])
     weight = ir.val("weight", const_value=ir.tensor(np.ones((3, 4), np.float32)))
     tape = ir.tape.Tape()
-    y = tape.op("MatMul", [x, weight])
+    from examples.lora.bf16_rules import DOMAIN, OP, matmul_function
+
+    y = tape.op(OP if bf16 else "MatMul", [x, weight], domain=DOMAIN if bf16 else "")
     y.name, y.dtype, y.shape = "logits", ir.DataType.FLOAT, ir.Shape([2, 4])
     model = ir.Model(
         ir.Graph([x], [y], nodes=tape.nodes, initializers=[weight], opset_imports={"": 18}),
         ir_version=10,
     )
+    if bf16:
+        function = matmul_function(18)
+        model.functions[function.identifier()] = function
+        model.graph.opset_imports[DOMAIN] = 1
     original_lookup = _VjpRegistry.lookup
     original_model = ir.to_proto(model).SerializeToString()
 
@@ -60,7 +68,11 @@ def test_local_oracle_detects_wrong_rule_and_nonfinite_gradient():
     assert _VjpRegistry.lookup is original_lookup
     assert ir.to_proto(model).SerializeToString() == original_model
     arguments = {"x": np.ones((2, 3), np.float32), seed: np.ones((2, 4), np.float32)}
-    executor = diagnostic_session(ir.to_proto(joint).SerializeToString())
+    from examples.huggingface.serialization import reference_session
+
+    executor = (reference_session if bf16 else diagnostic_session)(
+        ir.to_proto(joint).SerializeToString()
+    )
     observed = dict(
         zip([v.name for v in joint.graph.outputs], executor.run(None, arguments), strict=True)
     )
@@ -75,3 +87,25 @@ def test_local_oracle_detects_wrong_rule_and_nonfinite_gradient():
     observed[gradient_name] = np.ones((1, 3), np.float32)
     with pytest.raises(AssertionError, match="interface mismatch"):
         check(probes, observed, constants)
+
+
+@pytest.mark.parametrize("nf4", [False, True])
+@pytest.mark.parametrize("provider", ["reference", "mlx"])
+def test_bf16_local_pullbacks_at_observed_primals(nf4, provider):
+    if provider == "mlx" and os.environ.get("ONNAX_TEST_MLX_EP") != "1":
+        pytest.skip("Native MLX opt-in")
+    from examples.huggingface.local_vjp_audit import run
+
+    report = run(
+        nf4=nf4,
+        projection_precision="bf16",
+        provider=provider,
+        library=os.environ.get("ONNAX_MLX_EP_LIBRARY") if provider == "mlx" else None,
+    )
+    assert report["unchecked_active_nodes"] == {}
+    for state in report["states"]:
+        assert state["failed_partials"] == 0, state["failures"]
+        assert state["operators"]["MatMulBF16"]["input_partials"] > 0
+        if nf4:
+            assert state["operators"]["NF4MatMulBF16"]["nodes"] == 11
+    assert [state["adapter_b"] for state in report["states"]] == [0.0, 0.01]

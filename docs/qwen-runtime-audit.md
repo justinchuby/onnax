@@ -93,6 +93,21 @@ uv run python -m examples.huggingface.local_vjp_audit --real --nf4 \
   --b-values 0 0.01 --output local-vjp.json
 ```
 
+For BF16 projection products and FP32 surrogate adjoints, select a BF16-capable
+provider:
+
+```bash
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.local_vjp_audit \
+  --real --nf4 --projection-precision bf16 --provider mlx \
+  --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --adapter trained/export/adapter.npz --output bf16-local-vjp.json
+```
+
+`--adapter` adds the exported trained parameters as a third state and records
+the archive hash. Use `--provider reference` for offline tiny-model checks.
+The BF16 oracle rounds captured primal operands before FP32 adjoint arithmetic;
+NF4 weights are decoded from the captured packed codes and scales.
+
 The command builds one derivative graph and reuses its forward and reverse
 sessions for both adapter states. B starts at zero in the first state; the
 second fills B with 0.01, activating gradients for A as well. The upstream
@@ -111,6 +126,15 @@ Both real-model states cover all 2,552 active operations, including 193 NF4
 matrix products. Each state checks 3,298 input contributions with zero failures
 at `rtol=1e-4, atol=1e-6`; `unchecked_active_nodes` is empty. The largest local
 absolute difference is `9.71e-7` for zero B and `9.55e-7` for nonzero B.
+
+The BF16 {download}`real-model report <../examples/huggingface/reports/qwen3-nf4-bf16-local-vjp-m1max.json>`
+covers zero B, B filled with 0.01, and the exported step-30 adapters. Each state
+checks 2,776 active operations and 3,522 input contributions, including 193
+frozen NF4/BF16 projections and 113 BF16 products. All contributions pass
+`rtol=1e-4, atol=1e-6`, and `unchecked_active_nodes` is empty. The largest
+absolute local difference is 9.57e-7, 9.50e-7 and 1.91e-6 respectively.
+The report records captured-state and library hashes. The BF16 negative-control
+test also detects a deliberately doubled derivative.
 
 This report checks operation pullbacks at observed activations. The paired audit
 above tracks the complete-model gradient comparison with Transformers.

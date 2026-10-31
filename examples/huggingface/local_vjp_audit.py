@@ -3,6 +3,7 @@
 """Compare local Qwen pullbacks at observed activations and loss cotangents."""
 
 import argparse
+import hashlib
 import importlib.metadata
 import json
 import os
@@ -21,6 +22,8 @@ from examples.huggingface.qwen import REVISION, build_base, decompose, inject, r
 from examples.huggingface.rms_audit import diagnostic_session
 from examples.huggingface.serialization import save_graph
 from examples.huggingface.sft import token_loss
+from examples.lora.bf16_rules import DOMAIN as BF16_DOMAIN
+from examples.lora.bf16_rules import OP as BF16_OP
 from examples.lora.nf4 import DOMAIN, dequantize
 from onnax._autodiff._registry import _VjpRegistry
 
@@ -45,7 +48,7 @@ LAYOUT = frozenset(
 
 
 def operation(node):
-    return "NF4MatMul" if node.domain == DOMAIN else node.op_type
+    return "NF4" + node.op_type.split("_")[0] if node.domain == DOMAIN else node.op_type
 
 
 def trace(model, names):
@@ -58,8 +61,13 @@ def trace(model, names):
 
         def observe(context, node, seeds, indices):
             contributions = rule(context, node, seeds, indices)
-            if (not node.domain and node.op_type in ARITHMETIC | LAYOUT) or (
-                node.domain == DOMAIN and node.op_type.startswith("MatMul_")
+            if (
+                (not node.domain and node.op_type in ARITHMETIC | LAYOUT)
+                or (
+                    node.domain == DOMAIN
+                    and node.op_type.startswith(("MatMul_", "MatMulBF16_"))
+                )
+                or (node.domain == BF16_DOMAIN and node.op_type == BF16_OP)
             ):
                 probes.append((node, tuple(seeds), dict(contributions)))
             else:
@@ -98,7 +106,15 @@ def reference_output(node, operands):
         weight = dequantize(
             operands[1].numpy(), operands[2].numpy(), (int(k), int(n)), block_size=int(block)
         )
+        if node.op_type.startswith("MatMulBF16_"):
+            from examples.huggingface.mixed_precision import _Product
+
+            return _Product.apply(operands[0], torch.from_numpy(weight))
         return operands[0] @ torch.from_numpy(weight)
+    if node.domain == BF16_DOMAIN and node.op_type == BF16_OP:
+        from examples.huggingface.mixed_precision import _Product
+
+        return _Product.apply(*operands)
     op = node.op_type
     x = operands[0]
     if op == "MatMul":
@@ -214,15 +230,50 @@ def check(probes, observed, constants):
     return {"operators": summaries, "failed_partials": len(failures), "failures": failures}
 
 
-def run(*, real=False, nf4=False, b_values=(0.0, 0.01)):
+def run(
+    *,
+    real=False,
+    nf4=False,
+    b_values=(0.0, 0.01),
+    projection_precision="fp32",
+    provider="cpu",
+    library=None,
+    adapter=None,
+):
     if not b_values or not all(np.isfinite(value) for value in b_values):
         raise ValueError("Expected finite adapter B values")
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 projection precision")
+    if provider not in ("cpu", "reference", "mlx"):
+        raise ValueError("Expected cpu, reference or mlx provider")
+    if projection_precision == "bf16" and provider == "cpu":
+        raise ValueError("BF16 requires reference or mlx execution")
+    if library is not None and provider != "mlx":
+        raise ValueError("A development library requires the mlx provider")
+    factory = diagnostic_session
+    library_hash = None
+    if provider == "reference":
+        from examples.huggingface.serialization import reference_session
+
+        factory = reference_session
+    elif provider == "mlx":
+        from examples.lora.mlx_runtime import register_library, session
+
+        factory = session
+        if library is not None:
+            register_library(library)
+            with open(library, "rb") as stream:
+                library_hash = hashlib.file_digest(stream, "sha256").hexdigest()
     torch.set_num_threads(1)
     reference = reference_model(real)
     model, params, _ = inject(build_base(reference))
     model = decompose(model)
     if nf4:
-        model, _ = lower_decoder(model, reference)
+        model, _ = lower_decoder(model, reference, precision=projection_precision)
+    if projection_precision == "bf16":
+        from examples.huggingface.mixed_precision import bf16_projections
+
+        model = bf16_projections(model)
     del reference
     joint, seed_name, probes, unchecked = trace(model, params)
     constants = {name: value.const_value for name, value in joint.graph.initializers.items()}
@@ -232,19 +283,40 @@ def run(*, real=False, nf4=False, b_values=(0.0, 0.01)):
         "attention_mask": np.ones_like(ids),
         "position_ids": np.arange(64, dtype=np.int64)[None],
     }
+    state_inputs = [
+        (
+            {"adapter_b": b},
+            {
+                name: np.full_like(value, b) if name.endswith(".B") else value
+                for name, value in params.items()
+            },
+        )
+        for b in b_values
+    ]
+    if adapter is not None:
+        with np.load(adapter, allow_pickle=False) as archive:
+            if set(archive.files) != set(params):
+                raise ValueError("Adapter parameter names differ from the model")
+            trained = {name: archive[name].copy() for name in params}
+        for name, value in trained.items():
+            if (
+                value.shape != params[name].shape
+                or value.dtype != np.float32
+                or not np.isfinite(value).all()
+            ):
+                raise ValueError(f"Invalid adapter array: {name}")
+        with open(adapter, "rb") as stream:
+            digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        state_inputs.append(({"adapter_archive_sha256": digest}, trained))
     states = []
     with tempfile.TemporaryDirectory(prefix="onnax-local-vjp-") as directory:
         for name, graph in (("forward", model), ("joint", joint)):
             save_graph(
                 graph, os.path.join(directory, name + ".onnx"), data_name=name + ".data"
             )
-        forward = diagnostic_session(os.path.join(directory, "forward.onnx"))
-        backward = diagnostic_session(os.path.join(directory, "joint.onnx"))
-        for b in b_values:
-            arrays = {
-                name: np.full_like(value, b) if name.endswith(".B") else value
-                for name, value in params.items()
-            }
+        forward = factory(os.path.join(directory, "forward.onnx"))
+        backward = factory(os.path.join(directory, "joint.onnx"))
+        for state, arrays in state_inputs:
             arguments = {**feeds, **arrays}
             logits = torch.tensor(forward.run(["logits"], arguments)[0], requires_grad=True)
             loss = token_loss(logits, torch.from_numpy(ids))
@@ -255,7 +327,7 @@ def run(*, real=False, nf4=False, b_values=(0.0, 0.01)):
             np.testing.assert_array_equal(observed["logits"], logits.detach().numpy())
             states.append(
                 {
-                    "adapter_b": b,
+                    **state,
                     "loss": float(loss.detach()),
                     **check(probes, observed, constants),
                 }
@@ -265,6 +337,12 @@ def run(*, real=False, nf4=False, b_values=(0.0, 0.01)):
         "revision": REVISION if real else None,
         "nf4": nf4,
         "dtype": "float32",
+        "projection_precision": projection_precision,
+        "provider": provider,
+        "library_sha256": library_hash,
+        "adjoints": "FP32 with BF16-rounded operands"
+        if projection_precision == "bf16"
+        else "FP32",
         "rtol": 1e-4,
         "atol": 1e-6,
         "input_ids": ids.tolist(),
@@ -272,7 +350,7 @@ def run(*, real=False, nf4=False, b_values=(0.0, 0.01)):
         "covered_nodes": len(probes),
         "unchecked_active_nodes": dict(sorted(unchecked.items())),
         "ort_graph_optimization": "disabled",
-        "ort_memory_reuse": False,
+        "ort_memory_reuse": False if provider == "cpu" else None,
         "threads": 1,
         "versions": {
             name: importlib.metadata.version(name)
@@ -288,9 +366,21 @@ def main():
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--b-values", type=float, nargs="+", default=[0.0, 0.01])
+    parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
+    parser.add_argument("--provider", choices=["cpu", "reference", "mlx"], default="cpu")
+    parser.add_argument("--library")
+    parser.add_argument("--adapter", help="Also audit parameters from an exported adapter.npz")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
-    report = run(real=args.real, nf4=args.nf4, b_values=args.b_values)
+    report = run(
+        real=args.real,
+        nf4=args.nf4,
+        b_values=args.b_values,
+        projection_precision=args.projection_precision,
+        provider=args.provider,
+        library=args.library,
+        adapter=args.adapter,
+    )
     with open(args.output, "w") as stream:
         json.dump(report, stream, indent=2, allow_nan=False)
         stream.write("\n")

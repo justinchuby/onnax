@@ -123,7 +123,11 @@ The control changes loss and gradient errors in both directions; a common
 accumulation policy alone does not align the full model. The shared-state
 results, original tolerances and experiment script are in
 `reports/qwen3-nf4-bf16-accumulation-control-m1max.json`.
-The next audit compares local derivatives at identical intermediate activations.
+The [local derivative audit](qwen-runtime-audit.md) then checks identical
+intermediate inputs and incoming cotangents. All 3,522 local input contributions
+pass at zero B, nonzero B and the trained step-30 adapter state. End-to-end
+qualification now needs to connect these local checks to full-graph gradient
+accumulation and forward rounding propagation.
 
 Inspect projection inputs, outputs and incoming gradients at the same parameter
 state with:
