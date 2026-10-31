@@ -134,6 +134,19 @@ native session disables ORT graph optimization and CPU fallback. In Python,
 bytes or an external-data model path; the same factory handles forward, VJP,
 head prediction and head loss sessions.
 
+On Apple M1 Max, a real-model run with microbatch 1 and gradient accumulation 4
+completed 30 native chunked-loss updates. Validation loss fell from **7.75064
+to 5.63150**. A fresh process resumed checkpoint 15 and reproduced all 112
+adapters, 113 checkpoint tensors, optimizer/scheduler state and loaded ONNX
+outputs byte for byte. Frozen source weights remained unchanged. PEFT adapter
+format exchange also preserved all parameter bytes.
+
+The initial and final comparisons against Transformers exceed the FP32
+tolerance for 47 and 90 gradient tensors, respectively. PEFT gradient and
+independent-update comparisons also fail. The
+[native SFT report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-native-sft-m1max.json)
+contains these failures alongside the training and recovery results.
+
 The native MLX validation uses the same two-layer NF4 Qwen and independently
 updates its ONNX and Transformers adapters for four AdamW steps. It compares
 logits, token loss, all adapter gradients and parameters at every step. ONNX
