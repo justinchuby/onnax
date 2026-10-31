@@ -262,3 +262,17 @@ Fusion improves the matched MLX complete step by **3.76 times**. PyTorch CPU
 has the shortest steps in this matrix. The saved ONNX path retains about
 1.40 GB of logical residuals; graph execution and runtime boundaries remain
 the next performance targets.
+
+## Joint graph initialization
+
+A whole-graph Qwen3 NF4 joint loss/gradient diagnostic captured both ORT
+initialization hotspots: partition `GraphViewer` construction, followed by
+`SequentialPlanner::ComputeReusePlan`. The process was stopped after 21.4 minutes
+of active process time, including model construction and differentiation.
+The [diagnostic record](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-joint-default-initialization.json)
+contains the final native frames, source and library hashes, and pause accounting.
+
+The [joint tutorial](qwen-adapters.md) uses coalesced eager regions from MLX EP
+PR #96. Its measured session factory takes 3.78 seconds for this graph. The ORT
+investigations remain in [#101](https://github.com/justinchuby/onnax/issues/101)
+and [#103](https://github.com/justinchuby/onnax/issues/103).

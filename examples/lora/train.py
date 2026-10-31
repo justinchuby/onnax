@@ -24,8 +24,9 @@ from examples.lora.adam import adam_step
 from examples.lora.model import PARAMETERS, base_model, digest, export, validate_interface
 
 
-def session(path):
+def session(path, *, memory_reuse=True):
     options = ort.SessionOptions()
+    options.enable_mem_reuse = memory_reuse
     options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
     options.intra_op_num_threads = 1
     options.inter_op_num_threads = 1

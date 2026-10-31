@@ -52,7 +52,10 @@ def _training_outputs(directory, interface, feeds):
                 raise AssertionError(f"Exported parameter interface differs: {row['name']}")
             inputs[row["name"]] = value
     names = [interface["output"], *(row["gradient"] for row in interface["parameters"])]
-    executor = session(os.path.join(directory, "export", interface["model"]))
+    # Large derivative graphs encounter ORT's quadratic reuse planner (#103).
+    executor = session(
+        os.path.join(directory, "export", interface["model"]), memory_reuse=False
+    )
     values = executor.run(names, inputs)
     shapes = [[], *(row["shape"] for row in interface["parameters"])]
     for name, value, shape in zip(names, values, shapes, strict=True):
@@ -105,7 +108,7 @@ def verify(first, replay, *, step=30):
     }
     outputs = []
     for directory in (first, replay):
-        executor = session(os.path.join(directory, "export/forward.onnx"))
+        executor = session(os.path.join(directory, "export/forward.onnx"), memory_reuse=False)
         outputs.append(executor.run(None, feeds))
         del executor
     for x, y in zip(*outputs, strict=True):
@@ -121,6 +124,7 @@ def verify(first, replay, *, step=30):
         "scheduler_equal": True,
         "frozen_hashes_equal": True,
         "export_load_outputs_bitwise_equal": True,
+        "ort_memory_reuse": False,
     }
     if interface[0].get("kind") == "loss_gradient":
         training = [
