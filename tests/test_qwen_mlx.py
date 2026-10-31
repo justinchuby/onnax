@@ -81,14 +81,20 @@ def test_native_sft_checkpoint_resume(tmp_path, monkeypatch, mode):
     os.environ.get("ONNAX_TEST_MLX_EP") != "1", reason="Native MLX Qwen opt-in"
 )
 @pytest.mark.parametrize("segmented", [False, True])
-def test_nf4_qwen_native_training(segmented):
+@pytest.mark.parametrize("mode", ["saved", "joint"])
+def test_nf4_qwen_native_training(segmented, mode):
     pytest.importorskip("mobius")
     pytest.importorskip("trl")
     pytest.importorskip("peft")
     pytest.importorskip("onnxruntime_ep_mlx")
     from examples.huggingface.mlx_validation import run
 
-    run(library=os.environ.get("ONNAX_MLX_EP_LIBRARY"), segmented=segmented)
+    run(
+        library=os.environ.get("ONNAX_MLX_EP_LIBRARY"),
+        segmented=segmented,
+        mode=mode,
+        stable_reference=mode == "joint",
+    )
 
 
 @pytest.mark.skipif(

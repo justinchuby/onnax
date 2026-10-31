@@ -80,6 +80,20 @@ to its gradient output, shape and dtype and records the frozen-weight hashes.
 A bound `forward.onnx` restores the trained adapter values for inference.
 Checkpoint loading checks the frozen base identity before restoring parameters.
 
+Use the numerical audit to compare every update with the corresponding
+Transformers model. It also evaluates the reference at the ONNX parameters,
+separating local gradient differences from accumulated optimizer drift:
+
+```bash
+uv run python -m examples.huggingface.mlx_validation --mode joint --provider cpu --stable-reference --steps 100 --output joint-cpu-audit.json
+uv run python -m examples.huggingface.mlx_validation --mode joint --library /path/to/libonnxruntime_mlx_ep.dylib --stable-reference --steps 100 --output joint-mlx-audit.json
+```
+
+Add `--real` for the pinned Qwen3-0.6B model. `--segmented --segment-nodes 1024`
+bounds graph size per runtime session. Both paths use the same parameter
+mapping, FP32 arithmetic and `rtol=1e-4, atol=1e-6` checks. The CLI saves all
+per-step failures and exits nonzero when a check fails.
+
 The benchmark reports joint loss/gradient execution, PyTorch gradient scaling,
 AdamW and complete-step median/P95, plus process peak RSS and logical session
 input/output bytes. It constructs the selected provider's sessions directly.

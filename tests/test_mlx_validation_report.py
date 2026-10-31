@@ -76,8 +76,10 @@ def test_cli_saves_failed_report_and_exits_nonzero(monkeypatch, tmp_path):
     assert json.loads(output.read_text()) == report
 
 
-def test_cpu_stable_reference_updates():
-    report = mlx_validation.run(provider="cpu", stable_reference=True, steps=2)
+@pytest.mark.parametrize("mode", ["saved", "joint"])
+def test_cpu_stable_reference_updates(mode):
+    report = mlx_validation.run(provider="cpu", stable_reference=True, steps=2, mode=mode)
+    assert report["mode"] == mode
     assert report["strict_checks_passed"]
     assert report["independent_updates_passed"]
     assert report["provider"] == "CPUExecutionProvider"
@@ -94,6 +96,8 @@ def test_cpu_stable_reference_updates():
         {"provider": "invalid"},
         {"provider": "cpu", "library": "unused"},
         {"backward_provider": "invalid"},
+        {"mode": "invalid"},
+        {"mode": "joint", "provider": "cpu", "backward_provider": "mlx"},
     ],
 )
 def test_reject_invalid_runtime_options(options):

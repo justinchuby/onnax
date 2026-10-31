@@ -1,6 +1,6 @@
 # Copyright (c) 2026 onnax contributors
 # SPDX-License-Identifier: MIT
-"""Compare independent tiny NF4 Qwen updates on native MLX or CPU."""
+"""Compare independent NF4 Qwen updates on native MLX or CPU."""
 
 import argparse
 import copy
@@ -14,6 +14,7 @@ import numpy as np
 import torch
 
 from examples.huggingface.bridge import frozen_hashes
+from examples.huggingface.qwen import REVISION
 from examples.huggingface.residuals import split_vjp
 from examples.huggingface.sft import prepare
 from examples.huggingface.validation import add_reference_adapters, audit
@@ -66,11 +67,17 @@ def run(
     stable_reference=False,
     provider="mlx",
     backward_provider=None,
+    mode="saved",
+    real=False,
 ):
     """Compare independent FP32 AdamW updates on the selected runtime."""
     backward_provider = provider if backward_provider is None else backward_provider
     if provider not in ("cpu", "mlx") or backward_provider not in ("cpu", "mlx"):
         raise ValueError("Expected provider 'cpu' or 'mlx'")
+    if mode not in ("saved", "joint"):
+        raise ValueError("Expected saved or joint execution")
+    if mode == "joint" and provider != backward_provider:
+        raise ValueError("Joint execution uses one provider for loss and gradients")
     uses_mlx = "mlx" in (provider, backward_provider)
     if not uses_mlx and library is not None:
         raise ValueError("A development MLX library requires an MLX session")
@@ -85,30 +92,64 @@ def run(
         with open(library, "rb") as stream:
             library_hash = hashlib.file_digest(stream, "sha256").hexdigest()
     torch.set_num_threads(1)
-    model, reference = prepare(nf4=True, save_activations=True)
-    forward, _, _ = split_vjp(model.onnx.model, model.onnx.vjp_model)
     from examples.lora.train import session as cpu_session
 
     factories = {"mlx": session, "cpu": cpu_session}
-    if segmented:
-        from examples.huggingface.segmented import SegmentedSession
+    if mode == "joint":
+        factory = factories[provider]
+        if segmented:
+            from examples.huggingface.segmented import SegmentedSession
 
-        model.onnx.forward_session = SegmentedSession(
-            forward, target_nodes=target_nodes, session_factory=factories[provider]
-        )
-        model.onnx.backward_session = SegmentedSession(
-            model.onnx.optimized_vjp,
-            target_nodes=target_nodes,
-            session_factory=factories[backward_provider],
-        )
+            selected = factory
+
+            def factory(source):
+                import onnx
+                import onnx_ir as ir
+
+                graph = (
+                    ir.from_proto(onnx.load_model_from_string(source))
+                    if isinstance(source, bytes)
+                    else ir.load(source)
+                )
+                return SegmentedSession(
+                    graph, target_nodes=target_nodes, session_factory=selected
+                )
+
+        model, reference = prepare(real, mode="joint", nf4=True, session_factory=factory)
     else:
-        if provider == "mlx":
-            model.onnx.forward_session = session(forward)
-        if backward_provider == "mlx":
-            model.onnx.backward_session = session(model.onnx.optimized_vjp)
+        model, reference = prepare(real, nf4=True, save_activations=True)
+        forward, _, _ = split_vjp(model.onnx.model, model.onnx.vjp_model)
+        if segmented:
+            from examples.huggingface.segmented import SegmentedSession
+
+            model.onnx.forward_session = SegmentedSession(
+                forward, target_nodes=target_nodes, session_factory=factories[provider]
+            )
+            model.onnx.backward_session = SegmentedSession(
+                model.onnx.optimized_vjp,
+                target_nodes=target_nodes,
+                session_factory=factories[backward_provider],
+            )
+        else:
+            if provider == "mlx":
+                model.onnx.forward_session = session(forward)
+            if backward_provider == "mlx":
+                model.onnx.backward_session = session(model.onnx.optimized_vjp)
     reference = add_reference_adapters(reference, model)
     ids = torch.tensor([[1, 4, 5, 6, 2], [1, 7, 2, 0, 0]])
-    mask = ids.ne(0).long()
+    if real:
+        from examples.huggingface.sft import texts, tokenizer
+
+        sample = tokenizer(True)(
+            [" ".join(texts()[:8])],
+            truncation=True,
+            max_length=64,
+            padding="max_length",
+            return_tensors="pt",
+        )
+        ids, mask = sample["input_ids"], sample["attention_mask"]
+    else:
+        mask = ids.ne(0).long()
     labels = ids.clone()
     labels[mask == 0] = -100
     batch = {"input_ids": ids, "attention_mask": mask, "labels": labels}
@@ -194,7 +235,11 @@ def run(
             for row in checks
         ),
         "same_parameter_control": same_parameters,
-        "model": "tiny-qwen3-nf4",
+        "model": "qwen3-0.6b-nf4" if real else "tiny-qwen3-nf4",
+        "mode": mode,
+        "model_revision": REVISION if real else None,
+        "batch_shape": list(ids.shape),
+        "valid_shifted_tokens": int(labels[:, 1:].ne(-100).sum()),
         "reference_computation": (
             "target-excluded stable CE; FP32 pairwise head backward, K blocks 128"
             if stable_reference
@@ -231,7 +276,11 @@ def run(
         "runtime_dtype": "float32",
         "lut4_fusion_disabled": uses_mlx
         and os.environ.get("ONNXRUNTIME_EP_MLX_NO_LUT4_FUSION") == "1",
-        "boundary": "CPU PyTorch loss, parameters and AdamW; NumPy session exchange",
+        "boundary": (
+            "ONNX loss and gradients; CPU PyTorch parameters and AdamW; NumPy session exchange"
+            if mode == "joint"
+            else "CPU PyTorch loss, parameters and AdamW; NumPy session exchange"
+        ),
         "adapter_tensors": len(model.onnx.adapters),
         "steps": len(losses),
         "losses": losses,
@@ -255,6 +304,8 @@ def main():
     parser.add_argument("--segmented", action="store_true")
     parser.add_argument("--segment-nodes", type=int, default=1024)
     parser.add_argument("--steps", type=int, default=4)
+    parser.add_argument("--mode", choices=("saved", "joint"), default="saved")
+    parser.add_argument("--real", action="store_true")
     parser.add_argument("--stable-reference", action="store_true")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
@@ -268,6 +319,8 @@ def main():
             target_nodes=args.segment_nodes,
             steps=args.steps,
             stable_reference=args.stable_reference,
+            mode=args.mode,
+            real=args.real,
         )
     except ValidationError as error:
         result = error.report
