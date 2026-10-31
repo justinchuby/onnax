@@ -140,6 +140,14 @@ records both ordinary and stable comparisons. The preservation regression checks
 that enabling the stable control leaves the original report and parameter bytes
 unchanged.
 
+At the two failing coordinates, gradients around 3.4e-10 differ by 1.39e-11.
+For zero initial moments, Adam's first update is
+$\Delta\theta=-\eta g/(|g|+\epsilon)$. With the original learning rate 0.003
+and epsilon 1e-8, these gradients produce a parameter gap of 3.88e-6. An
+isolated FP32 scalar AdamW step reproduces both full-tensor updated values
+exactly. The {download}`conditioning report <../examples/huggingface/reports/tiny-nf4-bf16-adam-conditioning.json>`
+records the gradients, initial parameters and scalar replay.
+
 Inspect projection inputs, outputs and incoming gradients at the same parameter
 state with:
 

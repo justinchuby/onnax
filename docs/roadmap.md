@@ -101,9 +101,12 @@ pullback audit passes all 3,522 input contributions in three adapter states.
 Independent full-graph recomposition covers 580 fan-in additions per state.
 A scalar-oracle audit identifies ordinary CPU reference error in the long
 output-head reduction. With pairwise FP32 head accumulation, all 112 adapter
-gradients pass in all three states at the original tolerance. Next connect
-this check to the exported joint loss/gradient graph and resolve the remaining
-independent forward and loss differences.
+gradients pass in all three states at the original tolerance. The saved,
+optimized joint loss/gradient module now also matches the independent stable
+loss and all 112 gradients across these states, with its 532 frozen hashes
+verified. Next resolve independent Transformers forward differences and
+qualify the remaining update trajectories. Scalar Adam replay identifies the
+tiny nonzero-B fresh-update gap as amplification of a 1.39e-11 gradient difference.
 Measured tensor lifetimes
 and the head memory curve will guide recomputation boundaries.
 

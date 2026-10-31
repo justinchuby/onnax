@@ -1,0 +1,82 @@
+{
+  "scope": "Fixed computed FP32 gradients, replay one scalar AdamW step with unchanged lr=0.003 eps=1e-8 weight_decay=0",
+  "failed_coordinates": [
+    {
+      "parameter": "model.layers.1.self_attn.v_proj.lora.A",
+      "coordinate": [
+        37,
+        0
+      ],
+      "initial_parameter": -0.019414005801081657,
+      "onnx_gradient": 3.440163709456101e-10,
+      "reference_gradient": 3.5788616514764726e-10,
+      "gradient_gap": 1.3869794202037156e-11,
+      "onnx_updated": -0.019513778388500214,
+      "reference_updated": -0.01951766200363636,
+      "actual_update_gap": 3.883615136146545e-06,
+      "isolated_scalar_adam_updated": [
+        -0.019513778388500214,
+        -0.01951766200363636
+      ],
+      "isolated_scalar_update_gap": 3.883615136146545e-06,
+      "scalar_matches_full_updates": true,
+      "ideal_first_step_gap": 3.8835682234011285e-06
+    },
+    {
+      "parameter": "model.layers.1.self_attn.v_proj.lora.A",
+      "coordinate": [
+        37,
+        2
+      ],
+      "initial_parameter": 0.0095780985429883,
+      "onnx_gradient": 3.440163709456101e-10,
+      "reference_gradient": 3.5788616514764726e-10,
+      "gradient_gap": 1.3869794202037156e-11,
+      "onnx_updated": 0.009478325955569744,
+      "reference_updated": 0.009474442340433598,
+      "actual_update_gap": 3.883615136146545e-06,
+      "isolated_scalar_adam_updated": [
+        0.009478325955569744,
+        0.009474442340433598
+      ],
+      "isolated_scalar_update_gap": 3.883615136146545e-06,
+      "scalar_matches_full_updates": true,
+      "ideal_first_step_gap": 3.8835682234011285e-06
+    }
+  ],
+  "stable_control": {
+    "reference_loss": 5.487370491027832,
+    "reference_computation": "target-excluded stable CE; BF16 forward; FP32 pairwise head backward, K blocks 128",
+    "loss_check_passed": true,
+    "adapter_tensors": 8,
+    "rtol": 0.0001,
+    "atol": 1e-06,
+    "optimizer": {
+      "name": "AdamW",
+      "lr": 0.003,
+      "eps": 1e-08,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "weight_decay": 0
+    },
+    "gradient_check_passed": true,
+    "gradients_max_abs": 3.026798367500305e-09,
+    "gradient_failures": {},
+    "update_check_passed": false,
+    "updates_max_abs": 3.885477781295776e-06,
+    "update_failures": {
+      "model.layers.1.self_attn.v_proj.lora.A": {
+        "violations": 2,
+        "max_abs": 3.885477781295776e-06
+      }
+    }
+  },
+  "experiment_script": "import json,sys,os,tempfile\nsys.path.insert(0,os.getcwd())\nimport numpy as np\nimport torch\nfrom unittest.mock import patch\nfrom examples.huggingface.sft import prepare\nfrom examples.huggingface.serialization import reference_session\nfrom examples.huggingface.peft_adapter import roundtrip\nfrom examples.huggingface import peft_reference\n\ntorch.set_num_threads(1)\nmodel,reference=prepare(mode='joint',nf4=True,projection_precision='bf16',session_factory=reference_session)\nwith torch.no_grad():\n for name,p in zip(model.onnx.names,model.onnx.adapters,strict=True):\n  if name.endswith('.B'):p.add_(0.01)\ninitial=model.onnx.arrays()\nrecords=[]\noriginal=peft_reference._compare\n\ndef capture(actual,expected):\n records.append(({k:v.detach().numpy().copy() for k,v in actual.items()},{k:v.detach().numpy().copy() for k,v in expected.items()}))\n return original(actual,expected)\nids=torch.tensor([[1,4,5,6,2]])\nbatch=dict(input_ids=ids,attention_mask=torch.ones_like(ids),labels=ids.clone())\nwith tempfile.TemporaryDirectory() as directory,patch.object(peft_reference,'_compare',capture):\n result=roundtrip(model,reference,batch,directory,diagnose_rounding=True,stable_reference=True)\nassert len(records)==2\nrows=[]\n(ga,gb),(pa,pb)=records\nfor name in pa:\n delta=np.abs(pa[name]-pb[name]);bad=delta>1e-6+1e-4*np.abs(pb[name])\n for index in zip(*np.nonzero(bad),strict=True):\n  a,b=float(ga[name][index]),float(gb[name][index])\n  predictions=[]\n  for grad in (a,b):\n   p=torch.nn.Parameter(torch.tensor([initial[name][index]],dtype=torch.float32));p.grad=torch.tensor([grad],dtype=torch.float32)\n   torch.optim.AdamW([p],lr=0.003,weight_decay=0).step();predictions.append(float(p.detach()[0]))\n  predicted_gap=abs(predictions[0]-predictions[1]);actual_gap=float(delta[index])\n  rows.append({'parameter':name,'coordinate':list(map(int,index)),'initial_parameter':float(initial[name][index]),'onnx_gradient':a,'reference_gradient':b,'gradient_gap':abs(a-b),'onnx_updated':float(pa[name][index]),'reference_updated':float(pb[name][index]),'actual_update_gap':actual_gap,'isolated_scalar_adam_updated':predictions,'isolated_scalar_update_gap':predicted_gap,'scalar_matches_full_updates':predictions==[float(pa[name][index]),float(pb[name][index])],'ideal_first_step_gap':abs(0.003*a/(abs(a)+1e-8)-0.003*b/(abs(b)+1e-8))})\nreport={'scope':'Fixed computed FP32 gradients, replay one scalar AdamW step with unchanged lr=0.003 eps=1e-8 weight_decay=0','failed_coordinates':rows,'stable_control':result['stable_reference_audit']}\nwith open('/tmp/onnax-tiny-bf16-adam-conditioning.json','w') as f:json.dump(report,f,indent=2);f.write('\\n')\nprint(json.dumps(rows,indent=2))\n",
+  "working_tree_source_sha256": {
+    "examples/huggingface/peft_reference.py": "4fc7a11ce7761a411eee811e4e6f460920e684cc4ec85af31b80fb80b2320da9",
+    "examples/huggingface/reference_head.py": "6cc8741c38b89f74f8d98081567e4a76b2febc8ca233c6f11f3dc0e5db009097",
+    "examples/huggingface/peft_adapter.py": "897f88b19f825c7f0231b3788e8a76209044fe593a58c1a34679337fd5e55052"
+  }
+}

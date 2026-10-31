@@ -150,3 +150,43 @@ def test_composition_detects_bad_final_fan_in_with_correct_local_partials():
     result = compose(model, ["x"], observed, constants, upstream, [derivative])
     assert result["failed_parameters"] == 1
     assert result["rows"][0]["max_abs"] == 4
+
+
+@pytest.mark.parametrize("corrupt", [False, True])
+def test_exported_optimized_training_matches_composition(tmp_path, corrupt):
+    from examples.huggingface.local_vjp_audit import run
+    from examples.huggingface.serialization import reference_session
+    from examples.huggingface.sft import prepare
+
+    model, _ = prepare(
+        mode="joint", nf4=True, projection_precision="bf16", session_factory=reference_session
+    )
+    manifest = model.onnx.export(str(tmp_path))
+    if corrupt:
+        path = tmp_path / manifest["model"]
+        graph = ir.load(path)
+        row = next(row for row in manifest["parameters"] if row["name"].endswith(".B"))
+        value = next(value for value in graph.graph.outputs if value.name == row["gradient"])
+        value.name += "_original"
+        tape = ir.tape.Tape()
+        two = tape.op("Constant", [], {"value": ir.tensor(np.array(2, np.float32))})
+        wrong = tape.op("Mul", [value, two])
+        wrong.name, wrong.dtype, wrong.shape = row["gradient"], value.dtype, value.shape
+        graph.graph.extend(tape.nodes)
+        graph.graph.outputs.remove(value)
+        graph.graph.outputs.append(wrong)
+        ir.save(graph, path, external_data="corrupt.data")
+    report = run(
+        nf4=True,
+        projection_precision="bf16",
+        provider="reference",
+        b_values=(0.0,),
+        pairwise_head=True,
+        training_export=tmp_path,
+    )
+    state = report["states"][0]
+    assert state["pairwise_head_composition"]["failed_parameters"] == 0
+    assert state["exported_training"]["loss_check_passed"]
+    assert state["exported_training"]["failed_parameters"] == int(corrupt)
+    assert state["exported_training"]["parameters"] == 8
+    assert report["training_export"]["frozen_buffers"] == len(manifest["frozen"])

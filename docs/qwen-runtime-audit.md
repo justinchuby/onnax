@@ -100,7 +100,8 @@ provider:
 ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.local_vjp_audit \
   --real --nf4 --projection-precision bf16 --provider mlx \
   --library /path/to/libonnxruntime_mlx_ep.dylib \
-  --pairwise-head --adapter trained/export/adapter.npz --output bf16-local-vjp.json
+  --pairwise-head --adapter trained/export/adapter.npz \
+  --training-export trained/export --output bf16-local-vjp.json
 ```
 
 `--adapter` adds the exported trained parameters as a third state and records
@@ -116,6 +117,24 @@ cotangents and generated local contributions are excluded from this calculation.
 `composition` records active nodes, fan-in additions and every adapter comparison.
 A branch regression verifies that this check catches a missing final contribution
 even when all local contributions are correct.
+
+`--training-export` executes the saved, optimized joint loss/gradient model too.
+The interface must match the source's frozen hashes, precision policy, parameter
+names, shapes and dtypes. This mode seeds the independent reverse traversal with
+the target-excluded stable token loss. The exported summed loss and gradients
+are divided by the valid shifted-token count before comparison. Each state's
+`exported_training` section records the loss and every adapter gradient.
+The diagnostic sessions are released before loading the exported module; only
+FP32 adapter gradients and scalar reference losses cross that boundary.
+
+The {download}`exported-training report <../examples/huggingface/reports/qwen3-nf4-bf16-exported-training-vjp-m1max.json>`
+validates the actual Qwen3-0.6B optimized module in all three states. Its 532
+frozen hashes and precision/parameter interface match the source. Each state's
+loss and all 112 adapter gradients pass the original tolerance. Maximum gradient
+absolute differences are 3.43e-7, 4.57e-7 and 4.59e-6 for zero B, B=0.01 and
+the step-30 adapter respectively. The report records model/interface hashes and
+every parameter comparison. A regression doubles one gradient in an exported
+graph and verifies that this check detects it.
 
 The command builds one derivative graph and reuses its forward and reverse
 sessions for both adapter states. B starts at zero in the first state; the

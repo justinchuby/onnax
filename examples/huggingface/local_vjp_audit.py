@@ -3,6 +3,7 @@
 """Compare local Qwen pullbacks at observed activations and loss cotangents."""
 
 import argparse
+import gc
 import hashlib
 import importlib.metadata
 import json
@@ -239,7 +240,15 @@ def check(probes, observed, constants):
 
 
 def compose(
-    model, names, observed, constants, seed, derivative_outputs, *, pairwise_head=False
+    model,
+    names,
+    observed,
+    constants,
+    seed,
+    derivative_outputs,
+    *,
+    pairwise_head=False,
+    reference_gradients=None,
 ):
     """Independently reverse the primal graph using captured operand values.
 
@@ -319,6 +328,8 @@ def compose(
             raise AssertionError(f"Composed gradient interface mismatch: {name}")
         if not np.isfinite(actual).all() or not np.isfinite(expected).all():
             raise AssertionError(f"Nonfinite composed gradient: {name}")
+        if reference_gradients is not None:
+            reference_gradients[name] = expected.copy()
         rows.append({"parameter": name, **compare(actual, expected)})
     return {
         "active_nodes": nodes,
@@ -340,6 +351,7 @@ def run(
     library=None,
     adapter=None,
     pairwise_head=False,
+    training_export=None,
 ):
     if not b_values or not all(np.isfinite(value) for value in b_values):
         raise ValueError("Expected finite adapter B values")
@@ -376,6 +388,33 @@ def run(
 
         model = bf16_projections(model)
     del reference
+    export_interface = None
+    if training_export is not None:
+        if not pairwise_head:
+            raise ValueError("Exported training checks require --pairwise-head")
+        from examples.huggingface.bridge import frozen_hashes
+        from examples.huggingface.joint_loss import causal_loss_graph
+
+        with open(os.path.join(training_export, "interface.json")) as stream:
+            export_interface = json.load(stream)
+        if (
+            export_interface.get("version") != 1
+            or export_interface.get("kind") != "loss_gradient"
+        ):
+            raise ValueError("Expected a version-one loss/gradient export")
+        if export_interface.get("frozen") != frozen_hashes(causal_loss_graph(model)):
+            raise ValueError("Exported frozen weights differ from the source model")
+        policy = json.loads(model.metadata_props.get("onnax.example.precision", "null"))
+        if export_interface.get("precision") != policy:
+            raise ValueError("Exported precision policy differs from the source model")
+        rows = export_interface["parameters"]
+        if len(rows) != len(params) or {row["name"] for row in rows} != set(params):
+            raise ValueError("Exported parameter names differ from the source model")
+        for row in rows:
+            if row["shape"] != list(params[row["name"]].shape) or row["dtype"] != "float32":
+                raise ValueError("Exported parameter shapes or dtypes differ")
+        if export_interface["causal_loss"]["reduction"] != "sum":
+            raise ValueError("Expected a summed causal loss export")
     joint, seed_name, probes, unchecked = trace(model, params)
     constants = {name: value.const_value for name, value in joint.graph.initializers.items()}
     derivative_outputs = list(joint.graph.outputs)[
@@ -412,7 +451,8 @@ def run(
         with open(adapter, "rb") as stream:
             digest = hashlib.file_digest(stream, "sha256").hexdigest()
         state_inputs.append(({"adapter_archive_sha256": digest}, trained))
-    states = []
+    states, export_references = [], []
+    covered_nodes = len(probes)
     with tempfile.TemporaryDirectory(prefix="onnax-local-vjp-") as directory:
         for name, graph in (("forward", model), ("joint", joint)):
             save_graph(
@@ -423,13 +463,19 @@ def run(
         for state, arrays in state_inputs:
             arguments = {**feeds, **arrays}
             logits = torch.tensor(forward.run(["logits"], arguments)[0], requires_grad=True)
-            loss = token_loss(logits, torch.from_numpy(ids))
+            loss_function = token_loss
+            if export_interface is not None:
+                from examples.huggingface.reference_losses import stable_token_loss
+
+                loss_function = stable_token_loss
+            loss = loss_function(logits, torch.from_numpy(ids))
             loss.backward()
             arguments[seed_name] = logits.grad.numpy()
             values = backward.run(None, arguments)
             observed = dict(zip([v.name for v in joint.graph.outputs], values, strict=True))
             np.testing.assert_array_equal(observed["logits"], logits.detach().numpy())
             stable = {}
+            reference_gradients = {} if export_interface is not None else None
             if pairwise_head:
                 stable["pairwise_head_composition"] = compose(
                     model,
@@ -439,7 +485,10 @@ def run(
                     arguments[seed_name],
                     derivative_outputs,
                     pairwise_head=True,
+                    reference_gradients=reference_gradients,
                 )
+            if export_interface is not None:
+                export_references.append((arrays, reference_gradients, float(loss.detach())))
             states.append(
                 {
                     **stable,
@@ -456,6 +505,75 @@ def run(
                     ),
                 }
             )
+        del forward, backward
+    export_info = None
+    if export_interface is not None:
+        del (
+            model,
+            joint,
+            graph,
+            probes,
+            constants,
+            derivative_outputs,
+            observed,
+            values,
+            logits,
+            loss,
+            arguments,
+        )
+        gc.collect()
+        path = os.path.join(training_export, export_interface["model"])
+        executor = factory(path)
+        count = np.float32(ids[:, 1:].size)
+        names = [
+            export_interface["output"],
+            *(row["gradient"] for row in export_interface["parameters"]),
+        ]
+        for state, (arrays, expected, reference_loss) in zip(
+            states, export_references, strict=True
+        ):
+            arguments = {
+                **feeds,
+                **arrays,
+                export_interface["causal_loss"]["labels"]: ids.copy(),
+            }
+            results = executor.run(names, arguments)
+            if (
+                results[0].shape != ()
+                or results[0].dtype != np.float32
+                or not np.isfinite(results[0])
+            ):
+                raise AssertionError("Invalid exported loss interface")
+            actual_loss = float(results[0] / count)
+            comparisons = []
+            for row, gradient in zip(export_interface["parameters"], results[1:], strict=True):
+                target = expected[row["name"]]
+                if (
+                    gradient.shape != target.shape
+                    or gradient.dtype != target.dtype
+                    or not np.isfinite(gradient).all()
+                ):
+                    raise AssertionError(f"Invalid exported gradient interface: {row['name']}")
+                comparisons.append(
+                    {"parameter": row["name"], **compare(gradient / count, target)}
+                )
+            state["exported_training"] = {
+                "loss": actual_loss,
+                "reference_loss": reference_loss,
+                "loss_check_passed": bool(
+                    np.isclose(actual_loss, reference_loss, rtol=1e-4, atol=1e-6)
+                ),
+                "parameters": len(comparisons),
+                "failed_parameters": sum(row["violations"] > 0 for row in comparisons),
+                "rows": comparisons,
+            }
+        with open(path, "rb") as stream:
+            digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        export_info = {
+            "model_sha256": digest,
+            "frozen_buffers": len(export_interface["frozen"]),
+            "normalization": "Exported loss/gradients divided by valid shifted-token count",
+        }
     return {
         "model": "Qwen3-0.6B" if real else "tiny Qwen3",
         "revision": REVISION if real else None,
@@ -471,7 +589,11 @@ def run(
         "atol": 1e-6,
         "input_ids": ids.tolist(),
         "trainable_tensors": len(params),
-        "covered_nodes": len(probes),
+        "covered_nodes": covered_nodes,
+        "training_export": export_info,
+        "loss_seed": "target-excluded stable CE"
+        if export_interface is not None
+        else "standard causal CE",
         "unchecked_active_nodes": dict(sorted(unchecked.items())),
         "ort_graph_optimization": "disabled",
         "ort_memory_reuse": False if provider == "cpu" else None,
@@ -499,6 +621,10 @@ def main():
         action="store_true",
         help="Also compose with FP32 pairwise frozen-head accumulation",
     )
+    parser.add_argument(
+        "--training-export",
+        help="Compare an exported joint loss/gradient module with the independent composition",
+    )
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     report = run(
@@ -510,6 +636,7 @@ def main():
         library=args.library,
         adapter=args.adapter,
         pairwise_head=args.pairwise_head,
+        training_export=args.training_export,
     )
     with open(args.output, "w") as stream:
         json.dump(report, stream, indent=2, allow_nan=False)
