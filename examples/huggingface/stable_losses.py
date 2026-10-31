@@ -154,10 +154,10 @@ def distillation(ctx, student, teacher):
     return result
 
 
-def _function(op, dtype):
+def _function(op, dtype, opset):
     x = ir.val("x", dtype=dtype)
     inputs = [x]
-    graph = ir.Graph(inputs, [], nodes=[], opset_imports={"": 18, DOMAIN: 1}, name=op)
+    graph = ir.Graph(inputs, [], nodes=[], opset_imports={"": opset, DOMAIN: 1}, name=op)
     ctx = onnax.AutodiffContext(graph)
     one, zero = ctx.scalar(x, 1), ctx.scalar(x, 0)
     if op == "HardCrossEntropy":
@@ -205,9 +205,12 @@ def _function(op, dtype):
 
 def install(model):
     """Attach portable local functions; global rules are installed on import."""
+    opset = model.graph.opset_imports.get("", 0)
+    if opset < 18:
+        raise ValueError("Stable losses require standard ONNX opset 18 or newer")
     for dtype in (ir.DataType.FLOAT, ir.DataType.DOUBLE):
         for op in ("Log1p", "Expm1", "Distillation", "HardCrossEntropy"):
-            function = _function(op, dtype)
+            function = _function(op, dtype, opset)
             model.functions[function.identifier()] = function
     model.graph.opset_imports[DOMAIN] = 1
 
