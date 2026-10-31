@@ -215,3 +215,60 @@ def test_peft_gradient_diagnostic_retains_failures(tmp_path, diagnose):
     else:
         with pytest.raises(AssertionError):
             roundtrip(model, reference, batch, str(tmp_path))
+
+
+def test_stable_peft_control_preserves_original_roundtrip(tmp_path):
+    from examples.huggingface.peft_adapter import roundtrip
+
+    ids = torch.tensor([[1, 4, 5, 6, 2]])
+    batch = {"input_ids": ids, "attention_mask": torch.ones_like(ids), "labels": ids.clone()}
+    results, arrays = [], []
+    for enabled in (False, True):
+        model, reference = prepare(mode="chunked", chunk_size=3)
+        with torch.no_grad():
+            for name, parameter in zip(model.onnx.names, model.onnx.adapters, strict=True):
+                if name.endswith(".B"):
+                    parameter.add_(0.01)
+        result = roundtrip(
+            model, reference, batch, str(tmp_path / str(enabled)), stable_reference=enabled
+        )
+        if enabled:
+            control = result.pop("stable_reference_audit")
+            assert control["adapter_tensors"] == len(model.onnx.names)
+            assert control["loss_check_passed"]
+            assert control["gradient_check_passed"]
+            assert control["update_check_passed"]
+        results.append(result)
+        arrays.append(model.onnx.arrays())
+    assert results[0] == results[1]
+    for name, value in arrays[0].items():
+        np.testing.assert_array_equal(value, arrays[1][name])
+
+
+def test_stable_peft_control_restores_gradients_on_failure(tmp_path, monkeypatch):
+    from examples.huggingface import peft_reference
+
+    model, reference = prepare()
+    export_adapter(model, str(tmp_path))
+    peft = PeftModel.from_pretrained(reference, str(tmp_path), is_trainable=True).eval()
+    for parameter in peft.parameters():
+        if parameter.requires_grad:
+            parameter.grad = torch.ones_like(parameter)
+    saved = {
+        name: None if p.grad is None else p.grad.clone() for name, p in peft.named_parameters()
+    }
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("reference failed")
+
+    monkeypatch.setattr(peft_reference, "stable_token_loss", fail)
+    ids = torch.tensor([[1, 4, 5, 2]])
+    batch = {"input_ids": ids, "attention_mask": torch.ones_like(ids), "labels": ids.clone()}
+    with pytest.raises(RuntimeError, match="reference failed"):
+        peft_reference.stable_control(model, peft, batch, torch.tensor(1.0))
+    assert "forward" not in peft.lm_head.__dict__
+    for name, parameter in peft.named_parameters():
+        if saved[name] is None:
+            assert parameter.grad is None
+        else:
+            torch.testing.assert_close(parameter.grad, saved[name], rtol=0, atol=0)

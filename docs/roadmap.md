@@ -62,11 +62,23 @@ tools to exported ONNX derivatives. [NF4 Qwen fine-tuning](qwen-nf4.md) extends
 the same bridge to packed decoder weights, independent adapter updates and
 fresh-process checkpoint recovery.
 
-Next, qualify the real model's FP32 gradients at observed activations and its
-independent update trajectories. Measure NF4 decoding lifetimes and connect a
-fused runtime kernel. Use the
-measured save/recompute boundary and output-head memory curve to guide deeper
-activation checkpointing and device execution.
+Native FP32 Qwen SFT now completes 30 updates, exchanges standard PEFT adapters
+and reproduces checkpoint-15 recovery byte for byte. The stable reference
+qualifies all 112 adapter gradients at the training endpoints and through
+standard PEFT. [Reference accuracy checks](qwen-reference-accuracy.md) retain
+the remaining pointwise-logit and independent-update differences, including
+captured Adam-state histories.
+
+The experimental MLX packed-lookup MatMul kernel executes the ordinary NF4
+graphs. Isolated measurements compare fused/unfused MLX, ONNX CPU and PyTorch
+CPU; [runtime reports](qwen-runtime-audit.md) record the measured source,
+complete-step timing and process RSS.
+
+Next, reduce frozen-weight and decoded-weight storage across forward, VJP and
+head sessions. Use the measured tensor lifetimes and head memory curve to place
+recomputation boundaries in the real transformer. Extend the same workload to
+BF16 computation with FP32 master adapters, gradients, accumulation and optimizer
+state. Continue independent FP32 update qualification alongside these changes.
 
 ## Engineering boundaries
 

@@ -18,6 +18,7 @@ qwen-sft
 qwen-adapters
 qwen-nf4
 qwen-runtime-audit
+qwen-reference-accuracy
 mlp
 mlp-bf16
 classifier-device

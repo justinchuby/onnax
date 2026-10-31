@@ -116,50 +116,51 @@ and decoding lifetime are the next performance targets.
 
 ## Run forward and VJP on Apple GPUs
 
-The native MLX validation uses the same two-layer NF4 Qwen and independently
-updates its ONNX and Transformers adapters for four AdamW steps. It compares
-logits, token loss, all adapter gradients and parameters at every step. ONNX
-forward and VJP sessions require complete MLX assignment and disable ORT graph
-optimization. PyTorch computes loss and AdamW on the CPU; NumPy arrays cross the
-session boundary.
-
-Use an MLX EP build containing [dynamic Range and ScatterElements support](
-https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/90):
+SFTTrainer can create MLX execution sessions directly for the body and the
+chunked output head. Trainer continues to own CPU PyTorch adapters, AdamW,
+gradient accumulation and checkpoints; NumPy carries values across runtime
+boundaries.
 
 ```bash
-uv run python -m examples.huggingface.mlx_validation \
-  --library /path/to/libonnxruntime_mlx_ep.dylib --output mlx-qwen.json
+uv run python -m examples.huggingface.sft --nf4 --save-activations \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --segment-nodes 1024 --mode chunked --output-dir native-sft
 ```
 
-Omit `--library` to use the installed plugin. The report records the library,
-package versions, execution boundary and numerical tolerances. The checked-in
-M1 Max report has loss decreasing from 5.50393 to 5.49281 across four steps.
-Run the native regression with `ONNAX_TEST_MLX_EP=1` and set
-`ONNAX_MLX_EP_LIBRARY` for a development dylib:
+Use `--resume native-sft/checkpoint-50` to restore a tiny training run. The
+report records the selected provider and development library hash. Every
+native session disables ORT graph optimization and CPU fallback. In Python,
+`prepare(session_factory=...)` accepts a runtime constructor receiving ONNX
+bytes or an external-data model path; the same factory handles forward, VJP,
+head prediction and head loss sessions.
 
-```bash
-ONNAX_TEST_MLX_EP=1 ONNAX_MLX_EP_LIBRARY=/path/to/libonnxruntime_mlx_ep.dylib \
-  uv run pytest tests/test_qwen_mlx.py -q
-```
+On Apple M1 Max, a real-model run with microbatch 1 and gradient accumulation 4
+completed 30 native chunked-loss updates with analytic CE derivatives.
+Validation loss fell from **7.75064 to 5.63277**. A fresh process resumed checkpoint 15 and reproduced all 112
+adapters, 113 checkpoint tensors, optimizer/scheduler state and loaded ONNX
+outputs byte for byte. Frozen source weights remained unchanged. PEFT adapter
+format exchange also preserved all parameter bytes.
+All 112 adapter gradients pass the stable-reference checks at both endpoints.
+With `--peft-roundtrip --stable-reference`, the PEFT report also includes
+`stable_reference_audit`, using the same loss and pairwise frozen-head
+reference. This additional control preserves the gradients used by the
+original PEFT update comparison.
+At the 30-step real-model checkpoint, this standard PEFT control passes all
+112 adapter gradients, with a maximum absolute difference of 1.65e-6.
+Independent fresh Adam updates exceed tolerance for 92 tensors. The
+[PEFT reference report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-peft-stable-reference-m1max.json)
+contains both the original and stable-reference comparisons.
 
-Use `--steps 100` to extend the comparison. Each step also evaluates a copied
-Transformers reference at the ONNX adapter parameters. This separates derivative
-accuracy at one point from the accumulated difference between two independently
-updated parameter trajectories. The control preserves both training trajectories
-and restores the ONNX gradients before AdamW runs.
+The initial and final comparisons against Transformers exceed the FP32
+tolerance for 47 and 92 gradient tensors, respectively. PEFT gradient and
+independent-update comparisons also fail. The
+[native SFT report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-native-analytic-ce-sft-m1max.json)
+contains these failures alongside the training and recovery results.
 
-On the M1 Max 100-step run, loss decreases from 5.50393 to 4.85798. Both the
-fused and unfused paths pass every same-parameter forward, loss and gradient
-comparison at `rtol=1e-4, atol=1e-6`. The independent trajectories first exceed
-gradient tolerance at steps 92 and 87, respectively. All fused-path parameter
-comparisons pass; unfused parameter comparisons exceed tolerance at steps 96
-and 99. Both complete reports retain `strict_checks_passed=false`; the CLI
-writes the report and exits with status 1. The
-[100-step comparison report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-nf4-mlx-100-comparison.json)
-records the per-step checks and runtime library hash.
-
-The [paired runtime audit](qwen-runtime-audit.md) compares CPU and MLX gradients
-with fixed forward residuals and provides reusable segmented ONNX execution.
+For loss formulas, reference controls, independent update trajectories and
+Adam-state analysis, see [FP32 reference checks](qwen-reference-accuracy.md).
+The [paired runtime audit](qwen-runtime-audit.md) holds forward residuals fixed
+to compare backward execution directly.
 
 ## Reuse frozen weights in saved backward graphs
 

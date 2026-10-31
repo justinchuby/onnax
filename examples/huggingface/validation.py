@@ -41,7 +41,7 @@ def add_reference_adapters(reference, model):
     return reference
 
 
-def audit(model, reference, batch, *, sync=True, diagnose_rounding=False):
+def audit(model, reference, batch, *, sync=True, diagnose_rounding=False, reference_loss=None):
     arrays = model.onnx.arrays()
     for row in model.mapping:
         layer = reference.get_submodule(row["module"])
@@ -58,7 +58,7 @@ def audit(model, reference, batch, *, sync=True, diagnose_rounding=False):
         with torch.no_grad():
             actual.logits = model(**inputs).logits
     expected = reference(**inputs, use_cache=False).logits
-    expected_loss = token_loss(expected, batch["labels"])
+    expected_loss = (reference_loss or token_loss)(expected, batch["labels"])
     valid = batch["attention_mask"].bool()
     actual_values = actual.logits.detach()[valid].numpy()
     expected_values = expected.detach()[valid].numpy()

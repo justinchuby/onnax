@@ -103,7 +103,9 @@ def import_adapter(model, directory):
             parameter.copy_(value)
 
 
-def roundtrip(model, reference, batch, directory, *, diagnose_rounding=False):
+def roundtrip(
+    model, reference, batch, directory, *, diagnose_rounding=False, stable_reference=False
+):
     """Exchange through PEFT, compare gradients, then exchange one AdamW update."""
     import numpy as np
     from peft import PeftModel
@@ -155,6 +157,11 @@ def roundtrip(model, reference, batch, directory, *, diagnose_rounding=False):
                 np.testing.assert_allclose(
                     actual_gradient, expected_gradient, rtol=1e-4, atol=1e-6
                 )
+    stable = None
+    if stable_reference:
+        from examples.huggingface.peft_reference import stable_control
+
+        stable = stable_control(model, peft, batch, actual.loss)
     torch.optim.AdamW(model.parameters(), lr=0.003, weight_decay=0).step()
     torch.optim.AdamW(
         [p for p in peft.parameters() if p.requires_grad], lr=0.003, weight_decay=0
@@ -173,7 +180,7 @@ def roundtrip(model, reference, batch, directory, *, diagnose_rounding=False):
             }
         if not diagnose_rounding:
             np.testing.assert_allclose(value, arrays[name], rtol=1e-4, atol=1e-6)
-    return {
+    result = {
         "adapter_tensors": len(arrays),
         "format_roundtrip_bitwise": True,
         "gradient_check_passed": not bool(gradient_failures),
@@ -183,3 +190,7 @@ def roundtrip(model, reference, batch, directory, *, diagnose_rounding=False):
         "logit_violations": logit_failures,
         "logits_max_abs": float(np.max(np.abs(logits - reference_logits))),
     }
+
+    if stable_reference:
+        result["stable_reference_audit"] = stable
+    return result

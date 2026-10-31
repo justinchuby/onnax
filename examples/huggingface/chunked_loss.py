@@ -14,6 +14,7 @@ import onnax
 from examples.huggingface.bridge import graph_session
 from examples.huggingface.optimization import optimize_training_graph
 from examples.huggingface.stable_losses import hard_cross_entropy, install
+from examples.lora.train import session
 
 
 def head_graph(weight):
@@ -72,7 +73,7 @@ class _ChunkLoss(torch.autograd.Function):
 
 
 class ChunkedHead:
-    def __init__(self, weight, *, chunk_size=128):
+    def __init__(self, weight, *, chunk_size=128, session_factory=session):
         if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size < 1:
             raise ValueError("chunk_size must be a positive integer")
         self.chunk_size = chunk_size
@@ -83,7 +84,9 @@ class ChunkedHead:
         )
         self.gradient.graph.sort()
         self.directory = tempfile.TemporaryDirectory(prefix="onnax-head-")
-        self.executor = graph_session(self.gradient, self.directory.name, "gradient")
+        self.executor = graph_session(
+            self.gradient, self.directory.name, "gradient", session_factory=session_factory
+        )
         forward = self.model.clone()
         logits = next(n.outputs[0] for n in forward.graph if n.op_type == "MatMul")
         logits.name = "logits"
@@ -93,7 +96,9 @@ class ChunkedHead:
         from onnxscript import optimizer
 
         optimizer.remove_unused_nodes(forward)
-        self.forward_executor = graph_session(forward, self.directory.name, "forward")
+        self.forward_executor = graph_session(
+            forward, self.directory.name, "forward", session_factory=session_factory
+        )
 
     def forward(self, hidden):
         array = hidden.detach().contiguous().numpy()

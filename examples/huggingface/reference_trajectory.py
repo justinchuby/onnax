@@ -7,7 +7,6 @@ import hashlib
 import importlib.metadata
 import json
 import platform
-from unittest.mock import patch
 
 import numpy as np
 import torch
@@ -61,8 +60,9 @@ def run(*, real=False, nf4=False, steps=4, accumulation=4, eps=1e-8):
     if not np.isfinite(eps) or eps <= 0:
         raise ValueError("Expected a positive finite Adam epsilon")
     torch.set_num_threads(1)
-    with patch("examples.huggingface.bridge.session", diagnostic_session):
-        model, reference = prepare(real, nf4=nf4, save_activations=True)
+    model, reference = prepare(
+        real, nf4=nf4, save_activations=True, session_factory=diagnostic_session
+    )
     reference = add_reference_adapters(reference, model)
     tok, corpus = tokenizer(real), texts()
     batches = []

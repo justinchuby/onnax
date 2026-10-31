@@ -215,3 +215,45 @@ all adapter gradients and four independent AdamW updates against Transformers:
 uv run python -m examples.huggingface.mlx_validation --segmented \
   --library /path/to/libonnxruntime_mlx_ep.dylib --output segmented-updates.json
 ```
+
+## Measure complete native training steps
+
+The training benchmark also accepts `--provider mlx`. It executes ONNX forward
+and VJP graphs on MLX, with CPU PyTorch token loss and AdamW connected through
+NumPy arrays. `--segment-nodes` uses the reusable subgraph sessions above.
+
+```bash
+uv run python -m examples.huggingface.benchmark \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --mode saved --segment-nodes 1024 --real --nf4 --batch-size 1 \
+  --warmup 10 --samples 100 > native-saved.json
+```
+
+Each measured step includes forward/loss, backward and AdamW. The report records
+median/P95, valid shifted tokens per second, input-view exchange time, loss
+sequence, saved activation bytes and whole-process peak RSS. Construction starts
+with the common CPU model setup, then replaces execution sessions with MLX;
+native export/session times are recorded separately. RSS includes that setup.
+MLX execution disables CPU fallback and ORT graph optimization.
+
+Omit `--mode` to run PyTorch CPU, raw ONNX, optimized ONNX, saved-activation ONNX
+and chunked loss in separate processes and write the matrix to `--output`.
+For a fusion comparison, repeat the same command with
+`ONNXRUNTIME_EP_MLX_NO_LUT4_FUSION=1`. Keep batch size, sample count, segmentation
+and library identical; the report records the library hash and fusion switch.
+
+The [M1 Max runtime matrix](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-native-runtime-m1max.json)
+uses Qwen3-0.6B NF4, FP32 computation, batch 1 and sequence length 64. Each path
+runs 10 warmups and 100 measured updates on the same 63 shifted tokens.
+
+| Path | Step median (s) | Step P95 (s) | Tokens/s | Peak RSS (GiB) |
+| --- | ---: | ---: | ---: | ---: |
+| MLX, saved activations, fused | 1.925 | 2.042 | 32.72 | 10.22 |
+| MLX, saved activations, unfused | 7.248 | 7.603 | 8.69 | 10.69 |
+| ONNX CPU, saved activations | 8.709 | 8.778 | 7.23 | 12.95 |
+| PyTorch CPU, reconstructed FP32 weights | 0.361 | 0.375 | 174.52 | 4.72 |
+
+Fusion improves the matched MLX complete step by **3.76 times**. PyTorch CPU
+has the shortest steps in this matrix. The saved ONNX path retains about
+1.40 GB of logical residuals; graph execution and runtime boundaries remain
+the next performance targets.
