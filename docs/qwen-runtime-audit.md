@@ -215,3 +215,29 @@ all adapter gradients and four independent AdamW updates against Transformers:
 uv run python -m examples.huggingface.mlx_validation --segmented \
   --library /path/to/libonnxruntime_mlx_ep.dylib --output segmented-updates.json
 ```
+
+## Measure complete native training steps
+
+The training benchmark also accepts `--provider mlx`. It executes ONNX forward
+and VJP graphs on MLX, with CPU PyTorch token loss and AdamW connected through
+NumPy arrays. `--segment-nodes` uses the reusable subgraph sessions above.
+
+```bash
+uv run python -m examples.huggingface.benchmark \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --mode saved --segment-nodes 1024 --real --nf4 --batch-size 1 \
+  --warmup 10 --samples 100 > native-saved.json
+```
+
+Each measured step includes forward/loss, backward and AdamW. The report records
+median/P95, valid shifted tokens per second, input-view exchange time, loss
+sequence, saved activation bytes and whole-process peak RSS. Construction starts
+with the common CPU model setup, then replaces execution sessions with MLX;
+native export/session times are recorded separately. RSS includes that setup.
+MLX execution disables CPU fallback and ORT graph optimization.
+
+Omit `--mode` to run PyTorch CPU, raw ONNX, optimized ONNX, saved-activation ONNX
+and chunked loss in separate processes and write the matrix to `--output`.
+For a fusion comparison, repeat the same command with
+`ONNXRUNTIME_EP_MLX_NO_LUT4_FUSION=1`. Keep batch size, sample count, segmentation
+and library identical; the report records the library hash and fusion switch.
