@@ -116,6 +116,15 @@ projection, the FP32-accumulation control matches all 22,528 captured MLX output
 the native PyTorch BF16 product differs at four entries. The command records
 shapes, the capture hash, thread count and comparison errors.
 
+Applying this accumulation control throughout the real NF4/BF16 transformer
+still leaves 56 failing gradient tensors at initialization and 112 after
+30 updates. Logit maximum differences remain 0.125 and 0.3125 respectively.
+The control changes loss and gradient errors in both directions; a common
+accumulation policy alone does not align the full model. The shared-state
+results, original tolerances and experiment script are in
+`reports/qwen3-nf4-bf16-accumulation-control-m1max.json`.
+The next audit compares local derivatives at identical intermediate activations.
+
 Inspect projection inputs, outputs and incoming gradients at the same parameter
 state with:
 

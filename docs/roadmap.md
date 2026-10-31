@@ -86,10 +86,18 @@ Tiny Qwen now combines packed NF4 decoder storage with BF16 products. The
 strict five-step independent updates, 100-step native training, PEFT controls
 and checkpoint recovery pass for this workload.
 
-Next, qualify the combined NF4/BF16 path on the real transformer and measure
-its training time and memory. Use measured tensor
-lifetimes and the head memory curve to place recomputation boundaries.
-Continue independent FP32 update qualification alongside these changes.
+The real NF4/BF16 transformer completes 30 updates and fresh-process
+checkpoint-15 recovery, with exact adapter/state/export replay. Eager array
+lifetime correction reduces its observed full-run physical footprint to about
+10.5 GiB on M1 Max. Matched 100-sample measurements record a 1.873 s median
+ONNX/MLX training step and 3.054 s for PyTorch CPU, with source, precision,
+storage and loss policies in the [NF4 tutorial](qwen-nf4.md).
+
+Next, resolve the real-model independent BF16 logits, loss and gradient
+differences and complete independent FP32 update qualification. Shared-input
+projection controls distinguish product accumulation from upstream rounding;
+all comparisons retain their original tolerances. Measured tensor lifetimes
+and the head memory curve will guide recomputation boundaries.
 
 ## Engineering boundaries
 
