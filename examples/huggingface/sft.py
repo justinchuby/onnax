@@ -15,7 +15,7 @@ from transformers import AutoTokenizer, PreTrainedModel, PreTrainedTokenizerFast
 from transformers.modeling_outputs import CausalLMOutput
 from trl import SFTConfig, SFTTrainer
 
-from examples.huggingface.bridge import OnnxModule
+from examples.huggingface.bridge import OnnxModule, frozen_hashes
 from examples.huggingface.qwen import (
     MODEL_ID,
     REVISION,
@@ -292,6 +292,7 @@ def run(
         nf4=nf4,
         session_factory=runtime,
     )
+    initial_frozen = frozen_hashes(model.forward_graph)
     tok = tokenizer(real)
     from examples.huggingface.validation import add_reference_adapters, audit
 
@@ -324,6 +325,7 @@ def run(
         "provider": provider,
         "segment_target_nodes": segment_nodes,
         "ort_graph_optimization": "disabled",
+        "frozen_buffers_unchanged": frozen_hashes(model.forward_graph) == initial_frozen,
     }
     if provider == "mlx":
         report["cpu_fallback_disabled"] = True
@@ -352,6 +354,8 @@ def run(
 
     report["requested_audits"] = {"peft": peft_roundtrip, "fp64": fp64_audit}
     persist()
+    if not report["frozen_buffers_unchanged"]:
+        raise AssertionError("Frozen model buffers changed during training")
     if peft_roundtrip:
         from examples.huggingface.peft_adapter import roundtrip
 
