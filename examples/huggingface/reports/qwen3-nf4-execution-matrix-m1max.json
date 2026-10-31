@@ -1,0 +1,1728 @@
+{
+  "version": 1,
+  "model": "Qwen/Qwen3-0.6B",
+  "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+  "source_commit": "b0415d1f79e6278fe4fccf4115cbbcf331e0e150",
+  "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+  "source_sha256": {
+    "examples/huggingface/benchmark.py": "fff0dc3d8bd7af7fc282be550df816c605efcaeb606208d385b575a02d8d154f",
+    "examples/huggingface/bridge.py": "c1947b3dc2053734cab4506a9f278ca456b269b3381bf58fae1e7741954ecc71",
+    "examples/huggingface/qwen.py": "4584892046af4f5aa95a8a336130859d6ad14b308a52d533d32477711a3e6c8e",
+    "examples/huggingface/sft.py": "1bf7c1065b9fa72ddcaafcfb35527c80e770182f7a511e8c7b2130ee546c34b6",
+    "examples/huggingface/nf4.py": "a374f41406ed0b8967f723873b8bb9b5a563b8350895c299137905422522d9d7"
+  },
+  "comparison": {
+    "matched_fields": [
+      "provider",
+      "real",
+      "weight_values",
+      "projection_precision",
+      "gradient_and_optimizer_dtype",
+      "base_storage",
+      "warmup",
+      "samples",
+      "batch",
+      "sequence",
+      "valid_shifted_tokens",
+      "parameter_bytes",
+      "threads",
+      "thread_environment",
+      "ort_optimizer",
+      "library_sha256",
+      "mlx_compile_disabled",
+      "lut4_fusion_disabled",
+      "hardware",
+      "versions"
+    ],
+    "losses_compared": 110,
+    "losses_bitwise_equal": true,
+    "max_loss_absolute_gap": 0.0,
+    "median_step_reduction_fraction": 0.08616423074569912,
+    "all_paths_matched_fields": [
+      "real",
+      "weight_values",
+      "projection_precision",
+      "gradient_and_optimizer_dtype",
+      "warmup",
+      "samples",
+      "batch",
+      "sequence",
+      "valid_shifted_tokens",
+      "parameter_bytes",
+      "threads",
+      "thread_environment",
+      "ort_optimizer",
+      "hardware",
+      "versions"
+    ]
+  },
+  "components": {
+    "raw": {
+      "mode": "raw",
+      "provider": "mlx",
+      "segment_target_nodes": null,
+      "lut4_fusion_disabled": false,
+      "mlx_compile_disabled": true,
+      "real": true,
+      "weight_values": "nf4_reconstructed_fp32",
+      "projection_precision": "fp32",
+      "gradient_and_optimizer_dtype": "float32",
+      "base_storage": "packed_nf4_decoder",
+      "warmup": 10,
+      "samples": 100,
+      "losses": [
+        4.561556816101074,
+        4.289498329162598,
+        3.7140800952911377,
+        3.064570903778076,
+        2.4306046962738037,
+        1.8179062604904175,
+        1.311374306678772,
+        1.0156018733978271,
+        0.643747866153717,
+        0.4353105127811432,
+        0.31029757857322693,
+        0.26649928092956543,
+        0.2506483197212219,
+        0.23745989799499512,
+        0.4957730770111084,
+        0.24548082053661346,
+        0.23690639436244965,
+        0.23571929335594177,
+        0.23451362550258636,
+        0.2341560274362564,
+        0.2334468811750412,
+        0.23248891532421112,
+        0.2315916121006012,
+        0.23071305453777313,
+        0.22974587976932526,
+        0.22884856164455414,
+        0.22805571556091309,
+        0.2273305356502533,
+        0.22663314640522003,
+        0.22591587901115417,
+        0.22520160675048828,
+        0.22450341284275055,
+        0.22381138801574707,
+        0.22311697900295258,
+        0.2224159687757492,
+        0.22170490026474,
+        0.22098158299922943,
+        0.22024445235729218,
+        0.21949191391468048,
+        0.21872319281101227,
+        0.21793657541275024,
+        0.21713121235370636,
+        0.21630513668060303,
+        0.21545711159706116,
+        0.21458536386489868,
+        0.21368782222270966,
+        0.212762713432312,
+        0.2118077129125595,
+        0.2108212113380432,
+        0.20980046689510345,
+        0.20874309539794922,
+        0.20764672756195068,
+        0.20650841295719147,
+        0.2053256779909134,
+        0.20409512519836426,
+        0.2028137594461441,
+        0.20147815346717834,
+        0.20008446276187897,
+        0.19862909615039825,
+        0.19710823893547058,
+        0.19551797211170197,
+        0.19385436177253723,
+        0.19211256504058838,
+        0.19028759002685547,
+        0.1883726269006729,
+        0.18635833263397217,
+        0.18423333764076233,
+        0.18198387324810028,
+        0.1795981377363205,
+        0.17706194519996643,
+        0.17436058819293976,
+        0.17147521674633026,
+        0.16837617754936218,
+        0.1650187224149704,
+        0.16132839024066925,
+        0.15718533098697662,
+        0.1524057537317276,
+        0.1466972827911377,
+        0.1395692080259323,
+        0.13011717796325684,
+        0.11668190360069275,
+        0.09676916897296906,
+        0.07021547853946686,
+        0.05532590672373772,
+        0.05656742304563522,
+        0.05471520870923996,
+        0.04876327887177467,
+        0.04061833396553993,
+        0.03067309409379959,
+        0.020344141870737076,
+        0.012138040736317635,
+        0.007305645849555731,
+        0.004793865140527487,
+        0.003420464461669326,
+        0.0025733893271535635,
+        0.0019927744287997484,
+        0.0015762674156576395,
+        0.001279695425182581,
+        0.0010748981731012464,
+        0.0009381689014844596,
+        0.0008488164748996496,
+        0.0007821223698556423,
+        0.0007217508391477168,
+        0.0006694630719721317,
+        0.0006282896501943469,
+        0.0005954558146186173,
+        0.0005678744055330753,
+        0.0005435868515633047,
+        0.000521757872775197,
+        0.0005016050999984145
+      ],
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_tokens": 63,
+      "initialization_seconds": 156.19215441698907,
+      "timings_ms": {
+        "forward_and_loss": {
+          "median": 140.57233298080973,
+          "p95": 143.2616476289695
+        },
+        "backward": {
+          "median": 1487.6702079782262,
+          "p95": 2428.4952190413605
+        },
+        "process_cpu": {
+          "median": 878.0619999999999,
+          "p95": 920.8942999999933
+        },
+        "adamw": {
+          "median": 2.7176454896107316,
+          "p95": 2.9221416887594387
+        },
+        "step": {
+          "median": 1630.6137914943974,
+          "p95": 2571.670872854884
+        }
+      },
+      "effective_tokens_per_second": 38.63575809834334,
+      "peak_rss_bytes": 7484702720,
+      "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+      "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+      "parameter_bytes": 2293760,
+      "threads": {
+        "torch": 1,
+        "ort_intra": 1,
+        "ort_inter": 1
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      },
+      "ort_optimizer": "disabled",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      },
+      "native_construction": {
+        "session_0": {
+          "factory_seconds": 0.4698862499790266,
+          "segments": 1,
+          "source": "forward.onnx"
+        },
+        "session_1": {
+          "factory_seconds": 4.642400250013452,
+          "segments": 1,
+          "source": "backward.onnx"
+        }
+      },
+      "cpu_fallback_disabled": true,
+      "library": "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "initializer_bytes_by_session": {
+        "forward": 891289904,
+        "backward": 891289904
+      },
+      "initializer_scope": "Logical top-level initializer bytes for each execution session",
+      "decoder_storage_bytes": {
+        "original": 1761607680,
+        "packed": 247726080
+      },
+      "nodes": {
+        "forward": 3412,
+        "raw_vjp": 46024,
+        "executed_vjp": 46024
+      },
+      "logical_saved_activation_bytes": 0,
+      "saved_activation_count": 0,
+      "input_view_median_us": 16.62501017563045,
+      "input_view_scope": "Host data-input preparation; adapter preparation is included in forward",
+      "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
+    },
+    "optimized": {
+      "mode": "optimized",
+      "provider": "mlx",
+      "segment_target_nodes": null,
+      "lut4_fusion_disabled": false,
+      "mlx_compile_disabled": true,
+      "real": true,
+      "weight_values": "nf4_reconstructed_fp32",
+      "projection_precision": "fp32",
+      "gradient_and_optimizer_dtype": "float32",
+      "base_storage": "packed_nf4_decoder",
+      "warmup": 10,
+      "samples": 100,
+      "losses": [
+        4.561556816101074,
+        4.289498329162598,
+        3.7140800952911377,
+        3.064570903778076,
+        2.4306046962738037,
+        1.8179062604904175,
+        1.311374306678772,
+        1.0156018733978271,
+        0.643747866153717,
+        0.4353105127811432,
+        0.31029757857322693,
+        0.26649928092956543,
+        0.2506483197212219,
+        0.23745989799499512,
+        0.4957730770111084,
+        0.24548082053661346,
+        0.23690639436244965,
+        0.23571929335594177,
+        0.23451362550258636,
+        0.2341560274362564,
+        0.2334468811750412,
+        0.23248891532421112,
+        0.2315916121006012,
+        0.23071305453777313,
+        0.22974587976932526,
+        0.22884856164455414,
+        0.22805571556091309,
+        0.2273305356502533,
+        0.22663314640522003,
+        0.22591587901115417,
+        0.22520160675048828,
+        0.22450341284275055,
+        0.22381138801574707,
+        0.22311697900295258,
+        0.2224159687757492,
+        0.22170490026474,
+        0.22098158299922943,
+        0.22024445235729218,
+        0.21949191391468048,
+        0.21872319281101227,
+        0.21793657541275024,
+        0.21713121235370636,
+        0.21630513668060303,
+        0.21545711159706116,
+        0.21458536386489868,
+        0.21368782222270966,
+        0.212762713432312,
+        0.2118077129125595,
+        0.2108212113380432,
+        0.20980046689510345,
+        0.20874309539794922,
+        0.20764672756195068,
+        0.20650841295719147,
+        0.2053256779909134,
+        0.20409512519836426,
+        0.2028137594461441,
+        0.20147815346717834,
+        0.20008446276187897,
+        0.19862909615039825,
+        0.19710823893547058,
+        0.19551797211170197,
+        0.19385436177253723,
+        0.19211256504058838,
+        0.19028759002685547,
+        0.1883726269006729,
+        0.18635833263397217,
+        0.18423333764076233,
+        0.18198387324810028,
+        0.1795981377363205,
+        0.17706194519996643,
+        0.17436058819293976,
+        0.17147521674633026,
+        0.16837617754936218,
+        0.1650187224149704,
+        0.16132839024066925,
+        0.15718533098697662,
+        0.1524057537317276,
+        0.1466972827911377,
+        0.1395692080259323,
+        0.13011717796325684,
+        0.11668190360069275,
+        0.09676916897296906,
+        0.07021547853946686,
+        0.05532590672373772,
+        0.05656742304563522,
+        0.05471520870923996,
+        0.04876327887177467,
+        0.04061833396553993,
+        0.03067309409379959,
+        0.020344141870737076,
+        0.012138040736317635,
+        0.007305645849555731,
+        0.004793865140527487,
+        0.003420464461669326,
+        0.0025733893271535635,
+        0.0019927744287997484,
+        0.0015762674156576395,
+        0.001279695425182581,
+        0.0010748981731012464,
+        0.0009381689014844596,
+        0.0008488164748996496,
+        0.0007821223698556423,
+        0.0007217508391477168,
+        0.0006694630719721317,
+        0.0006282896501943469,
+        0.0005954558146186173,
+        0.0005678744055330753,
+        0.0005435868515633047,
+        0.000521757872775197,
+        0.0005016050999984145
+      ],
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_tokens": 63,
+      "initialization_seconds": 159.36411716701696,
+      "timings_ms": {
+        "forward_and_loss": {
+          "median": 139.38072900054976,
+          "p95": 144.1073127760319
+        },
+        "backward": {
+          "median": 1349.0841254824772,
+          "p95": 2277.865897284937
+        },
+        "process_cpu": {
+          "median": 804.6290000000056,
+          "p95": 854.625200000001
+        },
+        "adamw": {
+          "median": 2.805166965117678,
+          "p95": 3.0932306079193945
+        },
+        "step": {
+          "median": 1490.1132085069548,
+          "p95": 2417.137396184262
+        }
+      },
+      "effective_tokens_per_second": 42.27866690955915,
+      "peak_rss_bytes": 7324565504,
+      "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+      "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+      "parameter_bytes": 2293760,
+      "threads": {
+        "torch": 1,
+        "ort_intra": 1,
+        "ort_inter": 1
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      },
+      "ort_optimizer": "disabled",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      },
+      "native_construction": {
+        "session_0": {
+          "factory_seconds": 0.49133241700474173,
+          "segments": 1,
+          "source": "forward.onnx"
+        },
+        "session_1": {
+          "factory_seconds": 3.495638874999713,
+          "segments": 1,
+          "source": "backward.onnx"
+        }
+      },
+      "cpu_fallback_disabled": true,
+      "library": "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "initializer_bytes_by_session": {
+        "forward": 891289904,
+        "backward": 891289932
+      },
+      "initializer_scope": "Logical top-level initializer bytes for each execution session",
+      "decoder_storage_bytes": {
+        "original": 1761607680,
+        "packed": 247726080
+      },
+      "nodes": {
+        "forward": 3412,
+        "raw_vjp": 46024,
+        "executed_vjp": 32649
+      },
+      "logical_saved_activation_bytes": 0,
+      "saved_activation_count": 0,
+      "input_view_median_us": 18.666498363018036,
+      "input_view_scope": "Host data-input preparation; adapter preparation is included in forward",
+      "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
+    },
+    "pytorch": {
+      "mode": "pytorch",
+      "provider": "pytorch_cpu",
+      "segment_target_nodes": null,
+      "lut4_fusion_disabled": false,
+      "mlx_compile_disabled": true,
+      "real": true,
+      "weight_values": "nf4_reconstructed_fp32",
+      "projection_precision": "fp32",
+      "gradient_and_optimizer_dtype": "float32",
+      "base_storage": "fp32",
+      "warmup": 10,
+      "samples": 100,
+      "losses": [
+        4.561557769775391,
+        4.289498329162598,
+        3.7140843868255615,
+        3.0646026134490967,
+        2.430683135986328,
+        1.8180488348007202,
+        1.3115311861038208,
+        1.0157428979873657,
+        0.6438482999801636,
+        0.43535321950912476,
+        0.3103013038635254,
+        0.2665081024169922,
+        0.2506541609764099,
+        0.23745675384998322,
+        0.4934908449649811,
+        0.24337469041347504,
+        0.23722140491008759,
+        0.23598428070545197,
+        0.2352459579706192,
+        0.23484832048416138,
+        0.23416829109191895,
+        0.23338986933231354,
+        0.23257258534431458,
+        0.2317121922969818,
+        0.23077747225761414,
+        0.2298843413591385,
+        0.22906389832496643,
+        0.22829386591911316,
+        0.22754113376140594,
+        0.22674019634723663,
+        0.22594134509563446,
+        0.22515542805194855,
+        0.22436970472335815,
+        0.22357669472694397,
+        0.2227735072374344,
+        0.22195765376091003,
+        0.22112832963466644,
+        0.2202846109867096,
+        0.21942564845085144,
+        0.21854963898658752,
+        0.21765561401844025,
+        0.21674183011054993,
+        0.21580614149570465,
+        0.21484649181365967,
+        0.2138597071170807,
+        0.2128436118364334,
+        0.21179573237895966,
+        0.21071304380893707,
+        0.2095925509929657,
+        0.20843103528022766,
+        0.20722492039203644,
+        0.2059711068868637,
+        0.20466580986976624,
+        0.20330481231212616,
+        0.20188361406326294,
+        0.20039723813533783,
+        0.19884195923805237,
+        0.19721010327339172,
+        0.19549590349197388,
+        0.19369125366210938,
+        0.19178691506385803,
+        0.18976964056491852,
+        0.18762506544589996,
+        0.18533264100551605,
+        0.18286575376987457,
+        0.18019461631774902,
+        0.1772819608449936,
+        0.17408041656017303,
+        0.17052334547042847,
+        0.16650904715061188,
+        0.16187065839767456,
+        0.15630944073200226,
+        0.1492673009634018,
+        0.1396886110305786,
+        0.1258872002363205,
+        0.10561829805374146,
+        0.08073645085096359,
+        0.07064827531576157,
+        0.07120179384946823,
+        0.06680567562580109,
+        0.06076476350426674,
+        0.05385192856192589,
+        0.04552384465932846,
+        0.03548484668135643,
+        0.024529535323381424,
+        0.015022899955511093,
+        0.009043889120221138,
+        0.005975239910185337,
+        0.004268220160156488,
+        0.0031376362312585115,
+        0.0023411931470036507,
+        0.001805933890864253,
+        0.0014677619328722358,
+        0.0012590923579409719,
+        0.0011257306905463338,
+        0.0010322817834094167,
+        0.0009590389672666788,
+        0.000896503624971956,
+        0.0008407948189415038,
+        0.0007908012485131621,
+        0.0007460483466275036,
+        0.0007062563672661781,
+        0.0006710322923026979,
+        0.0006397127290256321,
+        0.0006116707227192819,
+        0.0005863515543751419,
+        0.000563211680855602,
+        0.0005418337532319129,
+        0.000521865498740226,
+        0.0005031506298109889
+      ],
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_tokens": 63,
+      "initialization_seconds": 12.995199124969076,
+      "timings_ms": {
+        "forward_and_loss": {
+          "median": 162.6835205242969,
+          "p95": 171.74002290703356
+        },
+        "backward": {
+          "median": 194.66756252222694,
+          "p95": 203.53336668922566
+        },
+        "process_cpu": {
+          "median": 541.4180000000001,
+          "p95": 555.0677500000031
+        },
+        "adamw": {
+          "median": 1.9101670186500996,
+          "p95": 2.0220437203533947
+        },
+        "step": {
+          "median": 359.2134999926202,
+          "p95": 374.64005627261935
+        }
+      },
+      "effective_tokens_per_second": 175.3831634982936,
+      "peak_rss_bytes": 5064359936,
+      "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+      "initialization_scope": "PyTorch model construction and FP32 base reconstruction",
+      "parameter_bytes": 2293760,
+      "threads": {
+        "torch": 1,
+        "ort_intra": 1,
+        "ort_inter": 1
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      },
+      "ort_optimizer": "disabled",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      }
+    },
+    "chunked": {
+      "mode": "chunked",
+      "provider": "mlx",
+      "segment_target_nodes": null,
+      "lut4_fusion_disabled": false,
+      "mlx_compile_disabled": true,
+      "real": true,
+      "weight_values": "nf4_reconstructed_fp32",
+      "projection_precision": "fp32",
+      "gradient_and_optimizer_dtype": "float32",
+      "base_storage": "packed_nf4_decoder",
+      "warmup": 10,
+      "samples": 100,
+      "losses": [
+        4.561665058135986,
+        4.289608478546143,
+        3.714170455932617,
+        3.064645767211914,
+        2.430623769760132,
+        1.8178768157958984,
+        1.3112916946411133,
+        1.015562891960144,
+        0.6437041759490967,
+        0.43533608317375183,
+        0.31027692556381226,
+        0.2665795683860779,
+        0.2506439685821533,
+        0.2374618947505951,
+        0.49719032645225525,
+        0.24436157941818237,
+        0.23722322285175323,
+        0.23577065765857697,
+        0.23471765220165253,
+        0.23432402312755585,
+        0.23362424969673157,
+        0.23273949325084686,
+        0.23190569877624512,
+        0.23097263276576996,
+        0.22998616099357605,
+        0.22907434403896332,
+        0.22826264798641205,
+        0.22752103209495544,
+        0.22681714594364166,
+        0.22608095407485962,
+        0.22533220052719116,
+        0.22460058331489563,
+        0.22387471795082092,
+        0.22314612567424774,
+        0.22241003811359406,
+        0.22166365385055542,
+        0.2209051102399826,
+        0.22013242542743683,
+        0.21934479475021362,
+        0.21854032576084137,
+        0.2177181839942932,
+        0.21687652170658112,
+        0.21601366996765137,
+        0.21512798964977264,
+        0.21421732008457184,
+        0.21327993273735046,
+        0.21231359243392944,
+        0.21131588518619537,
+        0.21028466522693634,
+        0.2092173993587494,
+        0.20811142027378082,
+        0.206963911652565,
+        0.20577198266983032,
+        0.20453236997127533,
+        0.203241765499115,
+        0.20189648866653442,
+        0.20049235224723816,
+        0.19902531802654266,
+        0.1974906325340271,
+        0.195883110165596,
+        0.1941971480846405,
+        0.1924259513616562,
+        0.19056124985218048,
+        0.18859218060970306,
+        0.1865052431821823,
+        0.18428343534469604,
+        0.18190696835517883,
+        0.17935357987880707,
+        0.17659689486026764,
+        0.17360350489616394,
+        0.1703273057937622,
+        0.16669923067092896,
+        0.16260915994644165,
+        0.15786999464035034,
+        0.1521477848291397,
+        0.14482246339321136,
+        0.13470129668712616,
+        0.119687020778656,
+        0.09688425809144974,
+        0.07051544636487961,
+        0.06471285223960876,
+        0.06512872874736786,
+        0.060530953109264374,
+        0.05366736650466919,
+        0.044439323246479034,
+        0.03273652121424675,
+        0.021819056943058968,
+        0.016366519033908844,
+        0.012955018319189548,
+        0.007861047051846981,
+        0.003911789506673813,
+        0.0022056500893086195,
+        0.001611296203918755,
+        0.0014213200192898512,
+        0.001365917851217091,
+        0.0013420655159279704,
+        0.0013093325542286038,
+        0.0012572170235216618,
+        0.0011902664555236697,
+        0.0011150180362164974,
+        0.0010383273474872112,
+        0.0009653939632698894,
+        0.0008987954934127629,
+        0.0008392179734073579,
+        0.0007862818893045187,
+        0.0007391116232611239,
+        0.0006966903456486762,
+        0.0006580838817171752,
+        0.0006226130644790828,
+        0.0005897367955185473
+      ],
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_tokens": 63,
+      "initialization_seconds": 161.12221187504474,
+      "timings_ms": {
+        "forward_and_loss": {
+          "median": 177.3993750102818,
+          "p95": 187.47490174428094
+        },
+        "backward": {
+          "median": 1328.4179380279966,
+          "p95": 2340.4534922970925
+        },
+        "process_cpu": {
+          "median": 774.864000000008,
+          "p95": 807.7482000000174
+        },
+        "adamw": {
+          "median": 2.814104489516467,
+          "p95": 3.169198270188644
+        },
+        "step": {
+          "median": 1512.0459375320934,
+          "p95": 2520.4006728657987
+        }
+      },
+      "effective_tokens_per_second": 41.665400789890235,
+      "peak_rss_bytes": 8428306432,
+      "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+      "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+      "parameter_bytes": 2293760,
+      "threads": {
+        "torch": 1,
+        "ort_intra": 1,
+        "ort_inter": 1
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      },
+      "ort_optimizer": "disabled",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      },
+      "native_construction": {
+        "session_0": {
+          "factory_seconds": 0.11331049998989329,
+          "segments": 1,
+          "source": "gradient.onnx"
+        },
+        "session_1": {
+          "factory_seconds": 0.09012270800303668,
+          "segments": 1,
+          "source": "forward.onnx"
+        },
+        "session_2": {
+          "factory_seconds": 1.2861500830040313,
+          "segments": 1,
+          "source": "forward.onnx"
+        },
+        "session_3": {
+          "factory_seconds": 3.5479331249953248,
+          "segments": 1,
+          "source": "backward.onnx"
+        }
+      },
+      "cpu_fallback_disabled": true,
+      "library": "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "initializer_bytes_by_session": {
+        "forward": 891289904,
+        "backward": 891289932,
+        "head_forward": 622329856,
+        "head_backward": 622329900
+      },
+      "initializer_scope": "Logical top-level initializer bytes for each execution session",
+      "decoder_storage_bytes": {
+        "original": 1761607680,
+        "packed": 247726080
+      },
+      "nodes": {
+        "forward": 3410,
+        "raw_vjp": 46020,
+        "executed_vjp": 32646
+      },
+      "logical_saved_activation_bytes": 0,
+      "saved_activation_count": 0,
+      "input_view_median_us": 18.229475244879723,
+      "input_view_scope": "Host data-input preparation; adapter preparation is included in forward",
+      "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
+    },
+    "joint": {
+      "mode": "joint",
+      "provider": "mlx",
+      "segment_target_nodes": null,
+      "lut4_fusion_disabled": false,
+      "mlx_compile_disabled": true,
+      "real": true,
+      "weight_values": "nf4_reconstructed_fp32",
+      "projection_precision": "fp32",
+      "gradient_and_optimizer_dtype": "float32",
+      "base_storage": "packed_nf4_decoder",
+      "warmup": 10,
+      "samples": 100,
+      "losses": [
+        4.561665058135986,
+        4.289608955383301,
+        3.7141709327697754,
+        3.0646450519561768,
+        2.4306247234344482,
+        1.8178772926330566,
+        1.3112913370132446,
+        1.0155616998672485,
+        0.6437041163444519,
+        0.435336172580719,
+        0.3102768659591675,
+        0.2665787935256958,
+        0.25064393877983093,
+        0.23746196925640106,
+        0.497221440076828,
+        0.24438543617725372,
+        0.23722976446151733,
+        0.23577649891376495,
+        0.2347303181886673,
+        0.23433803021907806,
+        0.2336398959159851,
+        0.23275817930698395,
+        0.23192712664604187,
+        0.2309928834438324,
+        0.2300058901309967,
+        0.22909291088581085,
+        0.22827990353107452,
+        0.2275369018316269,
+        0.2268320918083191,
+        0.22609646618366241,
+        0.2253466248512268,
+        0.22461369633674622,
+        0.22388651967048645,
+        0.22315651178359985,
+        0.22241899371147156,
+        0.2216711789369583,
+        0.22091101109981537,
+        0.22013704478740692,
+        0.21934765577316284,
+        0.21854189038276672,
+        0.21771804988384247,
+        0.21687477827072144,
+        0.216010183095932,
+        0.21512287855148315,
+        0.21421046555042267,
+        0.2132710963487625,
+        0.2123025804758072,
+        0.21130292117595673,
+        0.21026937663555145,
+        0.20919954776763916,
+        0.20809097588062286,
+        0.20694062113761902,
+        0.20574575662612915,
+        0.20450294017791748,
+        0.2032088190317154,
+        0.20185980200767517,
+        0.2004518210887909,
+        0.19898054003715515,
+        0.19744126498699188,
+        0.19582878053188324,
+        0.19413748383522034,
+        0.19236041605472565,
+        0.19048911333084106,
+        0.18851275742053986,
+        0.18641720712184906,
+        0.18418551981449127,
+        0.18179744482040405,
+        0.17923018336296082,
+        0.17645680904388428,
+        0.17344319820404053,
+        0.17014141380786896,
+        0.16648010909557343,
+        0.16234442591667175,
+        0.15753872692584991,
+        0.15171174705028534,
+        0.14420704543590546,
+        0.1337616890668869,
+        0.1182013526558876,
+        0.09467763453722,
+        0.06921794265508652,
+        0.06512367725372314,
+        0.06500831991434097,
+        0.06015358865261078,
+        0.05316098779439926,
+        0.04375964403152466,
+        0.031964294612407684,
+        0.021317003294825554,
+        0.016165539622306824,
+        0.012665643356740475,
+        0.007520987186580896,
+        0.003737709019333124,
+        0.002143191173672676,
+        0.0015912289964035153,
+        0.0014150631614029408,
+        0.0013633512426167727,
+        0.0013400655006989837,
+        0.001307669677771628,
+        0.0012558778980746865,
+        0.0011879749363288283,
+        0.0011121006682515144,
+        0.0010356645798310637,
+        0.0009634040761739016,
+        0.0008975163218565285,
+        0.0008384811226278543,
+        0.0007858221069909632,
+        0.0007386786164715886,
+        0.0006960987811908126,
+        0.000657299708109349,
+        0.0006216269102878869,
+        0.0005885573336854577
+      ],
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_tokens": 63,
+      "initialization_seconds": 159.29928845801624,
+      "timings_ms": {
+        "loss_and_gradients": {
+          "median": 1362.679479032522,
+          "p95": 2278.812630943139
+        },
+        "gradient_scaling": {
+          "median": 0.6638749910052866,
+          "p95": 0.7252166717080399
+        },
+        "process_cpu": {
+          "median": 686.7580000000117,
+          "p95": 738.7462999999997
+        },
+        "adamw": {
+          "median": 2.6710629754234105,
+          "p95": 3.166893735760823
+        },
+        "step": {
+          "median": 1366.0566460166592,
+          "p95": 2281.999287160579
+        }
+      },
+      "effective_tokens_per_second": 46.118146113270114,
+      "peak_rss_bytes": 6282313728,
+      "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+      "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+      "parameter_bytes": 2293760,
+      "threads": {
+        "torch": 1,
+        "ort_intra": 1,
+        "ort_inter": 1
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      },
+      "ort_optimizer": "disabled",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      },
+      "native_construction": {
+        "session_0": {
+          "factory_seconds": 3.6150386669905856,
+          "segments": 1,
+          "source": "loss_gradient.onnx"
+        }
+      },
+      "cpu_fallback_disabled": true,
+      "library": "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "initializer_bytes_by_session": {
+        "loss_gradient": 891289984
+      },
+      "initializer_scope": "Logical top-level initializer bytes for each execution session",
+      "decoder_storage_bytes": {
+        "original": 1761607680,
+        "packed": 247726080
+      },
+      "nodes": {
+        "forward": 3412,
+        "loss_gradient": 32729
+      },
+      "logical_saved_activation_bytes": 0,
+      "saved_activation_count": 0,
+      "input_view_median_us": 370.2914691530168,
+      "input_view_scope": "Host data/adapter preparation and validation; runtime transfers are included in execution",
+      "autograd_saved_gradient_bytes": 2293760,
+      "public_session_payload_bytes": {
+        "inputs": 2295808,
+        "outputs": 2293764,
+        "scope": "Logical NumPy session arguments and results; excludes internal EP transfers"
+      },
+      "session_execution_ms": {
+        "median": 1361.77950000274,
+        "p95": 2277.938539913157
+      },
+      "timing_scope": "Forward computes loss and gradients; PyTorch backward scales returned gradients",
+      "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
+    }
+  },
+  "executions": [
+    {
+      "mode": "raw",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.benchmark",
+        "--mode",
+        "raw",
+        "--real",
+        "--nf4",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+        "--batch-size",
+        "1",
+        "--warmup",
+        "10",
+        "--samples",
+        "100"
+      ],
+      "source_commit": "b0415d1f79e6278fe4fccf4115cbbcf331e0e150",
+      "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "started": "2026-10-31T21:55:37.514169+00:00",
+      "operational_memory_limit_bytes": 25769803776,
+      "observations": [
+        {
+          "utc": "2026-10-31T21:55:53.404929+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 3543348019.2
+        },
+        {
+          "utc": "2026-10-31T21:56:09.300033+00:00",
+          "current_bytes": 4402341478.4,
+          "peak_bytes": 4402341478.4
+        },
+        {
+          "utc": "2026-10-31T21:56:25.213584+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:56:41.089438+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:56:56.967496+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:57:12.827451+00:00",
+          "current_bytes": 3328599654.4,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:57:28.723362+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:57:44.599177+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:58:00.474082+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:58:16.453364+00:00",
+          "current_bytes": 4509715660.8,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T21:58:32.585807+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T21:58:48.759581+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T21:59:04.885648+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T21:59:20.980045+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T21:59:37.079623+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T21:59:53.175800+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:00:09.302214+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:00:25.413224+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:00:41.516180+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:00:57.646485+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:01:13.747904+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:01:29.907413+00:00",
+          "current_bytes": 6227702579.2,
+          "peak_bytes": 6335076761.6
+        }
+      ],
+      "pid": 80455,
+      "returncode": 0,
+      "finished": "2026-10-31T22:01:44.918242+00:00"
+    },
+    {
+      "mode": "optimized",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.benchmark",
+        "--mode",
+        "optimized",
+        "--real",
+        "--nf4",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+        "--batch-size",
+        "1",
+        "--warmup",
+        "10",
+        "--samples",
+        "100"
+      ],
+      "source_commit": "b0415d1f79e6278fe4fccf4115cbbcf331e0e150",
+      "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "started": "2026-10-31T22:01:44.971252+00:00",
+      "operational_memory_limit_bytes": 25769803776,
+      "observations": [
+        {
+          "utc": "2026-10-31T22:02:00.858038+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 3543348019.2
+        },
+        {
+          "utc": "2026-10-31T22:02:16.746798+00:00",
+          "current_bytes": 4294967296.0,
+          "peak_bytes": 4294967296.0
+        },
+        {
+          "utc": "2026-10-31T22:02:32.617118+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:02:48.499450+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:03:04.371613+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:03:20.233544+00:00",
+          "current_bytes": 3328599654.4,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:03:36.106096+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:03:52.003634+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:04:07.895386+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:04:23.789259+00:00",
+          "current_bytes": 4402341478.4,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:04:39.890186+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:04:55.998388+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:05:12.120335+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:05:28.245982+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:05:44.372918+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:06:00.473170+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:06:16.568603+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:06:32.667996+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:06:48.785857+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:07:04.900796+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        },
+        {
+          "utc": "2026-10-31T22:07:21.011254+00:00",
+          "current_bytes": 6335076761.6,
+          "peak_bytes": 6335076761.6
+        }
+      ],
+      "pid": 81318,
+      "returncode": 0,
+      "finished": "2026-10-31T22:07:36.022150+00:00"
+    },
+    {
+      "mode": "pytorch",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.benchmark",
+        "--mode",
+        "pytorch",
+        "--real",
+        "--nf4",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+        "--batch-size",
+        "1",
+        "--warmup",
+        "10",
+        "--samples",
+        "100"
+      ],
+      "source_commit": "b0415d1f79e6278fe4fccf4115cbbcf331e0e150",
+      "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "started": "2026-10-31T22:09:04.954930+00:00",
+      "operational_memory_limit_bytes": 25769803776,
+      "observations": [
+        {
+          "utc": "2026-10-31T22:09:20.865864+00:00",
+          "current_bytes": 4402341478.4,
+          "peak_bytes": 4402341478.4
+        },
+        {
+          "utc": "2026-10-31T22:09:36.789912+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 4831838208.0
+        },
+        {
+          "utc": "2026-10-31T22:09:52.682476+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 4831838208.0
+        }
+      ],
+      "pid": 82110,
+      "returncode": 0,
+      "finished": "2026-10-31T22:10:07.693321+00:00"
+    },
+    {
+      "mode": "chunked",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.benchmark",
+        "--mode",
+        "chunked",
+        "--real",
+        "--nf4",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+        "--batch-size",
+        "1",
+        "--warmup",
+        "10",
+        "--samples",
+        "100"
+      ],
+      "source_commit": "b0415d1f79e6278fe4fccf4115cbbcf331e0e150",
+      "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "started": "2026-10-31T22:10:07.740161+00:00",
+      "operational_memory_limit_bytes": 25769803776,
+      "observations": [
+        {
+          "utc": "2026-10-31T22:10:23.619718+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 3543348019.2
+        },
+        {
+          "utc": "2026-10-31T22:10:39.523906+00:00",
+          "current_bytes": 4402341478.4,
+          "peak_bytes": 4402341478.4
+        },
+        {
+          "utc": "2026-10-31T22:10:55.435921+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-10-31T22:11:11.360125+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-10-31T22:11:27.284662+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-10-31T22:11:43.205804+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-10-31T22:11:59.129669+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-10-31T22:12:15.036819+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-10-31T22:12:30.965062+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-10-31T22:12:46.954696+00:00",
+          "current_bytes": 5476083302.4,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-10-31T22:13:03.125459+00:00",
+          "current_bytes": 8160437862.4,
+          "peak_bytes": 8160437862.4
+        },
+        {
+          "utc": "2026-10-31T22:13:19.287542+00:00",
+          "current_bytes": 8160437862.4,
+          "peak_bytes": 8160437862.4
+        },
+        {
+          "utc": "2026-10-31T22:13:35.438047+00:00",
+          "current_bytes": 8160437862.4,
+          "peak_bytes": 8160437862.4
+        },
+        {
+          "utc": "2026-10-31T22:13:51.614942+00:00",
+          "current_bytes": 8160437862.4,
+          "peak_bytes": 8160437862.4
+        },
+        {
+          "utc": "2026-10-31T22:14:07.786634+00:00",
+          "current_bytes": 8160437862.4,
+          "peak_bytes": 8160437862.4
+        },
+        {
+          "utc": "2026-10-31T22:14:23.973442+00:00",
+          "current_bytes": 8160437862.4,
+          "peak_bytes": 8160437862.4
+        },
+        {
+          "utc": "2026-10-31T22:14:40.148905+00:00",
+          "current_bytes": 8160437862.4,
+          "peak_bytes": 8160437862.4
+        },
+        {
+          "utc": "2026-10-31T22:14:56.319263+00:00",
+          "current_bytes": 8160437862.4,
+          "peak_bytes": 8160437862.4
+        },
+        {
+          "utc": "2026-10-31T22:15:12.491668+00:00",
+          "current_bytes": 8160437862.4,
+          "peak_bytes": 8160437862.4
+        },
+        {
+          "utc": "2026-10-31T22:15:28.689966+00:00",
+          "current_bytes": 8160437862.4,
+          "peak_bytes": 8160437862.4
+        },
+        {
+          "utc": "2026-10-31T22:15:44.965240+00:00",
+          "current_bytes": 8160437862.4,
+          "peak_bytes": 8160437862.4
+        }
+      ],
+      "pid": 82277,
+      "returncode": 0,
+      "finished": "2026-10-31T22:15:59.976436+00:00"
+    },
+    {
+      "mode": "joint",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.benchmark",
+        "--mode",
+        "joint",
+        "--real",
+        "--nf4",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-lifetimes-target/release/libonnxruntime_mlx_ep.dylib",
+        "--batch-size",
+        "1",
+        "--warmup",
+        "10",
+        "--samples",
+        "100"
+      ],
+      "source_commit": "b0415d1f79e6278fe4fccf4115cbbcf331e0e150",
+      "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+      "library_sha256": "4221186365f03ea48c88999d8918eddca05874c9ecb662b2f4e33709b215b8b1",
+      "started": "2026-10-31T22:16:00.032701+00:00",
+      "operational_memory_limit_bytes": 25769803776,
+      "observations": [
+        {
+          "utc": "2026-10-31T22:16:15.918420+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 3543348019.2
+        },
+        {
+          "utc": "2026-10-31T22:16:31.803212+00:00",
+          "current_bytes": 4294967296.0,
+          "peak_bytes": 4294967296.0
+        },
+        {
+          "utc": "2026-10-31T22:16:47.687814+00:00",
+          "current_bytes": 3865470566.4,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:17:03.565236+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:17:19.462231+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:17:35.359275+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:17:51.276884+00:00",
+          "current_bytes": 3650722201.6,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:18:07.147059+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:18:23.015068+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:18:38.904915+00:00",
+          "current_bytes": 3972844748.8,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-10-31T22:18:54.986281+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T22:19:11.067290+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T22:19:27.155351+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T22:19:43.234852+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T22:19:59.312437+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T22:20:15.384466+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T22:20:31.475022+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T22:20:47.552287+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T22:21:03.641823+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-10-31T22:21:19.705557+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 5583457484.8
+        }
+      ],
+      "pid": 83073,
+      "returncode": 0,
+      "finished": "2026-10-31T22:21:34.716358+00:00"
+    }
+  ],
+  "memory_observation_scope": "Isolated whole benchmark processes; physical footprint sampled with vmmap every 15 seconds, peak RSS from the benchmark process",
+  "loss_implementation": {
+    "pytorch": "PyTorch standard causal mean cross entropy",
+    "raw": "PyTorch standard causal mean cross entropy over ONNX logits",
+    "optimized": "PyTorch standard causal mean cross entropy over ONNX logits",
+    "chunked": "Target-excluded stable ONNX mean cross entropy in 128-row chunks",
+    "joint": "Target-excluded stable ONNX summed cross entropy divided by valid targets"
+  }
+}
