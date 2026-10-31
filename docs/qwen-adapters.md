@@ -1,8 +1,8 @@
 # LoRA adapters, chunked loss and saved activations
 
-The [Mobius Qwen3 workload](qwen-sft.md) has two complementary memory controls:
-bound the output projection by token chunks, or save the primal values needed
-by the exported backward graph.
+The [Mobius Qwen3 workload](qwen-sft.md) offers three execution paths: bound the output
+projection by token chunks, save primal values for a separate backward graph,
+or execute loss and adapter gradients together.
 
 ```bash
 uv run python -m examples.huggingface.sft --mode chunked --save-activations --peft-roundtrip --fp64-audit --output-dir qwen_chunked
@@ -46,6 +46,46 @@ saving `X @ A` needs `4*T*r` logical bytes in FP32 and avoids its `2*T*d*r`
 recomputation FLOPs. The full cut also saves other backward dependencies;
 the benchmark reports their logical extents and the process's measured RSS.
 
+## Joint loss and adapter gradients
+
+```bash
+uv run python -m examples.huggingface.sft --mode joint --nf4 --steps 100 --peft-roundtrip --output-dir qwen_joint
+uv run python -m examples.huggingface.benchmark --mode joint --nf4 --warmup 10 --samples 100
+```
+
+The joint path adds causal cross-entropy to the forward graph, then asks
+`onnax.grad` for every adapter parameter's gradient. ONNXScript optimizes the
+combined graph. One persistent ONNX session returns the summed token loss
+and all A/B gradients; intermediate activations stay inside that execution.
+
+For valid shifted targets $\mathcal V$, the exported scalar is
+
+$$
+L_{\mathrm{sum}}=\sum_{t\in\mathcal V}-\log p(y_t\mid x_{\le t}).
+$$
+
+The PyTorch wrapper divides this sum by the effective token count. Backward
+multiplies the returned gradients by the upstream scalar, so Trainer can
+normalize accumulated microbatches with different lengths. Ignored labels
+(`-100`) contribute zero. A sequence with no shifted targets also returns
+zero loss and gradients.
+
+Trainer owns the adapter tensors, AdamW state, scheduler and checkpoints.
+Calling the wrapper without labels creates a temporary forward session for
+full-logit prediction. Training continues to reuse the joint session.
+
+The export directory contains `loss_gradient.onnx` and its external data,
+`adapter.npz`, and `interface.json`. The versioned interface maps each parameter
+to its gradient output, shape and dtype and records the frozen-weight hashes.
+A bound `forward.onnx` restores the trained adapter values for inference.
+Checkpoint loading checks the frozen base identity before restoring parameters.
+
+The benchmark reports joint loss/gradient execution, PyTorch gradient scaling,
+AdamW and complete-step median/P95, plus process peak RSS and logical session
+input/output bytes. It constructs the selected provider's sessions directly.
+Run each path in its own process with the same provider, weights, batch and
+thread settings to compare time and memory.
+
 ## PEFT files
 
 The SFT command writes `adapter/adapter_model.safetensors`, `adapter_config.json`
@@ -61,7 +101,7 @@ parameter. The example uses one adapter, uniform rank/alpha and zero dropout.
 ## Measurements
 
 The benchmark starts a separate process for PyTorch, raw ONNX, optimized ONNX,
-saved activations and chunked loss. Defaults are batch four, length 64, FP32,
+saved activations, chunked loss and joint loss/gradients. Defaults are batch four, length 64, FP32,
 one CPU thread, 10 warmups and 100 measured AdamW updates. It reports valid
 tokens/s, forward/loss, backward, AdamW, complete-step median/P95 and peak RSS.
 RSS includes construction, runtime and optimizer allocations. CPU input-view

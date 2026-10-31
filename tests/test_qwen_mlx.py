@@ -10,7 +10,7 @@ import pytest
 @pytest.mark.skipif(
     os.environ.get("ONNAX_TEST_MLX_EP") != "1", reason="Native MLX Qwen opt-in"
 )
-@pytest.mark.parametrize("mode", ["full", "chunked"])
+@pytest.mark.parametrize("mode", ["full", "chunked", "joint"])
 def test_native_sft_checkpoint_resume(tmp_path, monkeypatch, mode):
     import subprocess
     import sys
