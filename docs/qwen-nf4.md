@@ -202,6 +202,15 @@ Replaying every captured component matches this formula within FP32 rounding
 bounds. Near-zero gradient sensitivity remains visible in the parameter
 comparison.
 
+The analytic hard-CE derivative also passes all 112 adapter gradient checks
+at the initial and trained states, with maximum errors of 2.38e-7 and 9.91e-7.
+Independent fresh Adam checks still exceed tolerance for 48 and 87 tensors.
+The [analytic CE control report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-analytic-ce-controls-m1max.json)
+records the exact gradients and first-step formulas at the largest parameter
+differences. This loss fix removes the non-target pivot cancellation described
+in [FP32 loss accuracy](softmax-precision.md); the remaining update drift
+requires further localization.
+
 The native MLX validation uses the same two-layer NF4 Qwen and independently
 updates its ONNX and Transformers adapters for four AdamW steps. It compares
 logits, token loss, all adapter gradients and parameters at every step. ONNX
