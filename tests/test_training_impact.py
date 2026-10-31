@@ -10,7 +10,7 @@ pytest.importorskip("trl")
 pytest.importorskip("torch")
 
 
-def test_independent_quality_runs_share_initialization_and_data():
+def test_independent_quality_runs_share_initialization_and_data(tmp_path):
     from examples.huggingface.training_impact import run
 
     report = run(
@@ -20,8 +20,17 @@ def test_independent_quality_runs_share_initialization_and_data():
         interval=1,
         microbatch=2,
         accumulation=2,
+        capture_path=tmp_path / "snapshots.npz",
     )
     assert report["frozen_unchanged"]
+    assert report["capture"]["parameter_order"] == sorted(report["capture"]["parameter_order"])
+    with np.load(tmp_path / "snapshots.npz", allow_pickle=False) as arrays:
+        assert len(arrays.files) == 12
+        assert arrays["torch_cpu__17__parameters"].dtype == np.float32
+        assert (
+            arrays["torch_cpu__17__gradient_1"].shape
+            == arrays["onnx_reference__17__gradient_1"].shape
+        )
     assert report["train_lines"] > 0 and report["heldout_lines"] > 0
     assert len(report["trials"]) == 4
     for trial in report["trials"]:

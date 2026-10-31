@@ -10,6 +10,7 @@ import importlib.metadata
 import importlib.util
 import itertools
 import json
+import os
 import platform
 import sys
 
@@ -18,6 +19,7 @@ import torch
 
 from examples.huggingface.bridge import frozen_hashes
 from examples.huggingface.mixed_precision import reference_projections
+from examples.huggingface.qwen import REVISION
 from examples.huggingface.reference_head import pairwise_head
 from examples.huggingface.reference_losses import stable_token_loss
 from examples.huggingface.sft import OnnxQwen3, _prepare_graph, texts, tokenizer
@@ -180,6 +182,12 @@ def _trial(
             snapshots[step] = vector.cpu().numpy().copy()
         optimizer.step()
         losses.append(total)
+        if step == 1 or step % max(1, interval // 4) == 0 or step == steps:
+            print(
+                json.dumps({"engine": engine, "seed": seed, "step": step, "loss": total}),
+                file=sys.stderr,
+                flush=True,
+            )
         if step % interval == 0 or step == steps:
             curves.append({"step": step, "loss": _evaluate(model, evaluation, engine)})
     final = (
@@ -236,6 +244,7 @@ def run(
     microbatch=1,
     accumulation=4,
     interval=20,
+    capture_path=None,
 ):
     if not engines or len(set(engines)) != len(engines) or set(engines) - set(ENGINES):
         raise ValueError("Select unique supported engines")
@@ -270,6 +279,7 @@ def run(
     for engine in selected:
         print(json.dumps({"engine": engine, "stage": "build"}), file=sys.stderr, flush=True)
         model, parameters, base = _build(engine, real, precision, library)
+        parameter_order = list(parameters)
         frozen = _frozen(model, engine)
         context = (
             pairwise_head(model, projection_precision=precision)
@@ -337,16 +347,58 @@ def run(
             "min": min(values),
             "max": max(values),
         }
+    capture = None
+    if capture_path is not None:
+        arrays = {}
+        for (engine, seed), (gradients, parameters) in captures.items():
+            arrays[f"{engine}__{seed}__parameters"] = parameters
+            arrays.update(
+                {
+                    f"{engine}__{seed}__gradient_{step}": value
+                    for step, value in gradients.items()
+                }
+            )
+        with open(capture_path, "wb") as stream:
+            np.savez(stream, **arrays)
+        with open(capture_path, "rb") as stream:
+            digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        capture = {"version": 1, "sha256": digest, "parameter_order": parameter_order}
+    library_hash = None
+    if library is not None and "mlx" in selected:
+        with open(library, "rb") as stream:
+            library_hash = hashlib.file_digest(stream, "sha256").hexdigest()
+    versions = {}
+    for name in (
+        "onnax",
+        "torch",
+        "numpy",
+        "onnxruntime",
+        "onnxscript",
+        "transformers",
+        "mobius-onnx",
+        "onnxruntime-ep-mlx",
+        "mlx",
+    ):
+        try:
+            versions[name] = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
+            versions[name] = None
     return {
         "model": "Qwen3-0.6B" if real else "tiny Qwen3",
         "nf4": True,
+        "revision": REVISION if real else None,
+        "base_seed": 20261029,
         "projection_precision": precision,
+        "library_sha256": library_hash,
+        "mlx_compile_disabled": os.environ.get("ONNXRUNTIME_EP_MLX_NO_COMPILE") == "1",
+        "capture": capture,
         "engines": selected,
         "unavailable_engines": [engine for engine in engines if not available[engine]],
         "seeds": list(seeds),
         "steps": steps,
         "microbatch": microbatch,
         "accumulation": accumulation,
+        "evaluation_interval": interval,
         "optimizer": {
             "name": "AdamW",
             "lr": 0.003,
@@ -367,10 +419,15 @@ def run(
         "measurement_scope": "Training-quality experiment with host snapshots for gradient comparison",
         "ort_optimizer": "disabled",
         "torch_float32_matmul_precision": torch.get_float32_matmul_precision(),
+        "cuda_bf16_reduced_precision_reduction": torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction
+        if "torch_cuda" in selected and precision == "bf16"
+        else None,
         "platform": platform.platform(),
-        "versions": {
-            name: importlib.metadata.version(name)
-            for name in ("torch", "onnxruntime", "onnxscript", "transformers", "mobius-onnx")
+        "versions": versions,
+        "hardware": {
+            "cpu_architecture": platform.machine(),
+            "logical_cpu_count": os.cpu_count(),
+            "cuda_device": torch.cuda.get_device_name(0) if "torch_cuda" in selected else None,
         },
         "validation_summary": summaries,
         "comparisons": comparisons,
@@ -386,6 +443,12 @@ def main():
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="bf16")
     parser.add_argument("--library")
+    parser.add_argument("--microbatch", type=int, default=1)
+    parser.add_argument("--accumulation", type=int, default=4)
+    parser.add_argument("--interval", type=int, default=20)
+    parser.add_argument(
+        "--capture", help="Save FP32 gradient snapshots and final adapters as NPZ"
+    )
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     report = run(
@@ -395,6 +458,10 @@ def main():
         real=args.real,
         precision=args.projection_precision,
         library=args.library,
+        capture_path=args.capture,
+        microbatch=args.microbatch,
+        accumulation=args.accumulation,
+        interval=args.interval,
     )
     with open(args.output, "w") as stream:
         json.dump(report, stream, indent=2, allow_nan=False)

@@ -104,9 +104,15 @@ output-head reduction. With pairwise FP32 head accumulation, all 112 adapter
 gradients pass in all three states at the original tolerance. The saved,
 optimized joint loss/gradient module now also matches the independent stable
 loss and all 112 gradients across these states, with its 532 frozen hashes
-verified. Next resolve independent Transformers forward differences and
-qualify the remaining update trajectories. Scalar Adam replay identifies the
-tiny nonzero-B fresh-update gap as amplification of a 1.39e-11 gradient difference.
+verified. Scalar Adam replay identifies the tiny nonzero-B fresh-update gap
+as amplification of a 1.39e-11 gradient difference.
+
+The [training-quality baseline](training-quality.md) now compares five independent
+seeds across PyTorch CPU, ReferenceEvaluator CPU and MLX for 100 tiny NF4/BF16
+updates. The maximum paired PyTorch/MLX held-out loss gap is 0.000209, compared
+with a seed standard deviation around 0.0037. Next measure the real model and
+CPU/CUDA baseline under matched training settings. Component-level numerical
+checks remain available alongside validation quality and seed variation.
 Measured tensor lifetimes
 and the head memory curve will guide recomputation boundaries.
 

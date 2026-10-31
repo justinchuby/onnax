@@ -10,6 +10,10 @@ uv run python -m examples.huggingface.sft --output-dir qwen_tiny
 uv run python -m examples.huggingface.sft --real --diagnose-rounding --output-dir qwen_real
 ```
 
+Compare held-out loss across runtimes and independent seeds with the
+[training-quality experiment](training-quality.md). Its paired runs match the
+frozen base, initial adapters and data schedule.
+
 ## Model and training graph
 
 The offline model has two layers, hidden size 64, intermediate size 128,
