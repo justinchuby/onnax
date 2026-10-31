@@ -81,8 +81,8 @@ The independently evolving trajectories diverge more than in the tiny experiment
 Gradient cosine similarities start above 0.9997; by step 30 they are 0.892, 0.877
 and -0.076 for seeds 17, 29 and 43. These snapshots evaluate different parameter
 states. The [fixed-primal audit](qwen-runtime-audit.md) compares derivatives at a
-shared state. A shared-parameter replay of the quality snapshots is the next step
-to separate evaluation differences from trajectory divergence.
+shared state. The shared-parameter replay below separates evaluation differences from
+trajectory divergence.
 
 All frozen-base checks pass. Both runs exit successfully. CUDA was unavailable
 on this host. The {download}`full comparison report
@@ -157,3 +157,24 @@ Same-engine replay checks whether the saved adapters reproduce their recorded
 validation losses. Cross-engine replay holds the adapters fixed while comparing
 loss and gradient direction. Evaluating both trained adapters on one engine then
 shows the effect of their different parameter trajectories.
+
+### Recorded shared-state replay
+
+All six final adapter states were evaluated on both CPU and MLX. Same-engine
+replay reproduces every saved validation loss exactly. At shared parameters,
+the largest CPU/MLX held-out loss gap is **0.014166**. For seed 29, evaluating
+both trained adapters on CPU retains a loss gap of **0.410466**, compared with
+0.424632 when each adapter is evaluated on its training runtime. Most of this
+seed's final quality gap therefore persists under a common evaluator.
+
+Shared-state gradient cosine similarities range from **0.988867 to 0.999676**;
+relative L2 differences range from **0.025454 to 0.151191**. These common-parameter
+gradients differ less in direction than the independently evolving step-30
+trajectories. The FP32 training control keeps the data and optimizer fixed while
+changing projection precision to examine the role of BF16 computation.
+
+The {download}`shared-state report
+<../examples/huggingface/reports/qwen3-nf4-bf16-shared-state-replay-m1max.json>`
+contains every paired metric, component result, parameter/capture checksum and
+execution journal. Both processes completed successfully, preserved frozen
+weights and used matching computation-source hashes.

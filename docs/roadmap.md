@@ -113,9 +113,9 @@ updates. The maximum paired PyTorch/MLX held-out loss gap is 0.000209, compared
 with a seed standard deviation around 0.0037. Three real-model seeds complete
 30 updates per engine: final validation loss averages 7.211 on CPU and 7.384 on
 MLX, with a maximum paired gap of 0.425. Both curves improve through step 10
-and then overfit the small corpus. Next replay shared parameter snapshots to
-separate evaluation differences from trajectory divergence, and measure the
-CPU/CUDA baseline. Component-level numerical
+and then overfit the small corpus. Shared-parameter replay limits the largest evaluation loss gap to 0.0142;
+shared-state gradient cosine ranges from 0.9889 to 0.9997. Next complete the
+matched FP32 training control and measure the CPU/CUDA baseline. Component-level numerical
 checks remain available alongside validation quality and seed variation.
 Measured tensor lifetimes
 and the head memory curve will guide recomputation boundaries.
