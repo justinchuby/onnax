@@ -202,6 +202,26 @@ class OnnxQwen3(PreTrainedModel):
         return CausalLMOutput(loss=loss, logits=logits)
 
 
+def _prepare_graph(real=False, *, nf4=False, projection_precision="fp32"):
+    """Build one canonical Mobius source and matching reconstructed reference."""
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 projection precision")
+    reference = reference_model(real)
+    base = build_base(reference)
+    adapted, params, mapping = inject(base)
+    graph = decompose(adapted)
+    quantization = None
+    if nf4:
+        from examples.huggingface.nf4 import lower_decoder
+
+        graph, quantization = lower_decoder(graph, reference, precision=projection_precision)
+    if projection_precision == "bf16":
+        from examples.huggingface.mixed_precision import bf16_projections
+
+        graph = bf16_projections(graph)
+    return reference, graph, params, mapping, quantization
+
+
 def prepare(
     real=False,
     *,
@@ -217,19 +237,9 @@ def prepare(
         raise ValueError("Expected fp32 or bf16 projection precision")
     if projection_precision == "bf16" and mode != "joint":
         raise ValueError("BF16 projection training uses joint execution")
-    reference = reference_model(real)
-    base = build_base(reference)
-    adapted, params, mapping = inject(base)
-    graph = decompose(adapted)
-    quantization = None
-    if nf4:
-        from examples.huggingface.nf4 import lower_decoder
-
-        graph, quantization = lower_decoder(graph, reference, precision=projection_precision)
-    if projection_precision == "bf16":
-        from examples.huggingface.mixed_precision import bf16_projections
-
-        graph = bf16_projections(graph)
+    reference, graph, params, mapping, quantization = _prepare_graph(
+        real, nf4=nf4, projection_precision=projection_precision
+    )
     model = OnnxQwen3(
         reference.config,
         graph,

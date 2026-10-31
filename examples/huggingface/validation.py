@@ -21,10 +21,14 @@ class TorchLora(torch.nn.Module):
 
 
 def add_reference_adapters(reference, model):
+    return add_reference_parameters(reference, model.onnx.arrays(), model.mapping)
+
+
+def add_reference_parameters(reference, arrays, mapping):
+    """Install adapters from the source parameter arrays and module mapping."""
     for p in reference.parameters():
         p.requires_grad_(False)
-    arrays = model.onnx.arrays()
-    for row in model.mapping:
+    for row in mapping:
         parent, name = row["module"].rsplit(".", 1)
         module = reference.get_submodule(parent)
         setattr(
