@@ -75,6 +75,9 @@ def test_native_sft_checkpoint_resume(tmp_path, monkeypatch, mode):
     subprocess.run(command, check=True, capture_output=True, text=True)
     replay = verify(first, resumed, step=4)
     assert replay["adapter_bitwise_equal"] and replay["optimizer_bitwise_equal"]
+    if mode == "joint":
+        assert replay["export_load_loss_gradients_bitwise_equal"]
+        assert replay["exported_gradient_tensors"] == replay["adapter_tensors"]
 
 
 @pytest.mark.skipif(

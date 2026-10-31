@@ -42,6 +42,27 @@ def _equal_tree(a, b):
         raise AssertionError(f"State values differ: {a} versus {b}")
 
 
+def _training_outputs(directory, interface, feeds):
+    labels = interface["causal_loss"]["labels"]
+    inputs = {**feeds, labels: feeds["input_ids"].copy()}
+    with np.load(os.path.join(directory, "export/adapter.npz")) as parameters:
+        for row in interface["parameters"]:
+            value = parameters[row["name"]]
+            if value.dtype != np.float32 or list(value.shape) != row["shape"]:
+                raise AssertionError(f"Exported parameter interface differs: {row['name']}")
+            inputs[row["name"]] = value
+    names = [interface["output"], *(row["gradient"] for row in interface["parameters"])]
+    executor = session(os.path.join(directory, "export", interface["model"]))
+    values = executor.run(names, inputs)
+    shapes = [[], *(row["shape"] for row in interface["parameters"])]
+    for name, value, shape in zip(names, values, shapes, strict=True):
+        if value.dtype != np.float32 or list(value.shape) != shape:
+            raise AssertionError(f"Exported training output interface differs: {name}")
+        if not np.isfinite(value).all():
+            raise AssertionError(f"Nonfinite exported training output: {name}")
+    return values
+
+
 def verify(first, replay, *, step=30):
     with (
         np.load(os.path.join(first, "export/adapter.npz")) as a,
@@ -101,6 +122,14 @@ def verify(first, replay, *, step=30):
         "frozen_hashes_equal": True,
         "export_load_outputs_bitwise_equal": True,
     }
+    if interface[0].get("kind") == "loss_gradient":
+        training = [
+            _training_outputs(directory, interface[0], feeds) for directory in (first, replay)
+        ]
+        for x, y in zip(*training, strict=True):
+            _equal_array(x, y)
+        result["export_load_loss_gradients_bitwise_equal"] = True
+        result["exported_gradient_tensors"] = len(training[0]) - 1
     return result
 
 

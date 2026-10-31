@@ -79,6 +79,9 @@ The export directory contains `loss_gradient.onnx` and its external data,
 to its gradient output, shape and dtype and records the frozen-weight hashes.
 A bound `forward.onnx` restores the trained adapter values for inference.
 Checkpoint loading checks the frozen base identity before restoring parameters.
+The replay verifier reloads both forward and loss/gradient artifacts on ORT CPU
+and compares every output byte after fresh-process checkpoint recovery. It also
+checks adapter values, AdamW moments and scheduler state.
 
 Use the numerical audit to compare every update with the corresponding
 Transformers model. It also evaluates the reference at the ONNX parameters,

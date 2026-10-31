@@ -113,6 +113,7 @@ def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4):
     import sys
 
     run(str(tmp_path), mode=mode, nf4=nf4)
+    resumed = tmp_path / "resumed"
     with np.load(tmp_path / "export" / "adapter.npz") as data:
         expected = {n: data[n].copy() for n in data.files}
     subprocess.run(
@@ -121,7 +122,7 @@ def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4):
             "-m",
             "examples.huggingface.sft",
             "--output-dir",
-            str(tmp_path),
+            str(resumed),
             "--resume",
             os.fspath(tmp_path / "checkpoint-50"),
             "--mode",
@@ -132,9 +133,18 @@ def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4):
         capture_output=True,
         text=True,
     )
-    with np.load(tmp_path / "export" / "adapter.npz") as data:
+    with np.load(resumed / "export" / "adapter.npz") as data:
         for n, value in expected.items():
             np.testing.assert_array_equal(data[n], value)
+
+    from examples.huggingface.replay import verify
+
+    replay = verify(str(tmp_path), str(resumed), step=100)
+    assert replay["optimizer_bitwise_equal"]
+    assert replay["export_load_outputs_bitwise_equal"]
+    if mode == "joint":
+        assert replay["export_load_loss_gradients_bitwise_equal"]
+        assert replay["exported_gradient_tensors"] == len(expected)
 
 
 def test_noncontiguous_position_ids(workload):
