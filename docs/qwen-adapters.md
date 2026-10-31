@@ -94,6 +94,23 @@ bounds graph size per runtime session. Both paths use the same parameter
 mapping, FP32 arithmetic and `rtol=1e-4, atol=1e-6` checks. The CLI saves all
 per-step failures and exits nonzero when a check fails.
 
+The 100-step tiny NF4 audit at the original tolerance gives:
+
+| Check | ORT CPU | Native MLX |
+| --- | --- | --- |
+| Same-parameter logits, loss and all gradients | All 100 pass | All 100 pass |
+| Independently updated parameters | All 100 pass | Steps 1–94 pass; 95–100 fail |
+| Independent trajectory loss | All 100 pass | All 100 pass |
+| First independent gradient failure | Step 87 | Step 83 |
+| First independent logit failure | Step 93 | Step 92 |
+
+Frozen buffers remain unchanged. These results separate agreement at identical
+parameters from differences accumulated along two training trajectories. The
+[CPU report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-nf4-joint-cpu-100.json)
+and [MLX report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-nf4-joint-mlx-100.json)
+retain every step and failed tensor. The MLX parameter divergence remains part
+of the FP32 qualification work.
+
 The benchmark reports joint loss/gradient execution, PyTorch gradient scaling,
 AdamW and complete-step median/P95, plus process peak RSS and logical session
 input/output bytes. It constructs the selected provider's sessions directly.
