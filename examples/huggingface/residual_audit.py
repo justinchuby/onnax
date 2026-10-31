@@ -100,6 +100,8 @@ def worker(directory, variant, *, warmup, samples):
 
 
 def run(*, real=False, nf4=False, warmup=10, samples=100):
+    from examples.huggingface.benchmark import hardware
+
     if warmup < 0 or samples < 1:
         raise ValueError("Expected nonnegative warmup and positive sample counts")
     torch.set_num_threads(1)
@@ -216,6 +218,11 @@ def run(*, real=False, nf4=False, warmup=10, samples=100):
         "model": "Qwen3-0.6B" if real else "tiny Qwen3",
         "revision": REVISION if real else None,
         "nf4": nf4,
+        "hardware": hardware(),
+        "parameter_bytes": sum(value.nbytes for value in params.values()),
+        "compute_dtype": "float32",
+        "batch_size": 1,
+        "sequence_length": 64,
         "model_build_seconds": model_build_seconds,
         "derivative_build_seconds": derivative_build_seconds,
         "variants": variants,
@@ -228,7 +235,15 @@ def run(*, real=False, nf4=False, warmup=10, samples=100):
         "threads": 1,
         "versions": {
             name: importlib.metadata.version(name)
-            for name in ("onnax", "onnxruntime", "torch", "onnxscript", "onnx-ir")
+            for name in (
+                "onnax",
+                "onnxruntime",
+                "torch",
+                "onnxscript",
+                "onnx-ir",
+                "numpy",
+                "mobius-onnx",
+            )
         },
         "platform": platform.platform(),
     }
