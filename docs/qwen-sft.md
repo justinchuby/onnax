@@ -125,9 +125,9 @@ results, original tolerances and experiment script are in
 `reports/qwen3-nf4-bf16-accumulation-control-m1max.json`.
 The [local derivative audit](qwen-runtime-audit.md) then checks identical
 intermediate inputs and incoming cotangents. All 3,522 local input contributions
-pass at zero B, nonzero B and the trained step-30 adapter state. End-to-end
-qualification now needs to connect these local checks to full-graph gradient
-accumulation and forward rounding propagation.
+pass at zero B, nonzero B and the trained step-30 adapter state. Independent full-graph recomposition still exceeds the original tolerance for
+39/51/108 adapter tensors across these states. The audit now records both local
+and composed errors; long-dimension accumulation is the next diagnostic.
 
 Inspect projection inputs, outputs and incoming gradients at the same parameter
 state with:

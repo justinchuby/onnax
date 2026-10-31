@@ -13,6 +13,7 @@ from collections import Counter
 from unittest.mock import patch
 
 import numpy as np
+import onnx_ir as ir
 import torch
 
 import onnax
@@ -89,6 +90,8 @@ def trace(model, names):
             exposed.add(value.name)
 
     for node, seeds, contributions in probes:
+        for output in node.outputs:
+            expose(output, output)
         for value in node.inputs:
             if value is not None:
                 expose(value, value)
@@ -230,6 +233,81 @@ def check(probes, observed, constants):
     return {"operators": summaries, "failed_partials": len(failures), "failures": failures}
 
 
+def compose(model, names, observed, constants, seed, derivative_outputs):
+    """Independently reverse the primal graph using captured operand values.
+
+    Reachability and fan-in are computed from the primal graph. Generated rule
+    contributions and observed intermediate cotangents are not used.
+    """
+
+    def array(value):
+        return (
+            observed[value.name] if value.name in observed else constants[value.name].numpy()
+        )
+
+    active = set(names)
+    for node in model.graph:
+        if any(value is not None and value.name in active for value in node.inputs):
+            active.update(
+                value.name
+                for value in node.outputs
+                if value.dtype in (ir.DataType.FLOAT, ir.DataType.DOUBLE)
+            )
+    pending = {"logits": torch.tensor(seed)}
+    nodes = additions = 0
+    for node in reversed(list(model.graph)):
+        if not any(value.name in pending for value in node.outputs):
+            continue
+        indices = [
+            i
+            for i, value in enumerate(node.inputs)
+            if value is not None and value.name in active
+        ]
+        seeds = tuple(pending.pop(value.name, None) for value in node.outputs)
+        if not indices:
+            continue
+        seeds = tuple(
+            value if value is not None else torch.zeros_like(torch.tensor(array(output)))
+            for value, output in zip(seeds, node.outputs, strict=True)
+        )
+        operands = [
+            torch.tensor(array(value), requires_grad=i in indices)
+            if value is not None
+            else None
+            for i, value in enumerate(node.inputs)
+        ]
+        output = reference_output(node, operands)
+        gradients = torch.autograd.grad(
+            (output,) if isinstance(output, torch.Tensor) else tuple(output),
+            [operands[i] for i in indices],
+            seeds,
+        )
+        nodes += 1
+        for index, gradient in zip(indices, gradients, strict=True):
+            name = node.inputs[index].name
+            if name in pending:
+                pending[name] = pending[name] + gradient
+                additions += 1
+            else:
+                pending[name] = gradient
+    rows = []
+    for name, output in zip(names, derivative_outputs, strict=True):
+        actual = observed[output.name]
+        expected = pending[name].numpy() if name in pending else np.zeros_like(actual)
+        if actual.shape != expected.shape or actual.dtype != expected.dtype:
+            raise AssertionError(f"Composed gradient interface mismatch: {name}")
+        if not np.isfinite(actual).all() or not np.isfinite(expected).all():
+            raise AssertionError(f"Nonfinite composed gradient: {name}")
+        rows.append({"parameter": name, **compare(actual, expected)})
+    return {
+        "active_nodes": nodes,
+        "fan_in_additions": additions,
+        "parameters": len(rows),
+        "failed_parameters": sum(row["violations"] > 0 for row in rows),
+        "rows": rows,
+    }
+
+
 def run(
     *,
     real=False,
@@ -277,6 +355,9 @@ def run(
     del reference
     joint, seed_name, probes, unchecked = trace(model, params)
     constants = {name: value.const_value for name, value in joint.graph.initializers.items()}
+    derivative_outputs = list(joint.graph.outputs)[
+        len(model.graph.outputs) : len(model.graph.outputs) + len(params)
+    ]
     ids = np.arange(3, 67, dtype=np.int64)[None]
     feeds = {
         "input_ids": ids,
@@ -330,6 +411,14 @@ def run(
                     **state,
                     "loss": float(loss.detach()),
                     **check(probes, observed, constants),
+                    "composition": compose(
+                        model,
+                        params,
+                        observed,
+                        constants,
+                        arguments[seed_name],
+                        derivative_outputs,
+                    ),
                 }
             )
     return {

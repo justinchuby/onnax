@@ -22,6 +22,8 @@ def test_tiny_nf4_all_active_pullbacks():
     assert report["covered_nodes"] == 160
     for state in report["states"]:
         assert state["failed_partials"] == 0
+        assert state["composition"]["failed_parameters"] == 0
+        assert state["composition"]["active_nodes"] == report["covered_nodes"]
         assert state["operators"]["NF4MatMul"]["nodes"] == 11
         assert state["operators"]["Split"]["input_partials"] > 0
     assert [state["adapter_b"] for state in report["states"]] == [0.0, 0.01]
@@ -105,7 +107,43 @@ def test_bf16_local_pullbacks_at_observed_primals(nf4, provider):
     assert report["unchecked_active_nodes"] == {}
     for state in report["states"]:
         assert state["failed_partials"] == 0, state["failures"]
+        assert state["composition"]["failed_parameters"] == 0, state["composition"]
+        assert state["composition"]["active_nodes"] == report["covered_nodes"]
+        assert state["composition"]["fan_in_additions"] > 0
         assert state["operators"]["MatMulBF16"]["input_partials"] > 0
         if nf4:
             assert state["operators"]["NF4MatMulBF16"]["nodes"] == 11
     assert [state["adapter_b"] for state in report["states"]] == [0.0, 0.01]
+
+
+def test_composition_detects_bad_final_fan_in_with_correct_local_partials():
+    from examples.huggingface.local_vjp_audit import check, compose, trace
+    from examples.huggingface.rms_audit import diagnostic_session
+
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[2, 3])
+    weight = ir.val("weight", const_value=ir.tensor(np.ones((3, 4), np.float32)))
+    tape = ir.tape.Tape()
+    product = tape.op("MatMul", [x, weight])
+    product.name, product.dtype, product.shape = "product", ir.DataType.FLOAT, ir.Shape([2, 4])
+    y = tape.op("Add", [product, product])
+    y.name, y.dtype, y.shape = "logits", ir.DataType.FLOAT, ir.Shape([2, 4])
+    model = ir.Model(
+        ir.Graph([x], [y], nodes=tape.nodes, initializers=[weight], opset_imports={"": 18}),
+        ir_version=10,
+    )
+    joint, seed, probes, _ = trace(model, ["x"])
+    derivative = joint.graph.outputs[1]
+    executor = diagnostic_session(ir.to_proto(joint).SerializeToString())
+    upstream = np.ones((2, 4), np.float32)
+    values = executor.run(None, {"x": np.ones((2, 3), np.float32), seed: upstream})
+    observed = dict(zip([v.name for v in joint.graph.outputs], values, strict=True))
+    constants = {"weight": weight.const_value}
+    result = compose(model, ["x"], observed, constants, upstream, [derivative])
+    assert result["active_nodes"] == 2
+    assert result["fan_in_additions"] == 1
+    assert result["failed_parameters"] == 0
+    observed[derivative.name] = observed[derivative.name] / np.float32(2)
+    assert check(probes, observed, constants)["failed_partials"] == 0
+    result = compose(model, ["x"], observed, constants, upstream, [derivative])
+    assert result["failed_parameters"] == 1
+    assert result["rows"][0]["max_abs"] == 4

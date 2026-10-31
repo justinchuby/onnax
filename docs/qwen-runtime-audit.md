@@ -108,6 +108,15 @@ the archive hash. Use `--provider reference` for offline tiny-model checks.
 The BF16 oracle rounds captured primal operands before FP32 adjoint arithmetic;
 NF4 weights are decoded from the captured packed codes and scales.
 
+The report also independently composes the local pullbacks. Starting from the
+logits' loss seed, it traverses the primal graph in reverse, computes PyTorch
+input gradients at captured forward values and accumulates shared-input
+contributions. Reachability comes from the primal graph; intermediate ONNX
+cotangents and generated local contributions are excluded from this calculation.
+`composition` records active nodes, fan-in additions and every adapter comparison.
+A branch regression verifies that this check catches a missing final contribution
+even when all local contributions are correct.
+
 The command builds one derivative graph and reuses its forward and reverse
 sessions for both adapter states. B starts at zero in the first state; the
 second fills B with 0.01, activating gradients for A as well. The upstream
@@ -135,6 +144,15 @@ frozen NF4/BF16 projections and 113 BF16 products. All contributions pass
 absolute local difference is 9.57e-7, 9.50e-7 and 1.91e-6 respectively.
 The report records captured-state and library hashes. The BF16 negative-control
 test also detects a deliberately doubled derivative.
+
+The independent {download}`composed BF16 report <../examples/huggingface/reports/qwen3-nf4-bf16-composed-vjp-m1max.json>`
+traverses all 2,776 active operations and performs 580 fan-in additions per state.
+Despite all local checks passing, 39, 51 and 108 of the 112 adapter gradients
+exceed the original tolerance at zero B, nonzero B and the step-30 adapter.
+Maximum absolute errors are 1.02e-5, 1.02e-5 and 8.65e-5. The largest local
+BF16 product input-gradient difference is below 1e-6 but has relative L2 error
+around 1.1e-4. The next diagnostic isolates long-dimension matrix accumulation
+against a scalar dot-product oracle.
 
 This report checks operation pullbacks at observed activations. The paired audit
 above tracks the complete-model gradient comparison with Transformers.

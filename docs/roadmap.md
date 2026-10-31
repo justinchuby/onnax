@@ -98,7 +98,9 @@ differences and complete independent FP32 update qualification. Shared-input
 projection controls distinguish product accumulation from upstream rounding;
 all comparisons retain their original tolerances. The real NF4/BF16 local
 pullback audit passes all 3,522 input contributions in three adapter states.
-Next compare their full-graph composition and accumulation at fixed primals.
+Independent full-graph recomposition now covers 580 fan-in additions per state;
+39/51/108 adapter tensors still exceed the original tolerance. The next audit
+isolates long-dimension product accumulation with scalar dot-product oracles.
 Measured tensor lifetimes
 and the head memory curve will guide recomputation boundaries.
 
