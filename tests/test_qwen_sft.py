@@ -309,3 +309,137 @@ def test_sft_stable_reference_includes_peft_control(tmp_path):
     assert control["loss_check_passed"]
     assert control["gradient_check_passed"]
     assert control["update_check_passed"]
+
+
+def test_custom_text_training_fresh_process_resume(tmp_path, monkeypatch):
+    import json
+    import subprocess
+    import sys
+
+    from transformers import AutoTokenizer
+
+    from examples.huggingface import sft
+
+    train = tmp_path / "train.txt"
+    validation = tmp_path / "validation.txt"
+    lines = ["Amber birds " * 40 + "glide."] + [
+        f"Amber birds glide over blue water {index}." for index in range(8)
+    ]
+    train.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    validation.write_text("Unseenword birds glide.\nBlue water is quiet.\n", encoding="utf-8")
+    original = sft.make_trainer
+
+    def checkpoint_each_step(*args, **kwargs):
+        trainer = original(*args, **kwargs)
+        trainer.args.save_steps = 1
+        return trainer
+
+    monkeypatch.setattr(sft, "make_trainer", checkpoint_each_step)
+    directory = tmp_path / "continuous"
+    report = sft.run(
+        str(directory),
+        steps=4,
+        mode="joint",
+        nf4=True,
+        train_file=train,
+        validation_file=validation,
+    )
+    assert report["data"]["train_lines"] == 9
+    assert report["data"]["validation_lines"] == 2
+    assert report["frozen_buffers_unchanged"]
+    tok = AutoTokenizer.from_pretrained(directory / "export")
+    assert "Unseenword" not in tok.get_vocab()
+    assert sft._tokenizer_digest(tok) == report["data"]["tokenizer_sha256"]
+    resumed = tmp_path / "resumed"
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "examples.huggingface.sft",
+            "--output-dir",
+            str(resumed),
+            "--mode",
+            "joint",
+            "--nf4",
+            "--steps",
+            "4",
+            "--resume",
+            str(directory / "checkpoint-1"),
+            "--train-file",
+            str(train),
+            "--validation-file",
+            str(validation),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    resumed_report = json.loads((resumed / "report.json").read_text())
+    assert resumed_report["data"] == report["data"]
+    with (
+        np.load(directory / "export" / "adapter.npz") as a,
+        np.load(resumed / "export" / "adapter.npz") as b,
+    ):
+        assert a.files == b.files
+        for name in a.files:
+            np.testing.assert_array_equal(a[name], b[name])
+    assert (resumed / "export" / "forward.onnx").is_file()
+    assert (resumed / "export" / "loss_gradient.onnx").is_file()
+    import functools
+
+    import onnx
+
+    from examples.huggingface.replay import _equal_array, _training_outputs
+    from examples.lora.train import session
+
+    encoded = tok(lines[0], truncation=True, max_length=64, return_tensors="np")
+    feeds = {name: encoded[name] for name in ("input_ids", "attention_mask")}
+    feeds["position_ids"] = (np.cumsum(feeds["attention_mask"], axis=1) - 1).clip(min=0)
+    factory = functools.partial(session, memory_reuse=False)
+    forward, training = [], []
+    for root in (directory, resumed):
+        for name in ("forward.onnx", "loss_gradient.onnx"):
+            onnx.checker.check_model(root / "export" / name, full_check=True)
+        forward.append(factory(root / "export" / "forward.onnx").run(None, feeds))
+        interface = json.loads((root / "export" / "interface.json").read_text())
+        training.append(_training_outputs(root, interface, feeds, factory))
+    for outputs in (forward, training):
+        for a, b in zip(*outputs, strict=True):
+            _equal_array(a, b)
+    with pytest.raises(ValueError, match="No checkpoint found"):
+        sft.run(str(tmp_path / "missing-checkpoint"), resume=True)
+    saved_identity = json.loads((directory / "checkpoint-1" / "onnax_data.json").read_text())
+    assert saved_identity == report["data"]
+    train.write_text("\n".join(reversed(lines)) + "\n", encoding="utf-8")
+    reordered = sft.tokenizer(training_texts=list(reversed(lines)))
+    assert sft._tokenizer_digest(reordered) == report["data"]["tokenizer_sha256"]
+    with pytest.raises(ValueError, match="Checkpoint training data or tokenizer differs"):
+        sft.run(
+            str(tmp_path / "changed"),
+            resume=directory / "checkpoint-1",
+            train_file=train,
+            validation_file=validation,
+        )
+    train.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    validation.write_text("A different held-out sequence.\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="Checkpoint training data or tokenizer differs"):
+        sft.run(
+            str(tmp_path / "changed-validation"),
+            resume=directory / "checkpoint-1",
+            train_file=train,
+            validation_file=validation,
+        )
+    (directory / "checkpoint-1" / "onnax_data.json").unlink()
+    with pytest.raises(ValueError, match="requires checkpoint data identity"):
+        sft.run(
+            str(tmp_path / "missing-identity"),
+            resume=directory / "checkpoint-1",
+            train_file=train,
+            validation_file=validation,
+        )
+
+    with pytest.raises(ValueError, match="both training and validation"):
+        sft.run(str(tmp_path / "invalid"), train_file=train)
+    validation.write_text("\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="both be nonempty"):
+        sft.run(str(tmp_path / "invalid"), train_file=train, validation_file=validation)

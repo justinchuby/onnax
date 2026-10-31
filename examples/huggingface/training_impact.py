@@ -22,7 +22,13 @@ from examples.huggingface.mixed_precision import reference_projections
 from examples.huggingface.qwen import REVISION
 from examples.huggingface.reference_head import pairwise_head
 from examples.huggingface.reference_losses import stable_token_loss
-from examples.huggingface.sft import OnnxQwen3, _prepare_graph, texts, tokenizer
+from examples.huggingface.sft import (
+    OnnxQwen3,
+    _prepare_graph,
+    _tokenizer_digest,
+    texts,
+    tokenizer,
+)
 from examples.huggingface.validation import add_reference_parameters
 
 ENGINES = ("torch_cpu", "torch_cuda", "onnx_reference", "mlx")
@@ -47,19 +53,6 @@ def _batch(tok, lines):
         position_ids=(mask.cumsum(-1) - 1).clamp(min=0),
         labels=labels,
     )
-
-
-def _tokenizer_digest(tok):
-    backend = json.loads(tok.backend_tokenizer.to_str())
-    # Per-batch padding/truncation settings are configured by _batch.
-    backend.pop("padding", None)
-    backend.pop("truncation", None)
-    identity = {
-        "backend": backend,
-        "special_tokens": tok.special_tokens_map,
-        "padding_side": tok.padding_side,
-    }
-    return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
 
 
 def _loss(model, batch, count, engine):

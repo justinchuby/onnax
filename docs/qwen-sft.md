@@ -14,6 +14,30 @@ Compare held-out loss across runtimes and independent seeds with the
 [training-quality experiment](training-quality.md). Its paired runs match the
 frozen base, initial adapters and data schedule.
 
+## Train on your own text
+
+Provide separate UTF-8 training and validation files, with one sequence per
+nonempty line:
+
+```bash
+uv run python -m examples.huggingface.sft --mode joint --nf4 \
+  --train-file train.txt --validation-file validation.txt \
+  --output-dir qwen_custom
+```
+
+TRL handles batches, AdamW and checkpoints. Sequences use right padding and a
+64-token limit; loss covers all shifted nonpadding text tokens. The tiny model
+builds its tokenizer from the training file. `--real` uses the pinned Qwen3-0.6B
+model and tokenizer.
+
+Resume with the same data options and `--resume qwen_custom/checkpoint-50`.
+Each checkpoint includes `onnax_data.json`; the CLI checks its training,
+validation and tokenizer identities before rebuilding the graph. Reports record
+the same identities, and the final ONNX export includes the tokenizer.
+
+The [pinned instruction-corpus preparation](pinned-instruction-corpus)
+provides a reproducible source of training and official-test examples.
+
 ## Model and training graph
 
 The offline model has two layers, hidden size 64, intermediate size 128,

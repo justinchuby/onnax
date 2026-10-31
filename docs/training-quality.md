@@ -248,6 +248,7 @@ building the execution model. The tokenizer identity includes its vocabulary,
 merges, normalization, preprocessing and special-token configuration.
 
 
+(pinned-instruction-corpus)=
 ### Prepare a pinned instruction corpus
 
 [No Robots](https://huggingface.co/datasets/HuggingFaceH4/no_robots) provides human-written
