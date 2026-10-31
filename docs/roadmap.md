@@ -95,13 +95,14 @@ source, precision, storage and loss policies for these measurements.
    split with 128 training and 32 official-test sequences. Three FP32 seeds
    complete 30 updates per runtime: CPU/MLX final held-out loss averages
    2.666917/2.666826, with a maximum paired gap of 0.000255. The matched BF16
-   experiment is running. The earlier 18/6 split and shared-parameter replays
+   run reaches 2.673957/2.669161, with a maximum paired gap of 0.005285. All
+   sampled validation curves decrease. The earlier 18/6 split and shared-parameter replays
    remain available for numerical diagnosis.
 2. **Evaluation cost.** Joint mode now creates a reusable loss-only session for
    no-grad evaluation. Tiny FP32/BF16 checks cover three adapter states,
    dynamic shapes, padding and ignored labels with bitwise loss agreement.
-   Run the [evaluation qualification command](qwen-sft.md) on Qwen3-0.6B after
-   the instruction-data experiment, measuring session creation, execution and
+   The [evaluation qualification command](qwen-sft.md) is running on Qwen3-0.6B,
+   measuring session creation, execution and
    the memory cost of keeping both sessions.
 3. **Platform baseline.** Run matched PyTorch CPU/CUDA training under the same
    precision and data policies. CUDA execution remains outstanding; the

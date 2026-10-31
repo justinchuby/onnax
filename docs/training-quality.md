@@ -39,7 +39,7 @@ after training.
 
 The pinned No Robots split uses 128 training sequences and 32 official-test
 sequences. Three seeds each train Qwen3-0.6B NF4 adapters for 30 updates, with
-FP32 projections, microbatch one and four accumulation steps.
+matched FP32/BF16 projection policies, microbatch one and four accumulation steps.
 
 | Engine | Initial held-out loss | Mean final held-out loss | Seed standard deviation |
 | --- | ---: | ---: | ---: |
@@ -52,10 +52,33 @@ sampled trajectory-gradient cosine similarity is **0.999945**. This FP32 run
 shows closely matched training outcomes on instruction data. CUDA was
 unavailable on the M1 Max host.
 
+The matched BF16 run also improves at every sampled checkpoint for every seed:
+
+| Engine | Initial held-out loss | Mean final held-out loss | Seed standard deviation |
+| --- | ---: | ---: | ---: |
+| PyTorch CPU | 3.412712 | 2.673957 | 0.020339 |
+| ONNX / MLX | 3.412826 | 2.669161 | 0.020054 |
+
+The largest paired BF16 loss gap is **0.005285**, compared with seed standard
+deviations near 0.020. Both engines improve by about 0.74 nats/token over 30
+updates. BF16 produces larger trajectory differences than FP32: final adapter
+relative L2 differences range from 0.079 to 0.095, and the minimum sampled
+trajectory-gradient cosine is 0.846358. These snapshots use independently
+updated parameters. On this instruction workload, the two runtimes reach
+similar held-out loss despite differing adapter trajectories.
+
+```{figure} _static/qwen-no-robots-precision-quality.svg
+:alt: CPU and MLX validation loss decreases throughout matched FP32 and BF16 training on No Robots, with seed standard deviation bands.
+
+Three seeds per runtime, with the same initial adapters and data schedule.
+```
+
 The {download}`FP32 report
 <../examples/huggingface/reports/qwen3-no-robots-nf4-fp32-training-quality-m1max.json>`
 records the matched settings, validation curves, adapter comparisons, source
-hashes and process journals. The [corpus preparation](pinned-instruction-corpus)
+hashes and process journals. The {download}`BF16 report
+<../examples/huggingface/reports/qwen3-no-robots-nf4-bf16-training-quality-m1max.json>`
+records the matching mixed-precision experiment. The [corpus preparation](pinned-instruction-corpus)
 records the dataset revision and selected examples. Memory observations cover
 construction, training, evaluation and host snapshots.
 
