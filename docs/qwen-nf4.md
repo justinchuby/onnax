@@ -68,6 +68,18 @@ ONNX forward/loss/gradient outputs byte for byte. Results are recorded in
 `reports/qwen-nf4-bf16-tiny-sft-recovery.json`.
 The [BF16 Qwen tutorial](qwen-sft.md) records real-model precision qualification.
 
+The combined Qwen3-0.6B run completes 30 updates with the eager array-lifetime
+fix in [MLX EP PR #97](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/97).
+Validation loss decreases from 7.7479 to 6.1986, frozen weights remain unchanged,
+and exports pass the full ONNX checker. The observed process-reported peak
+physical footprint is about 10.5 GiB, including GPU mappings, construction,
+validation, training and adapter audits. An earlier run retained translation
+intermediates and reached 54.5G before initial validation completed.
+
+Independent real-model forward, loss and gradient checks exceed the original
+tolerances; the report preserves each failure in
+`reports/qwen3-nf4-bf16-joint-sft-m1max.json`.
+
 The recorded native run uses the development library from
 [MLX EP PR #96](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/96),
 selected with `--library /path/to/libonnxruntime_mlx_ep.dylib`.
