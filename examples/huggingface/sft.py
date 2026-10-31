@@ -28,12 +28,13 @@ from examples.huggingface.qwen import (
 from examples.lora.train import session
 
 
-def texts():
-    with open(os.path.join(os.path.dirname(__file__), "corpus.txt")) as stream:
+def texts(path=None):
+    path = os.path.join(os.path.dirname(__file__), "corpus.txt") if path is None else path
+    with open(path, encoding="utf-8") as stream:
         return [line.strip() for line in stream if line.strip()]
 
 
-def tokenizer(real=False):
+def tokenizer(real=False, *, training_texts=None):
     if real:
         result = AutoTokenizer.from_pretrained(MODEL_ID, revision=REVISION)
         result.pad_token = result.eos_token
@@ -42,7 +43,7 @@ def tokenizer(real=False):
     backend = Tokenizer(models.WordLevel(unk_token="<unk>"))
     backend.pre_tokenizer = pre_tokenizers.Whitespace()
     backend.train_from_iterator(
-        texts(),
+        texts() if training_texts is None else training_texts,
         trainers.WordLevelTrainer(
             vocab_size=256,
             special_tokens=["<pad>", "<s>", "</s>", "<unk>"],

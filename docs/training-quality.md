@@ -224,3 +224,25 @@ from differences between the two training trajectories. The
 <../examples/huggingface/reports/tiny-bf16-pairwise-adam-trace-m1max.json>` records
 the gradients, moments, scalar replays, source hashes and the original failed
 parameter check.
+
+## Compare your own corpus
+
+Use a UTF-8 file with one sequence per nonempty line. `--train-lines` selects the
+first N sequences for training; the remainder forms the held-out split:
+
+```bash
+uv run python -m examples.huggingface.training_impact --real \
+  --projection-precision fp32 --corpus my-corpus.txt --train-lines 128 \
+  --engines torch_cpu --seeds 17 29 43 --steps 30 \
+  --capture cpu.npz --output cpu.json
+```
+
+Run the other engine with the same corpus, split and training settings, then
+compare the report/capture pairs as above. Sequences are truncated to 64 tokens.
+The real model uses its pinned Qwen tokenizer; a custom tiny run builds its
+local tokenizer from the training portion.
+
+Pass `--corpus my-corpus.txt` to shared-state replay as well. It restores the
+saved split and checks the normalized corpus and tokenizer identities before
+building the execution model. The tokenizer identity includes its vocabulary,
+merges, normalization, preprocessing and special-token configuration.

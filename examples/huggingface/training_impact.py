@@ -49,6 +49,19 @@ def _batch(tok, lines):
     )
 
 
+def _tokenizer_digest(tok):
+    backend = json.loads(tok.backend_tokenizer.to_str())
+    # Per-batch padding/truncation settings are configured by _batch.
+    backend.pop("padding", None)
+    backend.pop("truncation", None)
+    identity = {
+        "backend": backend,
+        "special_tokens": tok.special_tokens_map,
+        "padding_side": tok.padding_side,
+    }
+    return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+
+
 def _loss(model, batch, count, engine):
     if engine.startswith("torch_"):
         device = next(model.parameters()).device
@@ -245,6 +258,8 @@ def run(
     accumulation=4,
     interval=20,
     capture_path=None,
+    corpus_path=None,
+    train_lines=None,
 ):
     if not engines or len(set(engines)) != len(engines) or set(engines) - set(ENGINES):
         raise ValueError("Select unique supported engines")
@@ -270,11 +285,12 @@ def run(
     selected = [engine for engine in engines if available[engine]]
     if not selected:
         raise ValueError("No requested engine is available")
-    tok, corpus = tokenizer(real), texts()
-    split = max(1, len(corpus) * 3 // 4)
+    corpus = texts(corpus_path)
+    split = max(1, len(corpus) * 3 // 4) if train_lines is None else train_lines
+    if not 0 < split < len(corpus):
+        raise ValueError("The split must contain training and held-out corpus lines")
     train, heldout = corpus[:split], corpus[split:]
-    if not heldout:
-        raise ValueError("A held-out split needs at least two corpus lines")
+    tok = tokenizer(real, training_texts=train if corpus_path is not None else None)
     reports, captures, bases = [], {}, {}
     for engine in selected:
         print(json.dumps({"engine": engine, "stage": "build"}), file=sys.stderr, flush=True)
@@ -413,6 +429,7 @@ def run(
         "frozen_unchanged": True,
         "source_base_sha256": next(iter(bases.values())),
         "corpus_sha256": hashlib.sha256("\n".join(corpus).encode()).hexdigest(),
+        "tokenizer_sha256": _tokenizer_digest(tok),
         "train_lines": len(train),
         "heldout_lines": len(heldout),
         "gradient_scope": "Independent trajectory states before indicated update; identical batch schedule for each seed",
@@ -446,6 +463,8 @@ def main():
     parser.add_argument("--microbatch", type=int, default=1)
     parser.add_argument("--accumulation", type=int, default=4)
     parser.add_argument("--interval", type=int, default=20)
+    parser.add_argument("--corpus", help="UTF-8 text file with one sequence per nonempty line")
+    parser.add_argument("--train-lines", type=int, help="Use the first N lines for training")
     parser.add_argument(
         "--capture", help="Save FP32 gradient snapshots and final adapters as NPZ"
     )
@@ -462,6 +481,8 @@ def main():
         microbatch=args.microbatch,
         accumulation=args.accumulation,
         interval=args.interval,
+        corpus_path=args.corpus,
+        train_lines=args.train_lines,
     )
     with open(args.output, "w") as stream:
         json.dump(report, stream, indent=2, allow_nan=False)

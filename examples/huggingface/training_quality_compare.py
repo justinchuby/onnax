@@ -83,6 +83,8 @@ def compare(reports, captures, *, executions=None):
                 raise ValueError(f"Missing experiment setting: {field}")
             if component[field] != baseline[field]:
                 raise ValueError(f"Experiment settings differ: {field}")
+        if component.get("tokenizer_sha256") != baseline.get("tokenizer_sha256"):
+            raise ValueError("Experiment tokenizers differ")
         if sorted(component["seeds"]) != seeds or not component["frozen_unchanged"]:
             raise ValueError("Trial seeds or frozen-base checks differ")
         metadata = component.get("capture")
@@ -205,7 +207,14 @@ def compare(reports, captures, *, executions=None):
         if len({row["source_commit"] for row in journals}) != 1:
             raise ValueError("Component source commits differ")
     return {
-        "settings": {field: baseline.get(field) for field in MATCHED},
+        "settings": {
+            **{field: baseline.get(field) for field in MATCHED},
+            **(
+                {"tokenizer_sha256": baseline["tokenizer_sha256"]}
+                if "tokenizer_sha256" in baseline
+                else {}
+            ),
+        },
         "seeds": seeds,
         "engines": engines,
         "cuda_executed": "torch_cuda" in engines,

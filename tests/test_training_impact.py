@@ -154,3 +154,81 @@ def test_gradient_direction_distinguishes_scale_and_sign():
     assert _vector_metrics(x, -x)["cosine"] == pytest.approx(-1)
     assert _vector_metrics(x, x * 2)["relative_l2"] == pytest.approx(0.5)
     assert _vector_metrics(np.zeros_like(x), x)["cosine"] == 0
+
+
+def test_custom_corpus_split_and_replay(tmp_path):
+    from examples.huggingface.sft import tokenizer
+    from examples.huggingface.training_impact import _batch, _tokenizer_digest, run
+    from examples.huggingface.training_quality_replay import replay
+
+    lines = [
+        "Amber birds glide over quiet water.",
+        "Silver fish swim beneath clear water.",
+        "Quiet winds move across amber fields.",
+        "Unseenword cafés glow beside silver water.",
+    ]
+    corpus = tmp_path / "corpus.txt"
+    corpus.write_text("\n\n".join(lines) + "\n", encoding="utf-8")
+    tok = tokenizer(training_texts=lines[:3])
+    assert "Unseenword" not in tok.get_vocab()
+    digest = _tokenizer_digest(tok)
+    _batch(tok, lines)
+    assert _tokenizer_digest(tok) == digest
+    capture = tmp_path / "custom.npz"
+    report = run(
+        engines=("torch_cpu", "onnx_reference"),
+        seeds=(17,),
+        steps=1,
+        microbatch=1,
+        accumulation=2,
+        interval=1,
+        corpus_path=corpus,
+        train_lines=3,
+        capture_path=capture,
+    )
+    assert report["train_lines"] == 3 and report["heldout_lines"] == 1
+    assert report["tokenizer_sha256"] == digest
+    paths = []
+    for engine in report["engines"]:
+        component = {
+            **report,
+            "engines": [engine],
+            "trials": [r for r in report["trials"] if r["engine"] == engine],
+        }
+        path = tmp_path / f"{engine}.json"
+        path.write_text(json.dumps(component))
+        paths.append(path)
+    result = replay(
+        paths,
+        [capture] * 2,
+        engine="torch_cpu",
+        corpus_path=corpus,
+        capture_path=tmp_path / "replay.npz",
+    )
+    assert result["frozen_unchanged"]
+    own = next(row for row in result["states"] if row["source_engine"] == "torch_cpu")
+    assert own["validation_loss_gap_from_source"] == pytest.approx(0, abs=1e-6)
+    for path in paths:
+        component = json.loads(path.read_text())
+        component["tokenizer_sha256"] = "different tokenizer"
+        path.write_text(json.dumps(component))
+    with pytest.raises(ValueError, match="Replay tokenizer differs"):
+        replay(
+            paths,
+            [capture] * 2,
+            engine="torch_cpu",
+            corpus_path=corpus,
+            capture_path=tmp_path / "bad-tokenizer.npz",
+        )
+    corpus.write_text("\n".join([*lines[:-1], "Changed held-out text."]), encoding="utf-8")
+    with pytest.raises(ValueError, match="Replay corpus differs"):
+        replay(
+            paths,
+            [capture] * 2,
+            engine="torch_cpu",
+            corpus_path=corpus,
+            capture_path=tmp_path / "bad.npz",
+        )
+    for split in (0, len(lines)):
+        with pytest.raises(ValueError, match="split must contain"):
+            run(corpus_path=corpus, train_lines=split, engines=("torch_cpu",))

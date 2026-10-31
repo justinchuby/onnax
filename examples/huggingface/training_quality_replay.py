@@ -20,13 +20,14 @@ from examples.huggingface.training_impact import (
     _frozen,
     _loss,
     _schedule,
+    _tokenizer_digest,
     texts,
     tokenizer,
 )
 from examples.huggingface.training_quality_compare import compare
 
 
-def replay(reports, captures, *, engine, library=None, capture_path):
+def replay(reports, captures, *, engine, library=None, capture_path, corpus_path=None):
     comparison = compare(reports, captures)
     settings = comparison["settings"]
     if engine not in ENGINES:
@@ -43,18 +44,21 @@ def replay(reports, captures, *, engine, library=None, capture_path):
         if precision == "bf16" and not torch.cuda.is_bf16_supported():
             raise ValueError("CUDA device does not support BF16")
         torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction = False
+    corpus = texts(corpus_path)
+    if hashlib.sha256("\n".join(corpus).encode()).hexdigest() != settings["corpus_sha256"]:
+        raise ValueError("Replay corpus differs from capture")
+    train, heldout = corpus[: settings["train_lines"]], corpus[settings["train_lines"] :]
+    if len(heldout) != settings["heldout_lines"]:
+        raise ValueError("Replay data split differs from capture")
+    tok = tokenizer(real, training_texts=train if corpus_path is not None else None)
+    if settings.get("tokenizer_sha256") not in (None, _tokenizer_digest(tok)):
+        raise ValueError("Replay tokenizer differs from capture")
     model, parameters, base = _build(engine, real, precision, library)
     if base != settings["source_base_sha256"]:
         raise ValueError("Replay source weights differ from captured weights")
     expected_order = comparison["components"][0]["capture"]["parameter_order"]
     if list(parameters) != expected_order:
         raise ValueError("Replay parameter order differs from capture")
-    corpus, tok = texts(), tokenizer(real)
-    if hashlib.sha256("\n".join(corpus).encode()).hexdigest() != settings["corpus_sha256"]:
-        raise ValueError("Replay corpus differs from capture")
-    train, heldout = corpus[: settings["train_lines"]], corpus[settings["train_lines"] :]
-    if len(heldout) != settings["heldout_lines"]:
-        raise ValueError("Replay data split differs from capture")
     microbatch, accumulation = settings["microbatch"], settings["accumulation"]
     evaluation = [
         _batch(tok, heldout[start : start + microbatch])
@@ -155,6 +159,7 @@ def main():
     parser.add_argument("--captures", nargs="+", required=True)
     parser.add_argument("--engine", choices=ENGINES, required=True)
     parser.add_argument("--library")
+    parser.add_argument("--corpus", help="The text file used by the captured training runs")
     parser.add_argument("--capture", required=True)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
@@ -164,6 +169,7 @@ def main():
         engine=args.engine,
         library=args.library,
         capture_path=args.capture,
+        corpus_path=args.corpus,
     )
     with open(args.output, "w") as stream:
         json.dump(result, stream, indent=2, allow_nan=False)
