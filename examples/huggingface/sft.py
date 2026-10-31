@@ -396,6 +396,7 @@ def run(
             sample,
             os.path.join(directory, "peft_roundtrip"),
             diagnose_rounding=diagnose_rounding,
+            stable_reference=stable_reference,
         )
         with torch.no_grad():
             for name, parameter in zip(model.onnx.names, model.onnx.adapters, strict=True):
