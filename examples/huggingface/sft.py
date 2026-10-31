@@ -452,8 +452,12 @@ def run(
     if fp64_audit:
         from examples.huggingface.precision import audit64
 
-        model.onnx.forward_session = model.onnx.backward_session = None
-        model.onnx.runtime_directory.cleanup()
+        if mode == "joint":
+            model.onnx.executor = None
+            model.onnx.directory.cleanup()
+        else:
+            model.onnx.forward_session = model.onnx.backward_session = None
+            model.onnx.runtime_directory.cleanup()
         report["fp64"] = audit64(model, reference, sample, [initial_params, final_params])
     persist()
     return report
