@@ -50,6 +50,27 @@ def matmul_vjp(ctx, node, cotangents, input_indices):
     return contributions
 
 
+def matmul_function(opset=18):
+    """Portable BF16 product with an FP32 public boundary."""
+    args = [ir.val(n) for n in ("a", "b")]
+    tape = ir.tape.Tape()
+    reduced = [tape.op("Cast", [arg], {"to": int(ir.DataType.BFLOAT16)}) for arg in args]
+    product = tape.op("MatMul", reduced)
+    output = tape.op("Cast", [product], {"to": int(ir.DataType.FLOAT)})
+    return ir.Function(
+        DOMAIN,
+        OP,
+        graph=ir.Graph(
+            args,
+            [output],
+            nodes=tape.nodes,
+            opset_imports={"": opset},
+            name="bf16_matrix_product",
+        ),
+        attributes=[],
+    )
+
+
 def lower_matmuls(model):
     """Replace this example's FP32 matrix calls without changing its public boundary.
 
@@ -74,23 +95,7 @@ def lower_matmuls(model):
         for value in node.inputs
     ):
         raise TypeError("Expected FP32 matrix operands.")
-    args = [ir.val(n) for n in ("a", "b")]
-    tape = ir.tape.Tape()
-    reduced = [tape.op("Cast", [arg], {"to": int(ir.DataType.BFLOAT16)}) for arg in args]
-    product = tape.op("MatMul", reduced)
-    output = tape.op("Cast", [product], {"to": int(ir.DataType.FLOAT)})
-    function = ir.Function(
-        DOMAIN,
-        OP,
-        graph=ir.Graph(
-            args,
-            [output],
-            nodes=tape.nodes,
-            opset_imports={"": 18},
-            name="bf16_matrix_product",
-        ),
-        attributes=[],
-    )
+    function = matmul_function(result.graph.opset_imports[""])
     result.functions[function.identifier()] = function
     result.graph.opset_imports[DOMAIN] = 1
     for node in result.graph:

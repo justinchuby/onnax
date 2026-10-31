@@ -1,0 +1,195 @@
+{
+  "status": "work in progress: strict independent update qualification fails",
+  "source_parent_commit": "25c1e1b55a96dbbae3d911bd0119635ebb2c942c",
+  "working_tree_source_sha256": {
+    "examples/huggingface/mixed_precision.py": "c4972708821a8bcba668390b3182233fafa6ef8a132944ba192b92a03fbac4f2",
+    "examples/lora/bf16_rules.py": "6efbd3fa01e837c89dc57a7b3d25e6ce6cf914579ac75cb11c170283464e7a36",
+    "tests/test_qwen_bf16.py": "adf272c4b8c7d5cc4fb3563b5bf7d60626042cc5e1574d831449370b39ffa736"
+  },
+  "policy": {
+    "projection_compute": "BF16 inputs/results",
+    "attention_normalization_loss": "FP32",
+    "adjoints": "FP32 straight-through with BF16-rounded operands",
+    "parameters_and_adam_state": "FP32",
+    "frozen_storage": "FP32"
+  },
+  "rtol": 0.0001,
+  "atol": 1e-06,
+  "optimizer": {
+    "name": "AdamW",
+    "learning_rate": 0.003,
+    "epsilon": 1e-08,
+    "weight_decay": 0
+  },
+  "backends": {
+    "reference": {
+      "initial_forward_check": "passed",
+      "loss_and_all_eight_gradients_through_step_5": "passed at original tolerance",
+      "parameter_comparison": "failed",
+      "failures": [
+        {
+          "step": 5,
+          "parameter": "model.layers.0.self_attn.q_proj.lora.A",
+          "kind": "after",
+          "coordinate": [
+            47,
+            2
+          ],
+          "actual": 0.02502346597611904,
+          "reference": 0.02501581609249115,
+          "max_abs": 7.64988362789154e-06,
+          "violations": 2
+        }
+      ],
+      "rounding_trace": [
+        {
+          "step": 1,
+          "rounded_parameter_disagreements_before_step": 0,
+          "parameter_gap_before_step": 0
+        },
+        {
+          "step": 2,
+          "rounded_parameter_disagreements_before_step": 0,
+          "parameter_gap_before_step": 3.189779818058014e-08
+        },
+        {
+          "step": 3,
+          "rounded_parameter_disagreements_before_step": 1,
+          "parameter_gap_before_step": 8.260831236839294e-07
+        },
+        {
+          "step": 4,
+          "rounded_parameter_disagreements_before_step": 1,
+          "parameter_gap_before_step": 8.326023817062378e-07
+        },
+        {
+          "step": 5,
+          "rounded_parameter_disagreements_before_step": 0,
+          "parameter_gap_before_step": 3.345310688018799e-06
+        }
+      ]
+    },
+    "mlx": {
+      "initial_forward_check": "passed",
+      "loss_and_all_eight_gradients_through_step_5": "passed at original tolerance",
+      "parameter_comparison": "failed",
+      "failures": [
+        {
+          "step": 5,
+          "parameter": "model.layers.0.self_attn.q_proj.lora.A",
+          "kind": "after",
+          "coordinate": [
+            47,
+            2
+          ],
+          "actual": 0.02502349019050598,
+          "reference": 0.02501581609249115,
+          "max_abs": 7.674098014831543e-06,
+          "violations": 2
+        }
+      ],
+      "rounding_trace": [
+        {
+          "step": 1,
+          "rounded_parameter_disagreements_before_step": 0,
+          "parameter_gap_before_step": 0
+        },
+        {
+          "step": 2,
+          "rounded_parameter_disagreements_before_step": 0,
+          "parameter_gap_before_step": 3.888271749019623e-08
+        },
+        {
+          "step": 3,
+          "rounded_parameter_disagreements_before_step": 1,
+          "parameter_gap_before_step": 3.795139491558075e-07
+        },
+        {
+          "step": 4,
+          "rounded_parameter_disagreements_before_step": 1,
+          "parameter_gap_before_step": 4.986068233847618e-07
+        },
+        {
+          "step": 5,
+          "rounded_parameter_disagreements_before_step": 0,
+          "parameter_gap_before_step": 3.335997462272644e-06
+        }
+      ]
+    }
+  },
+  "diagnostic_boundary_control": {
+    "purpose": "isolate BF16 rounding divergence; diagnostic interventions are not a training algorithm",
+    "interventions": [
+      {
+        "after_step": 2,
+        "parameter_index": 5,
+        "coordinate": [
+          3,
+          48
+        ],
+        "actual_master": -0.004776631481945515,
+        "reference_master": -0.004775805398821831,
+        "actual_bf16": -0.004791259765625,
+        "reference_bf16": -0.0047607421875
+      },
+      {
+        "after_step": 3,
+        "parameter_index": 1,
+        "coordinate": [
+          2,
+          0
+        ],
+        "actual_master": -0.0006234189495444298,
+        "reference_master": -0.0006238261703401804,
+        "actual_bf16": -0.000621795654296875,
+        "reference_bf16": -0.0006256103515625
+      },
+      {
+        "after_step": 5,
+        "parameter_index": 1,
+        "coordinate": [
+          2,
+          63
+        ],
+        "actual_master": -0.006668052636086941,
+        "reference_master": -0.0066681825555861,
+        "actual_bf16": -0.00665283203125,
+        "reference_bf16": -0.006683349609375
+      },
+      {
+        "after_step": 5,
+        "parameter_index": 6,
+        "coordinate": [
+          51,
+          1
+        ],
+        "actual_master": -1.5124911442399025e-05,
+        "reference_master": -1.5089288353919983e-05,
+        "actual_bf16": -1.5139579772949219e-05,
+        "reference_bf16": -1.5079975128173828e-05
+      }
+    ],
+    "remaining_failures": [
+      {
+        "message": "step 5: model.layers.0.self_attn.q_proj.lora.A parameter",
+        "coordinate": [
+          40,
+          1
+        ],
+        "actual": -0.004435200244188309,
+        "expected": -0.004432751797139645,
+        "max_abs": 2.448447048664093e-06,
+        "violations": 1
+      }
+    ],
+    "first_original_failure_coordinate_gap_before_control": 7.64988362789154e-06,
+    "gap_after_control": 1.8104910850524902e-06,
+    "conclusion": "Rounding-boundary divergence contributes to the update gap; a remaining failure also exists."
+  },
+  "mlx_library_sha256": "1c9e7c0b40449408caf300d7da42cee8b4b50f0e1dc2564c30170eee2dcbdf20",
+  "existing_bf16_lora_regression": "4 passed",
+  "reproduction_scripts": {
+    "onnax-qwen-bf16-diagnose.py": "import json,sys\nfrom pathlib import Path\nimport numpy as np\nimport torch\nsys.path.insert(0,'tests')\nfrom test_qwen_bf16 import test_qwen_bf16_forward_gradients_and_updates\noriginal_close=torch.testing.assert_close\noriginal_step=torch.optim.AdamW.step\nrecords={}; labels={}; failures=[]; snapshots={}\n\ndef close(actual,expected,**kwargs):\n    try:\n        return original_close(actual,expected,**kwargs)\n    except AssertionError as error:\n        a,b=actual.detach().numpy(),expected.detach().numpy()\n        delta=np.abs(a-b); threshold=kwargs.get('atol',1e-6)+kwargs.get('rtol',1e-4)*np.abs(b)\n        index=np.unravel_index(np.argmax(delta/threshold),a.shape)\n        failures.append({'message':str(error),'coordinate':[int(i) for i in index],'actual':float(a[index]),'expected':float(b[index]),'max_abs':float(delta.max()),'violations':int(np.count_nonzero(delta>threshold))})\n\ndef step(optimizer,*args,**kwargs):\n    label=labels.setdefault(id(optimizer),'actual' if not labels else 'reference')\n    number=len(records.setdefault(label,[]))+1\n    current=[]\n    for index,p in enumerate(optimizer.param_groups[0]['params']):\n        prefix=f'{label}_{number}_{index}'\n        for key,value in [('before',p),('gradient',p.grad)]:\n            snapshots[prefix+'_'+key]=value.detach().numpy().copy()\n        for key in ['exp_avg','exp_avg_sq']:\n            if key in optimizer.state[p]: snapshots[prefix+'_'+key+'_before']=optimizer.state[p][key].numpy().copy()\n    result=original_step(optimizer,*args,**kwargs)\n    for index,p in enumerate(optimizer.param_groups[0]['params']):\n        prefix=f'{label}_{number}_{index}'\n        snapshots[prefix+'_after']=p.detach().numpy().copy()\n        for key in ['exp_avg','exp_avg_sq']: snapshots[prefix+'_'+key+'_after']=optimizer.state[p][key].numpy().copy()\n    records[label].append(number)\n    return result\n\nnative=sys.argv[1]=='mlx'\ntorch.testing.assert_close=close\ntorch.optim.AdamW.step=step\ntest_qwen_bf16_forward_gradients_and_updates(native)\npath=Path('/tmp/onnax-qwen-bf16-'+sys.argv[1]+'-diagnostic')\nnp.savez(str(path)+'.npz',**snapshots)\npath.with_suffix('.json').write_text(json.dumps({'backend':sys.argv[1],'rtol':1e-4,'atol':1e-6,'failures':failures,'steps':records},indent=2)+'\\n')\nprint(json.dumps({'backend':sys.argv[1],'failures':failures,'steps':records},indent=2))\n",
+    "onnax-qwen-bf16-control.py": "import json,sys\nfrom pathlib import Path\nimport numpy as np\nimport onnx_ir as ir\nimport torch\nsys.path.insert(0,'tests')\nfrom test_qwen_bf16 import test_qwen_bf16_forward_gradients_and_updates\noriginal_close=torch.testing.assert_close\noriginal_step=torch.optim.AdamW.step\nrecords={}; labels={}; failures=[]; snapshots={}; interventions=[]\n\ndef close(actual,expected,**kwargs):\n    try:\n        return original_close(actual,expected,**kwargs)\n    except AssertionError as error:\n        a,b=actual.detach().numpy(),expected.detach().numpy()\n        delta=np.abs(a-b); threshold=kwargs.get('atol',1e-6)+kwargs.get('rtol',1e-4)*np.abs(b)\n        index=np.unravel_index(np.argmax(delta/threshold),a.shape)\n        failures.append({'message':str(error),'coordinate':[int(i) for i in index],'actual':float(a[index]),'expected':float(b[index]),'max_abs':float(delta.max()),'violations':int(np.count_nonzero(delta>threshold))})\n\ndef step(optimizer,*args,**kwargs):\n    label=labels.setdefault(id(optimizer),'actual' if not labels else 'reference')\n    number=len(records.setdefault(label,[]))+1\n    current=[]\n    for index,p in enumerate(optimizer.param_groups[0]['params']):\n        prefix=f'{label}_{number}_{index}'\n        for key,value in [('before',p),('gradient',p.grad)]:\n            snapshots[prefix+'_'+key]=value.detach().numpy().copy()\n        for key in ['exp_avg','exp_avg_sq']:\n            if key in optimizer.state[p]: snapshots[prefix+'_'+key+'_before']=optimizer.state[p][key].numpy().copy()\n    result=original_step(optimizer,*args,**kwargs)\n    for index,p in enumerate(optimizer.param_groups[0]['params']):\n        prefix=f'{label}_{number}_{index}'\n        snapshots[prefix+'_after']=p.detach().numpy().copy()\n        for key in ['exp_avg','exp_avg_sq']: snapshots[prefix+'_'+key+'_after']=optimizer.state[p][key].numpy().copy()\n    records[label].append(number)\n    if label=='reference':\n        with torch.no_grad():\n            for index,p in enumerate(optimizer.param_groups[0]['params']):\n                actual=snapshots[f'actual_{number}_{index}_after']\n                expected=p.detach().numpy()\n                dtype=ir.DataType.BFLOAT16.numpy()\n                different=actual.astype(dtype)!=expected.astype(dtype)\n                for coordinate in zip(*np.nonzero(different)):\n                    interventions.append({'after_step':number,'parameter_index':index,'coordinate':[int(i) for i in coordinate],'actual_master':float(actual[coordinate]),'reference_master':float(expected[coordinate]),'actual_bf16':float(actual.astype(dtype)[coordinate]),'reference_bf16':float(expected.astype(dtype)[coordinate])})\n                p.copy_(torch.where(torch.from_numpy(different),torch.from_numpy(actual),p))\n    return result\n\nnative=sys.argv[1]=='mlx'\ntorch.testing.assert_close=close\ntorch.optim.AdamW.step=step\ntest_qwen_bf16_forward_gradients_and_updates(native)\npath=Path('/tmp/onnax-qwen-bf16-'+sys.argv[1]+'-boundary-control')\nnp.savez(str(path)+'.npz',**snapshots)\npath.with_suffix('.json').write_text(json.dumps({'backend':sys.argv[1],'rtol':1e-4,'atol':1e-6,'failures':failures,'steps':records,'diagnostic_only':True,'interventions':interventions},indent=2)+'\\n')\nprint(json.dumps({'backend':sys.argv[1],'failures':failures,'steps':records,'diagnostic_only':True,'interventions':interventions},indent=2))\n"
+  }
+}
