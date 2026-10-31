@@ -224,3 +224,30 @@ def test_hard_loss_curvature_at_equal_binary_logits():
         },
     )[-1]
     np.testing.assert_allclose(result, [[0.5, -0.5], [0, 0]], rtol=1e-6, atol=1e-7)
+
+
+@pytest.mark.parametrize("in_axes", [(0, None), (None, 0)])
+def test_hard_loss_batching_with_shared_operand(in_axes):
+    gradient = onnax.grad(loss_model("hard"), inputs=["x"], output="loss")
+    batched = onnax.vmap(gradient, in_axes=in_axes)
+    x = np.array([[0.2, -0.1, 0.4], [1, 2, 3]], np.float32)
+    labels = np.array([1, -100], np.int64)
+    xs = np.stack([x, x + np.array([[-1, 0, 1], [0, 0, 0]], np.float32)])
+    ys = np.stack([labels, np.array([0, 2], np.int64)])
+    inputs = {"x": xs if in_axes[0] == 0 else x, "other": ys if in_axes[1] == 0 else labels}
+    executor = runtime_session(gradient)
+    expected = np.stack(
+        [
+            executor.run(
+                None,
+                {
+                    "x": xs[i] if in_axes[0] == 0 else x,
+                    "other": ys[i] if in_axes[1] == 0 else labels,
+                },
+            )[-1]
+            for i in range(2)
+        ]
+    )
+    np.testing.assert_allclose(
+        runtime_session(batched).run(None, inputs)[-1], expected, rtol=1e-5, atol=1e-7
+    )
