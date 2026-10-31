@@ -246,3 +246,27 @@ Pass `--corpus my-corpus.txt` to shared-state replay as well. It restores the
 saved split and checks the normalized corpus and tokenizer identities before
 building the execution model. The tokenizer identity includes its vocabulary,
 merges, normalization, preprocessing and special-token configuration.
+
+
+### Prepare a pinned instruction corpus
+
+[No Robots](https://huggingface.co/datasets/HuggingFaceH4/no_robots) provides human-written
+instructions and answers under CC BY-NC 4.0. This preparation command selects
+128 training and 32 test examples from its official splits at revision
+`e6f9a4ac5c37faeb744ba9ecf0473184d7f8105b`:
+
+```bash
+uv run python -m examples.huggingface.quality_corpus   --output no-robots.txt --manifest no-robots.json
+```
+
+It selects unique single-turn user/assistant pairs in a fixed shuffled order.
+Prompts occupy at most 32 tokens, leaving room for the answer in the 64-token
+training sequence. The text uses `User: … Assistant: …`; loss includes both
+parts. The manifest records source split, sample ID, retained token count,
+corpus/tokenizer hashes and package versions. The downloaded text stays in the
+chosen output file.
+
+Use `--corpus no-robots.txt --train-lines 128` for training and pass the same
+file to replay. The {download}`recorded selection
+<../examples/huggingface/reports/qwen3-no-robots-quality-corpus.json>` fixes the
+160 sample IDs used by the extended experiment.

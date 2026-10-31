@@ -1,0 +1,991 @@
+{
+  "version": 1,
+  "dataset": "HuggingFaceH4/no_robots",
+  "dataset_revision": "e6f9a4ac5c37faeb744ba9ecf0473184d7f8105b",
+  "dataset_url": "https://huggingface.co/datasets/HuggingFaceH4/no_robots/tree/e6f9a4ac5c37faeb744ba9ecf0473184d7f8105b",
+  "license": "cc-by-nc-4.0",
+  "attribution": "No Robots, HuggingFaceH4, 2023",
+  "tokenizer": "Qwen/Qwen3-0.6B",
+  "tokenizer_revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+  "tokenizer_sha256": "6dd55c5383c60de4ef14710c7a19b02df3f57ce1792e5028373a9945b4173574",
+  "shuffle_seed": 20261029,
+  "train_lines": 128,
+  "heldout_lines": 32,
+  "source_splits": [
+    "train",
+    "test"
+  ],
+  "selection": "Unique single-turn user/assistant pairs; whitespace normalized; prefix <=32 tokens",
+  "training_sequence_limit": 64,
+  "loss": "All shifted nonpadding tokens, including user and assistant text",
+  "corpus_sha256": "6d336644ca1228a132fe3e2a5dbaa3642f774976249aa9e139b38fae5c15f4b2",
+  "samples": [
+    {
+      "id": "45719de04c007513b403661a720351f3fd61b36bd88f22f49826d10766cccf9a",
+      "prefix_tokens": 23,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "a7406bedf61bdc91e7c42cbf0153b60eedea9238ccafac25b96b2d70d68f597b",
+      "prefix_tokens": 21,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "9162e30d8ad5a4851b061d668f8538584221ee4a5c1a3a01db1a8b0a2b9449a4",
+      "prefix_tokens": 13,
+      "retained_tokens": 56,
+      "split": "train"
+    },
+    {
+      "id": "5ab7fe2c4c9807066e720c0d0d908e3f5a768739bab60b8aa4a7cce7b6b44b69",
+      "prefix_tokens": 19,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "91e23d009a064f5b77c4ec13fa13dc0d0548ce9e1a44dab6706572b7cd72b84b",
+      "prefix_tokens": 25,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "6b6b77de5d3bda7c2bb1434780cf8fd1c1253192651cd63fe2d542c14bec5629",
+      "prefix_tokens": 29,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "faf66018a8b571eaf3eb88478c5ccb4bc21c6d36fbfd39545a8ab551a3fc1bb8",
+      "prefix_tokens": 22,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "873fe69fe8ce706ddb5485ce58413bcc663190735af08148c9c643049a9f05d1",
+      "prefix_tokens": 19,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "bc7ae7503e619e8c6ed59d3acc34dcd9a3164ab1eeba1f83c17efcb4cc19856e",
+      "prefix_tokens": 29,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "1af3d362f02d3d459c95a60df617691bc8ccbf24116767263e0de85ae86f2080",
+      "prefix_tokens": 17,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "dda5f3f547e04ce8fa599e8bae978c090a709ef2217337d9c8e36c5d23f8f18a",
+      "prefix_tokens": 28,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "1826d48f1deb673a291aeae015687f5f5937f74c94e1bdaf1ad1e677200d7ac3",
+      "prefix_tokens": 15,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "b753d44f627084f849f6b7e18131943b6b860ae50b4ad5d2adf5a2769293f43f",
+      "prefix_tokens": 27,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "faedb0661d1271e008cf5c731297be0c1839d37acc94b44b81b4dadf72f02065",
+      "prefix_tokens": 23,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "9367420c8cdffdcc20ea7342df8e0c404efd2d38655cdf8c09cbbe75adcfce93",
+      "prefix_tokens": 22,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "7c128b1fd6b26321e968ddb27e84300572fa7e49898ee4da865418cc564737cf",
+      "prefix_tokens": 10,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "d26a19842e878274a9b39770af5e477363149c9c26df2c128c0bea4cd85dec05",
+      "prefix_tokens": 21,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "7e83f4bcda1b62967c58fa9b979dec388c2c0b7f2391d66db6e9af39351ddd66",
+      "prefix_tokens": 24,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "c8c9cc409baadb196bae7c7da61af50a8081be51b347d1bb102bbf0eebb3acd0",
+      "prefix_tokens": 13,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "43eca3ee2e00067fdfa6b229e006a19be89a04bee5c9af4c17f0c9fb74940d6d",
+      "prefix_tokens": 22,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "02577f3c41b8c20f4467613143b1474eccad9ee614169cfc05fc78d59d34d9fe",
+      "prefix_tokens": 25,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "03e971518a4504edc5d0f2523de32763b0b7d38f908098dc31855de59a897f66",
+      "prefix_tokens": 18,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "f9e8a026abcb0b2030da2d8a5466517283ee7cdc3be21c42cb9aa5020c2c1a01",
+      "prefix_tokens": 14,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "7c54ae538ef1dd3b842ae5d1bf6550d70b555444102394388e85d77521c3c0be",
+      "prefix_tokens": 24,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "485f3a96ea480649472b527a6cb2a4abe0a3ac91bd8f1a02fefb69d5370d9efa",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "8dd91b46bf4e8ae377537f4b7b869dcddd907a66eff0be1eeabd3c1daa605ca9",
+      "prefix_tokens": 13,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "baebb81fb62ed3abea52141b63eff51f712811941464060007f71cd888d65ca3",
+      "prefix_tokens": 17,
+      "retained_tokens": 58,
+      "split": "train"
+    },
+    {
+      "id": "4efe1f51c2261953eefb21e8877f134fad0bffef55ebe50158611ee49fd49f96",
+      "prefix_tokens": 28,
+      "retained_tokens": 32,
+      "split": "train"
+    },
+    {
+      "id": "cfc5bc064fad876cfb60759c2fe87a7ea61d33b603cd66b7ccd7f1452d28647f",
+      "prefix_tokens": 13,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "72f600cd29b7712da3b01f8e7e534e09234e7f9e694623efd30542a5d7c0a0f1",
+      "prefix_tokens": 24,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "ed76585d922bc123c4a521ecf050e2a4f1db02e78139dabe07d705773932ce22",
+      "prefix_tokens": 15,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "58cb37ed27abee94c70e506ea1886943c2596ef8be3f058b195e605ff6b365d6",
+      "prefix_tokens": 18,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "94e261c080f95c041f45455f760adddf80c2f916ca1307a25f0393c7d707fd6c",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "77ab0789397fea1e11f6c9ebb1e59d73312853962bed25f6fd7db4a1af6bea84",
+      "prefix_tokens": 24,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "cbbb92ca7a19a2ec0abb8461dde77d886e4a716476ca0d6d4a58a79fbab0de7e",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "ef885da7f0fd5b01321a2b2adef53d11589274222cc74543bd97d372928e3f86",
+      "prefix_tokens": 11,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "76c2231890e9e384228b6f92e902b6120e20cae7eb85ad13ad93d8cb57b36175",
+      "prefix_tokens": 23,
+      "retained_tokens": 48,
+      "split": "train"
+    },
+    {
+      "id": "15aa0e4c1cc743635d3becab31071e4ee589b5e493bd9a3d44eb79fafb8b5899",
+      "prefix_tokens": 25,
+      "retained_tokens": 57,
+      "split": "train"
+    },
+    {
+      "id": "d385f6fffde19bb952b8858641e42cdac8c7533b1860d448a59b5d1c065edb7f",
+      "prefix_tokens": 17,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "834229f39cfed515a02e9c9818ea5309d1b517697e1acf40affe708508e9243e",
+      "prefix_tokens": 24,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "0f9f695df504da052a71da926df2707c31bb2d1888a5dc6992286af6e3a531bd",
+      "prefix_tokens": 13,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "3a674a93804f0cb967c174c325faa1dd6dacce34ef6f4437c44bd198c885a7e9",
+      "prefix_tokens": 17,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "931da2761203a96fce6235b2d2ca915844471cafe9e797ed098c864e39ac2bf6",
+      "prefix_tokens": 18,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "8dea188ea07175f52d030aabf3829f304bcfa01156dd9810eb70830ae5ae87e9",
+      "prefix_tokens": 14,
+      "retained_tokens": 44,
+      "split": "train"
+    },
+    {
+      "id": "887be64dc3ab21f688cc24a7cfbc74eb6198ece85e10800bdff91b5a7396c67b",
+      "prefix_tokens": 26,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "b3674629e2a7063975befe2f31e9684d95c6a5de56643b9a3f952e61a771bfae",
+      "prefix_tokens": 12,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "a4b4849a439955ab5799154a77ffa93bce754ec5b1990c44589637093aada104",
+      "prefix_tokens": 25,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "d119fe66d503432a4166b64a77d4dd4bc8628131d4e576ef94bf5872e4903c79",
+      "prefix_tokens": 29,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "3705c223a2949168d3728ec9da094578d20232811b6cf63aa22361ed75ea4834",
+      "prefix_tokens": 15,
+      "retained_tokens": 58,
+      "split": "train"
+    },
+    {
+      "id": "c24d9d6e51f1501893538972708df278a4e9e1b396f20de14822200f91f3934a",
+      "prefix_tokens": 22,
+      "retained_tokens": 59,
+      "split": "train"
+    },
+    {
+      "id": "af73e5cafc66abfe9fe82da756a95f12be2be45029671d7d24645341484a2899",
+      "prefix_tokens": 11,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "7e9a7cfbe4600f1e1af2e1ce67273e839000c75dbaa90927db2219deda2ed8ca",
+      "prefix_tokens": 27,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "9283c5b8dd2bd1db8a1e9f919d30542419d316b4413a6e7f6e7c10147bb72602",
+      "prefix_tokens": 31,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "167d16dfc93474a934fce7fe0826a7943ee5f389dca25d27b9afed94735749f1",
+      "prefix_tokens": 19,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "23eae30a6086da0783bdc1eac89ba7317e947e5943547afe1870e84c24959564",
+      "prefix_tokens": 17,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "38393dd54349f494914bc21864ce63151972dfac860d08d596d860cb75b8e9b6",
+      "prefix_tokens": 14,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "2851653adbd07d91bb4bb1178667964d9772a53c19c63dd38b2c5ec0354b44bd",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "a8ba9d3220f90ea669d6d39ee5145f24387fa80578ec086f21759e281e211be3",
+      "prefix_tokens": 11,
+      "retained_tokens": 58,
+      "split": "train"
+    },
+    {
+      "id": "5a9be7520fac4153393758c3e44573f86c78370537b6619d7a7306a04beda2d5",
+      "prefix_tokens": 32,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "af5bbf9808cf2c0b5ad89c81648be9289630cca5d5300fd04caa83038afc6e40",
+      "prefix_tokens": 23,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "c659fc587bcd72bb3332f4d2150b8f535ac09922cc9eed00e3f8ed9a86027d8a",
+      "prefix_tokens": 32,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "001d678a9ff4b6aa83fa3495283bd772cead249d8da6b9f7e72a69ec38918124",
+      "prefix_tokens": 13,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "870c590f55a26f1262f903bcb83371e81fdde60ef3a2331f53cb68f22eaf0a17",
+      "prefix_tokens": 29,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "a89a67f6513afae750b6bac838d5b5d36e1f71fc118e2977f4a357a2197b6d3e",
+      "prefix_tokens": 27,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "c5d76f18fcb94b67d594a991e2e3596b476aa26e4f0e2a1836d4d0e197db4661",
+      "prefix_tokens": 29,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "4672f666f82cf37d7af22e8aa8cc96778c4ac3cc24f01ce7d62a99178c6a58e3",
+      "prefix_tokens": 21,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "8f2548259f5ae6847801fff7388f8a068ebd713ec39b5346966929a647eaf818",
+      "prefix_tokens": 13,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "c29a866dbb1b99fc5b85cfcc44e5c4d016dc39df971ed3a30cf0f5753b5efed0",
+      "prefix_tokens": 22,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "0233dd9a01969b3bae924276362c3ea058b149b5449b7153511bfd7b82dde0a2",
+      "prefix_tokens": 18,
+      "retained_tokens": 33,
+      "split": "train"
+    },
+    {
+      "id": "f8eb3914eb42f162e7a7a818ce105ed4fe1cf03bcdd989feca53de13145b5b4b",
+      "prefix_tokens": 17,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "293a54a5e6e661ada4276cc86c391599745fe26bc7ae18aae708283268bb31b6",
+      "prefix_tokens": 28,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "771603bc722d956498e10bd016effeb6b252d359102e4cb9f8fbb59b24bb45b7",
+      "prefix_tokens": 19,
+      "retained_tokens": 51,
+      "split": "train"
+    },
+    {
+      "id": "2b2153a886bf93d65420c4f97b8273851790f0b04506683987062ae182706f97",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "5fea4f0effa79c24ae231731bfd3153b52181cbfa88b39457dd7741ffa8ceff0",
+      "prefix_tokens": 23,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "3929fab2be7ae51a02a4b288354dcbcb498e9345188c90b3fd077fd7f33517a6",
+      "prefix_tokens": 20,
+      "retained_tokens": 53,
+      "split": "train"
+    },
+    {
+      "id": "0010ee3901ad97e796eac7cf04adb2a98ef570a5ed55e0a689e954270c660b23",
+      "prefix_tokens": 28,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "3ef2063b315738d18aef2a717f690e041731d2568350fb300f883096e5af99dd",
+      "prefix_tokens": 14,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "dec199a8f104b22f966bdc91be9559ba67ea65ab117efafb546c3d2b3be0d029",
+      "prefix_tokens": 15,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "f5d64cd5de25a24c8250397507ae7448be035ca41780501416d92d4e355f4b78",
+      "prefix_tokens": 25,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "a8fdede151a1c934781ca22f61e2d9b89037a6c79d2825468debe43da60dee79",
+      "prefix_tokens": 28,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "e47fe0622ad4f3cfdc85f0bac6dfd202c9a67901d1f94813971d312f32813d79",
+      "prefix_tokens": 23,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "bd957ec2c6f855aacba55ff17ebbaea0e701e2aa40047c1ac7726918f181f8aa",
+      "prefix_tokens": 32,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "dd98ac7e240133cbc407754412a8c6c75126a7eb4e3258cde13f1074d022330f",
+      "prefix_tokens": 25,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "7b361c3e28b83402f8d7eb3b55afa686dcaf327adc1e8606a8ec04702d459fdb",
+      "prefix_tokens": 14,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "4f735b12cb79f471092c8f278afa3576be7ca80314d5f78953120c29badc22d5",
+      "prefix_tokens": 28,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "f49657698d907fb22edfb822be5671bf88f445e07fb27f8e34e2a90486e7f096",
+      "prefix_tokens": 31,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "05f19ece67a8cdd982d42ce29746c7b1c5dc31214b2b50ab0a12cf0891d9dba4",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "3eade95594f8d1fa8f3d49445986187ccf4631a35ac45909c9a09cd892d76f03",
+      "prefix_tokens": 21,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "a08a293657cf0f54e406aad5a4b248df12e33a67f3ed49604e9e9655a3723c54",
+      "prefix_tokens": 30,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "4074c20b363f853c7cc78fc845d61332aece441177a9271b4cba97e20dc70d28",
+      "prefix_tokens": 32,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "468ca747fe6a00b77eadde754e41578fd3de8cc259bf656b53b6d566ee5b7baa",
+      "prefix_tokens": 12,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "708f64a3d3cbcbdabafe53646f68d178136d39ed1934ac058d778639139744b4",
+      "prefix_tokens": 15,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "18fc80c45a764b8f960749266f39dce18c8c88260122d38bbae15f5eb80f6859",
+      "prefix_tokens": 10,
+      "retained_tokens": 52,
+      "split": "train"
+    },
+    {
+      "id": "09fd73608f1b577b13ec9e5c8fdf40863ba1f06c326738aa2ca1dee0ab618bab",
+      "prefix_tokens": 15,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "880d4392e197df217af02c04fd91cb338dbaabbdb3345f8bbb8b938ddbb822ce",
+      "prefix_tokens": 13,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "c45bca1514d0f0bccdcb607e2f70c4dd7adb5838a16890974256aa5c9e961a83",
+      "prefix_tokens": 14,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "a6a4f8d442c0efbf4d1cd24a42c10322af42abfad802de425db2a6b3d11dfe47",
+      "prefix_tokens": 23,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "3ed12d0f078cc4f240ceeb6c70b78dffdfaacfc041f5c66d1b8a8270ef14dd8b",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "484a7383586712f559c98eed43c9e4c43816c8a4a3385bf148819db174dde1b7",
+      "prefix_tokens": 12,
+      "retained_tokens": 29,
+      "split": "train"
+    },
+    {
+      "id": "6c3963ce40ae3ecf9f8bd934486f0ffa45a1c736653a8b8debe7f9cedf8441e9",
+      "prefix_tokens": 21,
+      "retained_tokens": 46,
+      "split": "train"
+    },
+    {
+      "id": "d5eee84dcdc368581538b070cb900b1dc015d3b5e0dfa3f86871196dbcf3accc",
+      "prefix_tokens": 31,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "578606ecee5ffd499c19b67db7b22c65954807f530e3c5fe9f02b8bc653867b5",
+      "prefix_tokens": 27,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "e04b099ee0032c605a100a12cd06b054c595b6f792c1f9e1b9effb77338bbcf2",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "53bd8da891a915d5ecb2de093c6710b4ca30b2660e08bb9cc5134c4db8492b7e",
+      "prefix_tokens": 12,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "163a2f85c7684b00a77a19475ee1cf5e2bf381300e528b9d7191c8dbada9d16c",
+      "prefix_tokens": 30,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "a5f48dc744d18c2d26fbc5077973f838be82b07230fdce385c1adfd0cc28fbcd",
+      "prefix_tokens": 18,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "76c5da68fb80236b3c424ed3cab6b5461707593072db07875c0b84c9bac10f59",
+      "prefix_tokens": 11,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "0f7c9d18ccaf1eb296e918eb4bdc24b17d60c7a9b5aea7e6950a85361eb70f29",
+      "prefix_tokens": 14,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "c1af44b00c617a6f6a17fecd4919d7439a619d1e8a3a740be1589c7ab5d1dd3c",
+      "prefix_tokens": 28,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "e63880600be0a6905267379657913ad03d6dc2d91cfde49c399aa8a5ca0d0904",
+      "prefix_tokens": 19,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "3668de3ffef3a0150c1ecaff0126635ff950ad56ba7d4eabe66766454e94eaf9",
+      "prefix_tokens": 22,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "528b09283928e4b12e8dd527d24d031077844efdc909385d5b6da87b73b0437c",
+      "prefix_tokens": 11,
+      "retained_tokens": 60,
+      "split": "train"
+    },
+    {
+      "id": "7dd343b43f970c3bdd62df2abf4973c0609a0b8ffddcfb8069452b3828580277",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "c0cb9a4a8daef4e7e7a49d18fb5dc1d99a44f701e11c17138700e0a75d369e33",
+      "prefix_tokens": 14,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "4609ba73400bf940fb134650b7cda2634d42a7252f4cd0b7705930e32b349812",
+      "prefix_tokens": 22,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "b273a8744ef6f93dbae81903ea7471e1d8fe6d6e23de9d533836ef5370db3b42",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "7ab3a0ddec4991bd72e592cf72943cb1717171f0cdf79e63065b2a882a23696a",
+      "prefix_tokens": 25,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "a25df8c17750dedf389d812e0989cc55f384ba5307dfe7368fd08b27ca1ffc37",
+      "prefix_tokens": 20,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "b46c7c5000139abd396aef18159e66706ca671eac8665af8a1c36f1144b4c762",
+      "prefix_tokens": 31,
+      "retained_tokens": 60,
+      "split": "train"
+    },
+    {
+      "id": "33ca2c0d04af02cf5ca6802247f10866a6a2da6dcd76af542c5093cb15c89c04",
+      "prefix_tokens": 24,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "38b6d4937c8d9a06ef544396617ba06e7992c15af4c1098ea80734a65105d765",
+      "prefix_tokens": 31,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "35f647f2fb1491a5a981fc9b57b774325a10f74939f5ef568ff94b1994ce2dc9",
+      "prefix_tokens": 19,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "aad7df35188b1c0dd11d15553e5e06514ac437821a65d111f8222a05717a2692",
+      "prefix_tokens": 28,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "123a4396da5af22cc187b9d4282a4216bc7e9affddd145de577ff43d7254ff45",
+      "prefix_tokens": 13,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "5060164102511a44b008ff5cb289942734ad4d85e61e0449fe2b70ea5ac39453",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "f2a1c4d6f13b998ba5232059afeea7de003431a5362dffcae425013e5d066f3c",
+      "prefix_tokens": 29,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "ef01509cc83fafa48c4f66a60cbc005fe2e5bf090766bae45566e43b8d1b3a98",
+      "prefix_tokens": 14,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "88aac00093ee38505252271f8fa27e284c515a5c9023a95f55bcb372c74aa5c0",
+      "prefix_tokens": 17,
+      "retained_tokens": 64,
+      "split": "train"
+    },
+    {
+      "id": "17b62a7ecf91cae6ab14f5504d18da30b44396a30219e2b824a59607e58053a5",
+      "prefix_tokens": 25,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "02c4f02245b627721c8a03184b85e95b2d7a2a3e2757fcaa53a3f227785f0277",
+      "prefix_tokens": 23,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "c4c48bb83330aaf49d90f0673248fb903b29f16adad3efc331c17dd200202483",
+      "prefix_tokens": 17,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "446c0186eeb24e8a43d0ab7dd13d314a20e86b3523aa23dc1d8e68422e7b7cce",
+      "prefix_tokens": 18,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "396b9869a1bcf5dc03b28b5b7d9beca4bcba0e336601de2c72d753a5581c0e7e",
+      "prefix_tokens": 20,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "ed6df8fada20e3613a2ee2142eb619726f7389f0b6464480a37e7f675dacf148",
+      "prefix_tokens": 14,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "9aa4a72006d99dbfa3577a09727a94f45fe46287f36c6a57f05277c5ee7241ab",
+      "prefix_tokens": 21,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "0f861d5aa34b0dcfc2ddd35da09fc581aff25b042a2795f36bda290e00071378",
+      "prefix_tokens": 25,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "2933db9a81070f5a3a907dddc7bfb53954204e9ce6accdbe16fa8236e73702bd",
+      "prefix_tokens": 13,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "50afd036b32ea68be44204ffab02e3f5cb85068de3d905b820844c09b77e17a5",
+      "prefix_tokens": 18,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "07727af96427cfb80e78aba4d505f97dde11e3c5969f44fe5664b45e8b4e7df7",
+      "prefix_tokens": 27,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "e10eb2e3fd3cbcbc45858578621b9b4e64aca3dd8f3b0ad39a472fa3c490f660",
+      "prefix_tokens": 22,
+      "retained_tokens": 48,
+      "split": "test"
+    },
+    {
+      "id": "59fd818054494e1765970af339112c6adf8fd23735c5d25d9737f96c3d0d915e",
+      "prefix_tokens": 24,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "ccdce774f24ede2e799686276e8b72e8b08a4aebf6ba75ecc450fc73cfedd1a8",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "b72a4b2add1b1711109547a75c5318b94db761dc3cd2c08e73e11cfe14469e96",
+      "prefix_tokens": 14,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "11cb75d074a4a74b12c17ea021dfe17d72909661a28ca255e000d86573e52f4a",
+      "prefix_tokens": 17,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "e038c9bbc2ec4556f6ab47f9651fa89cb5d7f72891a5fba4415e13f18f7ca0b7",
+      "prefix_tokens": 11,
+      "retained_tokens": 41,
+      "split": "test"
+    },
+    {
+      "id": "04f4e8dcb7a85d3d2942a5b8a88dba98e688b47fb767d15e5d6a6580cf920dd1",
+      "prefix_tokens": 14,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "fd80e71474ab525762acf1d979f85ecb5a6fe83d34087d7baac7f108e31b4415",
+      "prefix_tokens": 26,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "bc90d0b2dd1afcddd8de7b2e7ff4d4c770018190ad63c0d1de27cd6c0c046979",
+      "prefix_tokens": 16,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "c5bec6d10044644190ba466977bdab9375264adaae2d0c377ffa48410063fc80",
+      "prefix_tokens": 26,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "62ad8ad2fb5e912a6a726ce97148ab183e00836f1f419cb36b40ce9b539f966b",
+      "prefix_tokens": 30,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "ecdac8f179582eb850ec28155ea59279e445c219d7bcccc6753cef24a7199a42",
+      "prefix_tokens": 15,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "2ace06c7fd726671319de8192f3fe5480f5297faab8f09753c1cfe7d6df294fd",
+      "prefix_tokens": 22,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "c1c9a958b19539efc3ce03adb85c0c7811393e90d35f33f4d96e999d79e3e8a9",
+      "prefix_tokens": 19,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "45678c64b9b9861841bb742e8e05cc4c421d21c9bf4dcdf637a96e827c661830",
+      "prefix_tokens": 22,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "1af4443ea535d2f85009c7705db3081bfa675eda1ffcb4de92ac70102fe23448",
+      "prefix_tokens": 31,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "9f2696fa31f6f52d177f0acde38b92505c990b9a2cb440af41bababe680ca217",
+      "prefix_tokens": 30,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "02697bcf2ecb738e9532ddba8b7079aa21d8bb9744456dcde524871c3eb728f8",
+      "prefix_tokens": 29,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "45242f3a7707cd505500f1026ea4840d01c833047ca5b677ce90ae7e029dcbdc",
+      "prefix_tokens": 12,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "0dc3429898c88946ff7e6b1d33b8ba1ca2fe61216f700a9d88df16e14a6b7d8d",
+      "prefix_tokens": 12,
+      "retained_tokens": 64,
+      "split": "test"
+    },
+    {
+      "id": "602272a99566bf68a5b48979478bceb0b56f74915925ed8a1b0a558935df3584",
+      "prefix_tokens": 20,
+      "retained_tokens": 64,
+      "split": "test"
+    }
+  ],
+  "versions": {
+    "datasets": "5.1.0",
+    "transformers": "5.22.1",
+    "tokenizers": "0.23.3",
+    "huggingface-hub": "2.4.0"
+  },
+  "preparation_source_sha256": "ee0d5ba059e6d0de76850efca200fc0f0cc746ff3deb24da78738941b37d33c6"
+}

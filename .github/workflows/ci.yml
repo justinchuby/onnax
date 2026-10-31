@@ -65,4 +65,4 @@ jobs:
         with:
           python-version: "3.11"
       - run: uv sync --group dev --group training --group huggingface
-      - run: uv run --no-sync pytest -q tests/test_segmented_session.py tests/test_huggingface_bridge.py tests/test_qwen_sft.py tests/test_qwen_adapters.py tests/test_qwen_nf4.py tests/test_qwen_bf16.py tests/test_qwen_rms_audit.py tests/test_qwen_local_vjp.py tests/test_training_impact.py tests/test_reference_head.py tests/test_saved_residuals.py tests/test_mlx_validation_report.py tests/test_runtime_factory.py tests/test_reference_losses.py tests/test_joint_loss.py
+      - run: uv run --no-sync pytest -q tests/test_segmented_session.py tests/test_huggingface_bridge.py tests/test_qwen_sft.py tests/test_qwen_adapters.py tests/test_qwen_nf4.py tests/test_qwen_bf16.py tests/test_qwen_rms_audit.py tests/test_qwen_local_vjp.py tests/test_training_impact.py tests/test_quality_corpus.py tests/test_reference_head.py tests/test_saved_residuals.py tests/test_mlx_validation_report.py tests/test_runtime_factory.py tests/test_reference_losses.py tests/test_joint_loss.py
