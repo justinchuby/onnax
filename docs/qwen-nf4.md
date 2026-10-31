@@ -302,6 +302,20 @@ and backward arithmetic contribute to the independent update drift. The
 [runtime trajectory matrix](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-nf4-runtime-trajectory-matrix.json)
 includes full hybrid results and commands to reproduce each combination.
 
+A full optimizer-state trace locates the first native parameter failure at
+step 95, `model.layers.0.self_attn.q_proj.lora.B[2,17]`. Its parameter gap
+grows from -8.61e-7 to -2.02e-6 during that step. Swapping the current gradient
+and moment history in the Adam formula attributes -1.71e-6 of the update gap
+to history and +5.58e-7 to the current gradient. The current gradients are
+about 0.00537; this trajectory crosses tolerance through accumulated history.
+
+Reconstruction from the stored FP32 moments matches every captured update
+within 1.85e-9. Capturing the states preserves all original per-step checks
+and loss values exactly. The
+[first-divergence report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-nf4-adam-first-divergence.json)
+contains the coordinate's complete 100-step history and the reconstruction
+scripts. Scalar reconstruction uses host arithmetic; training remains FP32.
+
 The [paired runtime audit](qwen-runtime-audit.md) compares CPU and MLX gradients
 with fixed forward residuals and provides reusable segmented ONNX execution.
 
