@@ -258,6 +258,13 @@ and comparison tolerances match the default run. Each step also compares
 gradients at shared parameters while preserving the independent optimizer
 states. A failed comparison saves the complete report and exits with status 1.
 
+In the 100-step stable-reference run, all shared-parameter forward, loss and
+gradient checks pass. Independent parameter checks exceed tolerance at steps
+95–100; independent gradient checks first exceed it at step 87. Loss decreases
+from 5.50393 to 4.85798. The
+[stable-reference trajectory report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-nf4-mlx-stable-reference-100.json)
+retains all step comparisons and `strict_checks_passed=false`.
+
 The [paired runtime audit](qwen-runtime-audit.md) compares CPU and MLX gradients
 with fixed forward residuals and provides reusable segmented ONNX execution.
 
