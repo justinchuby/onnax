@@ -130,7 +130,10 @@ class JointLoss(torch.nn.Module):
             [torch.nn.Parameter(torch.from_numpy(value.copy())) for value in params.values()]
         )
         self.frozen = frozen_hashes(model)
-        identity = json.dumps({"frozen": self.frozen, "names": self.names}, sort_keys=True)
+        identity = {"frozen": self.frozen, "names": self.names}
+        if precision := model.metadata_props.get("onnax.example.precision"):
+            identity["precision"] = json.loads(precision)
+        identity = json.dumps(identity, sort_keys=True)
         self.register_buffer(
             "base_identity",
             torch.tensor(list(hashlib.sha256(identity.encode()).digest()), dtype=torch.uint8),
@@ -157,7 +160,9 @@ class JointLoss(torch.nn.Module):
     def _load_from_state_dict(self, state_dict, prefix, *args, **kwargs):
         identity = state_dict.get(prefix + "base_identity")
         if identity is None or not torch.equal(identity.cpu(), self.base_identity.cpu()):
-            raise ValueError("Checkpoint base model or parameter mapping mismatch")
+            raise ValueError(
+                "Checkpoint base model, parameter mapping or precision policy mismatch"
+            )
         return super()._load_from_state_dict(state_dict, prefix, *args, **kwargs)
 
     def export(self, directory, *, forward_model=None):
@@ -205,6 +210,8 @@ class JointLoss(torch.nn.Module):
                 )
             ],
         }
+        if policy := self.model.metadata_props.get("onnax.example.precision"):
+            interface["precision"] = json.loads(policy)
         with open(os.path.join(directory, "interface.json"), "w") as stream:
             json.dump(interface, stream, indent=2)
         return interface

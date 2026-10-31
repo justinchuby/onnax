@@ -106,13 +106,29 @@ def test_independent_multi_step_updates():
                 )
 
 
-@pytest.mark.parametrize("mode,nf4", [("full", False), ("joint", True)])
-def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4):
+@pytest.mark.parametrize(
+    "mode,nf4,precision,provider",
+    [
+        ("full", False, "fp32", "cpu"),
+        ("joint", True, "fp32", "cpu"),
+        ("joint", False, "bf16", "reference"),
+    ],
+)
+def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4, precision, provider):
     import os
     import subprocess
     import sys
 
-    run(str(tmp_path), mode=mode, nf4=nf4)
+    result = run(
+        str(tmp_path),
+        mode=mode,
+        nf4=nf4,
+        projection_precision=precision,
+        provider=provider,
+        diagnose_rounding=precision == "bf16",
+    )
+    assert result["frozen_buffers_unchanged"]
+    assert result["validation_loss"][1] < result["validation_loss"][0]
     resumed = tmp_path / "resumed"
     with np.load(tmp_path / "export" / "adapter.npz") as data:
         expected = {n: data[n].copy() for n in data.files}
@@ -127,6 +143,11 @@ def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4):
             os.fspath(tmp_path / "checkpoint-50"),
             "--mode",
             mode,
+            "--projection-precision",
+            precision,
+            "--provider",
+            provider,
+            *(["--diagnose-rounding"] if precision == "bf16" else []),
             *(["--nf4"] if nf4 else []),
         ],
         check=True,
@@ -139,7 +160,7 @@ def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4):
 
     from examples.huggingface.replay import verify
 
-    replay = verify(str(tmp_path), str(resumed), step=100)
+    replay = verify(str(tmp_path), str(resumed), step=100, provider=provider)
     assert replay["optimizer_bitwise_equal"]
     assert replay["export_load_outputs_bitwise_equal"]
     if mode == "joint":

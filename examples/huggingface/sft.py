@@ -3,6 +3,7 @@
 """Mobius Qwen3 ONNX fine-tuning through TRL SFTTrainer."""
 
 import argparse
+import contextlib
 import functools
 import hashlib
 import json
@@ -210,8 +211,13 @@ def prepare(
     optimize=True,
     save_activations=False,
     nf4=False,
+    projection_precision="fp32",
     session_factory=session,
 ):
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 projection precision")
+    if projection_precision == "bf16" and (nf4 or mode != "joint"):
+        raise ValueError("BF16 projection training uses joint execution with an FP32 base")
     reference = reference_model(real)
     base = build_base(reference)
     adapted, params, mapping = inject(base)
@@ -221,6 +227,10 @@ def prepare(
         from examples.huggingface.nf4 import lower_decoder
 
         graph, quantization = lower_decoder(graph, reference)
+    if projection_precision == "bf16":
+        from examples.huggingface.mixed_precision import bf16_projections
+
+        graph = bf16_projections(graph)
     model = OnnxQwen3(
         reference.config,
         graph,
@@ -233,6 +243,7 @@ def prepare(
         session_factory=session_factory,
     )
     model.quantization = quantization
+    model.projection_precision = projection_precision
     return model, reference
 
 
@@ -302,12 +313,17 @@ def run(
     library=None,
     segment_nodes=None,
     stable_reference=False,
+    projection_precision="fp32",
 ):
-    if provider not in ("cpu", "mlx"):
-        raise ValueError("Expected cpu or mlx provider")
-    if provider == "cpu" and (library is not None or segment_nodes is not None):
+    if provider not in ("cpu", "mlx", "reference"):
+        raise ValueError("Expected cpu, mlx or reference provider")
+    if provider != "mlx" and (library is not None or segment_nodes is not None):
         raise ValueError("Library and segmentation options require the mlx provider")
     runtime = session
+    if provider == "reference":
+        from examples.huggingface.serialization import reference_session
+
+        runtime = reference_session
     if provider == "mlx":
         from examples.lora.mlx_runtime import register_library
         from examples.lora.mlx_runtime import session as mlx_session
@@ -319,6 +335,10 @@ def run(
         raise ValueError(
             "FP64 oracle expects an FP32 base; use the dequantized FP32 NF4 reference"
         )
+    if projection_precision == "bf16" and fp64_audit:
+        raise ValueError("FP64 diagnostics require the FP32 projection policy")
+    if projection_precision == "bf16" and provider == "cpu":
+        raise ValueError("Select mlx or reference for BF16 projection execution")
     torch.set_num_threads(4 if real else 1)
     model, reference = prepare(
         real,
@@ -327,6 +347,7 @@ def run(
         optimize=optimize,
         save_activations=save_activations,
         nf4=nf4,
+        projection_precision=projection_precision,
         session_factory=runtime,
     )
     initial_frozen = frozen_hashes(model.forward_graph)
@@ -334,6 +355,10 @@ def run(
     from examples.huggingface.validation import add_reference_adapters, audit
 
     reference = add_reference_adapters(reference, model)
+    if projection_precision == "bf16":
+        from examples.huggingface.mixed_precision import reference_projections
+
+        reference = reference_projections(reference)
     sample = tok(texts()[0], return_tensors="pt")
     sample = {k: v for k, v in sample.items() if k in ("input_ids", "attention_mask")}
     sample["labels"] = sample["input_ids"].clone()
@@ -344,7 +369,12 @@ def run(
         from examples.huggingface.reference_head import pairwise_head
         from examples.huggingface.reference_losses import stable_token_loss
 
-        with pairwise_head(reference):
+        control = (
+            contextlib.nullcontext()
+            if projection_precision == "bf16"
+            else pairwise_head(reference)
+        )
+        with control:
             return audit(
                 model,
                 reference,
@@ -373,12 +403,13 @@ def run(
         "revision": REVISION if real else None,
         "steps": trainer.state.global_step,
         "mode": mode,
+        "projection_precision": projection_precision,
         "validation_loss": [before, after],
         "audits": [initial_audit, final_audit],
         "quantization": model.quantization,
         "provider": provider,
         "segment_target_nodes": segment_nodes,
-        "ort_graph_optimization": "disabled",
+        "ort_graph_optimization": None if provider == "reference" else "disabled",
         "frozen_buffers_unchanged": frozen_hashes(model.forward_graph) == initial_frozen,
     }
     if provider == "mlx":
@@ -396,7 +427,11 @@ def run(
     if stable_reference:
         report["stable_reference_audits"] = {
             "loss": "target-excluded stable CE",
-            "head_backward": "FP32 pairwise K blocks of 128",
+            "head_backward": (
+                "FP32 adjoint using BF16-rounded operands"
+                if projection_precision == "bf16"
+                else "FP32 pairwise K blocks of 128"
+            ),
             "checks": [initial_stable, final_stable],
         }
     final_params = model.onnx.arrays()
@@ -475,8 +510,9 @@ if __name__ == "__main__":
     parser.add_argument("--save-activations", action="store_true")
     parser.add_argument("--fp64-audit", action="store_true")
     parser.add_argument("--nf4", action="store_true")
+    parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
     parser.add_argument("--peft-roundtrip", action="store_true")
-    parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
+    parser.add_argument("--provider", choices=["cpu", "mlx", "reference"], default="cpu")
     parser.add_argument("--library")
     parser.add_argument("--segment-nodes", type=int)
     parser.add_argument(
@@ -503,6 +539,7 @@ if __name__ == "__main__":
                 library=args.library,
                 segment_nodes=args.segment_nodes,
                 stable_reference=args.stable_reference,
+                projection_precision=args.projection_precision,
             ),
             indent=2,
         )

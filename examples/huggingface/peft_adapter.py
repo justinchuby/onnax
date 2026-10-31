@@ -112,6 +112,10 @@ def roundtrip(
 
     export_adapter(model, directory)
     peft = PeftModel.from_pretrained(reference, directory, is_trainable=True).eval()
+    if getattr(model, "projection_precision", "fp32") == "bf16":
+        from examples.huggingface.mixed_precision import reference_projections
+
+        peft = reference_projections(peft)
     initial = model.onnx.arrays()
     peft.save_pretrained(directory, save_embedding_layers=False)
     import_adapter(model, directory)
