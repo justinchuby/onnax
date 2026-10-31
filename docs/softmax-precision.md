@@ -89,6 +89,8 @@ records the scalar oracle, all checks, runtime versions and library hash.
 Call `stable_losses.install(model)` to attach the standard-ONNX function bodies
 after building a graph with these helpers. The chunked head installs them
 automatically. Keep the local functions intact during optimization before AD.
+Function bodies use the containing model's standard ONNX opset (18 or newer),
+including the opset 24 graphs produced by the Qwen builder.
 
 `examples.huggingface.stable_losses` also provides a fixed-teacher logit loss,
 using compensated Log1p/Expm1 ONNX local functions and global JVP/VJP rules.

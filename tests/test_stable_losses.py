@@ -6,6 +6,7 @@ import math
 import os
 
 import numpy as np
+import onnx
 import onnx_ir as ir
 import pytest
 from _testing import runtime_session
@@ -15,14 +16,14 @@ import onnax
 from examples.huggingface import stable_losses as losses
 
 
-def loss_model(kind, *, vocab=3):
+def loss_model(kind, *, vocab=3, opset=18):
     x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[2, vocab])
     other = ir.val(
         "other",
         dtype=ir.DataType.INT64 if kind == "hard" else ir.DataType.FLOAT,
         shape=[2] if kind == "hard" else [2, vocab],
     )
-    graph = ir.Graph([x, other], [], nodes=[], opset_imports={"": 18}, name="stable_loss")
+    graph = ir.Graph([x, other], [], nodes=[], opset_imports={"": opset}, name="stable_loss")
     ctx = onnax.AutodiffContext(graph)
     rows = (losses.hard_cross_entropy if kind == "hard" else losses.distillation)(
         ctx, x, other
@@ -251,3 +252,19 @@ def test_hard_loss_batching_with_shared_operand(in_axes):
     np.testing.assert_allclose(
         runtime_session(batched).run(None, inputs)[-1], expected, rtol=1e-5, atol=1e-7
     )
+
+
+@pytest.mark.parametrize("kind", ["hard", "soft"])
+def test_loss_functions_follow_model_opset(kind):
+    model = onnax.grad(loss_model(kind, opset=24), inputs=["x"], output="loss")
+    onnx.checker.check_model(ir.to_proto(model), full_check=True)
+    assert all(function.opset_imports[""] == 24 for function in model.functions.values())
+    x = np.array([[0, -18, -40], [1, 2, 3]], np.float32)
+    other = np.array([0, -100], np.int64) if kind == "hard" else x.copy()
+    values = runtime_session(model).run(None, {"x": x, "other": other})
+    assert all(np.isfinite(value).all() for value in values)
+
+
+def test_stable_loss_rejects_older_model_opset():
+    with pytest.raises(ValueError, match="opset 18 or newer"):
+        loss_model("hard", opset=17)
