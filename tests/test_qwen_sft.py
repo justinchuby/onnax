@@ -253,3 +253,22 @@ def test_diagnostic_gradient_audit_rejects_nonfinite_values(side):
     batch = {"input_ids": ids, "attention_mask": torch.ones_like(ids), "labels": ids}
     with pytest.raises(AssertionError, match="Nonfinite gradient"):
         audit(model, reference, batch, diagnose_rounding=True)
+
+
+def test_sft_stable_reference_includes_peft_control(tmp_path):
+    from examples.huggingface.sft import run
+
+    report = run(
+        str(tmp_path),
+        steps=2,
+        mode="chunked",
+        nf4=True,
+        stable_reference=True,
+        peft_roundtrip=True,
+    )
+    assert report["frozen_buffers_unchanged"]
+    assert report["peft"]["format_roundtrip_bitwise"]
+    control = report["peft"]["stable_reference_audit"]
+    assert control["loss_check_passed"]
+    assert control["gradient_check_passed"]
+    assert control["update_check_passed"]
