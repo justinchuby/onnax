@@ -89,11 +89,13 @@ def _hard_gradient(ctx, logits, labels):
     target, valid, has_others, shifted, mass, margin = _hard_terms(ctx, logits, labels)
     zero, one = ctx.scalar(logits, 0), ctx.scalar(logits, 1)
     # Stable sigmoid retains negative-margin tails on CPU and MLX.
-    tail = ctx.op("Exp", ctx.op("Neg", ctx.op("Abs", margin)))
+    positive = ctx.op("GreaterOrEqual", margin, zero)
+    magnitude = ctx.op("Where", positive, margin, ctx.op("Neg", margin))
+    tail = ctx.op("Exp", ctx.op("Neg", magnitude))
     denominator = ctx.op("Add", one, tail)
     probability = ctx.op(
         "Where",
-        ctx.op("GreaterOrEqual", margin, zero),
+        positive,
         ctx.op("Div", one, denominator),
         ctx.op("Div", tail, denominator),
     )
