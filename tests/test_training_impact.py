@@ -66,6 +66,32 @@ def test_independent_quality_runs_share_initialization_and_data(tmp_path):
     for actual, expected in zip(combined["comparisons"], report["comparisons"], strict=True):
         assert actual["gradient_snapshots"] == expected["gradient_snapshots"]
         assert actual["parameters"] == expected["parameters"]
+    from examples.huggingface.training_quality_replay import replay
+
+    replays = []
+    for engine in report["engines"]:
+        result = replay(
+            paths,
+            [tmp_path / "snapshots.npz"] * 2,
+            engine=engine,
+            capture_path=tmp_path / f"{engine}-replay.npz",
+        )
+        assert result["frozen_unchanged"]
+        assert len(result["states"]) == 4
+        for state in result["states"]:
+            if state["source_engine"] == engine:
+                assert state["validation_loss_gap_from_source"] == pytest.approx(0, abs=1e-6)
+        replays.append(result)
+    with (
+        np.load(tmp_path / "torch_cpu-replay.npz") as a,
+        np.load(tmp_path / "onnx_reference-replay.npz") as b,
+    ):
+        from examples.huggingface.training_impact import _vector_metrics
+
+        for left, right in zip(replays[0]["states"], replays[1]["states"], strict=True):
+            assert left["parameter_sha256"] == right["parameter_sha256"]
+            key = left["gradient_key"]
+            assert _vector_metrics(a[key], b[key])["cosine"] > 0.9999
     curve = component["trials"][0]["validation_curve"]
     original = curve[1]["loss"]
     curve[1]["loss"] = float("nan")
