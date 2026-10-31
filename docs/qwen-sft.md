@@ -101,6 +101,21 @@ and audits the second gradient evaluation. All 23 rounded projection inputs and
 outputs match exactly. Incoming gradients meet the original tolerance, with
 FP32 arithmetic differences recorded for each projection.
 
+The measurement CLI accepts the same precision policy. Run each path in a
+separate process, with the same batch size and sequence length:
+
+```bash
+uv run python -m examples.huggingface.benchmark --mode pytorch \
+  --projection-precision bf16 --real --batch-size 1 --warmup 10 --samples 100
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.benchmark \
+  --mode joint --provider mlx --projection-precision bf16 --real \
+  --batch-size 1 --warmup 10 --samples 100
+```
+
+Reports include the projection policy, step median/P95, tokens per second,
+initialization time and peak process RSS. Both paths retain FP32 base storage
+and FP32 surrogate adjoints.
+
 For native execution select `--provider mlx`. The tested macOS ORT CPU backend
 has no BF16 MatMul kernel. This experiment uses FP32 weight storage; NF4 and
 BF16 projection compute currently have separate CLI paths.
