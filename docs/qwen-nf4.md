@@ -135,16 +135,21 @@ bytes or an external-data model path; the same factory handles forward, VJP,
 head prediction and head loss sessions.
 
 On Apple M1 Max, a real-model run with microbatch 1 and gradient accumulation 4
-completed 30 native chunked-loss updates. Validation loss fell from **7.75064
-to 5.63150**. A fresh process resumed checkpoint 15 and reproduced all 112
+completed 30 native chunked-loss updates with analytic CE derivatives.
+Validation loss fell from **7.75064 to 5.63277**. A fresh process resumed checkpoint 15 and reproduced all 112
 adapters, 113 checkpoint tensors, optimizer/scheduler state and loaded ONNX
 outputs byte for byte. Frozen source weights remained unchanged. PEFT adapter
 format exchange also preserved all parameter bytes.
+All 112 adapter gradients pass the stable-reference checks at both endpoints.
+With `--peft-roundtrip --stable-reference`, the PEFT report also includes
+`stable_reference_audit`, using the same loss and pairwise frozen-head
+reference. This additional control preserves the gradients used by the
+original PEFT update comparison.
 
 The initial and final comparisons against Transformers exceed the FP32
-tolerance for 47 and 90 gradient tensors, respectively. PEFT gradient and
+tolerance for 47 and 92 gradient tensors, respectively. PEFT gradient and
 independent-update comparisons also fail. The
-[native SFT report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-native-sft-m1max.json)
+[native SFT report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-native-analytic-ce-sft-m1max.json)
 contains these failures alongside the training and recovery results.
 
 ### Check the FP32 reference
@@ -182,7 +187,7 @@ the CE gradient error against an analytic oracle falls from 9.52e-6 to
 9.12e-9 initially, and from 5.72e-6 to 9.19e-9 after training. Moving the head
 normalization before its matrix product gives little change.
 
-The integrated 30-step SFT CLI run reproduces the validation loss decrease
+The earlier integrated 30-step run, using the expanded CE derivative, records a decrease
 from 7.75064 to 5.63150 with these additional audits enabled. All 112 adapter
 gradients pass at both endpoints; maximum absolute differences are 2.35e-7
 and 9.69e-7. Frozen weights remain byte-identical. Pointwise logits still
