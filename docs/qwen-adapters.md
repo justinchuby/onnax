@@ -130,7 +130,7 @@ The loss decreased from 5.55 to 5.09 over all 110 updates. The session accepted
 adapter gradients. The [measurement JSON](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-qwen-joint-native-m1max.json)
 records the source commit, native library digest, versions and timing scope.
 
-### Real Qwen3-0.6B native eager execution
+### Real Qwen3-0.6B training measurements
 
 The whole-graph joint module runs with the development provider in
 [MLX EP PR #96](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/96).
@@ -141,17 +141,23 @@ continues to execute inside those regions.
 ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.benchmark --mode joint --real --nf4 --batch-size 1 --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib --warmup 10 --samples 100
 ```
 
-On Apple M1 Max, with NF4 decoder weights, FP32 computation and AdamW, batch one,
-sequence length 64 and 63 valid shifted targets per update:
+On Apple M1 Max, all paths use the same NF4-reconstructed weight values, FP32
+computation and AdamW, batch one, sequence length 64 and 63 valid shifted targets
+per update. ONNX stores packed NF4 decoder matrices; PyTorch stores their FP32
+reconstructions.
 
 | Path | Step median / P95 (s) | Valid tokens/s | Peak process RSS (GiB) |
 | --- | ---: | ---: | ---: |
+| PyTorch CPU, reconstructed FP32 base | 0.355 / 0.368 | 177.40 | 4.72 |
 | Saved VJP | 1.650 / 1.717 | 38.18 | 9.79 |
 | Chunked head, recomputed body | 1.511 / 1.539 | 41.71 | 7.99 |
 | Joint loss/gradients | 1.353 / 1.388 | 46.55 | 5.84 |
 
-The sequential runs use the same library, weights, precision, batch and thread
-settings, with 10 warmups and 100 measured updates. The joint path takes 18%
+The native ONNX runs use the same provider library. All runs use the same
+weight values, precision and batch, with 10 warmups and 100 measured updates.
+Public runtime thread counts
+are one; BLAS environment variables are unset and process CPU time is recorded.
+PyTorch CPU is fastest in this configuration. The joint path takes 18%
 less step time and 40% less peak RSS than saved VJP in this configuration.
 RSS includes model construction, runtime, arrays and optimizer allocations.
 
@@ -165,7 +171,8 @@ Joint construction, differentiation and initialization take 150.76 s, including
 decreases from 4.56 to 0.00059 across all 110 updates. ORT graph optimization
 and CPU fallback are disabled.
 
-The [joint](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-joint-eager-m1max.json),
+The [PyTorch](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-pytorch-matched-m1max.json),
+[joint](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-joint-eager-m1max.json),
 [saved](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-saved-eager-m1max.json)
 and [chunked](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-chunked-eager-m1max.json)
 measurement reports record the model revision, source commits, library digest,
