@@ -182,6 +182,14 @@ the CE gradient error against an analytic oracle falls from 9.52e-6 to
 9.12e-9 initially, and from 5.72e-6 to 9.19e-9 after training. Moving the head
 normalization before its matrix product gives little change.
 
+The integrated 30-step SFT CLI run reproduces the validation loss decrease
+from 7.75064 to 5.63150 with these additional audits enabled. All 112 adapter
+gradients pass at both endpoints; maximum absolute differences are 2.35e-7
+and 9.69e-7. Frozen weights remain byte-identical. Pointwise logits still
+exceed the original tolerance at both endpoints. The
+[integrated run report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-native-stable-sft-m1max.json)
+records both sets of comparisons and the runtime library hash.
+
 Independent fresh AdamW updates still exceed tolerance for 48 and 87 parameter
 tensors at these states with epsilon 1e-8. The
 [reference-control report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-reference-ce-m1max.json)
