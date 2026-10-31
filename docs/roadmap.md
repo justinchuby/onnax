@@ -98,9 +98,12 @@ differences and complete independent FP32 update qualification. Shared-input
 projection controls distinguish product accumulation from upstream rounding;
 all comparisons retain their original tolerances. The real NF4/BF16 local
 pullback audit passes all 3,522 input contributions in three adapter states.
-Independent full-graph recomposition now covers 580 fan-in additions per state;
-39/51/108 adapter tensors still exceed the original tolerance. The next audit
-isolates long-dimension product accumulation with scalar dot-product oracles.
+Independent full-graph recomposition covers 580 fan-in additions per state.
+A scalar-oracle audit identifies ordinary CPU reference error in the long
+output-head reduction. With pairwise FP32 head accumulation, all 112 adapter
+gradients pass in all three states at the original tolerance. Next connect
+this check to the exported joint loss/gradient graph and resolve the remaining
+independent forward and loss differences.
 Measured tensor lifetimes
 and the head memory curve will guide recomputation boundaries.
 

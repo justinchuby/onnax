@@ -58,9 +58,23 @@ class _FrozenHead(torch.autograd.Function):
         )
 
 
+class _BF16FrozenHead(_FrozenHead):
+    @staticmethod
+    def forward(ctx, hidden, weight, block_size):
+        if weight.requires_grad:
+            raise ValueError("The reference head weight must be frozen")
+        rounded = weight.to(torch.bfloat16)
+        ctx.save_for_backward(rounded.float())
+        ctx.block_size = block_size
+        return (hidden.to(torch.bfloat16) @ rounded.T).float()
+
+
 @contextmanager
-def pairwise_head(reference, *, block_size=128):
+def pairwise_head(reference, *, block_size=128, projection_precision="fp32"):
     """Preserve Linear's forward and state dict; change frozen-head accumulation."""
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 projection precision")
+    product = _BF16FrozenHead if projection_precision == "bf16" else _FrozenHead
     head = reference.lm_head
     if head.weight.requires_grad or head.bias is not None:
         raise ValueError("Expected a frozen bias-free lm_head")
@@ -69,7 +83,7 @@ def pairwise_head(reference, *, block_size=128):
     original = head.__dict__.get("forward")
 
     def forward(module, hidden):
-        return _FrozenHead.apply(hidden, module.weight, block_size)
+        return product.apply(hidden, module.weight, block_size)
 
     head.forward = MethodType(forward, head)
     try:

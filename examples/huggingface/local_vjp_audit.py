@@ -102,8 +102,13 @@ def trace(model, names):
     return joint, seed_name, probes, unchecked
 
 
-def reference_output(node, operands):
+def reference_output(node, operands, *, pairwise_head=False):
     """Evaluate each observed operation using PyTorch's own autograd rules."""
+    if pairwise_head:
+        from examples.huggingface.reference_head import _BF16FrozenHead, _FrozenHead
+
+        product = _BF16FrozenHead if node.domain == BF16_DOMAIN else _FrozenHead
+        return product.apply(operands[0], operands[1].T, 128)
     if node.domain == DOMAIN:
         _, k, n, block = node.op_type.split("_")
         weight = dequantize(
@@ -233,7 +238,9 @@ def check(probes, observed, constants):
     return {"operators": summaries, "failed_partials": len(failures), "failures": failures}
 
 
-def compose(model, names, observed, constants, seed, derivative_outputs):
+def compose(
+    model, names, observed, constants, seed, derivative_outputs, *, pairwise_head=False
+):
     """Independently reverse the primal graph using captured operand values.
 
     Reachability and fan-in are computed from the primal graph. Generated rule
@@ -254,7 +261,8 @@ def compose(model, names, observed, constants, seed, derivative_outputs):
                 if value.dtype in (ir.DataType.FLOAT, ir.DataType.DOUBLE)
             )
     pending = {"logits": torch.tensor(seed)}
-    nodes = additions = 0
+    nodes = additions = heads = 0
+    vocab = next(value for value in model.graph.outputs if value.name == "logits").shape[-1]
     for node in reversed(list(model.graph)):
         if not any(value.name in pending for value in node.outputs):
             continue
@@ -276,7 +284,20 @@ def compose(model, names, observed, constants, seed, derivative_outputs):
             else None
             for i, value in enumerate(node.inputs)
         ]
-        output = reference_output(node, operands)
+        is_head = bool(
+            pairwise_head
+            and len(operands) == 2
+            and operands[1] is not None
+            and operands[1].ndim == 2
+            and operands[1].shape[-1] == vocab
+            and 1 not in indices
+            and (
+                (not node.domain and node.op_type == "MatMul")
+                or (node.domain == BF16_DOMAIN and node.op_type == BF16_OP)
+            )
+        )
+        heads += is_head
+        output = reference_output(node, operands, pairwise_head=is_head)
         gradients = torch.autograd.grad(
             (output,) if isinstance(output, torch.Tensor) else tuple(output),
             [operands[i] for i in indices],
@@ -302,6 +323,7 @@ def compose(model, names, observed, constants, seed, derivative_outputs):
     return {
         "active_nodes": nodes,
         "fan_in_additions": additions,
+        "pairwise_head_nodes": heads,
         "parameters": len(rows),
         "failed_parameters": sum(row["violations"] > 0 for row in rows),
         "rows": rows,
@@ -317,6 +339,7 @@ def run(
     provider="cpu",
     library=None,
     adapter=None,
+    pairwise_head=False,
 ):
     if not b_values or not all(np.isfinite(value) for value in b_values):
         raise ValueError("Expected finite adapter B values")
@@ -406,8 +429,20 @@ def run(
             values = backward.run(None, arguments)
             observed = dict(zip([v.name for v in joint.graph.outputs], values, strict=True))
             np.testing.assert_array_equal(observed["logits"], logits.detach().numpy())
+            stable = {}
+            if pairwise_head:
+                stable["pairwise_head_composition"] = compose(
+                    model,
+                    params,
+                    observed,
+                    constants,
+                    arguments[seed_name],
+                    derivative_outputs,
+                    pairwise_head=True,
+                )
             states.append(
                 {
+                    **stable,
                     **state,
                     "loss": float(loss.detach()),
                     **check(probes, observed, constants),
@@ -459,6 +494,11 @@ def main():
     parser.add_argument("--provider", choices=["cpu", "reference", "mlx"], default="cpu")
     parser.add_argument("--library")
     parser.add_argument("--adapter", help="Also audit parameters from an exported adapter.npz")
+    parser.add_argument(
+        "--pairwise-head",
+        action="store_true",
+        help="Also compose with FP32 pairwise frozen-head accumulation",
+    )
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     report = run(
@@ -469,6 +509,7 @@ def main():
         provider=args.provider,
         library=args.library,
         adapter=args.adapter,
+        pairwise_head=args.pairwise_head,
     )
     with open(args.output, "w") as stream:
         json.dump(report, stream, indent=2, allow_nan=False)

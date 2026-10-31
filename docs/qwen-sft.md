@@ -125,9 +125,20 @@ results, original tolerances and experiment script are in
 `reports/qwen3-nf4-bf16-accumulation-control-m1max.json`.
 The [local derivative audit](qwen-runtime-audit.md) then checks identical
 intermediate inputs and incoming cotangents. All 3,522 local input contributions
-pass at zero B, nonzero B and the trained step-30 adapter state. Independent full-graph recomposition still exceeds the original tolerance for
-39/51/108 adapter tensors across these states. The audit now records both local
-and composed errors; long-dimension accumulation is the next diagnostic.
+pass at zero B, nonzero B and the trained step-30 adapter state. Pairwise FP32 accumulation in the independent frozen-head adjoint aligns all
+112 composed adapter gradients in each state at the original tolerance. A
+scalar dot-product audit identifies the ordinary CPU reference's long-reduction
+error. SFT and PEFT stable controls preserve BF16 forward computation while
+using this pairwise adjoint. Independent full-model forward and loss comparisons
+remain recorded in the reports.
+
+A separate tiny PEFT check fills B with 0.01. Logits and loss match exactly and
+all gradients pass; the stable fresh AdamW update has a maximum parameter gap
+of 3.89e-6 and exceeds the original tolerance. The
+{download}`nonzero-B report <../examples/huggingface/reports/tiny-nf4-bf16-peft-nonzero-b-update.json>`
+records both ordinary and stable comparisons. The preservation regression checks
+that enabling the stable control leaves the original report and parameter bytes
+unchanged.
 
 Inspect projection inputs, outputs and incoming gradients at the same parameter
 state with:

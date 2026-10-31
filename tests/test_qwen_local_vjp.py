@@ -103,6 +103,7 @@ def test_bf16_local_pullbacks_at_observed_primals(nf4, provider):
         projection_precision="bf16",
         provider=provider,
         library=os.environ.get("ONNAX_MLX_EP_LIBRARY") if provider == "mlx" else None,
+        pairwise_head=True,
     )
     assert report["unchecked_active_nodes"] == {}
     for state in report["states"]:
@@ -110,6 +111,8 @@ def test_bf16_local_pullbacks_at_observed_primals(nf4, provider):
         assert state["composition"]["failed_parameters"] == 0, state["composition"]
         assert state["composition"]["active_nodes"] == report["covered_nodes"]
         assert state["composition"]["fan_in_additions"] > 0
+        assert state["pairwise_head_composition"]["failed_parameters"] == 0
+        assert state["pairwise_head_composition"]["pairwise_head_nodes"] == 1
         assert state["operators"]["MatMulBF16"]["input_partials"] > 0
         if nf4:
             assert state["operators"]["NF4MatMulBF16"]["nodes"] == 11

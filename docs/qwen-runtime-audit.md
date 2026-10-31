@@ -100,7 +100,7 @@ provider:
 ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.local_vjp_audit \
   --real --nf4 --projection-precision bf16 --provider mlx \
   --library /path/to/libonnxruntime_mlx_ep.dylib \
-  --adapter trained/export/adapter.npz --output bf16-local-vjp.json
+  --pairwise-head --adapter trained/export/adapter.npz --output bf16-local-vjp.json
 ```
 
 `--adapter` adds the exported trained parameters as a third state and records
@@ -136,26 +136,57 @@ matrix products. Each state checks 3,298 input contributions with zero failures
 at `rtol=1e-4, atol=1e-6`; `unchecked_active_nodes` is empty. The largest local
 absolute difference is `9.71e-7` for zero B and `9.55e-7` for nonzero B.
 
-The BF16 {download}`real-model report <../examples/huggingface/reports/qwen3-nf4-bf16-local-vjp-m1max.json>`
-covers zero B, B filled with 0.01, and the exported step-30 adapters. Each state
-checks 2,776 active operations and 3,522 input contributions, including 193
-frozen NF4/BF16 projections and 113 BF16 products. All contributions pass
-`rtol=1e-4, atol=1e-6`, and `unchecked_active_nodes` is empty. The largest
-absolute local difference is 9.57e-7, 9.50e-7 and 1.91e-6 respectively.
-The report records captured-state and library hashes. The BF16 negative-control
-test also detects a deliberately doubled derivative.
+The BF16 {download}`paired report <../examples/huggingface/reports/qwen3-nf4-bf16-pairwise-vjp-m1max.json>`
+checks zero B, B filled with 0.01 and the exported step-30 adapters. Each state
+covers 2,776 active operations, 3,522 local input contributions, 580 fan-in
+additions and all 112 adapter gradients. Local checks pass at
+`rtol=1e-4, atol=1e-6`, with no unchecked active nodes.
 
-The independent {download}`composed BF16 report <../examples/huggingface/reports/qwen3-nf4-bf16-composed-vjp-m1max.json>`
-traverses all 2,776 active operations and performs 580 fan-in additions per state.
-Despite all local checks passing, 39, 51 and 108 of the 112 adapter gradients
-exceed the original tolerance at zero B, nonzero B and the step-30 adapter.
-Maximum absolute errors are 1.02e-5, 1.02e-5 and 8.65e-5. The largest local
-BF16 product input-gradient difference is below 1e-6 but has relative L2 error
-around 1.1e-4. The next diagnostic isolates long-dimension matrix accumulation
-against a scalar dot-product oracle.
+Using short-block FP32 accumulation for the independent frozen-head adjoint
+aligns every composed adapter gradient at the original tolerance:
+
+| State | Failing tensors, ordinary reference | Failing tensors, pairwise head | Pairwise maximum absolute error |
+| --- | ---: | ---: | ---: |
+| Zero B | 39 | 0 | 3.87e-7 |
+| B = 0.01 | 51 | 0 | 3.61e-7 |
+| Step-30 adapter | 108 | 0 | 4.35e-6 |
+
+The ordinary and pairwise references use identical captured forward values,
+parameters and loss seeds. The independent [head accumulator](#calibrate-the-wide-output-head-reduction)
+uses a binary tree of 128-element FP32 products; BF16 projection computation is
+preserved. SFT and PEFT `--stable-reference` checks use this head adjoint too.
+
+The output-layer audit isolates its long-dimension matrix accumulation:
+
+```bash
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.head_reduction_audit \
+  --real --nf4 --projection-precision bf16 --provider mlx \
+  --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --capture head-operands.npz --output head-reduction.json
+```
+
+The product uses FP32 cotangents and BF16-rounded weights, with the same
+rank-two/transposed layout as the reverse graph. For eight selected discrepancy
+coordinates, scalar dot products show these maximum absolute errors:
+
+| Implementation | Maximum error against scalar sum |
+| --- | ---: |
+| MLX | 7.42e-9 |
+| PyTorch CPU | 9.60e-7 |
+| NumPy | 9.60e-7 |
+| Pairwise FP32, K-block 128 | 7.85e-10 |
+
+The {download}`head report <../examples/huggingface/reports/qwen3-nf4-bf16-head-reduction-m1max.json>`
+contains each sampled dot product, the capture hash and comparisons across all
+65,536 outputs against pairwise FP32. The scalar check identifies a long-reduction
+error in the ordinary CPU reference. `--pairwise-head` adds a second independent
+full-graph composition using the short-block frozen-head adjoint, while retaining
+the ordinary reference results. Both retain the BF16 forward product.
 
 This report checks operation pullbacks at observed activations. The paired audit
 above tracks the complete-model gradient comparison with Transformers.
+
+(calibrate-the-wide-output-head-reduction)=
 
 ## Calibrate the wide output-head reduction
 

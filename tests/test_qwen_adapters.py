@@ -267,27 +267,45 @@ def test_peft_diagnostic_rejects_nonfinite_loss(tmp_path, monkeypatch):
         )
 
 
-def test_stable_peft_control_preserves_original_roundtrip(tmp_path):
+@pytest.mark.parametrize("projection_precision", ["fp32", "bf16"])
+def test_stable_peft_control_preserves_original_roundtrip(tmp_path, projection_precision):
     from examples.huggingface.peft_adapter import roundtrip
 
     ids = torch.tensor([[1, 4, 5, 6, 2]])
     batch = {"input_ids": ids, "attention_mask": torch.ones_like(ids), "labels": ids.clone()}
     results, arrays = [], []
     for enabled in (False, True):
-        model, reference = prepare(mode="chunked", chunk_size=3)
+        options = {}
+        if projection_precision == "bf16":
+            from examples.huggingface.serialization import reference_session
+
+            options = {"session_factory": reference_session}
+        model, reference = prepare(
+            mode="joint" if projection_precision == "bf16" else "chunked",
+            chunk_size=3,
+            nf4=projection_precision == "bf16",
+            projection_precision=projection_precision,
+            **options,
+        )
         with torch.no_grad():
             for name, parameter in zip(model.onnx.names, model.onnx.adapters, strict=True):
                 if name.endswith(".B"):
                     parameter.add_(0.01)
         result = roundtrip(
-            model, reference, batch, str(tmp_path / str(enabled)), stable_reference=enabled
+            model,
+            reference,
+            batch,
+            str(tmp_path / str(enabled)),
+            stable_reference=enabled,
+            diagnose_rounding=projection_precision == "bf16",
         )
         if enabled:
             control = result.pop("stable_reference_audit")
             assert control["adapter_tensors"] == len(model.onnx.names)
             assert control["loss_check_passed"]
             assert control["gradient_check_passed"]
-            assert control["update_check_passed"]
+            if projection_precision == "fp32":
+                assert control["update_check_passed"]
         results.append(result)
         arrays.append(model.onnx.arrays())
     assert results[0] == results[1]

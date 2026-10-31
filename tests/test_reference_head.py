@@ -117,15 +117,58 @@ def test_failed_trajectory_cli_keeps_report(tmp_path, monkeypatch):
     assert json.loads(output.read_text())["checks"]["parameters"] is False
 
 
-def test_tiny_head_scalar_oracle():
+@pytest.mark.parametrize(
+    "projection_precision,provider", [("fp32", "cpu"), ("bf16", "reference"), ("bf16", "mlx")]
+)
+def test_tiny_head_scalar_oracle(projection_precision, provider):
     pytest.importorskip("mobius")
     pytest.importorskip("trl")
+    import os
+
     from examples.huggingface.head_reduction_audit import run
 
-    report = run(nf4=True)
+    if provider == "mlx" and os.environ.get("ONNAX_TEST_MLX_EP") != "1":
+        pytest.skip("Native MLX opt-in")
+    report = run(
+        nf4=True,
+        projection_precision=projection_precision,
+        provider=provider,
+        library=os.environ.get("ONNAX_MLX_EP_LIBRARY") if provider == "mlx" else None,
+    )
     assert report["compute_dtype"] == "float32"
     assert report["seed_shape"] == [1, 64, 256]
     assert report["samples"]
     for sample in report["samples"]:
         for error in sample["absolute_errors"].values():
             assert error <= 1e-6 + 1e-4 * abs(sample["scalar_fsum"])
+
+
+def test_bf16_pairwise_head_preserves_forward_and_matches_scalar_adjoint():
+    from examples.huggingface.mixed_precision import _Product
+    from examples.huggingface.reference_head import pairwise_head
+
+    torch.manual_seed(73)
+    head = torch.nn.Linear(7, 257, bias=False).requires_grad_(False)
+    reference = SimpleNamespace(lm_head=head)
+    x = torch.randn(2, 3, 7, requires_grad=True)
+    seed = torch.randn(2, 3, 257)
+    expected_forward = _Product.apply(x, head.weight.T)
+    original = head.forward
+    with pairwise_head(reference, projection_precision="bf16"):
+        actual = head(x)
+        torch.testing.assert_close(actual, expected_forward, rtol=0, atol=0)
+        actual.backward(seed)
+    assert head.forward == original
+    rounded = head.weight.bfloat16().float().numpy()
+    upstream = seed.numpy().reshape(-1, 257)
+    expected = np.array(
+        [
+            [
+                math.fsum(float(a) * float(b) for a, b in zip(row, rounded[:, j], strict=True))
+                for j in range(7)
+            ]
+            for row in upstream
+        ],
+        dtype=np.float32,
+    ).reshape(2, 3, 7)
+    np.testing.assert_allclose(x.grad.numpy(), expected, rtol=1e-4, atol=1e-6)

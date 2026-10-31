@@ -3,7 +3,6 @@
 """Mobius Qwen3 ONNX fine-tuning through TRL SFTTrainer."""
 
 import argparse
-import contextlib
 import functools
 import hashlib
 import json
@@ -369,12 +368,7 @@ def run(
         from examples.huggingface.reference_head import pairwise_head
         from examples.huggingface.reference_losses import stable_token_loss
 
-        control = (
-            contextlib.nullcontext()
-            if projection_precision == "bf16"
-            else pairwise_head(reference)
-        )
-        with control:
+        with pairwise_head(reference, projection_precision=projection_precision):
             return audit(
                 model,
                 reference,
@@ -428,7 +422,7 @@ def run(
         report["stable_reference_audits"] = {
             "loss": "target-excluded stable CE",
             "head_backward": (
-                "FP32 adjoint using BF16-rounded operands"
+                "FP32 pairwise K blocks of 128 using BF16-rounded weights"
                 if projection_precision == "bf16"
                 else "FP32 pairwise K blocks of 128"
             ),
