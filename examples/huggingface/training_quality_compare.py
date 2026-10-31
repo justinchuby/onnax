@@ -29,6 +29,8 @@ MATCHED = (
     "train_lines",
     "heldout_lines",
     "gradient_scope",
+    "ort_optimizer",
+    "torch_float32_matmul_precision",
 )
 
 
@@ -66,6 +68,16 @@ def compare(reports, captures, *, executions=None):
         if engine in engines:
             raise ValueError("Duplicate engine report")
         engines.append(engine)
+        if component.get("ort_optimizer") != "disabled":
+            raise ValueError("Quality comparisons require the ORT optimizer disabled")
+        if component.get("torch_float32_matmul_precision") != "highest":
+            raise ValueError("Quality comparisons require highest FP32 matmul precision")
+        if (
+            engine == "torch_cuda"
+            and component["projection_precision"] == "bf16"
+            and component.get("cuda_bf16_reduced_precision_reduction") is not False
+        ):
+            raise ValueError("CUDA BF16 comparisons require FP32 partial reductions")
         for field in MATCHED:
             if field not in component or field not in baseline:
                 raise ValueError(f"Missing experiment setting: {field}")
@@ -93,12 +105,12 @@ def compare(reports, captures, *, executions=None):
             curve = row["validation_curve"]
             steps = [point["step"] for point in curve]
             losses = [point["loss"] for point in curve]
-            if (
-                not steps
-                or steps[0] != 0
-                or steps[-1] != component["steps"]
-                or any(a >= b for a, b in itertools.pairwise(steps))
-            ):
+            expected_steps = [0] + [
+                step
+                for step in range(1, component["steps"] + 1)
+                if step % component["evaluation_interval"] == 0 or step == component["steps"]
+            ]
+            if steps != expected_steps:
                 raise ValueError("Incomplete or unordered validation curve")
             if not np.isfinite(losses).all():
                 raise ValueError("Nonfinite validation curve")

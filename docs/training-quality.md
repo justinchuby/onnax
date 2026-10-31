@@ -127,7 +127,9 @@ uv run python -m examples.huggingface.training_quality_compare \
 ```
 
 The comparison verifies matching model/data/precision/optimizer settings, source
-weights, initial adapters, schedules and snapshot checksums. It reports every
+weights, initial adapters, schedules and snapshot checksums. It also requires
+ORT optimization to be disabled, the highest FP32 MatMul precision, FP32 CUDA
+BF16 partial reductions and every scheduled validation checkpoint. It reports every
 seed's validation-curve gap, gradient direction and parameter difference. Replacing
 `mlx` with `torch_cuda` selects a CUDA component on a CUDA-equipped host.
 

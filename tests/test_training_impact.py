@@ -117,6 +117,29 @@ def test_independent_quality_runs_share_initialization_and_data(tmp_path):
     with pytest.raises(ValueError, match="Validation endpoints"):
         compare(paths, [tmp_path / "snapshots.npz"] * 2)
     component["trials"][0]["final_validation_loss"] = final_loss
+    omitted = curve.pop(1)
+    paths[-1].write_text(json.dumps(component))
+    with pytest.raises(ValueError, match="Incomplete or unordered"):
+        compare(paths, [tmp_path / "snapshots.npz"] * 2)
+    curve.insert(1, omitted)
+    component["ort_optimizer"] = "enabled"
+    paths[-1].write_text(json.dumps(component))
+    with pytest.raises(ValueError, match="ORT optimizer disabled"):
+        compare(paths, [tmp_path / "snapshots.npz"] * 2)
+    component["ort_optimizer"] = "disabled"
+    component["torch_float32_matmul_precision"] = "high"
+    paths[-1].write_text(json.dumps(component))
+    with pytest.raises(ValueError, match="highest FP32 matmul"):
+        compare(paths, [tmp_path / "snapshots.npz"] * 2)
+    component["torch_float32_matmul_precision"] = "highest"
+    engines = component["engines"]
+    component["engines"] = ["torch_cuda"]
+    component["cuda_bf16_reduced_precision_reduction"] = True
+    paths[-1].write_text(json.dumps(component))
+    with pytest.raises(ValueError, match="CUDA BF16 comparisons require FP32"):
+        compare(paths, [tmp_path / "snapshots.npz"] * 2)
+    component["engines"] = engines
+    component["cuda_bf16_reduced_precision_reduction"] = None
     component["trials"][0]["schedule_sha256"] = "different schedule"
     paths[-1].write_text(json.dumps(component))
     with pytest.raises(ValueError, match="schedule_sha256"):
