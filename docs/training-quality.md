@@ -180,3 +180,20 @@ The {download}`shared-state report
 contains every paired metric, component result, parameter/capture checksum and
 execution journal. Both processes completed successfully, preserved frozen
 weights and used matching computation-source hashes.
+
+
+## Trace a strict five-step parameter difference
+
+The tiny FP32-storage BF16 test first fails at step five for entry `[40, 1]`
+of `model.layers.0.self_attn.q_proj.lora.A`, with a parameter gap of 2.51e-6.
+Using the pairwise reference head preserves this result. All preceding loss and
+gradient checks pass at `rtol=1e-4, atol=1e-6`.
+
+Replaying each side's five captured gradients through a scalar AdamW reproduces
+both full-tensor parameter updates exactly, at the original learning rate and
+epsilon. The trace separates the optimizer's response to its gradient sequence
+from differences between the two training trajectories. The
+{download}`coordinate trace
+<../examples/huggingface/reports/tiny-bf16-pairwise-adam-trace-m1max.json>` records
+the gradients, moments, scalar replays, source hashes and the original failed
+parameter check.
