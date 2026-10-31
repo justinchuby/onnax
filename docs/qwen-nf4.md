@@ -142,6 +142,22 @@ ONNAX_TEST_MLX_EP=1 ONNAX_MLX_EP_LIBRARY=/path/to/libonnxruntime_mlx_ep.dylib \
   uv run pytest tests/test_qwen_mlx.py -q
 ```
 
+Use `--steps 100` to extend the comparison. Each step also evaluates a copied
+Transformers reference at the ONNX adapter parameters. This separates derivative
+accuracy at one point from the accumulated difference between two independently
+updated parameter trajectories. The control preserves both training trajectories
+and restores the ONNX gradients before AdamW runs.
+
+On the M1 Max 100-step run, loss decreases from 5.50393 to 4.85798. Both the
+fused and unfused paths pass every same-parameter forward, loss and gradient
+comparison at `rtol=1e-4, atol=1e-6`. The independent trajectories first exceed
+gradient tolerance at steps 92 and 87, respectively. All fused-path parameter
+comparisons pass; unfused parameter comparisons exceed tolerance at steps 96
+and 99. Both complete reports retain `strict_checks_passed=false`; the CLI
+writes the report and exits with status 1. The
+[100-step comparison report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-nf4-mlx-100-comparison.json)
+records the per-step checks and runtime library hash.
+
 The [paired runtime audit](qwen-runtime-audit.md) compares CPU and MLX gradients
 with fixed forward residuals and provides reusable segmented ONNX execution.
 

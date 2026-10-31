@@ -66,9 +66,15 @@ def audit(model, reference, batch, *, sync=True, diagnose_rounding=False):
     violations = difference > 1e-6 + 1e-4 * np.abs(expected_values)
     if not diagnose_rounding:
         np.testing.assert_allclose(actual_values, expected_values, rtol=1e-4, atol=1e-6)
-    np.testing.assert_allclose(
-        actual.loss.detach(), expected_loss.detach(), rtol=1e-4, atol=1e-6
+    loss_passed = bool(
+        np.isclose(
+            actual.loss.detach().numpy(), expected_loss.detach().numpy(), rtol=1e-4, atol=1e-6
+        )
     )
+    if not diagnose_rounding:
+        np.testing.assert_allclose(
+            actual.loss.detach(), expected_loss.detach(), rtol=1e-4, atol=1e-6
+        )
     actual.loss.backward()
     expected_loss.backward()
     maximum = 0.0
@@ -96,7 +102,13 @@ def audit(model, reference, batch, *, sync=True, diagnose_rounding=False):
                 )
 
     return {
-        "strict_logit_check_passed": not bool(np.any(violations)),
+        "strict_loss_check_passed": loss_passed,
+        "reference_loss": float(expected_loss.detach()),
+        "strict_logit_check_passed": bool(
+            np.isfinite(actual_values).all()
+            and np.isfinite(expected_values).all()
+            and not np.any(violations)
+        ),
         "logit_violations": int(np.count_nonzero(violations)),
         "logits_relative_l2": float(
             np.linalg.norm(actual_values - expected_values) / np.linalg.norm(expected_values)
