@@ -104,7 +104,9 @@ class OnnxModule(torch.nn.Module):
         if save_activations:
             from examples.huggingface.residuals import split_vjp
 
-            forward_model, vjp, self.residual_names = split_vjp(model, vjp)
+            forward_model, vjp, self.residual_names = split_vjp(
+                model, vjp, optimize_layout=optimize
+            )
         self.execution_vjp = vjp
         if optimize:
             executable = vjp.clone()

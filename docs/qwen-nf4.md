@@ -144,3 +144,28 @@ ONNAX_TEST_MLX_EP=1 ONNAX_MLX_EP_LIBRARY=/path/to/libonnxruntime_mlx_ep.dylib \
 
 The [paired runtime audit](qwen-runtime-audit.md) compares CPU and MLX gradients
 with fixed forward residuals and provides reusable segmented ONNX execution.
+
+## Reuse frozen weights in saved backward graphs
+
+A frozen projection often stores its weight as $W^T$ for forward execution.
+Its pullback needs $(W^T)^T=W$. Before splitting forward and backward,
+onnax composes these layouts so backward can read the original weight
+initializer. This removes the transposed weight from the saved activation
+boundary. Computed values are reused only when they are already available to
+backward, keeping the saved boundary from growing.
+
+Measure the change on the real model with:
+
+```bash
+uv run python -m examples.huggingface.residual_audit --real --nf4 \
+  --warmup 10 --samples 100 --output residual-layout.json
+```
+
+The audit compares logits, token loss and every adapter gradient at zero and
+nonzero B. Each variant runs in a separate CPU process with ORT graph
+optimization disabled. The report includes saved tensor sizes, initializer
+bytes, exported file sizes, session creation, VJP median/P95 and process peak
+RSS. VJP timing uses fixed saved activations and a fixed cotangent. Process RSS
+includes imports, sessions and correctness checks. Reusing an initializer also
+changes what is stored in the backward model; the exported sizes and RSS show
+that storage cost alongside the smaller activation boundary.
