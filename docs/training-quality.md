@@ -35,6 +35,30 @@ initial A matrices and data order; B starts at zero. The report checks matching
 source weights, adapter initialization and schedules, and verifies frozen weights
 after training.
 
+## No Robots instruction-data comparison
+
+The pinned No Robots split uses 128 training sequences and 32 official-test
+sequences. Three seeds each train Qwen3-0.6B NF4 adapters for 30 updates, with
+FP32 projections, microbatch one and four accumulation steps.
+
+| Engine | Initial held-out loss | Mean final held-out loss | Seed standard deviation |
+| --- | ---: | ---: | ---: |
+| PyTorch CPU | 3.411631 | 2.666917 | 0.013719 |
+| ONNX / MLX | 3.411631 | 2.666826 | 0.013719 |
+
+Held-out loss decreases at every sampled checkpoint for all three seeds.
+The largest paired loss gap across checkpoints is **0.000255**; the minimum
+sampled trajectory-gradient cosine similarity is **0.999945**. This FP32 run
+shows closely matched training outcomes on instruction data. CUDA was
+unavailable on the M1 Max host.
+
+The {download}`FP32 report
+<../examples/huggingface/reports/qwen3-no-robots-nf4-fp32-training-quality-m1max.json>`
+records the matched settings, validation curves, adapter comparisons, source
+hashes and process journals. The [corpus preparation](pinned-instruction-corpus)
+records the dataset revision and selected examples. Memory observations cover
+construction, training, evaluation and host snapshots.
+
 ## Recorded tiny BF16/NF4 comparison
 
 On M1 Max, five seeds each ran 100 updates with identical AdamW settings
