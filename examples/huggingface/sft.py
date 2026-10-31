@@ -265,6 +265,7 @@ def run(
     provider="cpu",
     library=None,
     segment_nodes=None,
+    stable_reference=False,
 ):
     if provider not in ("cpu", "mlx"):
         raise ValueError("Expected cpu or mlx provider")
@@ -302,11 +303,27 @@ def run(
     sample["labels"] = sample["input_ids"].clone()
     initial_params = model.onnx.arrays()
     initial_audit = audit(model, reference, sample, diagnose_rounding=diagnose_rounding)
+
+    def stable_control():
+        from examples.huggingface.reference_head import pairwise_head
+        from examples.huggingface.reference_losses import stable_token_loss
+
+        with pairwise_head(reference):
+            return audit(
+                model,
+                reference,
+                sample,
+                diagnose_rounding=True,
+                reference_loss=stable_token_loss,
+            )
+
+    initial_stable = stable_control() if stable_reference else None
     trainer = make_trainer(model, tok, directory, real=real, steps=steps)
     before = trainer.evaluate()["eval_loss"]
     trainer.train(resume_from_checkpoint=resume)
     after = trainer.evaluate()["eval_loss"]
     final_audit = audit(model, reference, sample, diagnose_rounding=diagnose_rounding)
+    final_stable = stable_control() if stable_reference else None
     model.onnx.export(os.path.join(directory, "export"), forward_model=model.forward_graph)
     from examples.huggingface.peft_adapter import export_adapter
 
@@ -333,6 +350,12 @@ def run(
         if library:
             with open(library, "rb") as stream:
                 report["library_sha256"] = hashlib.file_digest(stream, "sha256").hexdigest()
+    if stable_reference:
+        report["stable_reference_audits"] = {
+            "loss": "target-excluded stable CE",
+            "head_backward": "FP32 pairwise K blocks of 128",
+            "checks": [initial_stable, final_stable],
+        }
     final_params = model.onnx.arrays()
     report["artifact_bytes"] = {
         name: os.path.getsize(os.path.join(directory, "export", name))
@@ -352,7 +375,11 @@ def run(
             json.dump(report, stream, indent=2)
         os.replace(path + ".tmp", path)
 
-    report["requested_audits"] = {"peft": peft_roundtrip, "fp64": fp64_audit}
+    report["requested_audits"] = {
+        "peft": peft_roundtrip,
+        "fp64": fp64_audit,
+        "stable_reference": stable_reference,
+    }
     persist()
     if not report["frozen_buffers_unchanged"]:
         raise AssertionError("Frozen model buffers changed during training")
@@ -399,6 +426,11 @@ if __name__ == "__main__":
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
     parser.add_argument("--library")
     parser.add_argument("--segment-nodes", type=int)
+    parser.add_argument(
+        "--stable-reference",
+        action="store_true",
+        help="Record extra stable FP32 CE/head reference comparisons",
+    )
     args = parser.parse_args()
     print(
         json.dumps(
@@ -417,6 +449,7 @@ if __name__ == "__main__":
                 provider=args.provider,
                 library=args.library,
                 segment_nodes=args.segment_nodes,
+                stable_reference=args.stable_reference,
             ),
             indent=2,
         )

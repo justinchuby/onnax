@@ -147,6 +147,43 @@ independent-update comparisons also fail. The
 [native SFT report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-native-sft-m1max.json)
 contains these failures alongside the training and recovery results.
 
+### Check the FP32 reference
+
+Long-vocabulary CE reductions affect reference accuracy. In a scalar-oracle
+probe with 151,936 classes, ORT CPU and PyTorch CPU return CE 0.11903559 for
+an analytic value of 0.11897194. The minimal reproduction is tracked in
+[issue #111](https://github.com/justinchuby/onnax/issues/111).
+
+The independent PyTorch reference computes
+$\operatorname{softplus}(\log\sum_{j\ne y}\exp(z_j)-z_y)$ and accumulates
+frozen-head products in short FP32 blocks. This preserves the small target
+gradient and improves the long reduction. Add `--stable-reference` together
+with `--diagnose-rounding` to record these extra audits at the initial and
+final states. The original Transformers comparisons remain in `audits`.
+
+```python
+from examples.huggingface.reference_head import pairwise_head
+from examples.huggingface.reference_losses import stable_token_loss
+from examples.huggingface.validation import audit
+
+with pairwise_head(reference):
+    result = audit(
+        model, reference, batch, reference_loss=stable_token_loss,
+        diagnose_rounding=True,
+    )
+```
+
+At the real model's initial and trained states, all 112 gradients pass the
+original tolerance against this stable FP32 reference. On fixed FP32 logits,
+the CE gradient error against an analytic oracle falls from 9.52e-6 to
+9.12e-9 initially, and from 5.72e-6 to 9.19e-9 after training. Moving the head
+normalization before its matrix product gives little change.
+
+Independent fresh AdamW updates still exceed tolerance for 48 and 87 parameter
+tensors at these states with epsilon 1e-8. The
+[reference-control report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-reference-ce-m1max.json)
+retains these update failures and every original-reference comparison.
+
 The native MLX validation uses the same two-layer NF4 Qwen and independently
 updates its ONNX and Transformers adapters for four AdamW steps. It compares
 logits, token loss, all adapter gradients and parameters at every step. ONNX

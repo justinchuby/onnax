@@ -41,11 +41,16 @@ def test_native_sft_checkpoint_resume(tmp_path, monkeypatch, mode):
         provider="mlx",
         library=library,
         segment_nodes=128,
+        stable_reference=True,
     )
     assert report["cpu_fallback_disabled"]
     assert report["frozen_buffers_unchanged"]
     assert report["validation_loss"][1] < report["validation_loss"][0]
     assert all(row["strict_gradient_check_passed"] for row in report["audits"])
+    assert all(
+        row["strict_gradient_check_passed"]
+        for row in report["stable_reference_audits"]["checks"]
+    )
     command = [
         sys.executable,
         "-m",
