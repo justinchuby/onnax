@@ -209,3 +209,18 @@ def test_native_hard_loss_long_vocabulary_and_ignored_nan():
     np.testing.assert_allclose(gradient[0, 0], -mass / (1 + mass), rtol=2e-5, atol=0)
     np.testing.assert_allclose(gradient[0, 1:], math.exp(-14) / (1 + mass), rtol=2e-5, atol=0)
     np.testing.assert_array_equal(gradient[1], np.zeros(vocab, np.float32))
+
+
+def test_hard_loss_curvature_at_equal_binary_logits():
+    gradient = onnax.grad(loss_model("hard", vocab=2), inputs=["x"], output="loss")
+    hessian = onnax.jvp(gradient, inputs=["x"], outputs=[gradient.graph.outputs[-1].name])
+    direction = np.array([[1, -1], [0, 0]], np.float32)
+    result = runtime_session(hessian).run(
+        None,
+        {
+            "x": np.zeros((2, 2), np.float32),
+            "other": np.array([0, -100], np.int64),
+            hessian.graph.inputs[-1].name: direction,
+        },
+    )[-1]
+    np.testing.assert_allclose(result, [[0.5, -0.5], [0, 0]], rtol=1e-6, atol=1e-7)
