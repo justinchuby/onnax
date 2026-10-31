@@ -8,7 +8,6 @@ import json
 import platform
 from contextlib import contextmanager
 from types import MethodType
-from unittest.mock import patch
 
 import numpy as np
 import onnxruntime as ort
@@ -57,8 +56,9 @@ def division_control(reference):
 
 def run(*, real=False, nf4=False):
     torch.set_num_threads(1)
-    with patch("examples.huggingface.bridge.session", diagnostic_session):
-        model, reference = prepare(real=real, nf4=nf4, save_activations=True)
+    model, reference = prepare(
+        real=real, nf4=nf4, save_activations=True, session_factory=diagnostic_session
+    )
     reference = add_reference_adapters(reference, model)
     initial = model.onnx.arrays()
     ids = torch.arange(3, 67).reshape(1, -1)

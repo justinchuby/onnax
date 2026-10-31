@@ -42,3 +42,28 @@ def test_tiny_nf4_reference_control():
     for audit in report["audits"].values():
         assert audit["strict_gradient_check_passed"]
         assert audit["strict_logit_check_passed"]
+
+
+@pytest.mark.parametrize("kind", ["rms", "trajectory"])
+def test_diagnostic_runtime_options_reach_both_sessions(monkeypatch, kind):
+    from examples.huggingface import reference_trajectory, rms_audit
+
+    module = rms_audit if kind == "rms" else reference_trajectory
+    original = module.diagnostic_session
+    observed = []
+
+    def factory(source):
+        executor = original(source)
+        options = executor.get_session_options()
+        assert options.enable_mem_reuse is False
+        assert options.intra_op_num_threads == options.inter_op_num_threads == 1
+        observed.append(executor)
+        return executor
+
+    monkeypatch.setattr(module, "diagnostic_session", factory)
+    if kind == "rms":
+        report = module.run(nf4=True)
+    else:
+        report = module.run(nf4=True, steps=2, accumulation=2)
+    assert report["ort_memory_reuse"] is False
+    assert len(observed) == 2

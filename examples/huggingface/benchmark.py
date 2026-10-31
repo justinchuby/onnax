@@ -187,7 +187,11 @@ def measure(
         "peak_rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         * (1 if sys.platform == "darwin" else 1024),
         "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
-        "initialization_scope": "Model construction, initial CPU sessions, and selected execution sessions",
+        "initialization_scope": (
+            "PyTorch model construction and FP32 base reconstruction"
+            if mode == "pytorch"
+            else "Model construction, initial CPU sessions, and selected execution sessions"
+        ),
         "parameter_bytes": sum(p.numel() * p.element_size() for p in params),
         "threads": {"torch": 1, "ort_intra": 1, "ort_inter": 1},
         "ort_optimizer": "disabled",

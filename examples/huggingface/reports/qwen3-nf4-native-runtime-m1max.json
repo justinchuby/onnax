@@ -548,7 +548,7 @@
       "effective_tokens_per_second": 174.52191297431824,
       "peak_rss_bytes": 5066276864,
       "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
-      "initialization_scope": "Model construction, initial CPU sessions, and selected execution sessions",
+      "initialization_scope": "PyTorch model construction and FP32 base reconstruction",
       "parameter_bytes": 2293760,
       "threads": {
         "torch": 1,
@@ -568,7 +568,9 @@
         "onnxruntime": "1.31.1",
         "onnxscript": "0.7.2",
         "mobius-onnx": "0.1.0"
-      }
+      },
+      "initialization_scope_original": "Model construction, initial CPU sessions, and selected execution sessions",
+      "metadata_correction": "The source CLI emitted the ONNX initialization label for every mode; the PyTorch run constructs no ONNX sessions. Timings are unchanged."
     },
     "saved-cpu": {
       "mode": "saved",
