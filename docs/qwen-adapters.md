@@ -171,6 +171,42 @@ and [chunked](https://github.com/justinchuby/onnax/blob/main/examples/huggingfac
 measurement reports record the model revision, source commits, library digest,
 thread settings, logical input/output bytes, individual timings and observations.
 
+### Real joint SFT and checkpoint recovery
+
+```bash
+export ONNXRUNTIME_EP_MLX_NO_COMPILE=1
+uv run python -m examples.huggingface.sft --real --nf4 --mode joint --provider mlx \
+  --library /path/to/libonnxruntime_mlx_ep.dylib --steps 30 \
+  --diagnose-rounding --stable-reference --peft-roundtrip --output-dir joint-sft
+uv run python -m examples.huggingface.sft --real --nf4 --mode joint --provider mlx \
+  --library /path/to/libonnxruntime_mlx_ep.dylib --steps 30 \
+  --diagnose-rounding --stable-reference --resume joint-sft/checkpoint-15 \
+  --output-dir joint-resumed
+uv run python -m examples.huggingface.replay --uninterrupted joint-sft \
+  --resumed joint-resumed --step 30 --output joint-replay.json
+```
+
+The Qwen3-0.6B run uses microbatch one, four accumulated microbatches per update
+and 30 Trainer updates. Validation loss falls from 7.7506 to 5.6323. All 532 frozen
+initializer hashes stay unchanged. Recovery from checkpoint 15 reproduces the
+112 adapters, optimizer moments, scheduler and 113 checkpoint tensors exactly.
+Loaded forward outputs, summed loss and all 112 parameter gradients agree byte
+for byte between the uninterrupted and resumed exports. Both exports pass the
+full ONNX checker.
+
+The stable FP32 loss/head reference passes the loss and all adapter-gradient
+checks at the initial and final states. PEFT format exchange preserves all
+112 adapter tensors exactly. Raw Transformers logits/gradient comparisons retain
+failures at the original tolerance. With the stable reference, the PEFT
+fresh-Adam update comparison exceeds parameter tolerance on 92 tensors. `--diagnose-rounding` records those comparisons
+alongside the stable reference controls.
+
+The [training report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-joint-sft-m1max.json)
+and [recovery report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-nf4-joint-recovery-m1max.json)
+retain commands, backend settings, source revisions, precision results and loaded
+module verification. The recovery report also records disabled ORT memory-reuse
+planning for CPU replay.
+
 ## PEFT files
 
 The SFT command writes `adapter/adapter_model.safetensors`, `adapter_config.json`
