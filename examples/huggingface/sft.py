@@ -383,6 +383,12 @@ def run(
     }
     if provider == "mlx":
         report["cpu_fallback_disabled"] = True
+        report["mlx_compile_disabled"] = os.environ.get(
+            "ONNXRUNTIME_EP_MLX_NO_COMPILE", ""
+        ) not in ("", "0")
+        report["lut4_fusion_disabled"] = os.environ.get(
+            "ONNXRUNTIME_EP_MLX_NO_LUT4_FUSION", ""
+        ) not in ("", "0")
         report["library"] = os.path.abspath(library) if library else "installed plugin"
         if library:
             with open(library, "rb") as stream:
