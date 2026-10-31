@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 """Portable ONNX losses that preserve small gradients in FP32.
 
-Log1p/Expm1 use compensated standard-ONNX function bodies and analytic global
-JVP/VJP rules. Preserve these functions during optimization before further AD.
+Log1p/Expm1 use compensated standard-ONNX function bodies. Hard-label CE
+and distillation use analytic global JVP/VJP rules. Preserve these functions during optimization before further AD.
 Teacher logits are held fixed in the distillation loss.
 """
 
@@ -52,13 +52,16 @@ def log_softmax(ctx, x):
     return result
 
 
-def hard_cross_entropy(ctx, logits, labels):
-    """Return per-row hard-label loss, with -100 ignored; logits are rank two."""
+def _hard_terms(ctx, logits, labels):
     zero, one = ctx.scalar(logits, 0), ctx.scalar(logits, 1)
     axes = ctx.constant([-1])
     valid = ctx.op("GreaterOrEqual", labels, ctx.constant(0))
+    # Ignored rows must be finite before exponentials and their pullbacks.
+    dtype, shape = logits.dtype, logits.shape
+    logits = ctx.op("Where", ctx.op("Unsqueeze", valid, axes), logits, zero)
+    logits.type, logits.shape = ir.TensorType(dtype), shape
     safe = ctx.op("Max", labels, ctx.constant(0))
-    index = ctx.op("Unsqueeze", safe, ctx.constant([-1]))
+    index = ctx.op("Unsqueeze", safe, axes)
     target = _mask(ctx, logits, index)
     target_value = ctx.op("ReduceSum", ctx.op("Where", target, logits, zero), axes, keepdims=1)
     other_logits = ctx.op("Where", target, ctx.scalar(logits, -np.inf), logits)
@@ -72,8 +75,41 @@ def hard_cross_entropy(ctx, logits, labels):
     has_others = ctx.op("Greater", depth, ctx.constant(1))
     safe_mass = ctx.op("Where", has_others, mass, one)
     margin = ctx.op("Add", ctx.op("Sub", maximum, target_value), ctx.op("Log", safe_mass))
+    return target, valid, has_others, shifted, safe_mass, margin
+
+
+def _hard_body(ctx, logits, labels):
+    _, valid, has_others, _, _, margin = _hard_terms(ctx, logits, labels)
+    zero = ctx.scalar(logits, 0)
     loss = ctx.op("Where", has_others, ctx.op("Softplus", margin), zero)
-    result = ctx.op("Where", valid, ctx.op("Squeeze", loss, axes), zero)
+    return ctx.op("Where", valid, ctx.op("Squeeze", loss, ctx.constant([-1])), zero)
+
+
+def _hard_gradient(ctx, logits, labels):
+    target, valid, has_others, shifted, mass, margin = _hard_terms(ctx, logits, labels)
+    zero, one = ctx.scalar(logits, 0), ctx.scalar(logits, 1)
+    # Stable sigmoid retains negative-margin tails on CPU and MLX.
+    positive = ctx.op("GreaterOrEqual", margin, zero)
+    magnitude = ctx.op("Where", positive, margin, ctx.op("Neg", margin))
+    tail = ctx.op("Exp", ctx.op("Neg", magnitude))
+    denominator = ctx.op("Add", one, tail)
+    probability = ctx.op(
+        "Where",
+        positive,
+        ctx.op("Div", one, denominator),
+        ctx.op("Div", tail, denominator),
+    )
+    probability = ctx.op("Where", has_others, probability, zero)
+    other = ctx.op("Div", ctx.op("Exp", shifted), mass)
+    derivative = ctx.op(
+        "Where", target, ctx.op("Neg", probability), ctx.op("Mul", other, probability)
+    )
+    return ctx.op("Where", ctx.op("Unsqueeze", valid, ctx.constant([-1])), derivative, zero)
+
+
+def hard_cross_entropy(ctx, logits, labels):
+    """Hard-label loss with analytic derivatives and portable ONNX function body."""
+    result = ctx.op(_name("HardCrossEntropy", logits.dtype), logits, labels, domain=DOMAIN)
     result.type, result.shape = ir.TensorType(logits.dtype), labels.shape
     return result
 
@@ -124,7 +160,11 @@ def _function(op, dtype):
     graph = ir.Graph(inputs, [], nodes=[], opset_imports={"": 18, DOMAIN: 1}, name=op)
     ctx = onnax.AutodiffContext(graph)
     one, zero = ctx.scalar(x, 1), ctx.scalar(x, 0)
-    if op == "Log1p":
+    if op == "HardCrossEntropy":
+        labels = ir.val("labels", dtype=ir.DataType.INT64)
+        graph.inputs.append(labels)
+        value = _hard_body(ctx, x, labels)
+    elif op == "Log1p":
         u = ctx.op("Add", one, x)
         small = ctx.op("Equal", u, one)
         denominator = ctx.op("Where", small, one, ctx.op("Sub", u, one))
@@ -166,7 +206,7 @@ def _function(op, dtype):
 def install(model):
     """Attach portable local functions; global rules are installed on import."""
     for dtype in (ir.DataType.FLOAT, ir.DataType.DOUBLE):
-        for op in ("Log1p", "Expm1", "Distillation"):
+        for op in ("Log1p", "Expm1", "Distillation", "HardCrossEntropy"):
             function = _function(op, dtype)
             model.functions[function.identifier()] = function
     model.graph.opset_imports[DOMAIN] = 1
@@ -179,7 +219,12 @@ def _register(op, dtype):
     def vjp(ctx, node, cotangents, input_indices):
         x = ctx.input(node, 0)
         g = cotangents[0]
-        if op == "Distillation":
+        if op == "HardCrossEntropy":
+            if list(input_indices) != [0]:
+                raise ValueError("HardCrossEntropy differentiates logits only")
+            derivative = _hard_gradient(ctx, x, ctx.input(node, 1))
+            result = ctx.op("Mul", derivative, ctx.op("Unsqueeze", g, ctx.constant([-1])))
+        elif op == "Distillation":
             if list(input_indices) != [0]:
                 raise ValueError("Distillation holds teacher logits fixed")
             derivative = _distill_gradient(ctx, x, ctx.input(node, 1))
@@ -197,7 +242,18 @@ def _register(op, dtype):
     @onnax.register_jvp(DOMAIN, name, since_version=1, until_version=1)
     def jvp(ctx, node, tangents):
         x = ctx.input(node, 0)
-        if op == "Distillation":
+        if op == "HardCrossEntropy":
+            if set(tangents) != {0}:
+                raise ValueError("HardCrossEntropy differentiates logits only")
+            derivative = _hard_gradient(ctx, x, ctx.input(node, 1))
+            result = ctx.op(
+                "ReduceSum",
+                ctx.op("Mul", derivative, tangents[0]),
+                ctx.constant([-1]),
+                keepdims=0,
+            )
+            result.shape = node.outputs[0].shape
+        elif op == "Distillation":
             if set(tangents) != {0}:
                 raise ValueError("Distillation holds teacher logits fixed")
             derivative = _distill_gradient(ctx, x, ctx.input(node, 1))
@@ -221,17 +277,21 @@ def _register(op, dtype):
 
     @onnax.register_batching(DOMAIN, name, since_version=1, until_version=1)
     def batching(ctx, node):
-        if op != "Distillation":
+        if op not in ("Distillation", "HardCrossEntropy"):
             ctx.elementwise(node)
             return
         inputs, mapped = ctx.prepare(node)
-        rank = max(ctx.rank(v) for v in inputs)
+        rank = max(
+            ctx.rank(v) + (1 if op == "HardCrossEntropy" and i == 1 else 0)
+            for i, v in enumerate(inputs)
+        )
         if mapped:
             for i, v in enumerate(inputs):
-                node.replace_input_with(i, ctx.align(v, rank))
+                target_rank = rank - (1 if op == "HardCrossEntropy" and i == 1 else 0)
+                node.replace_input_with(i, ctx.align(v, target_rank))
         ctx.register_outputs(node, rank=rank - 1, mapped=mapped)
 
 
 for _dtype in (ir.DataType.FLOAT, ir.DataType.DOUBLE):
-    for _op in ("Log1p", "Expm1", "Distillation"):
+    for _op in ("Log1p", "Expm1", "Distillation", "HardCrossEntropy"):
         _register(_op, _dtype)

@@ -36,10 +36,10 @@ uv run python -m examples.huggingface.numerics --mlx --output fp32-mlx.json
 ONNAX_TEST_MLX_EP=1 uv run pytest -q tests/test_mlx_precision.py
 ```
 
-Eight native MLX regressions cover the kernel audit, confident Softmax/LogSoftmax
-JVP/VJP and Softplus gradients/HVP. The full hard-label loss graph currently assigns
-a generated Reshape node to CPU; allowing mixed execution produces the expected
-FP32 loss and gradients. Full MLX loss-graph assignment is the next integration step.
+Native MLX regressions cover the kernel audit, confident Softmax/LogSoftmax
+JVP/VJP and Softplus gradients/HVP. The development MLX provider also executes
+the complete hard-label loss and gradient graph with CPU fallback disabled,
+including a 151,936-class case and ignored NaN rows.
 The CPU Sigmoid reproduction is tracked in [onnax issue #95](https://github.com/justinchuby/onnax/issues/95).
 
 The Qwen validation reference is the corresponding **PyTorch Transformers model**.
@@ -69,6 +69,26 @@ $$
 
 It retains a positive FP32 loss beyond the usual probability-rounding threshold,
 ignores labels `-100`, and accumulates chunk losses in FP32.
+
+The loss uses a portable ONNX local function and analytic JVP/VJP rules. Let
+$u=\log\sum_{j\ne t}e^{z_j}-z_t$ and $q=\sigma(u)$. Its target derivative is
+$-q$; each other derivative is $q e^{z_j}/\sum_{k\ne t}e^{z_k}$. Computing
+these values directly avoids differentiating a numerically cancelling
+stabilization shift.
+
+For 151,936 classes with target logit 10 and all other logits -4, the previous
+expanded derivative gave the chosen non-target pivot a gradient of -1.17e-5.
+Its analytic gradient is positive, 7.38e-7. The registered rules preserve this
+sign and match every component against a scalar oracle on CPU and MLX. Ignored
+rows are replaced by zeros before arithmetic, producing zero loss and gradients
+even when their input logits contain NaNs. JVP, HVP and vmap checks cover the
+composed rules.
+The [CPU/MLX before-and-after report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/hard-ce-fp32-pivot.json)
+records the scalar oracle, all checks, runtime versions and library hash.
+
+Call `stable_losses.install(model)` to attach the standard-ONNX function bodies
+after building a graph with these helpers. The chunked head installs them
+automatically. Keep the local functions intact during optimization before AD.
 
 `examples.huggingface.stable_losses` also provides a fixed-teacher logit loss,
 using compensated Log1p/Expm1 ONNX local functions and global JVP/VJP rules.

@@ -13,7 +13,7 @@ from torch.autograd.function import once_differentiable
 import onnax
 from examples.huggingface.bridge import graph_session
 from examples.huggingface.optimization import optimize_training_graph
-from examples.huggingface.stable_losses import hard_cross_entropy
+from examples.huggingface.stable_losses import hard_cross_entropy, install
 
 
 def head_graph(weight):
@@ -39,6 +39,7 @@ def head_graph(weight):
     total.name, total.dtype, total.shape = "loss_sum", ir.DataType.FLOAT, ir.Shape([])
     graph.outputs.append(total)
     model = ir.Model(graph, ir_version=12)
+    install(model)
     ShapeInferencePass()(model)
     return model
 

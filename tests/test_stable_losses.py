@@ -3,6 +3,7 @@
 """FP32 loss primitives and their higher derivatives."""
 
 import math
+import os
 
 import numpy as np
 import onnx_ir as ir
@@ -14,12 +15,12 @@ import onnax
 from examples.huggingface import stable_losses as losses
 
 
-def loss_model(kind):
-    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[2, 3])
+def loss_model(kind, *, vocab=3):
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[2, vocab])
     other = ir.val(
         "other",
         dtype=ir.DataType.INT64 if kind == "hard" else ir.DataType.FLOAT,
-        shape=[2] if kind == "hard" else [2, 3],
+        shape=[2] if kind == "hard" else [2, vocab],
     )
     graph = ir.Graph([x, other], [], nodes=[], opset_imports={"": 18}, name="stable_loss")
     ctx = onnax.AutodiffContext(graph)
@@ -117,4 +118,136 @@ def test_distillation_batching_composes_with_gradient():
     feeds = {"x": x, "other": x.copy()}
     np.testing.assert_array_equal(
         runtime_session(batched).run(None, feeds)[-1], np.zeros_like(x)
+    )
+
+
+def test_hard_loss_long_vocabulary_other_pivot_gradient():
+    vocab = 151936
+    model = onnax.grad(loss_model("hard", vocab=vocab), inputs=["x"], output="loss")
+    x = np.full((2, vocab), -4, np.float32)
+    x[0, 0] = 10
+    value, gradient = runtime_session(model).run(
+        None, {"x": x, "other": np.array([0, -100], np.int64)}
+    )
+    mass = (vocab - 1) * math.exp(-14)
+    np.testing.assert_allclose(value, math.log1p(mass), rtol=2e-5, atol=0)
+    np.testing.assert_allclose(gradient[0, 0], -mass / (1 + mass), rtol=2e-5, atol=0)
+    np.testing.assert_allclose(gradient[0, 1:], math.exp(-14) / (1 + mass), rtol=2e-5, atol=0)
+
+
+def test_hard_loss_ignored_nan_rows_have_zero_derivatives():
+    model = onnax.grad(loss_model("hard"), inputs=["x"], output="loss")
+    x = np.full((2, 3), np.nan, np.float32)
+    value, gradient = runtime_session(model).run(
+        None, {"x": x, "other": np.full(2, -100, np.int64)}
+    )
+    np.testing.assert_array_equal(value, np.float32(0))
+    np.testing.assert_array_equal(gradient, np.zeros_like(x))
+
+
+def test_hard_loss_jvp_hvp_and_batching():
+    primal = loss_model("hard")
+    gradient = onnax.grad(primal, inputs=["x"], output="loss")
+    tangent = onnax.jvp(primal, inputs=["x"], outputs=["loss"])
+    hessian = onnax.jvp(gradient, inputs=["x"], outputs=[gradient.graph.outputs[-1].name])
+    x = np.array([[0.2, -0.1, 0.4], [1, 2, 3]], np.float32)
+    labels = np.array([1, -100], np.int64)
+    direction = np.array([[1, -2, 0.5], [0.5, 1, 2]], np.float32)
+    probability = np.exp(x.astype(np.float64) - x.max(-1, keepdims=True))
+    probability /= probability.sum(-1, keepdims=True)
+    expected_gradient = probability.copy()
+    expected_gradient[0, 1] -= 1
+    expected_gradient[1] = 0
+    expected_hessian = probability * (
+        direction - (probability * direction).sum(-1, keepdims=True)
+    )
+    expected_hessian[1] = 0
+    feeds = {"x": x, "other": labels}
+    jv = runtime_session(tangent).run(
+        None, {**feeds, tangent.graph.inputs[-1].name: direction}
+    )[-1]
+    hv = runtime_session(hessian).run(
+        None, {**feeds, hessian.graph.inputs[-1].name: direction}
+    )[-1]
+    np.testing.assert_allclose(jv, (expected_gradient * direction).sum(), rtol=1e-5, atol=1e-7)
+    np.testing.assert_allclose(hv, expected_hessian, rtol=1e-5, atol=1e-7)
+    batched = onnax.vmap(gradient, in_axes=(0, 0))
+    values = runtime_session(batched).run(
+        None, {"x": np.stack([x, x]), "other": np.stack([labels, labels])}
+    )[-1]
+    np.testing.assert_allclose(
+        values, np.stack([expected_gradient, expected_gradient]), rtol=1e-5, atol=1e-7
+    )
+
+
+def test_hard_loss_single_class():
+    model = onnax.grad(loss_model("hard", vocab=1), inputs=["x"], output="loss")
+    values = runtime_session(model).run(
+        None, {"x": np.array([[7], [-3]], np.float32), "other": np.array([0, -100], np.int64)}
+    )
+    np.testing.assert_array_equal(values[0], np.float32(0))
+    np.testing.assert_array_equal(values[1], np.zeros((2, 1), np.float32))
+
+
+@pytest.mark.skipif(os.environ.get("ONNAX_TEST_MLX_EP") != "1", reason="Native MLX opt-in")
+def test_native_hard_loss_long_vocabulary_and_ignored_nan():
+    from examples.lora.mlx_runtime import register_library, session
+
+    library = os.environ.get("ONNAX_MLX_EP_LIBRARY")
+    if library:
+        register_library(library)
+    vocab = 151936
+    model = onnax.grad(loss_model("hard", vocab=vocab), inputs=["x"], output="loss")
+    x = np.full((2, vocab), -4, np.float32)
+    x[0, 0] = 10
+    x[1] = np.nan
+    value, gradient = session(model).run(
+        None, {"x": x, "other": np.array([0, -100], np.int64)}
+    )
+    mass = (vocab - 1) * math.exp(-14)
+    np.testing.assert_allclose(value, math.log1p(mass), rtol=2e-5, atol=0)
+    np.testing.assert_allclose(gradient[0, 0], -mass / (1 + mass), rtol=2e-5, atol=0)
+    np.testing.assert_allclose(gradient[0, 1:], math.exp(-14) / (1 + mass), rtol=2e-5, atol=0)
+    np.testing.assert_array_equal(gradient[1], np.zeros(vocab, np.float32))
+
+
+def test_hard_loss_curvature_at_equal_binary_logits():
+    gradient = onnax.grad(loss_model("hard", vocab=2), inputs=["x"], output="loss")
+    hessian = onnax.jvp(gradient, inputs=["x"], outputs=[gradient.graph.outputs[-1].name])
+    direction = np.array([[1, -1], [0, 0]], np.float32)
+    result = runtime_session(hessian).run(
+        None,
+        {
+            "x": np.zeros((2, 2), np.float32),
+            "other": np.array([0, -100], np.int64),
+            hessian.graph.inputs[-1].name: direction,
+        },
+    )[-1]
+    np.testing.assert_allclose(result, [[0.5, -0.5], [0, 0]], rtol=1e-6, atol=1e-7)
+
+
+@pytest.mark.parametrize("in_axes", [(0, None), (None, 0)])
+def test_hard_loss_batching_with_shared_operand(in_axes):
+    gradient = onnax.grad(loss_model("hard"), inputs=["x"], output="loss")
+    batched = onnax.vmap(gradient, in_axes=in_axes)
+    x = np.array([[0.2, -0.1, 0.4], [1, 2, 3]], np.float32)
+    labels = np.array([1, -100], np.int64)
+    xs = np.stack([x, x + np.array([[-1, 0, 1], [0, 0, 0]], np.float32)])
+    ys = np.stack([labels, np.array([0, 2], np.int64)])
+    inputs = {"x": xs if in_axes[0] == 0 else x, "other": ys if in_axes[1] == 0 else labels}
+    executor = runtime_session(gradient)
+    expected = np.stack(
+        [
+            executor.run(
+                None,
+                {
+                    "x": xs[i] if in_axes[0] == 0 else x,
+                    "other": ys[i] if in_axes[1] == 0 else labels,
+                },
+            )[-1]
+            for i in range(2)
+        ]
+    )
+    np.testing.assert_allclose(
+        runtime_session(batched).run(None, inputs)[-1], expected, rtol=1e-5, atol=1e-7
     )
