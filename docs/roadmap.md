@@ -74,11 +74,18 @@ graphs. Isolated measurements compare fused/unfused MLX, ONNX CPU and PyTorch
 CPU; [runtime reports](qwen-runtime-audit.md) record the measured source,
 complete-step timing and process RSS.
 
-Next, reduce frozen-weight and decoded-weight storage across forward, VJP and
-head sessions. Use the measured tensor lifetimes and head memory curve to place
-recomputation boundaries in the real transformer. Extend the same workload to
-BF16 computation with FP32 master adapters, gradients, accumulation and optimizer
-state. Continue independent FP32 update qualification alongside these changes.
+The joint loss/gradient route now runs in one session and retains only adapter
+gradients across the PyTorch autograd boundary. Tiny Qwen also completes 100
+updates with BF16 projections and FP32 master adapters, gradients and Adam
+state on ReferenceEvaluator and native MLX. Both reproduce checkpoint-50
+recovery byte for byte. The [BF16 projection audit](qwen-sft.md) compares shared
+parameter states; strict independent five-step update qualification is still
+open.
+
+Next, qualify BF16 on the real transformer, measure its training time and
+memory, and combine it with packed decoder storage. Use measured tensor
+lifetimes and the head memory curve to place recomputation boundaries.
+Continue independent FP32 update qualification alongside these changes.
 
 ## Engineering boundaries
 

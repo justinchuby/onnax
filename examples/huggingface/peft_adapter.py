@@ -112,6 +112,10 @@ def roundtrip(
 
     export_adapter(model, directory)
     peft = PeftModel.from_pretrained(reference, directory, is_trainable=True).eval()
+    if getattr(model, "projection_precision", "fp32") == "bf16":
+        from examples.huggingface.mixed_precision import reference_projections
+
+        peft = reference_projections(peft)
     initial = model.onnx.arrays()
     peft.save_pretrained(directory, save_embedding_layers=False)
     import_adapter(model, directory)
@@ -127,6 +131,13 @@ def roundtrip(
     valid = batch["attention_mask"].bool()
     logits = actual.logits.detach()[valid].numpy()
     reference_logits = expected.logits.detach()[valid].numpy()
+    actual_loss, reference_loss = float(actual.loss.detach()), float(expected.loss.detach())
+    if not all(
+        np.isfinite(value).all()
+        for value in (logits, reference_logits, actual_loss, reference_loss)
+    ):
+        raise FloatingPointError("Nonfinite PEFT logits or loss")
+    loss_passed = bool(np.isclose(actual_loss, reference_loss, rtol=1e-4, atol=1e-6))
     logit_failures = int(
         np.count_nonzero(
             np.abs(logits - reference_logits) > 1e-6 + 1e-4 * np.abs(reference_logits)
@@ -134,9 +145,7 @@ def roundtrip(
     )
     if not diagnose_rounding:
         np.testing.assert_allclose(logits, reference_logits, rtol=1e-4, atol=1e-6)
-    np.testing.assert_allclose(
-        actual.loss.detach(), expected.loss.detach(), rtol=1e-4, atol=1e-6
-    )
+        np.testing.assert_allclose(actual_loss, reference_loss, rtol=1e-4, atol=1e-6)
     actual.loss.backward()
     expected.loss.backward()
     parameters = dict(peft.named_parameters())
@@ -146,6 +155,11 @@ def roundtrip(
             p = model.onnx.adapters[model.onnx.names.index(row[key])]
             q = parameters[f"base_model.model.{row['module']}.lora_{key}.default.weight"]
             actual_gradient, expected_gradient = p.grad.numpy(), q.grad.numpy().T
+            if (
+                not np.isfinite(actual_gradient).all()
+                or not np.isfinite(expected_gradient).all()
+            ):
+                raise FloatingPointError(f"Nonfinite PEFT gradient: {row[key]}")
             delta = np.abs(actual_gradient - expected_gradient)
             failed = delta > 1e-6 + 1e-4 * np.abs(expected_gradient)
             if np.any(failed):
@@ -171,6 +185,8 @@ def roundtrip(
     import_adapter(model, directory)
     update_failures = {}
     for name, value in model.onnx.arrays().items():
+        if not np.isfinite(value).all() or not np.isfinite(arrays[name]).all():
+            raise FloatingPointError(f"Nonfinite PEFT update: {name}")
         delta = np.abs(value - arrays[name])
         failures = delta > 1e-6 + 1e-4 * np.abs(arrays[name])
         if np.any(failures):
@@ -183,6 +199,10 @@ def roundtrip(
     result = {
         "adapter_tensors": len(arrays),
         "format_roundtrip_bitwise": True,
+        "loss_check_passed": loss_passed,
+        "loss": actual_loss,
+        "reference_loss": reference_loss,
+        "loss_abs_difference": abs(actual_loss - reference_loss),
         "gradient_check_passed": not bool(gradient_failures),
         "gradient_failures": gradient_failures,
         "update_check_passed": not bool(update_failures),

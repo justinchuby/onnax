@@ -217,6 +217,56 @@ def test_peft_gradient_diagnostic_retains_failures(tmp_path, diagnose):
             roundtrip(model, reference, batch, str(tmp_path))
 
 
+@pytest.mark.parametrize("diagnose", [False, True])
+def test_peft_loss_diagnostic_retains_failure(tmp_path, monkeypatch, diagnose):
+    from examples.huggingface.peft_adapter import roundtrip
+
+    model, reference = prepare()
+    original = model.forward
+
+    def shifted(**inputs):
+        result = original(**inputs)
+        if result.loss is not None:
+            result.loss = result.loss + 0.01
+        return result
+
+    monkeypatch.setattr(model, "forward", shifted)
+    ids = torch.tensor([[1, 4, 5, 2]])
+    batch = {"input_ids": ids, "attention_mask": torch.ones_like(ids), "labels": ids.clone()}
+    if diagnose:
+        result = roundtrip(model, reference, batch, str(tmp_path), diagnose_rounding=True)
+        assert not result["loss_check_passed"]
+        assert result["loss_abs_difference"] > 0.009
+        assert result["gradient_check_passed"]
+    else:
+        with pytest.raises(AssertionError):
+            roundtrip(model, reference, batch, str(tmp_path))
+
+
+def test_peft_diagnostic_rejects_nonfinite_loss(tmp_path, monkeypatch):
+    from examples.huggingface.peft_adapter import roundtrip
+
+    model, reference = prepare()
+    original = model.forward
+
+    def nonfinite(**inputs):
+        result = original(**inputs)
+        if result.loss is not None:
+            result.loss = result.loss * torch.tensor(float("nan"))
+        return result
+
+    monkeypatch.setattr(model, "forward", nonfinite)
+    ids = torch.tensor([[1, 4, 5, 2]])
+    with pytest.raises(FloatingPointError, match="Nonfinite PEFT"):
+        roundtrip(
+            model,
+            reference,
+            {"input_ids": ids, "attention_mask": torch.ones_like(ids), "labels": ids.clone()},
+            str(tmp_path),
+            diagnose_rounding=True,
+        )
+
+
 def test_stable_peft_control_preserves_original_roundtrip(tmp_path):
     from examples.huggingface.peft_adapter import roundtrip
 

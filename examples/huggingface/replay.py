@@ -3,6 +3,7 @@
 """Verify checkpoint state and loaded ONNX outputs after fresh-process resume."""
 
 import argparse
+import functools
 import json
 import os
 
@@ -42,7 +43,7 @@ def _equal_tree(a, b):
         raise AssertionError(f"State values differ: {a} versus {b}")
 
 
-def _training_outputs(directory, interface, feeds):
+def _training_outputs(directory, interface, feeds, session_factory):
     labels = interface["causal_loss"]["labels"]
     inputs = {**feeds, labels: feeds["input_ids"].copy()}
     with np.load(os.path.join(directory, "export/adapter.npz")) as parameters:
@@ -52,10 +53,7 @@ def _training_outputs(directory, interface, feeds):
                 raise AssertionError(f"Exported parameter interface differs: {row['name']}")
             inputs[row["name"]] = value
     names = [interface["output"], *(row["gradient"] for row in interface["parameters"])]
-    # Large derivative graphs encounter ORT's quadratic reuse planner (#103).
-    executor = session(
-        os.path.join(directory, "export", interface["model"]), memory_reuse=False
-    )
+    executor = session_factory(os.path.join(directory, "export", interface["model"]))
     values = executor.run(names, inputs)
     shapes = [[], *(row["shape"] for row in interface["parameters"])]
     for name, value, shape in zip(names, values, shapes, strict=True):
@@ -66,7 +64,24 @@ def _training_outputs(directory, interface, feeds):
     return values
 
 
-def verify(first, replay, *, step=30):
+def verify(first, replay, *, step=30, provider="cpu", library=None):
+    if provider not in ("cpu", "mlx", "reference"):
+        raise ValueError("Expected cpu, mlx or reference provider")
+    if library is not None and provider != "mlx":
+        raise ValueError("A development library requires the mlx provider")
+    # Large derivative graphs encounter ORT's quadratic reuse planner (#103).
+    factory = functools.partial(session, memory_reuse=False)
+    if provider == "reference":
+        from examples.huggingface.serialization import reference_session
+
+        factory = reference_session
+    elif provider == "mlx":
+        from examples.lora.mlx_runtime import register_library
+        from examples.lora.mlx_runtime import session as mlx_session
+
+        if library:
+            register_library(library)
+        factory = mlx_session
     with (
         np.load(os.path.join(first, "export/adapter.npz")) as a,
         np.load(os.path.join(replay, "export/adapter.npz")) as b,
@@ -108,7 +123,7 @@ def verify(first, replay, *, step=30):
     }
     outputs = []
     for directory in (first, replay):
-        executor = session(os.path.join(directory, "export/forward.onnx"), memory_reuse=False)
+        executor = factory(os.path.join(directory, "export/forward.onnx"))
         outputs.append(executor.run(None, feeds))
         del executor
     for x, y in zip(*outputs, strict=True):
@@ -124,11 +139,13 @@ def verify(first, replay, *, step=30):
         "scheduler_equal": True,
         "frozen_hashes_equal": True,
         "export_load_outputs_bitwise_equal": True,
-        "ort_memory_reuse": False,
+        "provider": provider,
+        "ort_memory_reuse": False if provider == "cpu" else None,
     }
     if interface[0].get("kind") == "loss_gradient":
         training = [
-            _training_outputs(directory, interface[0], feeds) for directory in (first, replay)
+            _training_outputs(directory, interface[0], feeds, factory)
+            for directory in (first, replay)
         ]
         for x, y in zip(*training, strict=True):
             _equal_array(x, y)
@@ -143,8 +160,16 @@ def main():
     parser.add_argument("--resumed", required=True)
     parser.add_argument("--step", type=int, default=30)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--provider", choices=["cpu", "mlx", "reference"], default="cpu")
+    parser.add_argument("--library")
     args = parser.parse_args()
-    result = verify(args.uninterrupted, args.resumed, step=args.step)
+    result = verify(
+        args.uninterrupted,
+        args.resumed,
+        step=args.step,
+        provider=args.provider,
+        library=args.library,
+    )
     with open(args.output, "w") as stream:
         json.dump(result, stream, indent=2)
         stream.write("\n")

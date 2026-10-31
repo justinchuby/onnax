@@ -50,7 +50,14 @@ def measure(
     provider="cpu",
     library=None,
     segment_nodes=None,
+    projection_precision="fp32",
 ):
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 projection precision")
+    if projection_precision == "bf16" and (
+        nf4 or mode not in ("pytorch", "joint") or (mode == "joint" and provider != "mlx")
+    ):
+        raise ValueError("BF16 measurement uses PyTorch or MLX joint mode with FP32 storage")
     torch.set_num_threads(1)
     start = time.perf_counter()
     if mode == "pytorch":
@@ -70,6 +77,10 @@ def measure(
                 b = np.zeros((4, layer.out_features), np.float32)
                 setattr(model.get_submodule(parent), child, TorchLora(layer, a, b, 0.25))
                 count += 2
+        if projection_precision == "bf16":
+            from examples.huggingface.mixed_precision import reference_projections
+
+            model = reference_projections(model)
     else:
         from examples.lora.train import session as cpu_session
 
@@ -101,6 +112,7 @@ def measure(
             optimize=mode != "raw",
             save_activations=mode == "saved",
             nf4=nf4,
+            projection_precision=projection_precision,
             session_factory=factory,
         )
         del reference
@@ -160,6 +172,8 @@ def measure(
         not in ("", "0"),
         "real": real,
         "weight_values": "nf4_reconstructed_fp32" if nf4 else "fp32",
+        "projection_precision": projection_precision,
+        "gradient_and_optimizer_dtype": "float32",
         "base_storage": "packed_nf4_decoder" if nf4 and mode != "pytorch" else "fp32",
         "warmup": warmup,
         "samples": samples,
@@ -287,6 +301,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--nf4", action="store_true")
+    parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
     parser.add_argument("--library", help="Development MLX EP library")
     parser.add_argument("--segment-nodes", type=int)
@@ -314,12 +329,18 @@ if __name__ == "__main__":
                     provider=args.provider,
                     library=args.library,
                     segment_nodes=args.segment_nodes,
+                    projection_precision=args.projection_precision,
                 )
             )
         )
     else:
         reports = []
-        for mode in ("pytorch", "raw", "optimized", "saved", "chunked", "joint"):
+        modes = (
+            ("pytorch", "joint")
+            if args.projection_precision == "bf16"
+            else ("pytorch", "raw", "optimized", "saved", "chunked", "joint")
+        )
+        for mode in modes:
             cmd = [
                 sys.executable,
                 "-m",
@@ -334,6 +355,8 @@ if __name__ == "__main__":
                 str(args.batch_size),
                 "--provider",
                 args.provider,
+                "--projection-precision",
+                args.projection_precision,
             ]
             if args.library:
                 cmd.extend(["--library", args.library])

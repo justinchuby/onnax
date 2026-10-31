@@ -1,0 +1,356 @@
+{
+  "scope": "Offline two-layer Qwen3, BF16 projections, FP32 storage and surrogate adjoints",
+  "source_base": "64e78d9a3346b7d9e472593b11cf2d8224a4a399",
+  "working_files_sha256": {
+    "docs/qwen-sft.md": "12780d3a57cf7eea82611fe4026a91ebaee066132286791964b5078d7b18d516",
+    "examples/huggingface/joint_loss.py": "163a3bcda6fb158d81b18937c633d1c4e790cb0dcb2419d502685b3a4ee2fc2b",
+    "examples/huggingface/peft_adapter.py": "715b51a69778d7ad0052cab50cd7e6200348a43d811d59e48f25161d0f5a8518",
+    "examples/huggingface/peft_reference.py": "e29d998c0e2dc2dcfc3063618648acc4db73f694e3304cd8d48aa54ba98dfadf",
+    "examples/huggingface/replay.py": "2bd6ce548bacd4e93c8fc55a7919ec9e2801e0cfd1cc79cea1da65943af8f681",
+    "examples/huggingface/serialization.py": "fb1afdb5d3578ccbb1f9db044a9ae097bc92eb34073d19c26dd5ece44c2ba151",
+    "examples/huggingface/sft.py": "33a588a86a4d1a7512b03cb2c9b1e9dfe18a401c4f1a97fea3ace1654df9b445",
+    "tests/test_joint_loss.py": "d2e7f197e74a31be6edddcf7289e6ef64c71062c16bf082771b6831cef8cbc8b",
+    "tests/test_qwen_sft.py": "1215fb12dd0e6649cd101d9463c8addcde38a813fa6c51342b2f1081ed329143"
+  },
+  "training": {
+    "model": "tiny-qwen3",
+    "revision": null,
+    "steps": 100,
+    "mode": "joint",
+    "projection_precision": "bf16",
+    "validation_loss": [
+      5.54405403137207,
+      5.401473045349121
+    ],
+    "audits": [
+      {
+        "strict_loss_check_passed": true,
+        "reference_loss": 5.579920291900635,
+        "strict_logit_check_passed": true,
+        "logit_violations": 0,
+        "logits_relative_l2": 0.0,
+        "logits_max_abs": 0.0,
+        "gradients_max_abs": 2.6775524020195007e-09,
+        "strict_gradient_check_passed": true,
+        "gradient_failures": {},
+        "loss": 5.579920768737793
+      },
+      {
+        "strict_loss_check_passed": true,
+        "reference_loss": 5.182520389556885,
+        "strict_logit_check_passed": false,
+        "logit_violations": 115,
+        "logits_relative_l2": 0.0007567560533061624,
+        "logits_max_abs": 0.001953125,
+        "gradients_max_abs": 4.377216100692749e-08,
+        "strict_gradient_check_passed": true,
+        "gradient_failures": {},
+        "loss": 5.182520866394043
+      }
+    ],
+    "quantization": null,
+    "provider": "reference",
+    "segment_target_nodes": null,
+    "ort_graph_optimization": null,
+    "frozen_buffers_unchanged": true,
+    "stable_reference_audits": {
+      "loss": "target-excluded stable CE",
+      "head_backward": "FP32 adjoint using BF16-rounded operands",
+      "checks": [
+        {
+          "strict_loss_check_passed": true,
+          "reference_loss": 5.579919815063477,
+          "strict_logit_check_passed": true,
+          "logit_violations": 0,
+          "logits_relative_l2": 0.0,
+          "logits_max_abs": 0.0,
+          "gradients_max_abs": 2.6775524020195007e-09,
+          "strict_gradient_check_passed": true,
+          "gradient_failures": {},
+          "loss": 5.579920768737793
+        },
+        {
+          "strict_loss_check_passed": true,
+          "reference_loss": 5.182519912719727,
+          "strict_logit_check_passed": false,
+          "logit_violations": 115,
+          "logits_relative_l2": 0.0007567560533061624,
+          "logits_max_abs": 0.001953125,
+          "gradients_max_abs": 4.0978193283081055e-08,
+          "strict_gradient_check_passed": true,
+          "gradient_failures": {},
+          "loss": 5.182520866394043
+        }
+      ]
+    },
+    "artifact_bytes": {
+      "forward.onnx": 75855,
+      "forward.data": 371712,
+      "adapter.npz": 9654,
+      "interface.json": 6481,
+      "loss_gradient.onnx": 222155,
+      "loss_gradient.data": 626688
+    },
+    "forward_nodes": 473,
+    "adapter_parameter_bytes": 7168,
+    "requested_audits": {
+      "peft": true,
+      "fp64": false,
+      "stable_reference": true
+    },
+    "peft": {
+      "adapter_tensors": 8,
+      "format_roundtrip_bitwise": true,
+      "gradient_check_passed": true,
+      "gradient_failures": {},
+      "update_check_passed": true,
+      "update_failures": {},
+      "logit_violations": 115,
+      "logits_max_abs": 0.001953125,
+      "stable_reference_audit": {
+        "reference_loss": 5.182519912719727,
+        "reference_computation": "target-excluded stable CE; BF16 projection forward and FP32 surrogate adjoints",
+        "loss_check_passed": true,
+        "adapter_tensors": 8,
+        "rtol": 0.0001,
+        "atol": 1e-06,
+        "optimizer": {
+          "name": "AdamW",
+          "lr": 0.003,
+          "eps": 1e-08,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "weight_decay": 0
+        },
+        "gradient_check_passed": true,
+        "gradients_max_abs": 3.725290298461914e-08,
+        "gradient_failures": {},
+        "update_check_passed": true,
+        "updates_max_abs": 6.705522537231445e-08,
+        "update_failures": {}
+      }
+    }
+  },
+  "recovery": {
+    "step": 100,
+    "adapter_tensors": 8,
+    "checkpoint_tensors": 9,
+    "frozen_initializers": 42,
+    "adapter_bitwise_equal": true,
+    "checkpoint_bitwise_equal": true,
+    "optimizer_bitwise_equal": true,
+    "scheduler_equal": true,
+    "frozen_hashes_equal": true,
+    "export_load_outputs_bitwise_equal": true,
+    "provider": "reference",
+    "ort_memory_reuse": null,
+    "export_load_loss_gradients_bitwise_equal": true,
+    "exported_gradient_tensors": 8
+  },
+  "resume_checkpoint": 50,
+  "open_checks": [
+    "Strict independent five-step parameter updates fail at step five",
+    "ReferenceEvaluator-trained final parameters: independent PyTorch logits have 115 tolerance violations",
+    "Real-model BF16 training"
+  ],
+  "native_mlx": {
+    "training": {
+      "model": "tiny-qwen3",
+      "revision": null,
+      "steps": 100,
+      "mode": "joint",
+      "projection_precision": "bf16",
+      "validation_loss": [
+        5.544053554534912,
+        5.401231288909912
+      ],
+      "audits": [
+        {
+          "strict_loss_check_passed": true,
+          "reference_loss": 5.579920291900635,
+          "strict_logit_check_passed": true,
+          "logit_violations": 0,
+          "logits_relative_l2": 0.0,
+          "logits_max_abs": 0.0,
+          "gradients_max_abs": 2.444721758365631e-09,
+          "strict_gradient_check_passed": true,
+          "gradient_failures": {},
+          "loss": 5.579919815063477
+        },
+        {
+          "strict_loss_check_passed": true,
+          "reference_loss": 5.182681083679199,
+          "strict_logit_check_passed": true,
+          "logit_violations": 0,
+          "logits_relative_l2": 0.0,
+          "logits_max_abs": 0.0,
+          "gradients_max_abs": 3.818422555923462e-08,
+          "strict_gradient_check_passed": true,
+          "gradient_failures": {},
+          "loss": 5.182681083679199
+        }
+      ],
+      "quantization": null,
+      "provider": "mlx",
+      "segment_target_nodes": null,
+      "ort_graph_optimization": "disabled",
+      "frozen_buffers_unchanged": true,
+      "cpu_fallback_disabled": true,
+      "mlx_compile_disabled": true,
+      "lut4_fusion_disabled": false,
+      "library": "/tmp/onnax-eager-target/release/libonnxruntime_mlx_ep.dylib",
+      "library_sha256": "1c9e7c0b40449408caf300d7da42cee8b4b50f0e1dc2564c30170eee2dcbdf20",
+      "stable_reference_audits": {
+        "loss": "target-excluded stable CE",
+        "head_backward": "FP32 adjoint using BF16-rounded operands",
+        "checks": [
+          {
+            "strict_loss_check_passed": true,
+            "reference_loss": 5.579919815063477,
+            "strict_logit_check_passed": true,
+            "logit_violations": 0,
+            "logits_relative_l2": 0.0,
+            "logits_max_abs": 0.0,
+            "gradients_max_abs": 2.3283064365386963e-09,
+            "strict_gradient_check_passed": true,
+            "gradient_failures": {},
+            "loss": 5.579919815063477
+          },
+          {
+            "strict_loss_check_passed": true,
+            "reference_loss": 5.182680130004883,
+            "strict_logit_check_passed": true,
+            "logit_violations": 0,
+            "logits_relative_l2": 0.0,
+            "logits_max_abs": 0.0,
+            "gradients_max_abs": 3.259629011154175e-08,
+            "strict_gradient_check_passed": true,
+            "gradient_failures": {},
+            "loss": 5.182681083679199
+          }
+        ]
+      },
+      "artifact_bytes": {
+        "forward.onnx": 75855,
+        "forward.data": 371712,
+        "adapter.npz": 9654,
+        "interface.json": 6481,
+        "loss_gradient.onnx": 222155,
+        "loss_gradient.data": 626688
+      },
+      "forward_nodes": 473,
+      "adapter_parameter_bytes": 7168,
+      "requested_audits": {
+        "peft": true,
+        "fp64": false,
+        "stable_reference": true
+      },
+      "peft": {
+        "adapter_tensors": 8,
+        "format_roundtrip_bitwise": true,
+        "gradient_check_passed": true,
+        "gradient_failures": {},
+        "update_check_passed": true,
+        "update_failures": {},
+        "logit_violations": 0,
+        "logits_max_abs": 0.0,
+        "stable_reference_audit": {
+          "reference_loss": 5.182680130004883,
+          "reference_computation": "target-excluded stable CE; BF16 projection forward and FP32 surrogate adjoints",
+          "loss_check_passed": true,
+          "adapter_tensors": 8,
+          "rtol": 0.0001,
+          "atol": 1e-06,
+          "optimizer": {
+            "name": "AdamW",
+            "lr": 0.003,
+            "eps": 1e-08,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "weight_decay": 0
+          },
+          "gradient_check_passed": true,
+          "gradients_max_abs": 3.259629011154175e-08,
+          "gradient_failures": {},
+          "update_check_passed": true,
+          "updates_max_abs": 5.960464477539063e-08,
+          "update_failures": {}
+        }
+      }
+    },
+    "recovery": {
+      "step": 100,
+      "adapter_tensors": 8,
+      "checkpoint_tensors": 9,
+      "frozen_initializers": 42,
+      "adapter_bitwise_equal": true,
+      "checkpoint_bitwise_equal": true,
+      "optimizer_bitwise_equal": true,
+      "scheduler_equal": true,
+      "frozen_hashes_equal": true,
+      "export_load_outputs_bitwise_equal": true,
+      "provider": "mlx",
+      "ort_memory_reuse": null,
+      "export_load_loss_gradients_bitwise_equal": true,
+      "exported_gradient_tensors": 8
+    }
+  },
+  "common_parameters_forward": [
+    {
+      "parameters_from": "mlx-100",
+      "shape": [
+        1,
+        12,
+        256
+      ],
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise_equal": true
+    },
+    {
+      "parameters_from": "sft-100",
+      "shape": [
+        1,
+        12,
+        256
+      ],
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise_equal": true
+    }
+  ],
+  "common_parameters_forward_scope": "Same exported ONNX forward and input sample on both executors; this does not compare either executor with PyTorch.",
+  "environment": {
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "machine": "arm64",
+    "python": "3.11.17",
+    "packages": {
+      "onnx": "1.23.2",
+      "onnxruntime": "1.31.1",
+      "onnx-ir": "1.1.0",
+      "onnxscript": "0.7.2",
+      "torch": "2.15.0",
+      "transformers": "5.22.1",
+      "trl": "0.24.0",
+      "peft": "0.21.2",
+      "numpy": "2.4.6"
+    }
+  },
+  "strict_update_regression": {
+    "reference": "failed at step 5, layer 0 q_proj A parameter",
+    "mlx": "failed at step 5, layer 0 q_proj A parameter",
+    "rtol": 0.0001,
+    "atol": 1e-06
+  },
+  "commands": {
+    "train": "python -m examples.huggingface.sft --mode joint --projection-precision bf16 --provider PROVIDER --steps 100 --diagnose-rounding --stable-reference --peft-roundtrip --output-dir OUTPUT",
+    "resume": "Same training arguments with --resume ORIGINAL/checkpoint-50 and a new OUTPUT directory",
+    "replay": "python -m examples.huggingface.replay --uninterrupted ORIGINAL --resumed RESUMED --step 100 --provider PROVIDER --output REPORT",
+    "mlx_environment": "ONNXRUNTIME_EP_MLX_NO_COMPILE=1; --library /tmp/onnax-eager-target/release/libonnxruntime_mlx_ep.dylib",
+    "strict_updates": "ONNAX_TEST_MLX_EP=1 ONNXRUNTIME_EP_MLX_NO_COMPILE=1 ONNAX_MLX_EP_LIBRARY=/tmp/onnax-eager-target/release/libonnxruntime_mlx_ep.dylib python -m pytest tests/test_qwen_bf16.py -q"
+  }
+}

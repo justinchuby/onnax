@@ -6,6 +6,16 @@ import numpy as np
 import onnx_ir as ir
 
 
+def reference_session(source):
+    """Execute portable graphs with ONNX's reference kernels, including BF16."""
+    import onnx
+    from onnx.reference import ReferenceEvaluator
+
+    return ReferenceEvaluator(
+        onnx.load_model_from_string(source) if isinstance(source, bytes) else str(source)
+    )
+
+
 def save_graph(model, path, *, data_name):
     """Serialize lazy transpose views through contiguous buffers once per export."""
     result = model.clone()

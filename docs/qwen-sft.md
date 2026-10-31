@@ -58,6 +58,96 @@ computes token loss outside the ONNX forward; gradients enter the ONNX VJP
 through the logits cotangent. Separate token-loss ONNX modules support the
 training-specific chunked execution path.
 
+## BF16 projection experiment
+
+Run the joint loss/gradient graph with BF16 matrix projections:
+
+```bash
+uv run python -m examples.huggingface.sft --mode joint \
+  --projection-precision bf16 --provider reference --steps 100 \
+  --stable-reference --diagnose-rounding --peft-roundtrip --output-dir qwen_bf16
+```
+
+Projection operands and results round to BF16. Attention, normalization, loss,
+master parameters and Adam state use FP32. Registered derivatives compute FP32
+straight-through adjoints using the rounded operands. The exported interface
+records this policy; checkpoints validate it when loading.
+
+The offline ReferenceEvaluator run reduced validation loss from 5.5441 to
+5.4015 in 100 updates. Restoring checkpoint 50 in a new process reproduced
+the final parameters, optimizer state and loaded ONNX outputs byte for byte.
+The final independent loss and adapter-gradient checks passed. Final logits
+had 115 tolerance violations, and the separate five-step independent update
+test still fails at step five. Results are recorded in
+`reports/qwen-bf16-tiny-sft-recovery.json` and
+`reports/qwen-bf16-first-divergence.json`.
+
+The native MLX run reduced validation loss from 5.5441 to 5.4012 and passed
+the initial and final independent logits, loss and adapter-gradient checks.
+Its checkpoint-50 resume also reproduced all final state and loaded ONNX
+outputs byte for byte. Running either set of final parameters on both ONNX
+executors produced identical logits on the audit sample. The remaining
+five-step update discrepancy is tracked separately from checkpoint recovery.
+
+On Qwen3-0.6B, 30 native MLX updates reduced validation loss from 7.4406 to
+6.2499. Checkpoint-15 recovery reproduced all 112 adapters, Adam/scheduler
+state and loaded ONNX forward/loss/gradient outputs byte for byte. Frozen
+weights and the PEFT adapter format round trip also matched exactly.
+
+Independent forward, loss and gradient comparisons exceed the original
+tolerance on this model. The first frozen q projection already exposes four
+BF16 output differences between PyTorch and MLX with identical operands;
+ReferenceEvaluator matches MLX. [Issue #116](https://github.com/justinchuby/onnax/issues/116)
+records FP32 accumulation and BF16 rounding near midpoint boundaries. The
+complete training and recovery evidence is in
+`reports/qwen3-bf16-joint-sft-m1max.json`.
+
+Inspect projection inputs, outputs and incoming gradients at the same parameter
+state with:
+
+```bash
+uv run python -m examples.huggingface.bf16_audit --output projection-audit.json
+```
+
+This runs one AdamW update, copies its parameters into the independent reference,
+and audits the second gradient evaluation. All 23 rounded projection inputs and
+outputs match exactly. Incoming gradients meet the original tolerance, with
+FP32 arithmetic differences recorded for each projection.
+
+The measurement CLI accepts the same precision policy. Run each path in a
+separate process, with the same batch size and sequence length:
+
+```bash
+uv run python -m examples.huggingface.benchmark --mode pytorch \
+  --projection-precision bf16 --real --batch-size 1 --warmup 10 --samples 100
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.benchmark \
+  --mode joint --provider mlx --projection-precision bf16 --real \
+  --batch-size 1 --warmup 10 --samples 100
+```
+
+Reports include the projection policy, step median/P95, tokens per second,
+initialization time and peak process RSS. Both paths retain FP32 base storage
+and FP32 surrogate adjoints.
+
+On an M1 Max, the real model with batch 1, sequence length 64 and 63 shifted
+targets produced the following measurements (10 warmups, 100 measured steps):
+
+| Path | Step median / P95 | Tokens/s | Peak process RSS |
+| --- | ---: | ---: | ---: |
+| PyTorch CPU BF16 | 3.071 / 3.135 s | 20.52 | 6.06 GiB |
+| MLX joint BF16 | 1.399 / 1.466 s | 45.04 | 10.36 GiB |
+
+Session/model initialization took 0.414 s for PyTorch and 35.432 s for the
+ONNX construction, differentiation, export and MLX session path. RSS includes
+construction, runtime, arrays and Adam state. PyTorch uses its standard causal
+CE; ONNX uses the stable target-excluded CE, with the same valid-token mean.
+The report is `reports/qwen3-bf16-matched-m1max.json`. Independent numerical
+qualification remains open as described above.
+
+For native execution select `--provider mlx`. The tested macOS ORT CPU backend
+has no BF16 MatMul kernel. This experiment uses FP32 weight storage; NF4 and
+BF16 projection compute currently have separate CLI paths.
+
 ## Validation
 
 Offline tests compare all q/v adapter gradients against a separate PyTorch

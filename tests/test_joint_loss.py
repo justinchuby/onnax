@@ -267,3 +267,23 @@ def test_joint_checkpoint_rejects_base_mismatch():
     state["base_identity"][0] ^= 1
     with pytest.raises(ValueError, match="base model"):
         joint.load_state_dict(state)
+
+
+def test_joint_checkpoint_precision_policy(tmp_path):
+    joint, _, _, _ = make_joint()
+    graph = joint.model.clone()
+    policy = {"version": 1, "projection_compute": "bfloat16"}
+    graph.metadata_props["onnax.example.precision"] = json.dumps(policy)
+    precise = JointLoss(graph, joint.arrays())
+    assert precise.frozen == joint.frozen
+    assert precise.names == joint.names
+    with pytest.raises(ValueError, match="precision policy"):
+        precise.load_state_dict(joint.state_dict())
+    with pytest.raises(ValueError, match="precision policy"):
+        joint.load_state_dict(precise.state_dict())
+    # JSON formatting does not change the computation contract.
+    graph.metadata_props["onnax.example.precision"] = json.dumps(policy, indent=2)
+    restored = JointLoss(graph, joint.arrays())
+    restored.load_state_dict(precise.state_dict())
+    precise.export(tmp_path)
+    assert json.loads((tmp_path / "interface.json").read_text())["precision"] == policy
