@@ -261,7 +261,7 @@ class CheckpointedModule(OnnxModule):
             name for execution in self.executions for name in execution.block.inputs
         )
 
-    def export(self, directory, *, forward_model=None):
+    def export(self, directory, *, forward_model=None, head=None):
         os.makedirs(directory, exist_ok=True)
         result = self._bound_forward(forward_model)
         record = {"version": 1, "layers": self.layers, "body": "body.onnx", "blocks": []}
@@ -287,6 +287,12 @@ class CheckpointedModule(OnnxModule):
                         "seeds": execution.seeds,
                         "gradients": execution.gradients,
                     }
+                )
+            if head is not None:
+                record["head"] = head.export_to(weights)
+                paths.extend(
+                    os.path.join(directory, record["head"][name])
+                    for name in ("loss", "gradient", "forward")
                 )
         for path in paths:
             onnx.checker.check_model(path, full_check=True)

@@ -597,7 +597,11 @@ def run(
         else None
     )
     final_stable = stable_control() if stable_reference else None
-    model.onnx.export(os.path.join(directory, "export"), forward_model=model.forward_graph)
+    model.onnx.export(
+        os.path.join(directory, "export"),
+        forward_model=model.forward_graph,
+        **({"head": model.head} if checkpoint_layers else {}),
+    )
     from examples.huggingface.peft_adapter import export_adapter
 
     export_adapter(model, os.path.join(directory, "adapter"))

@@ -54,6 +54,66 @@ saving `X @ A` needs `4*T*r` logical bytes in FP32 and avoids its `2*T*d*r`
 recomputation FLOPs. The full cut also saves other backward dependencies;
 the benchmark reports their logical extents and the process's measured RSS.
 
+## Decoder activation checkpointing
+
+Checkpoint decoder groups with the chunked output head:
+
+```bash
+uv run python -m examples.huggingface.sft --mode chunked --nf4 \
+  --checkpoint-layers 1 --output-dir qwen_checkpoints
+```
+
+`--checkpoint-layers N` groups consecutive decoder layers, including a shorter
+final group. `0` keeps the original execution path. The checkpoint and
+`--save-activations` options select separate storage strategies. Add
+`--projection-precision bf16 --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib`
+for BF16 projection computation with FP32 parameters, adjoints and optimizer state.
+
+For group $j$, write $H_{j+1}=F_j(H_j;\theta_j,W_j)$, where $W_j$ is frozen and
+$\theta_j$ contains its LoRA adapters. Forward saves group inputs and shared
+mask/RoPE dependencies. Backward recomputes the group and evaluates
+
+$$
+(\bar H_j,\bar\theta_j)
+=\operatorname{VJP}_{F_j}(H_j,\theta_j;\bar H_{j+1}).
+$$
+
+The hidden-state cotangent passes through frozen groups to earlier adapters.
+Each group has its own autograd context; PyTorch manages saved-tensor lifetimes,
+parameter version checks and retained backward graphs. Evaluation executes the
+forward modules without saving checkpoints. Group boundaries reduce cross-layer
+activation retention; a group's attention matrices still scale quadratically
+with sequence length.
+
+The export contains `checkpoint_plan.json`, `body.onnx`, each group's forward/VJP,
+and the output head's loss, gradient and prediction modules. Their initializers
+reference immutable shared weight files. Identical tensor payloads with the same
+shape and dtype are written once. `interface.json` identifies the actual model
+file and output name for each adapter gradient.
+
+Load these modules directly to continue an external training loop:
+
+```python
+import torch
+from examples.huggingface.checkpointing import CheckpointedModule
+from examples.huggingface.chunked_loss import ChunkedHead
+
+body = CheckpointedModule.load("qwen_checkpoints/export")
+head = ChunkedHead.load("qwen_checkpoints/export")
+optimizer = torch.optim.AdamW(body.parameters(), lr=0.003, weight_decay=0)
+# inputs contains CPU INT64 input_ids, attention_mask and position_ids;
+# labels contains token IDs and -100 for ignored positions.
+optimizer.zero_grad(set_to_none=True)
+loss = head(body(**inputs), labels)
+loss.backward()
+optimizer.step()
+```
+
+Pass `session_factory` to both loaders to select the execution backend. Loading
+uses the saved ONNX modules. The replay verifier checks their loss and every
+adapter gradient alongside parameters, AdamW state, scheduler and frozen hashes.
+Prediction initializes its full-logit session on the first request.
+
 (qwen-long-context)=
 
 ## Measure longer contexts

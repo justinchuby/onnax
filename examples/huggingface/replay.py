@@ -44,6 +44,20 @@ def _equal_tree(a, b):
 
 
 def _training_outputs(directory, interface, feeds, session_factory):
+    if interface.get("kind") == "checkpointed_vjp":
+        from examples.huggingface.checkpointing import CheckpointedModule
+        from examples.huggingface.chunked_loss import ChunkedHead
+
+        export = os.path.join(directory, "export")
+        body = CheckpointedModule.load(export, session_factory=session_factory)
+        head = ChunkedHead.load(export, session_factory=session_factory)
+        hidden = body(**{name: torch.from_numpy(value) for name, value in feeds.items()})
+        loss = head(hidden, torch.from_numpy(feeds["input_ids"].copy()))
+        loss.backward()
+        result = [loss.detach().numpy(), *(p.grad.detach().numpy() for p in body.adapters)]
+        if any(not np.isfinite(value).all() for value in result):
+            raise AssertionError("Nonfinite exported checkpointed training outputs")
+        return result
     labels = interface["causal_loss"]["labels"]
     inputs = {**feeds, labels: feeds["input_ids"].copy()}
     with np.load(os.path.join(directory, "export/adapter.npz")) as parameters:
@@ -142,7 +156,7 @@ def verify(first, replay, *, step=30, provider="cpu", library=None):
         "provider": provider,
         "ort_memory_reuse": False if provider == "cpu" else None,
     }
-    if interface[0].get("kind") == "loss_gradient":
+    if interface[0].get("kind") in ("loss_gradient", "checkpointed_vjp"):
         training = [
             _training_outputs(directory, interface[0], feeds, factory)
             for directory in (first, replay)

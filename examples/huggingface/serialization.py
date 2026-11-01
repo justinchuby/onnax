@@ -98,6 +98,7 @@ class SharedWeights:
                     self.payloads[identity] = offset, array.nbytes
                 offset, length = self.payloads[identity]
                 self.tensors[id(tensor)] = tensor, (offset, length)
+                del array, data
             value.const_value = ir.ExternalTensor(
                 self.data_name,
                 offset,
