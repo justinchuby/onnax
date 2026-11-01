@@ -91,25 +91,7 @@ class OnnxModule(torch.nn.Module):
         session_factory=session,
     ):
         super().__init__()
-        self.model = model
-        self.names = tuple(params)
-        self.output = output or model.graph.outputs[0].name
-        inputs = {v.name: v for v in model.graph.inputs}
-        for name, array in params.items():
-            if name not in inputs or name in model.graph.initializers:
-                raise ValueError(f"Expected explicit trainable input: {name}")
-            if array.dtype != np.float32 or list(array.shape) != list(inputs[name].shape):
-                raise ValueError(f"FP32 parameter shape mismatch: {name}")
-        self.adapters = torch.nn.ParameterList(
-            [torch.nn.Parameter(torch.from_numpy(p.copy())) for p in params.values()]
-        )
-        self.data_names = tuple(v.name for v in model.graph.inputs if v.name not in params)
-        self.frozen = frozen_hashes(model)
-        identity = json.dumps({"frozen": self.frozen, "names": self.names}, sort_keys=True)
-        self.register_buffer(
-            "base_identity",
-            torch.tensor(list(hashlib.sha256(identity.encode()).digest()), dtype=torch.uint8),
-        )
+        self._init_parameters(model, params, output)
         vjp = onnax.vjp(model, inputs=list(params), outputs=[self.output])
         self.seed = vjp.graph.inputs[-1].name
         self.gradients = [v.name for v in vjp.graph.outputs[len(model.graph.outputs) :]]
@@ -147,6 +129,28 @@ class OnnxModule(torch.nn.Module):
         )
         self.timings = {n: [] for n in ("forward", "backward", "exchange")}
 
+    def _init_parameters(self, model, params, output):
+        """Share parameter ownership and checkpoint identity across execution strategies."""
+        self.model = model
+        self.names = tuple(params)
+        self.output = output or model.graph.outputs[0].name
+        inputs = {v.name: v for v in model.graph.inputs}
+        for name, array in params.items():
+            if name not in inputs or name in model.graph.initializers:
+                raise ValueError(f"Expected explicit trainable input: {name}")
+            if array.dtype != np.float32 or list(array.shape) != list(inputs[name].shape):
+                raise ValueError(f"FP32 parameter shape mismatch: {name}")
+        self.adapters = torch.nn.ParameterList(
+            [torch.nn.Parameter(torch.from_numpy(p.copy())) for p in params.values()]
+        )
+        self.data_names = tuple(v.name for v in model.graph.inputs if v.name not in params)
+        self.frozen = frozen_hashes(model)
+        identity = json.dumps({"frozen": self.frozen, "names": self.names}, sort_keys=True)
+        self.register_buffer(
+            "base_identity",
+            torch.tensor(list(hashlib.sha256(identity.encode()).digest()), dtype=torch.uint8),
+        )
+
     def _load_from_state_dict(self, state_dict, prefix, *args, **kwargs):
         identity = state_dict.get(prefix + "base_identity")
         if identity is None or not torch.equal(identity.cpu(), self.base_identity.cpu()):
@@ -181,8 +185,7 @@ class OnnxModule(torch.nn.Module):
             for n, p in zip(self.names, self.adapters, strict=True)
         }
 
-    def export(self, directory, *, forward_model=None):
-        os.makedirs(directory, exist_ok=True)
+    def _bound_forward(self, forward_model=None):
         if frozen_hashes(self.model) != self.frozen:
             raise ValueError("Frozen ONNX weights changed")
         result = (self.model if forward_model is None else forward_model).clone()
@@ -192,9 +195,9 @@ class OnnxModule(torch.nn.Module):
             result.graph.inputs.remove(value)
             value.const_value = ir.tensor(array, name=name)
             result.graph.register_initializer(value)
-        path = os.path.join(directory, "forward.onnx")
-        save_graph(result, path, data_name="forward.data")
-        onnx.checker.check_model(path, full_check=True)
+        return result
+
+    def _export_parameters(self, directory):
         np.savez(os.path.join(directory, "adapter.npz"), **self.arrays())
         with open(os.path.join(directory, "interface.json"), "w") as stream:
             json.dump(
@@ -212,4 +215,12 @@ class OnnxModule(torch.nn.Module):
                 stream,
                 indent=2,
             )
+
+    def export(self, directory, *, forward_model=None):
+        os.makedirs(directory, exist_ok=True)
+        result = self._bound_forward(forward_model)
+        path = os.path.join(directory, "forward.onnx")
+        save_graph(result, path, data_name="forward.data")
+        onnx.checker.check_model(path, full_check=True)
+        self._export_parameters(directory)
         return result

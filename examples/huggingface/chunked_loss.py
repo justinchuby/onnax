@@ -17,7 +17,9 @@ from examples.huggingface.stable_losses import hard_cross_entropy, install
 from examples.lora.train import session
 
 
-def head_graph(weight):
+def head_graph(weight, *, projection_precision="fp32"):
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 head projection precision")
     width, vocab = weight.shape
     hidden = ir.val("hidden", dtype=ir.DataType.FLOAT, shape=["tokens", width])
     labels = ir.val("labels", dtype=ir.DataType.INT64, shape=["tokens"])
@@ -25,6 +27,7 @@ def head_graph(weight):
 
     w = tape.initializer(ir.tensor(weight, name="head.weight"))
     logits = tape.op("MatMul", [hidden, w])
+    logits.name = "logits"
     logits.dtype, logits.shape = hidden.dtype, ir.Shape(["tokens", vocab])
     graph = ir.Graph(
         [hidden, labels],
@@ -42,6 +45,10 @@ def head_graph(weight):
     model = ir.Model(graph, ir_version=12)
     install(model)
     ShapeInferencePass()(model)
+    if projection_precision == "bf16":
+        from examples.huggingface.mixed_precision import bf16_projections
+
+        model = bf16_projections(model)
     return model
 
 
@@ -73,12 +80,14 @@ class _ChunkLoss(torch.autograd.Function):
 
 
 class ChunkedHead:
-    def __init__(self, weight, *, chunk_size=128, session_factory=session):
+    def __init__(
+        self, weight, *, chunk_size=128, projection_precision="fp32", session_factory=session
+    ):
         if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size < 1:
             raise ValueError("chunk_size must be a positive integer")
         self.chunk_size = chunk_size
         self.vocab_size = weight.shape[1]
-        self.model = head_graph(weight)
+        self.model = head_graph(weight, projection_precision=projection_precision)
         self.gradient = optimize_training_graph(
             onnax.grad(self.model, inputs=["hidden"], output="loss_sum")
         )
@@ -88,8 +97,7 @@ class ChunkedHead:
             self.gradient, self.directory.name, "gradient", session_factory=session_factory
         )
         forward = self.model.clone()
-        logits = next(n.outputs[0] for n in forward.graph if n.op_type == "MatMul")
-        logits.name = "logits"
+        logits = ir.convenience.create_value_mapping(forward.graph)["logits"]
         forward.graph.outputs.clear()
         forward.graph.outputs.append(logits)
         forward.graph.inputs.pop()  # labels are unnecessary for prediction
