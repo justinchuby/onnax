@@ -7,8 +7,16 @@ provides tokenization, batches, AdamW, scheduling and checkpoints.
 ```bash
 uv sync --group dev --group training --group huggingface
 uv run python -m examples.huggingface.sft --output-dir qwen_tiny
-uv run python -m examples.huggingface.sft --real --diagnose-rounding --output-dir qwen_real
+uv run python -m examples.huggingface.sft --real --output-dir qwen_real
 ```
+
+Ordinary training releases the PyTorch weight-loading reference after ONNX
+construction. `--reference-audit` retains it to compare reference logits, loss
+and adapter gradients at the initial and final states. These comparisons are
+recorded by default when requested; `--strict-reference` makes failures fatal.
+`--diagnose-rounding` also requests a diagnostic reference audit. PEFT roundtrip,
+stable-reference and FP64 audit options retain the reference for their checks.
+Validation losses and adapter parameters must remain finite in ordinary training.
 
 Compare held-out loss across runtimes and independent seeds with the
 [training-quality experiment](training-quality.md). Its paired runs match the
@@ -308,10 +316,11 @@ initial and final adapter states. Maximum logit error is 1.99e-13 and maximum
 adapter-gradient error is 3.79e-15. This comparison uses the same stored RoPE
 and scalar constants, and evaluates the transformer independently in PyTorch.
 
-SFT records reference logits, loss and per-parameter gradient comparisons by
-default, using the original tolerances. `--strict-reference` makes pointwise
-failures fatal. Nonfinite values and shape mismatches always raise. The legacy
-`--diagnose-rounding` flag selects the default diagnostic mode.
+`--reference-audit` records reference logits, loss and per-parameter gradient
+comparisons using the original tolerances. `--strict-reference` requests the
+same checks with pointwise failures made fatal. Nonfinite values and shape
+mismatches always raise during audits. The legacy `--diagnose-rounding` flag
+requests diagnostic reference comparisons.
 
 Training acceptance uses gradient correctness, finite updates, convergence,
 held-out loss and recovery. The FP32 report preserves its original elementwise

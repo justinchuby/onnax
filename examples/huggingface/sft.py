@@ -4,8 +4,10 @@
 
 import argparse
 import functools
+import gc
 import hashlib
 import json
+import math
 import os
 import tempfile
 
@@ -401,7 +403,7 @@ def run(
     mode="full",
     chunk_size=128,
     optimize=True,
-    diagnose_rounding=True,
+    diagnose_rounding=None,
     save_activations=False,
     fp64_audit=False,
     nf4=False,
@@ -414,7 +416,16 @@ def run(
     train_file=None,
     validation_file=None,
     max_length=64,
+    reference_audit=False,
 ):
+    reference_audit = bool(
+        reference_audit
+        or diagnose_rounding is not None
+        or peft_roundtrip
+        or fp64_audit
+        or stable_reference
+    )
+    diagnose_rounding = True if diagnose_rounding is None else diagnose_rounding
     _validate_max_length(max_length, limit=None if real else 64)
     if provider not in ("cpu", "mlx", "reference"):
         raise ValueError("Expected cpu, mlx or reference provider")
@@ -476,16 +487,23 @@ def run(
     initial_frozen = frozen_hashes(model.forward_graph)
     from examples.huggingface.validation import add_reference_adapters, audit
 
-    reference = add_reference_adapters(reference, model)
-    if projection_precision == "bf16":
-        from examples.huggingface.mixed_precision import reference_projections
+    initial_audit = sample = None
+    if reference_audit:
+        reference = add_reference_adapters(reference, model)
+        if projection_precision == "bf16":
+            from examples.huggingface.mixed_precision import reference_projections
 
-        reference = reference_projections(reference)
-    sample = tok(train_lines[0], truncation=True, max_length=max_length, return_tensors="pt")
-    sample = {k: v for k, v in sample.items() if k in ("input_ids", "attention_mask")}
-    sample["labels"] = sample["input_ids"].clone()
-    initial_params = model.onnx.arrays()
-    initial_audit = audit(model, reference, sample, diagnose_rounding=diagnose_rounding)
+            reference = reference_projections(reference)
+        sample = tok(
+            train_lines[0], truncation=True, max_length=max_length, return_tensors="pt"
+        )
+        sample = {k: v for k, v in sample.items() if k in ("input_ids", "attention_mask")}
+        sample["labels"] = sample["input_ids"].clone()
+        initial_audit = audit(model, reference, sample, diagnose_rounding=diagnose_rounding)
+    else:
+        reference = None
+        gc.collect()
+    initial_params = model.onnx.arrays() if fp64_audit else None
 
     def stable_control():
         from examples.huggingface.reference_head import pairwise_head
@@ -512,9 +530,19 @@ def run(
         max_length=max_length,
     )
     before = trainer.evaluate()["eval_loss"]
+    if not math.isfinite(before):
+        raise FloatingPointError("Nonfinite validation loss before training")
     trainer.train(resume_from_checkpoint=resume)
+    if any(not torch.isfinite(parameter.detach()).all() for parameter in model.onnx.adapters):
+        raise FloatingPointError("Nonfinite adapter parameter after training")
     after = trainer.evaluate()["eval_loss"]
-    final_audit = audit(model, reference, sample, diagnose_rounding=diagnose_rounding)
+    if not math.isfinite(after):
+        raise FloatingPointError("Nonfinite validation loss after training")
+    final_audit = (
+        audit(model, reference, sample, diagnose_rounding=diagnose_rounding)
+        if reference_audit
+        else None
+    )
     final_stable = stable_control() if stable_reference else None
     model.onnx.export(os.path.join(directory, "export"), forward_model=model.forward_graph)
     from examples.huggingface.peft_adapter import export_adapter
@@ -532,7 +560,8 @@ def run(
         "mode": mode,
         "projection_precision": projection_precision,
         "validation_loss": [before, after],
-        "audits": [initial_audit, final_audit],
+        "audits": [initial_audit, final_audit] if reference_audit else [],
+        "reference_retained_during_training": reference_audit,
         "quantization": model.quantization,
         "provider": provider,
         "segment_target_nodes": segment_nodes,
@@ -586,7 +615,8 @@ def run(
         os.replace(path + ".tmp", path)
 
     report["requested_audits"] = {
-        "strict_reference": not diagnose_rounding,
+        "reference": reference_audit,
+        "strict_reference": reference_audit and not diagnose_rounding,
         "peft": peft_roundtrip,
         "fp64": fp64_audit,
         "stable_reference": stable_reference,
@@ -638,6 +668,11 @@ if __name__ == "__main__":
     parser.add_argument("--mode", choices=["full", "chunked", "joint"], default="full")
     parser.add_argument("--chunk-size", type=int, default=128)
     parser.add_argument("--max-length", type=int, default=64)
+    parser.add_argument(
+        "--reference-audit",
+        action="store_true",
+        help="Compare reference logits, loss and gradients at training endpoints",
+    )
     reference_checks = parser.add_mutually_exclusive_group()
     reference_checks.add_argument(
         "--strict-reference",
@@ -649,9 +684,9 @@ if __name__ == "__main__":
         "--diagnose-rounding",
         dest="diagnose_rounding",
         action="store_true",
-        help="Record pointwise reference comparisons (default)",
+        help="Record pointwise reference comparisons",
     )
-    parser.set_defaults(diagnose_rounding=True)
+    parser.set_defaults(diagnose_rounding=None)
     parser.add_argument("--save-activations", action="store_true")
     parser.add_argument("--fp64-audit", action="store_true")
     parser.add_argument("--nf4", action="store_true")
@@ -678,6 +713,7 @@ if __name__ == "__main__":
                 mode=args.mode,
                 chunk_size=args.chunk_size,
                 max_length=args.max_length,
+                reference_audit=args.reference_audit,
                 diagnose_rounding=args.diagnose_rounding,
                 save_activations=args.save_activations,
                 fp64_audit=args.fp64_audit,

@@ -5,7 +5,7 @@ projection by token chunks, save primal values for a separate backward graph,
 or execute loss and adapter gradients together.
 
 ```bash
-uv run python -m examples.huggingface.sft --mode chunked --save-activations --peft-roundtrip --fp64-audit --output-dir qwen_chunked
+uv run python -m examples.huggingface.sft --mode chunked --save-activations --output-dir qwen_chunked
 uv run python -m examples.huggingface.trainer --nf4 --output-dir nf4_trainer
 uv run python -m examples.huggingface.benchmark --output qwen-benchmark.json
 ```
@@ -30,7 +30,9 @@ The loss/gradient head session is created for training. The prediction session
 is created on the first full-logits request and reused thereafter. Its serialized
 weight snapshot is captured when the head is constructed, so predictions and
 training use the same frozen weights. Reference audits that request full logits
-also initialize this prediction session.
+also initialize this prediction session. The SFT CLI releases its PyTorch
+reference after graph construction unless a reference audit is requested;
+ordinary chunked training keeps the prediction session unloaded.
 
 ## Save or recompute
 
