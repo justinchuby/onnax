@@ -93,6 +93,25 @@ respectively. These include cold model construction and native runtime memory.
 The [capacity report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-4k-checkpoint-capacity-m1max.json)
 records input identities, versions, allocator counters and phase boundaries.
 
+## FP32 training result
+
+The complete 30-update FP32 run reduced loss on both fixed sets:
+
+| Evaluation set | Before training | After 30 updates |
+| --- | ---: | ---: |
+| Training, 128 examples | 3.1839 | 2.2026 |
+| Validation, 32 examples | 2.9834 | 2.2320 |
+
+All 112 adapter tensors changed during the second half of training. The final
+export retained the original hashes of all 532 frozen initializers. All 64
+exported ONNX modules passed the full checker; selected parameters are explicit
+FP32 inputs with matching FP32 gradient outputs. Whole-process peak physical
+footprint was 14.6 GiB, including construction, evaluation, training and export.
+
+The [FP32 training report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-4k-nf4-fp32-training-m1max.json)
+records exact loss values, corpus identities, source hashes, checkpoint state
+audits and per-update memory observations.
+
 ## Export and measure
 
 The export directory contains a bound ordinary ONNX forward model, shared
