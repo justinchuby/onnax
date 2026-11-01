@@ -123,6 +123,25 @@ and all 112 gradients on a 4096-token input with seven right-padding tokens.
 PEFT exchange preserved all 112 adapter arrays under both policies; the stable FP32 reference
 control aligned all adapter gradients at rtol=1e-4 and atol=1e-6.
 
+## 512-token strategy measurements
+
+The M1 Max measurements below use FP32 projection computation, packed NF4
+decoder weights, microbatch 1 and 128-token output-head chunks. Each strategy
+runs in a fresh process with 10 warmups and 100 measured updates. A training
+step includes forward, backward and one AdamW update. Peak process footprint
+includes model construction and runtime initialization.
+
+| Strategy | Step median | Step P95 | Valid tokens/s | Peak process footprint |
+| --- | ---: | ---: | ---: | ---: |
+| Whole-body recomputation | 2.917 s | 3.005 s | 175.2 | 10.44 GiB |
+| Checkpoint every layer | 2.780 s | 2.854 s | 183.8 | 7.05 GiB |
+| Checkpoint every 2 layers | 2.837 s | 2.870 s | 180.1 | 6.86 GiB |
+| Checkpoint every 4 layers | 2.846 s | 2.916 s | 179.5 | 7.40 GiB |
+
+All four strategies produced identical loss values across all 110 updates.
+Saving all activations exceeded the 24 GiB process budget and was stopped by
+the guard.
+
 ## Export and measure
 
 The export directory contains a bound ordinary ONNX forward model, shared
