@@ -193,6 +193,15 @@ Saving all activations exceeded the 24 GiB process budget.
 All four strategies produced identical loss values across all 110 updates.
 Saving all activations exceeded the 24 GiB process budget.
 
+### BF16, 4096 tokens
+
+| Strategy | Step median | Step P95 | Valid tokens/s | Peak process footprint |
+| --- | ---: | ---: | ---: | ---: |
+| Checkpoint every layer | 22.625 s | 22.866 s | 181.0 | 13.60 GiB |
+
+Whole-body recomputation and saving all activations exceeded the 24 GiB
+process budget during their capacity probes.
+
 ## Export and measure
 
 The export directory contains a bound ordinary ONNX forward model, shared
