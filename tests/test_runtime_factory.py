@@ -21,7 +21,11 @@ def test_external_evaluator_forward_and_vjp(saved):
     executors = []
 
     def factory(source):
-        evaluator = ReferenceEvaluator(onnx.load_model_from_string(source))
+        evaluator = ReferenceEvaluator(
+            onnx.load_model_from_string(source)
+            if isinstance(source, bytes)
+            else onnx.load(source)
+        )
         executors.append(evaluator)
         return evaluator
 
@@ -43,7 +47,11 @@ def test_chunked_head_prediction_and_loss_use_selected_evaluator():
     executors = []
 
     def factory(source):
-        evaluator = ReferenceEvaluator(onnx.load_model_from_string(source))
+        evaluator = ReferenceEvaluator(
+            onnx.load_model_from_string(source)
+            if isinstance(source, bytes)
+            else onnx.load(source)
+        )
         executors.append(evaluator)
         return evaluator
 

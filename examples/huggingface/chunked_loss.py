@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 """Bounded-token ONNX LM-head loss and hidden-state derivatives."""
 
+import json
+import os
 import tempfile
 
 import numpy as np
@@ -11,13 +13,15 @@ from onnx_ir.passes.common import ShapeInferencePass
 from torch.autograd.function import once_differentiable
 
 import onnax
-from examples.huggingface.bridge import graph_session, graph_source
 from examples.huggingface.optimization import optimize_training_graph
+from examples.huggingface.serialization import SharedWeights
 from examples.huggingface.stable_losses import hard_cross_entropy, install
 from examples.lora.train import session
 
 
-def head_graph(weight):
+def head_graph(weight, *, projection_precision="fp32"):
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 head projection precision")
     width, vocab = weight.shape
     hidden = ir.val("hidden", dtype=ir.DataType.FLOAT, shape=["tokens", width])
     labels = ir.val("labels", dtype=ir.DataType.INT64, shape=["tokens"])
@@ -25,6 +29,7 @@ def head_graph(weight):
 
     w = tape.initializer(ir.tensor(weight, name="head.weight"))
     logits = tape.op("MatMul", [hidden, w])
+    logits.name = "logits"
     logits.dtype, logits.shape = hidden.dtype, ir.Shape(["tokens", vocab])
     graph = ir.Graph(
         [hidden, labels],
@@ -42,6 +47,10 @@ def head_graph(weight):
     model = ir.Model(graph, ir_version=12)
     install(model)
     ShapeInferencePass()(model)
+    if projection_precision == "bf16":
+        from examples.huggingface.mixed_precision import bf16_projections
+
+        model = bf16_projections(model)
     return model
 
 
@@ -73,33 +82,99 @@ class _ChunkLoss(torch.autograd.Function):
 
 
 class ChunkedHead:
-    def __init__(self, weight, *, chunk_size=128, session_factory=session):
+    def __init__(
+        self, weight, *, chunk_size=128, projection_precision="fp32", session_factory=session
+    ):
         if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size < 1:
             raise ValueError("chunk_size must be a positive integer")
         self.chunk_size = chunk_size
+        self.projection_precision = projection_precision
         self.vocab_size = weight.shape[1]
-        self.model = head_graph(weight)
+        self.model = head_graph(weight, projection_precision=projection_precision)
         self.gradient = optimize_training_graph(
             onnax.grad(self.model, inputs=["hidden"], output="loss_sum")
         )
         self.gradient.graph.sort()
         self.directory = tempfile.TemporaryDirectory(prefix="onnax-head-")
-        self.executor = graph_session(
-            self.gradient, self.directory.name, "gradient", session_factory=session_factory
-        )
         forward = self.model.clone()
-        logits = next(n.outputs[0] for n in forward.graph if n.op_type == "MatMul")
-        logits.name = "logits"
+        logits = ir.convenience.create_value_mapping(forward.graph)["logits"]
         forward.graph.outputs.clear()
         forward.graph.outputs.append(logits)
         forward.graph.inputs.pop()  # labels are unnecessary for prediction
         from onnxscript import optimizer
 
         optimizer.remove_unused_nodes(forward)
-        # Snapshot the frozen head now; load its prediction session on first use.
-        self._forward_source = graph_source(forward, self.directory.name, "forward")
+        # All three modules snapshot the same immutable weight payload. Keep the
+        # prediction session lazy while retaining portable training artifacts.
+        with SharedWeights(self.directory.name) as weights:
+            sources = {
+                "loss": weights.save(self.model, "loss"),
+                "gradient": weights.save(self.gradient, "gradient"),
+                "forward": weights.save(forward, "forward"),
+            }
+        self._load_sources(sources, session_factory)
+
+    def _load_sources(self, sources, session_factory):
+        self.model = ir.load(sources["loss"])
+        self.gradient = ir.load(sources["gradient"])
+        self.forward_model = ir.load(sources["forward"])
+        weight = self.model.graph.initializers["head.weight"]
+        if list(weight.shape)[1] != self.vocab_size:
+            raise ValueError("Exported head vocabulary differs from its interface")
+        policy = json.loads(self.model.metadata_props.get("onnax.example.precision", "{}"))
+        actual_precision = "bf16" if policy.get("projection_compute") == "bfloat16" else "fp32"
+        if actual_precision != self.projection_precision:
+            raise ValueError("Output-head projection precision differs from its interface")
+        self.executor = session_factory(sources["gradient"])
+        self._forward_source = sources["forward"]
         self._session_factory = session_factory
         self.forward_executor = None
+
+    def export_to(self, weights):
+        """Store the head modules alongside the checkpointed body's shared weights."""
+        sources = {
+            "loss": weights.save(self.model, "head_loss"),
+            "gradient": weights.save(self.gradient, "head_gradient"),
+            "forward": weights.save(self.forward_model, "head_forward"),
+        }
+        return {
+            "version": 1,
+            "chunk_size": self.chunk_size,
+            "projection_precision": self.projection_precision,
+            "vocab_size": self.vocab_size,
+            "reduction": "valid_shifted_token_mean",
+            **{name: os.path.basename(path) for name, path in sources.items()},
+        }
+
+    @classmethod
+    def load(cls, directory, *, session_factory=session):
+        """Load a saved output head without constructing new derivative graphs."""
+        with open(os.path.join(directory, "checkpoint_plan.json")) as stream:
+            plan = json.load(stream)
+        if plan.get("version") != 1 or "head" not in plan:
+            raise ValueError("Expected a checkpoint execution plan with an output head")
+        record = plan["head"]
+        if record.get("version") != 1 or record.get("reduction") != "valid_shifted_token_mean":
+            raise ValueError("Unsupported output-head interface")
+        if (
+            isinstance(record["chunk_size"], bool)
+            or not isinstance(record["chunk_size"], int)
+            or record["chunk_size"] < 1
+            or record["projection_precision"] not in ("fp32", "bf16")
+        ):
+            raise ValueError("Invalid output-head execution options")
+        result = cls.__new__(cls)
+        result.chunk_size = record["chunk_size"]
+        result.vocab_size = record["vocab_size"]
+        result.projection_precision = record["projection_precision"]
+        result._load_sources(
+            {
+                name: os.path.join(directory, record[name])
+                for name in ("loss", "gradient", "forward")
+            },
+            session_factory,
+        )
+        return result
 
     def forward(self, hidden):
         array = hidden.detach().contiguous().numpy()

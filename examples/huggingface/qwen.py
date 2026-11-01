@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: MIT
 """Construct cache-free Qwen3 ONNX graphs with Mobius and inject explicit LoRA."""
 
+import ast
+import json
+
 import numpy as np
 import onnx_ir as ir
 import torch
@@ -17,6 +20,58 @@ from transformers import Qwen3Config, Qwen3ForCausalLM
 
 MODEL_ID = "Qwen/Qwen3-0.6B"
 REVISION = "c1899de289a04d12100db370d81485cdf75e47ca"
+DECODER_BOUNDARIES = "onnax.example.decoder_boundaries"
+
+
+def protect_decoder_boundaries(model):
+    """Expose Mobius decoder boundaries while rewriting a working model.
+
+    The original outputs and boundary names are recorded in model metadata.
+    Extra outputs keep the values available through decomposition and folding.
+    """
+    layers = {}
+    for node in model.graph:
+        scopes = ast.literal_eval(node.metadata_props.get("pkg.onnxscript.name_scopes", "[]"))
+        for scope in scopes:
+            if scope.startswith("layers.") and scope[7:].isdigit():
+                layers.setdefault(int(scope[7:]), []).append(node)
+                break
+    if not layers or sorted(layers) != list(range(len(layers))):
+        raise ValueError("Expected consecutive Mobius decoder layer scopes")
+    first = layers[0][0]
+    if first.op_type != "RMSNormalization":
+        raise ValueError("Expected Qwen decoder input normalization")
+    names = [first.inputs[0].name]
+    for index, nodes in sorted(layers.items()):
+        members = set(nodes)
+        exits = [
+            value
+            for node in nodes
+            for value in node.outputs
+            if any(use.node not in members for use in value.uses())
+            or value in model.graph.outputs
+        ]
+        if len(exits) != 1:
+            raise ValueError(f"Expected one hidden-state exit for decoder layer {index}")
+        names.append(exits[0].name)
+    original = [value.name for value in model.graph.outputs]
+    values = ir.convenience.create_value_mapping(model.graph)
+    for name in names:
+        if name not in original:
+            model.graph.outputs.append(values[name])
+    model.metadata_props[DECODER_BOUNDARIES] = json.dumps(
+        {"version": 1, "hidden_states": names, "original_outputs": original}
+    )
+
+
+def restore_decoder_outputs(model):
+    """Restore the inference interface after protecting checkpoint boundaries."""
+    record = json.loads(model.metadata_props[DECODER_BOUNDARIES])
+    values = ir.convenience.create_value_mapping(model.graph)
+    if any(name not in values for name in record["hidden_states"]):
+        raise ValueError("A decoder checkpoint boundary was lost during rewriting")
+    model.graph.outputs.clear()
+    model.graph.outputs.extend(values[name] for name in record["original_outputs"])
 
 
 def tiny_config():

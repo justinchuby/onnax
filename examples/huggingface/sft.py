@@ -31,9 +31,18 @@ from examples.huggingface.qwen import (
     build_base,
     decompose,
     inject,
+    protect_decoder_boundaries,
     reference_model,
+    restore_decoder_outputs,
 )
 from examples.lora.train import session
+
+
+def _validate_checkpoints(mode, layers, save_activations):
+    if isinstance(layers, bool) or not isinstance(layers, int) or layers < 0:
+        raise ValueError("checkpoint_layers must be a nonnegative integer")
+    if layers and (mode != "chunked" or save_activations):
+        raise ValueError("Checkpoint layers require chunked mode without save_activations")
 
 
 def texts(path=None):
@@ -112,13 +121,17 @@ class OnnxQwen3(PreTrainedModel):
         chunk_size=128,
         optimize=True,
         save_activations=False,
+        checkpoint_layers=0,
+        projection_precision="fp32",
         session_factory=session,
     ):
         super().__init__(config)
+        _validate_checkpoints(mode, checkpoint_layers, save_activations)
         self.loss_type = "ForCausalLM"
         if mode not in ("full", "chunked", "joint"):
             raise ValueError("Expected full, chunked or joint training")
         self.mode = mode
+        self.projection_precision = projection_precision
         self.forward_graph = model
         if mode == "joint":
             from examples.huggingface.joint_loss import JointLoss, causal_loss_graph
@@ -135,29 +148,53 @@ class OnnxQwen3(PreTrainedModel):
 
             from examples.huggingface.chunked_loss import ChunkedHead
 
-            rhs = model.graph.outputs[0].producer().inputs[1]
+            candidates = [
+                node.inputs[1]
+                for node in model.graph
+                if node.op_type in ("MatMul", "MatMulBF16")
+                and len(node.inputs) == 2
+                and node.inputs[1].shape is not None
+                and list(node.inputs[1].shape) == [config.hidden_size, config.vocab_size]
+            ]
+            if len(candidates) != 1:
+                raise ValueError("Expected one frozen output projection")
+            rhs = candidates[0]
             if rhs.const_value is not None:
                 weight = rhs.const_value.numpy()
-            elif rhs.producer().op_type == "Transpose":
+            elif rhs.producer() is not None and rhs.producer().op_type == "Transpose":
                 weight = rhs.producer().inputs[0].const_value.numpy().T
             else:
                 raise ValueError("Expected a frozen output projection")
             self.head = ChunkedHead(
-                weight, chunk_size=chunk_size, session_factory=session_factory
+                weight,
+                chunk_size=chunk_size,
+                projection_precision=projection_precision,
+                session_factory=session_factory,
             )
             body = model.clone()
             hidden = body.graph.outputs[1]
             body.graph.outputs.clear()
             body.graph.outputs.append(hidden)
             optimizer.remove_unused_nodes(body)
-            self.onnx = OnnxModule(
-                body,
-                params,
-                output=hidden.name,
-                optimize=optimize,
-                save_activations=save_activations,
-                session_factory=session_factory,
-            )
+            if checkpoint_layers:
+                from examples.huggingface.checkpointing import CheckpointedModule
+
+                self.onnx = CheckpointedModule(
+                    body,
+                    params,
+                    layers=checkpoint_layers,
+                    optimize=optimize,
+                    session_factory=session_factory,
+                )
+            else:
+                self.onnx = OnnxModule(
+                    body,
+                    params,
+                    output=hidden.name,
+                    optimize=optimize,
+                    save_activations=save_activations,
+                    session_factory=session_factory,
+                )
         else:
             self.onnx = OnnxModule(
                 model,
@@ -224,12 +261,14 @@ class OnnxQwen3(PreTrainedModel):
         return CausalLMOutput(loss=loss, logits=logits)
 
 
-def _prepare_graph(real=False, *, nf4=False, projection_precision="fp32"):
+def _prepare_graph(real=False, *, nf4=False, projection_precision="fp32", checkpoints=False):
     """Build one canonical Mobius source and matching reconstructed reference."""
     if projection_precision not in ("fp32", "bf16"):
         raise ValueError("Expected fp32 or bf16 projection precision")
     reference = reference_model(real)
     base = build_base(reference)
+    if checkpoints:
+        protect_decoder_boundaries(base)
     adapted, params, mapping = inject(base)
     graph = decompose(adapted)
     quantization = None
@@ -241,6 +280,8 @@ def _prepare_graph(real=False, *, nf4=False, projection_precision="fp32"):
         from examples.huggingface.mixed_precision import bf16_projections
 
         graph = bf16_projections(graph)
+    if checkpoints:
+        restore_decoder_outputs(graph)
     return reference, graph, params, mapping, quantization
 
 
@@ -251,16 +292,21 @@ def prepare(
     chunk_size=128,
     optimize=True,
     save_activations=False,
+    checkpoint_layers=0,
     nf4=False,
     projection_precision="fp32",
     session_factory=session,
 ):
+    _validate_checkpoints(mode, checkpoint_layers, save_activations)
     if projection_precision not in ("fp32", "bf16"):
         raise ValueError("Expected fp32 or bf16 projection precision")
-    if projection_precision == "bf16" and mode != "joint":
-        raise ValueError("BF16 projection training uses joint execution")
+    if projection_precision == "bf16" and mode not in ("joint", "chunked"):
+        raise ValueError("BF16 projection training uses joint or chunked execution")
     reference, graph, params, mapping, quantization = _prepare_graph(
-        real, nf4=nf4, projection_precision=projection_precision
+        real,
+        nf4=nf4,
+        projection_precision=projection_precision,
+        checkpoints=bool(checkpoint_layers),
     )
     model = OnnxQwen3(
         reference.config,
@@ -271,6 +317,8 @@ def prepare(
         chunk_size=chunk_size,
         optimize=optimize,
         save_activations=save_activations,
+        checkpoint_layers=checkpoint_layers,
+        projection_precision=projection_precision,
         session_factory=session_factory,
     )
     model.quantization = quantization
@@ -417,7 +465,11 @@ def run(
     validation_file=None,
     max_length=64,
     reference_audit=False,
+    checkpoint_layers=0,
 ):
+    _validate_checkpoints(mode, checkpoint_layers, save_activations)
+    if checkpoint_layers and fp64_audit:
+        raise ValueError("fp64_audit requires checkpoint_layers=0")
     reference_audit = bool(
         reference_audit
         or diagnose_rounding is not None
@@ -479,6 +531,7 @@ def run(
         chunk_size=chunk_size,
         optimize=optimize,
         save_activations=save_activations,
+        checkpoint_layers=checkpoint_layers,
         nf4=nf4,
         projection_precision=projection_precision,
         session_factory=runtime,
@@ -544,7 +597,11 @@ def run(
         else None
     )
     final_stable = stable_control() if stable_reference else None
-    model.onnx.export(os.path.join(directory, "export"), forward_model=model.forward_graph)
+    model.onnx.export(
+        os.path.join(directory, "export"),
+        forward_model=model.forward_graph,
+        **({"head": model.head} if checkpoint_layers else {}),
+    )
     from examples.huggingface.peft_adapter import export_adapter
 
     export_adapter(model, os.path.join(directory, "adapter"))
@@ -558,6 +615,7 @@ def run(
         "steps": trainer.state.global_step,
         "data": data_identity,
         "mode": mode,
+        "checkpoint_layers": checkpoint_layers,
         "projection_precision": projection_precision,
         "validation_loss": [before, after],
         "audits": [initial_audit, final_audit] if reference_audit else [],
@@ -591,9 +649,15 @@ def run(
             "checks": [initial_stable, final_stable],
         }
     final_params = model.onnx.arrays()
+    artifact_names = (
+        sorted(os.listdir(os.path.join(directory, "export")))
+        if checkpoint_layers
+        else ("forward.onnx", "forward.data", "adapter.npz", "interface.json")
+    )
     report["artifact_bytes"] = {
         name: os.path.getsize(os.path.join(directory, "export", name))
-        for name in ("forward.onnx", "forward.data", "adapter.npz", "interface.json")
+        for name in artifact_names
+        if os.path.isfile(os.path.join(directory, "export", name))
     }
     if mode == "joint":
         for name in ("loss_gradient.onnx", "loss_gradient.data"):
@@ -688,6 +752,7 @@ if __name__ == "__main__":
     )
     parser.set_defaults(diagnose_rounding=None)
     parser.add_argument("--save-activations", action="store_true")
+    parser.add_argument("--checkpoint-layers", type=int, default=0)
     parser.add_argument("--fp64-audit", action="store_true")
     parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
@@ -716,6 +781,7 @@ if __name__ == "__main__":
                 reference_audit=args.reference_audit,
                 diagnose_rounding=args.diagnose_rounding,
                 save_activations=args.save_activations,
+                checkpoint_layers=args.checkpoint_layers,
                 fp64_audit=args.fp64_audit,
                 nf4=args.nf4,
                 peft_roundtrip=args.peft_roundtrip,
