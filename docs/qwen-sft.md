@@ -12,11 +12,49 @@ uv run python -m examples.huggingface.sft --real --output-dir qwen_real
 
 Ordinary training releases the PyTorch weight-loading reference after ONNX
 construction. `--reference-audit` retains it to compare reference logits, loss
-and adapter gradients at the initial and final states. These comparisons are
-recorded by default when requested; `--strict-reference` makes failures fatal.
+and adapter gradients at the initial and final states. Reports contain the
+comparison results; `--strict-reference` makes failures fatal.
 `--diagnose-rounding` also requests a diagnostic reference audit. PEFT roundtrip,
 stable-reference and FP64 audit options retain the reference for their checks.
 Validation losses and adapter parameters must remain finite in ordinary training.
+
+For variable-length MLX runs, a free-cache budget bounds the buffers retained
+between allocations. With an MLX EP build containing
+[cache-budget configuration](https://github.com/onnxruntime/onnxruntime-ep-mlx/blob/85288a651ea547fe2604f82fb0aa0838b76e12be/docs/MEMORY.md),
+set one budget for all sessions in the process:
+
+```bash
+export ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912
+export ONNXRUNTIME_EP_MLX_NO_COMPILE=1
+uv run python -m examples.huggingface.sft --real --mode chunked --nf4 \
+  --mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --max-length 256 --chunk-size 128 --output-dir qwen_mlx
+```
+
+This 512 MiB target applies to idle MLX buffers. Active tensors, runtime state
+and host arrays contribute separately to process memory. MLX reclaims excess
+cache on the next allocation.
+
+On an Apple M1 Max with 32 GiB RAM, two Qwen3-0.6B NF4/FP32 runs used 128
+No Robots training sequences and 32 validation sequences, truncated to 256
+tokens. Both completed 30 AdamW updates with microbatch one, accumulation four
+and a 128-token output-head chunk. All 112 final adapter tensors were
+byte-identical, and validation loss fell from 3.2945 to 2.6737 in both runs.
+
+| Training path | Complete logits session | Peak process RSS |
+| --- | --- | ---: |
+| Ordinary | Unloaded | 7.52 GiB |
+| Reference audit | Loaded | 8.55 GiB |
+
+Both runs used the same MLX library and 512 MiB free-cache target, with MLX
+compilation and ORT graph optimization disabled. Peak RSS covers construction,
+training, evaluation and export, including host arrays and runtime allocations.
+Fresh-process recovery from checkpoint 15 reproduces all adapters, AdamW state,
+scheduler state and the final validation loss at step 30. Both exported models
+pass the full ONNX checker and produce identical logits and hidden states for
+a two-sequence, 256-token batch with padding. The {download}`run report
+<../examples/huggingface/reports/qwen3-no-robots-sft-reference-memory-m1max.json>`
+contains the three runs, phase memory counters, recovery checks and source hashes.
 
 Compare held-out loss across runtimes and independent seeds with the
 [training-quality experiment](training-quality.md). Its paired runs match the
