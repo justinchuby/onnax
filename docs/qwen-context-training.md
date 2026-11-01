@@ -198,6 +198,10 @@ Saving all activations exceeded the 24 GiB process budget.
 | Strategy | Step median | Step P95 | Valid tokens/s | Peak process footprint |
 | --- | ---: | ---: | ---: | ---: |
 | Checkpoint every layer | 22.625 s | 22.866 s | 181.0 | 13.60 GiB |
+| Checkpoint every 2 layers | 21.661 s | 21.838 s | 189.0 | 14.81 GiB |
+
+Checkpointing every layer and every two layers produced identical loss values
+across all 110 updates.
 
 Whole-body recomputation and saving all activations exceeded the 24 GiB
 process budget during their capacity probes.
