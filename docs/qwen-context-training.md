@@ -110,7 +110,9 @@ footprint was 14.6 GiB, including construction, evaluation, training and export.
 
 The [FP32 training report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-4k-nf4-fp32-training-m1max.json)
 records exact loss values, corpus identities, source hashes, checkpoint state
-audits and per-update memory observations.
+audits and per-update memory observations. A fresh process resumed checkpoint 15
+and reproduced all 112 final adapter tensors, AdamW state, scheduler and random
+number generator state byte for byte at update 30.
 
 ## Export and measure
 
