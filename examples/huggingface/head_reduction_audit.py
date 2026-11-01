@@ -33,11 +33,11 @@ def run(
     library=None,
     capture=None,
 ):
-    if projection_precision not in ("fp32", "bf16"):
-        raise ValueError("Expected fp32 or bf16 projection precision")
+    if projection_precision not in ("fp32", "bf16", "fp16"):
+        raise ValueError("Expected fp32, bf16 or fp16 projection precision")
     if provider not in ("cpu", "reference", "mlx"):
         raise ValueError("Expected cpu, reference or mlx provider")
-    if projection_precision == "bf16" and provider == "cpu":
+    if projection_precision != "fp32" and provider == "cpu":
         raise ValueError("BF16 forward requires reference or mlx")
     if library is not None and provider != "mlx":
         raise ValueError("A development library requires the mlx provider")
@@ -69,11 +69,13 @@ def run(
         else rhs.producer().inputs[0].const_value.numpy().T
     )
     np.testing.assert_array_equal(stored.T, weight.numpy())
-    if projection_precision == "bf16":
-        from examples.huggingface.mixed_precision import bf16_projections
+    if projection_precision != "fp32":
+        from examples.huggingface.mixed_precision import precision_projections
 
-        model = bf16_projections(model)
-        weight = weight.to(torch.bfloat16).float()
+        model = precision_projections(model, precision=projection_precision)
+        weight = weight.to(
+            torch.bfloat16 if projection_precision == "bf16" else torch.float16
+        ).float()
     ids = np.arange(3, 67, dtype=np.int64)[None]
     feeds = {
         "input_ids": ids,
@@ -90,7 +92,7 @@ def run(
     loss = token_loss(logits, torch.from_numpy(ids))
     loss.backward()
     seed = logits.grad
-    flat = projection_precision == "bf16"
+    flat = projection_precision != "fp32"
     seed_array = seed.numpy().reshape(-1, seed.shape[-1]) if flat else seed.numpy()
     weight_array = np.ascontiguousarray(weight.numpy().T) if flat else weight.numpy()
     g = ir.val("g", dtype=ir.DataType.FLOAT, shape=list(seed_array.shape))
@@ -166,7 +168,9 @@ def run(
         "projection_precision": projection_precision,
         "provider": provider,
         "library_sha256": library_hash,
-        "head_weight": "BF16-rounded FP32" if projection_precision == "bf16" else "FP32",
+        "head_weight": f"{projection_precision.upper()}-rounded FP32"
+        if projection_precision != "fp32"
+        else "FP32",
         "runtime_product": "Rank-two g @ Transpose(contiguous weight.T)"
         if flat
         else "Batched g @ weight",
@@ -197,7 +201,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--nf4", action="store_true")
-    parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
+    parser.add_argument(
+        "--projection-precision", choices=["fp32", "bf16", "fp16"], default="fp32"
+    )
     parser.add_argument("--provider", choices=["cpu", "reference", "mlx"], default="cpu")
     parser.add_argument("--library")
     parser.add_argument(
