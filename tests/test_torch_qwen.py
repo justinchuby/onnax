@@ -78,3 +78,11 @@ def test_public_module_qwen_updates_and_export(tmp_path):
     for name, tensor in reference.named_parameters():
         if name in frozen:
             np.testing.assert_array_equal(tensor.detach().numpy(), frozen[name].numpy())
+
+
+def test_public_module_mlp_training(tmp_path):
+    from examples.torch_mlp import run
+
+    report = run(tmp_path)
+    assert report["independent_updates"] and report["reload"]
+    assert report["validation_accuracy"] >= 0.95

@@ -164,26 +164,22 @@ extending it to 8192-token training.
 
 Direct JVP/VJP rules now retain Attention, RMSNormalization, RotaryEmbedding,
 Swish and LayerNormalization. The Qwen `--fused-ops` path selects native MLX
-forward implementations and has a portable ONNX backward. Next, tile the
-attention backward to reduce probability-matrix intermediates; qualify its
-gradients and updates against this baseline. See [fused derivatives](fused-autodiff.md).
+forward implementations and a portable ONNX backward. The optional
+[attention deployment pass](attention-vjp.md) now exposes a tiled or GEMM
+pullback to MLX EP, with a workspace policy and ordinary ONNX function fallback.
+See [fused derivatives](fused-autodiff.md) for the transformation API.
 
-Then promote the model-independent integration into an optional `onnax.torch`
-module. The first package interface should own explicit trainable parameters,
-connect forward and VJP sessions to PyTorch autograd, preserve stable parameter
-and gradient names, and load/export ordinary ONNX artifacts. A caller-supplied
-session factory selects the execution backend. Importing `onnax` should keep
-Torch, ONNX Runtime and Hugging Face dependencies optional.
+The optional [`onnax.torch` module](torch.md) now owns explicit parameters,
+connects forward/VJP sessions to autograd, and exports reloadable ONNX bundles.
+Regression, MLP and Qwen workloads qualify caller-defined losses, data-input
+gradients, accumulation, checkpoint identity, resource cleanup and installed-wheel
+execution. A session factory selects the backend. Model construction, adapter
+injection, tokenization and PEFT conventions stay in task adapters; Trainer and
+TRL own training loops, optimizers, schedulers and checkpoint policy.
 
-Qualify that interface with regression, an MLP classifier and Qwen. Cover
-caller-defined losses, upstream gradients, dynamic batches, gradient accumulation,
-parameter version checks, source-graph/checkpoint identity, loading and export.
-Include gradients for floating data inputs, so an ONNX block can propagate into
-trainable PyTorch layers before it. Define ownership and explicit session/tempfile
-cleanup for long-running processes. Validate the installed wheel outside the repository so the integration has no dependency on
-example modules. Keep model construction, adapter injection, tokenization, loss
-selection and PEFT conventions in task adapters. Trainer and TRL continue to own
-training loops, optimizers, schedulers and checkpoint policy.
+Next, generalize decoder execution strategies around the same parameter and
+session interfaces, and use measured workload costs to choose recomputation,
+attention workspace and output-head chunking.
 
 ## Engineering boundaries
 
