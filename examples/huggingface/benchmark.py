@@ -46,12 +46,24 @@ def measure(
     samples=100,
     warmup=10,
     batch_size=4,
+    sequence_length=64,
+    chunk_size=128,
     nf4=False,
     provider="cpu",
     library=None,
     segment_nodes=None,
     projection_precision="fp32",
 ):
+    for name, value, minimum in (
+        ("sequence_length", sequence_length, 2),
+        ("chunk_size", chunk_size, 1),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+            raise ValueError(f"{name} must be an integer >= {minimum}")
+    if not real and sequence_length > 64:
+        raise ValueError(
+            "Tiny Qwen context is limited to 64 tokens; use --real for longer contexts"
+        )
     if projection_precision not in ("fp32", "bf16"):
         raise ValueError("Expected fp32 or bf16 projection precision")
     if projection_precision == "bf16" and (
@@ -110,6 +122,7 @@ def measure(
             real,
             mode=mode if mode in ("chunked", "joint") else "full",
             optimize=mode != "raw",
+            chunk_size=chunk_size,
             save_activations=mode == "saved",
             nf4=nf4,
             projection_precision=projection_precision,
@@ -120,14 +133,22 @@ def measure(
     update = torch.optim.AdamW(params, lr=0.003, weight_decay=0)
     initialized = time.perf_counter()
     tok = tokenizer(real)
-    batch = tok(
-        [" ".join(texts()[:8])] * batch_size,
-        truncation=True,
-        max_length=64,
-        padding="max_length",
-        return_tensors="pt",
-    )
-    batch = {n: v for n, v in batch.items() if n in ("input_ids", "attention_mask")}
+    if sequence_length > model.config.max_position_embeddings:
+        raise ValueError("Sequence length exceeds the model context limit")
+    # Repeat the corpus token prefix so every requested position contributes work.
+    # The default 64-token prefix matches the original benchmark input.
+    source_ids = tok(" ".join(texts()[:8]), truncation=True, max_length=sequence_length)[
+        "input_ids"
+    ]
+    if not source_ids:
+        raise ValueError("Benchmark corpus must tokenize to at least one token")
+    ids = (source_ids * ((sequence_length + len(source_ids) - 1) // len(source_ids)))[
+        :sequence_length
+    ]
+    batch = {
+        "input_ids": torch.tensor([ids] * batch_size, dtype=torch.int64),
+        "attention_mask": torch.ones((batch_size, sequence_length), dtype=torch.int64),
+    }
     labels = batch["input_ids"].clone()
     labels[batch["attention_mask"] == 0] = -100
     tokens = int(labels[:, 1:].ne(-100).sum())
@@ -181,6 +202,13 @@ def measure(
         "batch": batch_size,
         "sequence": batch["input_ids"].shape[1],
         "valid_shifted_tokens": tokens,
+        "input_ids_sha256": hashlib.sha256(batch["input_ids"].numpy().tobytes()).hexdigest(),
+        "input_pattern": "Repeated prefix of the first eight local corpus lines",
+        "head_chunk_size": chunk_size if mode == "chunked" else None,
+        "full_logits_bytes": batch_size * sequence_length * model.config.vocab_size * 4,
+        "chunk_logits_bytes": min(chunk_size, tokens) * model.config.vocab_size * 4
+        if mode == "chunked"
+        else None,
         "initialization_seconds": initialized - start,
         "timings_ms": {
             key: {
@@ -308,10 +336,18 @@ if __name__ == "__main__":
     parser.add_argument("--samples", type=int, default=100)
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=4)
+    parser.add_argument("--sequence-length", type=int, default=64)
+    parser.add_argument("--chunk-size", type=int, default=128)
     parser.add_argument("--output", default="qwen-benchmark.json")
     args = parser.parse_args()
     if args.samples < 1 or args.warmup < 0 or args.batch_size < 1:
         parser.error("Require positive samples/batch and nonnegative warmup")
+    if args.sequence_length < 2 or args.chunk_size < 1:
+        parser.error("Require sequence length >= 2 and positive chunk size")
+    if not args.real and args.sequence_length > 64:
+        parser.error(
+            "Tiny Qwen context is limited to 64 tokens; use --real for longer contexts"
+        )
     if args.segment_nodes is not None and args.segment_nodes < 1:
         parser.error("Require a positive segment node target")
     if args.provider != "mlx" and (args.library or args.segment_nodes):
@@ -325,6 +361,8 @@ if __name__ == "__main__":
                     samples=args.samples,
                     warmup=args.warmup,
                     batch_size=args.batch_size,
+                    sequence_length=args.sequence_length,
+                    chunk_size=args.chunk_size,
                     nf4=args.nf4,
                     provider=args.provider,
                     library=args.library,
@@ -353,6 +391,10 @@ if __name__ == "__main__":
                 str(args.warmup),
                 "--batch-size",
                 str(args.batch_size),
+                "--sequence-length",
+                str(args.sequence_length),
+                "--chunk-size",
+                str(args.chunk_size),
                 "--provider",
                 args.provider,
                 "--projection-precision",

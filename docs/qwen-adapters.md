@@ -46,6 +46,29 @@ saving `X @ A` needs `4*T*r` logical bytes in FP32 and avoids its `2*T*d*r`
 recomputation FLOPs. The full cut also saves other backward dependencies;
 the benchmark reports their logical extents and the process's measured RSS.
 
+## Measure longer contexts
+
+The benchmark accepts `--sequence-length` and `--chunk-size`. For example,
+measure a 256-token context with a 128-token output-head chunk:
+
+```bash
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.benchmark \
+  --real --nf4 --mode chunked --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --batch-size 1 --sequence-length 256 --chunk-size 128 --warmup 10 --samples 100 \
+  > chunked-256.json
+```
+
+Run `--mode joint` or `--mode pytorch` with the same sequence length and batch
+for comparison. Each mode repeats the local corpus token prefix to fill the
+requested context and records its input checksum and valid shifted-token count.
+The tiny model accepts 2–64 tokens; the real model uses its configured context
+limit.
+
+`full_logits_bytes` and `chunk_logits_bytes` describe one logical FP32 logits
+tensor at the selected dimensions. Process peak RSS includes construction,
+runtime sessions, activations and optimizer state. Use measured memory and
+step timings to choose the context and head chunk size.
+
 ## Joint loss and adapter gradients
 
 ```bash
