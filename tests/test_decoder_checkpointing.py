@@ -371,3 +371,54 @@ def test_checkpointed_sft_fresh_process_recovery(tmp_path, monkeypatch):
     assert report["adapter_bitwise_equal"] and report["optimizer_bitwise_equal"]
     assert report["export_load_loss_gradients_bitwise_equal"]
     assert report["exported_gradient_tensors"] == 8
+    feeds = {name: value.numpy() for name, value in batch().items() if name != "labels"}
+    padded = verify(full, resumed, step=2, feeds=feeds)
+    assert padded["input_shape"] == [2, 5]
+    assert padded["padding_tokens"] == 2
+    assert padded["export_load_loss_gradients_bitwise_equal"]
+    import json
+
+    from examples.huggingface.replay import _training_outputs
+    from examples.lora.train import session
+
+    with open(os.path.join(full, "export/interface.json")) as stream:
+        interface = json.load(stream)
+    actual = _training_outputs(full, interface, feeds, session)
+    logits = session(os.path.join(full, "export/forward.onnx")).run(None, feeds)[0]
+    expected = torch.nn.functional.cross_entropy(
+        torch.from_numpy(logits)[:, :-1].reshape(-1, logits.shape[-1]),
+        batch()["labels"][:, 1:].reshape(-1),
+    )
+    torch.testing.assert_close(torch.from_numpy(actual[0]), expected, rtol=1e-4, atol=1e-6)
+    from examples.huggingface.checkpoint_adapter import verify as verify_adapter
+
+    exchanged = verify_adapter(full, str(tmp_path / "peft_exchange"))
+    assert exchanged["format_roundtrip_bitwise"]
+    assert exchanged["restored_loss_and_gradients_bitwise_equal"]
+
+
+@pytest.mark.parametrize("layers,saved", [(2, False), (0, True)])
+def test_checkpoint_benchmark_reports_executed_groups_and_components(layers, saved):
+    from examples.huggingface.benchmark import measure
+
+    report = measure(
+        "chunked",
+        checkpoint_layers=layers,
+        save_activations=saved,
+        samples=2,
+        warmup=1,
+        batch_size=1,
+        sequence_length=8,
+    )
+    assert report["checkpoint_layers"] == layers
+    assert report["save_activations"] == saved
+    assert report["valid_shifted_tokens"] == 7
+    if layers:
+        assert "decoder_0_2_backward" in report["nodes"]
+    else:
+        assert report["saved_activation_count"] > 0
+    assert report["logical_saved_activation_bytes"] > 0
+    times = report["timings_ms"]
+    assert times["head_loss_gradient_execution"]["median"] > 0
+    assert times["body_execution"]["median"] > 0
+    assert times["onnx_execution"]["median"] < times["step"]["median"]

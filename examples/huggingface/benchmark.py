@@ -53,6 +53,10 @@ def measure(
     library=None,
     segment_nodes=None,
     projection_precision="fp32",
+    checkpoint_layers=0,
+    train_file=None,
+    save_activations=False,
+    mlx_memory_limit_bytes=None,
 ):
     for name, value, minimum in (
         ("sequence_length", sequence_length, 2),
@@ -66,11 +70,29 @@ def measure(
         )
     if projection_precision not in ("fp32", "bf16"):
         raise ValueError("Expected fp32 or bf16 projection precision")
+    if save_activations and mode != "chunked":
+        raise ValueError("Explicit saved activations require chunked mode")
+    if mlx_memory_limit_bytes is not None:
+        if (
+            isinstance(mlx_memory_limit_bytes, bool)
+            or not isinstance(mlx_memory_limit_bytes, int)
+            or mlx_memory_limit_bytes < 1
+        ):
+            raise ValueError("MLX allocator limit must be a positive integer")
+        if provider != "mlx" or not library:
+            raise ValueError("An MLX allocator limit requires the mlx provider and library")
+        from examples.huggingface.long_context import memory_limit
+
+        memory_limit(library, mlx_memory_limit_bytes)
+    if checkpoint_layers and mode != "chunked":
+        raise ValueError("Decoder checkpoints require chunked mode")
     if projection_precision == "bf16" and (
-        mode not in ("pytorch", "joint") or (mode == "joint" and provider != "mlx")
+        mode not in ("pytorch", "joint", "chunked")
+        or (mode != "pytorch" and provider != "mlx")
     ):
-        raise ValueError("BF16 measurement uses PyTorch or MLX joint mode")
+        raise ValueError("BF16 measurement uses PyTorch or MLX joint/chunked mode")
     torch.set_num_threads(1)
+    session_totals = {}
     start = time.perf_counter()
     if mode == "pytorch":
         model = reference_model(real)
@@ -118,15 +140,34 @@ def measure(
                 }
                 return executor
 
+        selected_factory = factory
+
+        class TimedSession:
+            def __init__(self, source):
+                self.executor = selected_factory(source)
+                self.name = os.path.basename(source) if isinstance(source, str) else "body"
+
+            def run(self, *args, **kwargs):
+                before = time.perf_counter()
+                result = self.executor.run(*args, **kwargs)
+                session_totals[self.name] = (
+                    session_totals.get(self.name, 0.0) + time.perf_counter() - before
+                )
+                return result
+
+            def __getattr__(self, name):
+                return getattr(self.executor, name)
+
         model, reference = prepare(
             real,
             mode=mode if mode in ("chunked", "joint") else "full",
             optimize=mode != "raw",
             chunk_size=chunk_size,
-            save_activations=mode == "saved",
+            checkpoint_layers=checkpoint_layers,
+            save_activations=mode == "saved" or save_activations,
             nf4=nf4,
             projection_precision=projection_precision,
-            session_factory=factory,
+            session_factory=TimedSession,
         )
         del reference
     params = [p for p in model.parameters() if p.requires_grad]
@@ -135,11 +176,21 @@ def measure(
     tok = tokenizer(real)
     if sequence_length > model.config.max_position_embeddings:
         raise ValueError("Sequence length exceeds the model context limit")
-    # Repeat the corpus token prefix so every requested position contributes work.
-    # The default 64-token prefix matches the original benchmark input.
-    source_ids = tok(" ".join(texts()[:8]), truncation=True, max_length=sequence_length)[
-        "input_ids"
-    ]
+    if train_file is not None:
+        source_ids = next(
+            (
+                ids
+                for text in texts(train_file)
+                if len(ids := tok(text)["input_ids"]) >= sequence_length
+            ),
+            None,
+        )
+        if source_ids is None:
+            raise ValueError("No corpus example reaches the requested benchmark length")
+    else:
+        source_ids = tok(" ".join(texts()[:8]), truncation=True, max_length=sequence_length)[
+            "input_ids"
+        ]
     if not source_ids:
         raise ValueError("Benchmark corpus must tokenize to at least one token")
     ids = (source_ids * ((sequence_length + len(source_ids) - 1) // len(source_ids)))[
@@ -155,6 +206,7 @@ def measure(
     records = []
     losses = []
     for index in range(warmup + samples):
+        sessions_before = session_totals.copy()
         before = time.perf_counter()
         cpu_before = time.process_time()
         update.zero_grad(set_to_none=True)
@@ -182,8 +234,25 @@ def measure(
                     "step": finished - before,
                 }
             )
+            if mode != "pytorch":
+                durations = {
+                    name: value - sessions_before.get(name, 0.0)
+                    for name, value in session_totals.items()
+                }
+                records[-1]["onnx_execution"] = sum(durations.values())
+                if mode == "chunked":
+                    records[-1]["head_loss_gradient_execution"] = sum(
+                        value for name, value in durations.items() if name == "gradient.onnx"
+                    )
+                    records[-1]["body_execution"] = (
+                        records[-1]["onnx_execution"]
+                        - records[-1]["head_loss_gradient_execution"]
+                    )
     report = {
         "mode": mode,
+        "checkpoint_layers": checkpoint_layers,
+        "save_activations": mode == "saved" or save_activations,
+        "mlx_memory_limit_bytes": mlx_memory_limit_bytes,
         "provider": "pytorch_cpu" if mode == "pytorch" else provider,
         "segment_target_nodes": segment_nodes
         if mode != "pytorch" and provider == "mlx"
@@ -203,7 +272,11 @@ def measure(
         "sequence": batch["input_ids"].shape[1],
         "valid_shifted_tokens": tokens,
         "input_ids_sha256": hashlib.sha256(batch["input_ids"].numpy().tobytes()).hexdigest(),
-        "input_pattern": "Repeated prefix of the first eight local corpus lines",
+        "input_pattern": (
+            "Prefix of the first naturally long corpus example"
+            if train_file is not None
+            else "Repeated prefix of the first eight local corpus lines"
+        ),
         "head_chunk_size": chunk_size if mode == "chunked" else None,
         "full_logits_bytes": batch_size * sequence_length * model.config.vocab_size * 4,
         "chunk_logits_bytes": min(chunk_size, tokens) * model.config.vocab_size * 4
@@ -245,7 +318,22 @@ def measure(
             for n in ("torch", "transformers", "onnxruntime", "onnxscript", "mobius-onnx")
         },
     }
+    from examples.process_memory import physical_footprint
+
+    report["physical_footprint"] = physical_footprint()
     if provider == "mlx" and mode != "pytorch":
+        import ctypes
+
+        if library:
+            api = ctypes.CDLL(library)
+            report["mlx_allocator"] = {}
+            for name in ("active", "cache", "peak"):
+                fn = getattr(api, f"mlx_get_{name}_memory")
+                fn.argtypes, fn.restype = [ctypes.POINTER(ctypes.c_size_t)], ctypes.c_int
+                value = ctypes.c_size_t()
+                if fn(ctypes.byref(value)) != 0:
+                    raise RuntimeError("MLX memory query failed")
+                report["mlx_allocator"][name + "_bytes"] = value.value
         report["native_construction"] = native_construction
         report["cpu_fallback_disabled"] = True
         report["library"] = os.path.abspath(library) if library else "installed plugin"
@@ -253,11 +341,18 @@ def measure(
             with open(library, "rb") as stream:
                 report["library_sha256"] = hashlib.file_digest(stream, "sha256").hexdigest()
     if mode != "pytorch":
-        executed_graphs = (
-            {"loss_gradient": model.onnx.gradient}
-            if mode == "joint"
-            else {"forward": model.onnx.model, "backward": model.onnx.optimized_vjp}
-        )
+        if checkpoint_layers:
+            executed_graphs = {}
+            for execution in model.onnx.executions:
+                executed_graphs[execution.block.name + "_forward"] = execution.block.model
+                if execution.derivative is not None:
+                    executed_graphs[execution.block.name + "_backward"] = execution.derivative
+        else:
+            executed_graphs = (
+                {"loss_gradient": model.onnx.gradient}
+                if mode == "joint"
+                else {"forward": model.onnx.model, "backward": model.onnx.optimized_vjp}
+            )
         if mode == "chunked":
             executed_graphs["head_backward"] = model.head.gradient
             report["head_forward_session_created"] = model.head.forward_executor is not None
@@ -276,22 +371,26 @@ def measure(
                 "packed": model.quantization["packed_decoder_bytes"],
             }
         report["nodes"] = (
-            {
-                "forward": len(model.forward_graph.graph),
-                "loss_gradient": len(model.onnx.gradient.graph),
-            }
-            if mode == "joint"
-            else {
-                "forward": len(model.onnx.model.graph),
-                "raw_vjp": len(model.onnx.vjp_model.graph),
-                "executed_vjp": len(model.onnx.optimized_vjp.graph),
-            }
+            {name: len(graph.graph) for name, graph in executed_graphs.items()}
+            if checkpoint_layers
+            else (
+                {
+                    "forward": len(model.forward_graph.graph),
+                    "loss_gradient": len(model.onnx.gradient.graph),
+                }
+                if mode == "joint"
+                else {
+                    "forward": len(model.onnx.model.graph),
+                    "raw_vjp": len(model.onnx.vjp_model.graph),
+                    "executed_vjp": len(model.onnx.optimized_vjp.graph),
+                }
+            )
         )
         report["logical_saved_activation_bytes"] = getattr(
             model.onnx, "last_residual_bytes", 0
         )
         report["saved_activation_count"] = (
-            0 if mode == "joint" else len(model.onnx.residual_names)
+            0 if mode == "joint" or checkpoint_layers else len(model.onnx.residual_names)
         )
         report["input_view_median_us"] = float(
             np.median(model.onnx.timings["exchange"][warmup:]) * 1e6
@@ -329,6 +428,10 @@ if __name__ == "__main__":
         "--mode", choices=["pytorch", "raw", "optimized", "saved", "chunked", "joint"]
     )
     parser.add_argument("--real", action="store_true")
+    parser.add_argument("--checkpoint-layers", type=int, default=0)
+    parser.add_argument("--train-file")
+    parser.add_argument("--save-activations", action="store_true")
+    parser.add_argument("--mlx-memory-limit-gib", type=int)
     parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
@@ -349,6 +452,8 @@ if __name__ == "__main__":
         parser.error(
             "Tiny Qwen context is limited to 64 tokens; use --real for longer contexts"
         )
+    if args.mlx_memory_limit_gib is not None and args.mlx_memory_limit_gib < 1:
+        parser.error("Require a positive MLX allocator limit")
     if args.segment_nodes is not None and args.segment_nodes < 1:
         parser.error("Require a positive segment node target")
     if args.provider != "mlx" and (args.library or args.segment_nodes):
@@ -359,6 +464,14 @@ if __name__ == "__main__":
                 measure(
                     args.mode,
                     real=args.real,
+                    checkpoint_layers=args.checkpoint_layers,
+                    train_file=args.train_file,
+                    save_activations=args.save_activations,
+                    mlx_memory_limit_bytes=(
+                        args.mlx_memory_limit_gib * 1024**3
+                        if args.mlx_memory_limit_gib
+                        else None
+                    ),
                     samples=args.samples,
                     warmup=args.warmup,
                     batch_size=args.batch_size,
@@ -379,6 +492,8 @@ if __name__ == "__main__":
             if args.projection_precision == "bf16"
             else ("pytorch", "raw", "optimized", "saved", "chunked", "joint")
         )
+        if args.checkpoint_layers or args.save_activations:
+            modes = ("chunked",)
         for mode in modes:
             cmd = [
                 sys.executable,
@@ -401,6 +516,14 @@ if __name__ == "__main__":
                 "--projection-precision",
                 args.projection_precision,
             ]
+            if args.checkpoint_layers:
+                cmd.extend(["--checkpoint-layers", str(args.checkpoint_layers)])
+            if args.save_activations:
+                cmd.append("--save-activations")
+            if args.mlx_memory_limit_gib:
+                cmd.extend(["--mlx-memory-limit-gib", str(args.mlx_memory_limit_gib)])
+            if args.train_file:
+                cmd.extend(["--train-file", args.train_file])
             if args.library:
                 cmd.extend(["--library", args.library])
             if args.segment_nodes:

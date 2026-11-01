@@ -274,6 +274,18 @@ def test_replay_verification_checks_state_bytes():
         _equal_tree(state, {"optimizer": [torch.tensor([0.0, 1.0]), {"step": 4}]})
 
 
+def test_reloaded_output_digests_preserve_bytes_and_reject_nonfinite():
+    from examples.huggingface.replay import _output_digest
+
+    value = np.arange(24, dtype=np.float32).reshape(4, 6).T
+    assert _output_digest(value) == _output_digest(value.copy())
+    assert _output_digest(np.array([0.0], np.float32)) != _output_digest(
+        np.array([-0.0], np.float32)
+    )
+    with pytest.raises(FloatingPointError, match="Nonfinite"):
+        _output_digest(np.array([np.nan], np.float32))
+
+
 @pytest.mark.parametrize("side", ["onnx", "reference"])
 def test_diagnostic_gradient_audit_rejects_nonfinite_values(side):
     from examples.huggingface.validation import add_reference_adapters, audit
@@ -593,3 +605,32 @@ def test_default_sft_rejects_nonfinite_update_before_export(tmp_path, monkeypatc
     with pytest.raises(FloatingPointError, match="Nonfinite adapter parameter"):
         sft.run(str(tmp_path), mode="joint", steps=1)
     assert not (tmp_path / "export" / "forward.onnx").exists()
+
+
+def test_jsonl_preserves_multiline_training_examples(tmp_path):
+    import json
+
+    from examples.huggingface.sft import texts
+
+    path = tmp_path / "train.jsonl"
+    expected = ["User: line one\nline two\nAssistant: answer", " next sample "]
+    path.write_text("\n".join(json.dumps({"text": text}) for text in expected))
+    assert texts(path) == expected
+    path.write_text('{"text": ""}\n')
+    with pytest.raises(ValueError, match="text"):
+        texts(path)
+
+
+def test_multiline_data_identity_preserves_example_boundaries():
+    import hashlib
+
+    from examples.huggingface.sft import _data_identity
+
+    tok = tokenizer()
+    plain = _data_identity(["a", "b"], ["c"], tok)
+    assert plain["version"] == 1
+    assert plain["train_sha256"] == hashlib.sha256(b"a\nb").hexdigest()
+    left = _data_identity(["a\nb", "c"], ["heldout"], tok)
+    right = _data_identity(["a", "b\nc"], ["heldout"], tok)
+    assert left["version"] == right["version"] == 2
+    assert left["train_sha256"] != right["train_sha256"]

@@ -123,6 +123,30 @@ record data and tokenizer identities and reject changed inputs before model
 construction. Optimization, scheduling and checkpoint ownership stay with
 Trainer and the external training code.
 
+### Completed milestone: 4096-token Qwen fine-tuning
+
+The [4096-token tutorial](qwen-context-training.md) records the completed
+Qwen3-0.6B workload: frozen NF4 decoder weights, rank-4 q/v adapters in all
+28 layers, and ordinary ONNX forward/VJP modules with decoder checkpointing.
+FP32 and BF16 projection compute each completed 30 updates on complete
+LongAlpaca QA, with FP32 adapters, accumulated gradients and AdamW state.
+Training and held-out loss decreased in both runs. Fresh-process recovery
+from update 15 reproduced update 30 exactly; PEFT adapter exchange and loaded
+inference/training graphs reproduced the saved results.
+
+The measurement report contains 22 runs at 512, 1024 and 4096 tokens, each with
+10 warmups and 100 timed steps. At 4096 tokens, four-layer checkpoint groups
+measured 193.9 valid tokens/s for FP32 and 197.6 for BF16 projection compute
+on an M1 Max. Whole-process peak physical footprints were 19.36 and 19.54 GiB.
+All successful strategies reproduced the same 110 losses within each precision
+and sequence length. Timing uses one microbatch per update; quality training
+uses four-microbatch accumulation.
+
+Both 8192-token probes exceeded the configured 24 GiB process budget. The next
+memory milestone is to profile construction and execution peaks, then choose
+session and recomputation boundaries for an 8192-token training run. Device
+binding and data exchange measurements will guide subsequent runtime work.
+
 ## Engineering boundaries
 
 - Preserve model-first transforms and global decorator registration; later
