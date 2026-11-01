@@ -251,7 +251,7 @@ def collect(suite):
             for strategy in ("recompute", "saved", "group1", "group2", "group4"):
                 name = f"{precision}-{length}-{strategy}"
                 if name not in names:
-                    limited = cases.get(name + "-capacity", cases.get(name, {}))
+                    limited = cases.get(name, cases.get(name + "-capacity", {}))
                     _require(
                         limited.get("status") == "failed"
                         and limited.get("memory_capacity_failure"),
