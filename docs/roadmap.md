@@ -77,9 +77,10 @@ The real-model local pullback audit covers all 3,522 input contributions and
 580 fan-in additions in each of three adapter states. Pairwise FP32 output-head
 accumulation brings the saved optimized module's loss and all 112 gradients
 within the original independent-reference tolerance in those states; all 532
-frozen hashes remain unchanged. Strict independent update comparisons remain
-open: scalar Adam replay reproduces the observed parameter gap from the
-captured gradient sequences.
+frozen hashes remain unchanged. Scalar Adam replay explains the recorded
+parameter gap from the captured gradient sequences. Cross-runtime pointwise comparisons remain diagnostic
+records; workload acceptance uses gradient correctness, finite updates,
+convergence, held-out loss and checkpoint recovery.
 
 The MLX packed-lookup MatMul kernel executes ordinary NF4 graphs. Eager array
 lifetime correction brings the observed real NF4/BF16 full-run physical
@@ -88,7 +89,7 @@ footprint to about 10.5 GiB on M1 Max. Matched 100-sample measurements record a
 [NF4 tutorial](qwen-nf4.md) and [runtime audit](qwen-runtime-audit.md) record the
 source, precision, storage and loss policies for these measurements.
 
-### Current qualification priorities
+### Workload results and next priorities
 
 1. **Training quality on instruction data.** The
    [training-quality experiment](training-quality.md) now uses a pinned No Robots
@@ -108,9 +109,11 @@ source, precision, storage and loss policies for these measurements.
    on Qwen3-0.6B. With 100 measured calls, median evaluation time falls from
    1.375 to 0.117 s for FP32 and 1.858 to 0.359 s for BF16. Reports include
    session creation, exchange, execution and whole-process memory with both sessions.
-3. **Platform baseline.** Run matched PyTorch CPU/CUDA training under the same
-   precision and data policies. CUDA execution remains outstanding; the
-   recorded Mac comparisons cover CPU and MLX.
+3. **Precision acceptance.** Assess differences against the declared precision
+   policy, independent local derivatives and training outcomes across seeds.
+   Investigate changes that affect convergence, stability or model quality.
+   Cross-backend elementwise comparisons and CUDA comparisons are optional
+   diagnostics.
 4. **Memory boundaries.** Use tensor lifetimes and the output-head memory curve
    to choose recomputation boundaries, then validate complete training and
    checkpoint recovery for each change.
