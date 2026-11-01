@@ -65,4 +65,17 @@ jobs:
         with:
           python-version: "3.11"
       - run: uv sync --group dev --group training --group huggingface
-      - run: uv run --no-sync pytest -q tests/test_fused_autodiff.py tests/test_segmented_session.py tests/test_huggingface_bridge.py tests/test_qwen_sft.py tests/test_decoder_checkpointing.py tests/test_torch_context.py tests/test_qwen_adapters.py tests/test_qwen_nf4.py tests/test_qwen_bf16.py tests/test_qwen_rms_audit.py tests/test_qwen_local_vjp.py tests/test_training_impact.py tests/test_quality_corpus.py tests/test_reference_head.py tests/test_saved_residuals.py tests/test_mlx_validation_report.py tests/test_runtime_factory.py tests/test_reference_losses.py tests/test_joint_loss.py
+      - run: uv run --no-sync pytest -q tests/test_torch_module.py tests/test_torch_qwen.py tests/test_fused_autodiff.py tests/test_segmented_session.py tests/test_huggingface_bridge.py tests/test_qwen_sft.py tests/test_decoder_checkpointing.py tests/test_torch_context.py tests/test_qwen_adapters.py tests/test_qwen_nf4.py tests/test_qwen_bf16.py tests/test_qwen_rms_audit.py tests/test_qwen_local_vjp.py tests/test_training_impact.py tests/test_quality_corpus.py tests/test_reference_head.py tests/test_saved_residuals.py tests/test_mlx_validation_report.py tests/test_runtime_factory.py tests/test_reference_losses.py tests/test_joint_loss.py
+      - run: uv run --no-sync mypy
+      - run: uv build
+      - name: Exercise installed Torch integration outside the checkout
+        shell: bash
+        run: |
+          uv venv --python .venv/bin/python "$RUNNER_TEMP/onnax-torch-smoke"
+          python="$RUNNER_TEMP/onnax-torch-smoke/bin/python"
+          site=$(uv run --no-sync python -c 'import sysconfig; print(sysconfig.get_path("purelib"))')
+          target=$("$python" -c 'import sysconfig; print(sysconfig.get_path("purelib"))')
+          printf '%s\n' "$site" > "$target/third-party.pth"
+          uv pip install --python "$python" --no-deps dist/*.whl
+          cp tools/check_torch_distribution.py "$RUNNER_TEMP/check_torch_distribution.py"
+          (cd "$RUNNER_TEMP" && "$python" -I check_torch_distribution.py)
