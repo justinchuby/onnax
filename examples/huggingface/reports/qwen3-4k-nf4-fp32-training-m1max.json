@@ -1773,5 +1773,40 @@
         "onnax_data.json": "724c8a9fdf13f60f108deb314a79251c64d7d7860653f877193fc4b935a5af18"
       }
     }
+  },
+  "peft_export_format_audit": {
+    "format": "standard PEFT Linear LoRA",
+    "decoder_layers": 28,
+    "projections": 56,
+    "adapter_tensors": 112,
+    "rank": 4,
+    "alpha": 1,
+    "scaling": 0.25,
+    "targets": [
+      "q_proj",
+      "v_proj"
+    ],
+    "all_exported_arrays_exact_transposes": true,
+    "all_arrays_float32": true,
+    "base_revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "sha256": {
+      "adapter_config.json": "669cf73fd9ab2fd057476f164ee852f001e98568c6acbc36a41191acdbc97460",
+      "adapter_mapping.json": "6760db7cad38c9cf347eed81038c84aa315cde690fcb2e38d47d1319242cf0b3",
+      "adapter_model.safetensors": "207e39abc7dae4d0c6fb22ec49909886cdf8ef43b830698effa0ad3c688baa7b"
+    }
+  },
+  "trainer_shifted_token_count_audit": {
+    "microbatches": 4,
+    "lengths": [
+      2,
+      3,
+      5,
+      9
+    ],
+    "ignored_tail_tokens": 2,
+    "valid_shifted_tokens": 13,
+    "unshifted_tokens": 17,
+    "model_accepts_loss_kwargs": true,
+    "trainer_recognizes_causal_shift": true
   }
 }
