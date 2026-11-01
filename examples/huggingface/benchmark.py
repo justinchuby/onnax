@@ -55,6 +55,8 @@ def measure(
     projection_precision="fp32",
     checkpoint_layers=0,
     train_file=None,
+    save_activations=False,
+    mlx_memory_limit_bytes=None,
 ):
     for name, value, minimum in (
         ("sequence_length", sequence_length, 2),
@@ -68,6 +70,20 @@ def measure(
         )
     if projection_precision not in ("fp32", "bf16"):
         raise ValueError("Expected fp32 or bf16 projection precision")
+    if save_activations and mode != "chunked":
+        raise ValueError("Explicit saved activations require chunked mode")
+    if mlx_memory_limit_bytes is not None:
+        if (
+            isinstance(mlx_memory_limit_bytes, bool)
+            or not isinstance(mlx_memory_limit_bytes, int)
+            or mlx_memory_limit_bytes < 1
+        ):
+            raise ValueError("MLX allocator limit must be a positive integer")
+        if provider != "mlx" or not library:
+            raise ValueError("An MLX allocator limit requires the mlx provider and library")
+        from examples.huggingface.long_context import memory_limit
+
+        memory_limit(library, mlx_memory_limit_bytes)
     if checkpoint_layers and mode != "chunked":
         raise ValueError("Decoder checkpoints require chunked mode")
     if projection_precision == "bf16" and (
@@ -148,7 +164,7 @@ def measure(
             optimize=mode != "raw",
             chunk_size=chunk_size,
             checkpoint_layers=checkpoint_layers,
-            save_activations=mode == "saved",
+            save_activations=mode == "saved" or save_activations,
             nf4=nf4,
             projection_precision=projection_precision,
             session_factory=TimedSession,
@@ -235,6 +251,8 @@ def measure(
     report = {
         "mode": mode,
         "checkpoint_layers": checkpoint_layers,
+        "save_activations": mode == "saved" or save_activations,
+        "mlx_memory_limit_bytes": mlx_memory_limit_bytes,
         "provider": "pytorch_cpu" if mode == "pytorch" else provider,
         "segment_target_nodes": segment_nodes
         if mode != "pytorch" and provider == "mlx"
@@ -412,6 +430,8 @@ if __name__ == "__main__":
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--checkpoint-layers", type=int, default=0)
     parser.add_argument("--train-file")
+    parser.add_argument("--save-activations", action="store_true")
+    parser.add_argument("--mlx-memory-limit-gib", type=int)
     parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
@@ -432,6 +452,8 @@ if __name__ == "__main__":
         parser.error(
             "Tiny Qwen context is limited to 64 tokens; use --real for longer contexts"
         )
+    if args.mlx_memory_limit_gib is not None and args.mlx_memory_limit_gib < 1:
+        parser.error("Require a positive MLX allocator limit")
     if args.segment_nodes is not None and args.segment_nodes < 1:
         parser.error("Require a positive segment node target")
     if args.provider != "mlx" and (args.library or args.segment_nodes):
@@ -444,6 +466,12 @@ if __name__ == "__main__":
                     real=args.real,
                     checkpoint_layers=args.checkpoint_layers,
                     train_file=args.train_file,
+                    save_activations=args.save_activations,
+                    mlx_memory_limit_bytes=(
+                        args.mlx_memory_limit_gib * 1024**3
+                        if args.mlx_memory_limit_gib
+                        else None
+                    ),
                     samples=args.samples,
                     warmup=args.warmup,
                     batch_size=args.batch_size,
@@ -464,7 +492,7 @@ if __name__ == "__main__":
             if args.projection_precision == "bf16"
             else ("pytorch", "raw", "optimized", "saved", "chunked", "joint")
         )
-        if args.checkpoint_layers:
+        if args.checkpoint_layers or args.save_activations:
             modes = ("chunked",)
         for mode in modes:
             cmd = [
@@ -490,6 +518,10 @@ if __name__ == "__main__":
             ]
             if args.checkpoint_layers:
                 cmd.extend(["--checkpoint-layers", str(args.checkpoint_layers)])
+            if args.save_activations:
+                cmd.append("--save-activations")
+            if args.mlx_memory_limit_gib:
+                cmd.extend(["--mlx-memory-limit-gib", str(args.mlx_memory_limit_gib)])
             if args.train_file:
                 cmd.extend(["--train-file", args.train_file])
             if args.library:

@@ -8,6 +8,7 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -117,6 +118,11 @@ def main():
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not command:
         parser.error("Provide a worker command after --")
+
+    def terminate(signum, frame):
+        raise SystemExit(128 + signum)
+
+    signal.signal(signal.SIGTERM, terminate)
     result = run(command, args.output_dir)
     print(json.dumps({key: value for key, value in result.items() if key != "observations"}))
     sys.exit(0 if result["status"] == "complete" else 1)

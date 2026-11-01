@@ -27,7 +27,8 @@ newlines and appends the Qwen EOS token before counting tokens. Training has
 Short examples have at most 1024 tokens and long examples have 3072–4096.
 Shared contexts and source files form document groups held out together.
 The manifest records source indices, document identities, token counts and
-file digests. LongAlpaca uses CC BY-NC 4.0; see its
+file digests. A separate `benchmark.jsonl` supplies a naturally long example
+for fixed 4096/8192-token performance prefixes. LongAlpaca uses CC BY-NC 4.0; see its
 [dataset card](https://huggingface.co/datasets/Yukang/LongAlpaca-12k).
 
 ```bash
@@ -79,12 +80,26 @@ uv run --extra huggingface python -m examples.huggingface.guard \
 Set the environment variables above before invoking the guard. The
 512 MiB setting is the allocator's free-cache target.
 
+## Capacity results
+
+On M1 Max with 32 GiB unified memory, both FP32 and BF16 compute completed a
+4096-token forward, backward and AdamW update with all 112 adapter gradients
+finite. Whole-process peak physical footprint was 13.5 GiB and 14.4 GiB,
+respectively. These include cold model construction and native runtime memory.
+The [capacity report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-4k-checkpoint-capacity-m1max.json)
+records input identities, versions, allocator counters and phase boundaries.
+
 ## Export and measure
 
 The export directory contains a bound ordinary ONNX forward model, shared
 frozen weight data, adapter arrays and grouped forward/VJP modules. See
 [checkpoint loading](qwen-adapters.md) for direct execution with an external
-optimizer. The training directory also contains a standard PEFT adapter.
+optimizer. The training directory also contains a standard PEFT adapter. Validate its
+exchange through PyTorch PEFT with `python -m
+examples.huggingface.checkpoint_adapter --training-dir /tmp/qwen-4k-fp32
+--output-dir /tmp/qwen-peft-check --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib`.
+The audit reloads the saved training modules and restores the trained adapter
+after its one-step update comparison.
 
 Benchmark the same graph strategy independently from quality training:
 
@@ -94,8 +109,9 @@ ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912 \
 uv run --extra huggingface python -m examples.huggingface.benchmark \
   --mode chunked --checkpoint-layers 1 --real --nf4 --provider mlx \
   --library /path/to/libonnxruntime_mlx_ep.dylib \
-  --train-file /tmp/qwen-long-corpus/train.jsonl \
+  --train-file /tmp/qwen-long-corpus/benchmark.jsonl \
   --sequence-length 4096 --batch-size 1 --chunk-size 128 \
+  --mlx-memory-limit-gib 20 \
   --warmup 10 --samples 100
 ```
 

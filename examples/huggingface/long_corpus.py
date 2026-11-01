@@ -211,6 +211,30 @@ def prepare(directory):
             "maximum_tokens": max(r["tokens"] for r in samples),
             "valid_shifted_tokens": sum(r["tokens"] - 1 for r in samples),
         }
+    benchmark = None
+    for index, row in enumerate(rows):
+        text = _render(row)
+        if text is None:
+            continue
+        if not text.endswith(tok.eos_token):
+            text += tok.eos_token
+        length = len(tok(text, verbose=False)["input_ids"])
+        if length >= 8192:
+            benchmark = {"source_index": index, "text": text, "tokens": length}
+            break
+    if benchmark is None:
+        raise ValueError("No natural example reaches 8192 benchmark tokens")
+    path = directory / "benchmark.jsonl"
+    path.write_text(
+        json.dumps({"text": benchmark["text"]}, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    benchmark_metadata = {
+        "filename": path.name,
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        "source_index": benchmark["source_index"],
+        "natural_tokens": benchmark["tokens"],
+        "usage": "Fixed-length performance/capacity prefixes; quality training uses complete train/validation examples",
+    }
     manifest = {
         "version": 1,
         "dataset": DATASET,
@@ -232,6 +256,7 @@ def prepare(directory):
         "loss": "All shifted nonpadding tokens",
         "source_counts": counts,
         "files": files,
+        "benchmark": benchmark_metadata,
         "samples": {
             split: [{k: v for k, v in row.items() if k != "text"} for row in samples]
             for split, samples in selected.items()
