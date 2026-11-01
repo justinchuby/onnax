@@ -1766,5 +1766,101 @@
         "onnax_data.json": "724c8a9fdf13f60f108deb314a79251c64d7d7860653f877193fc4b935a5af18"
       }
     }
+  },
+  "completed_recovery_run": {
+    "continuous": {
+      "training_loss": [
+        3.184457778930664,
+        2.2050328254699707
+      ],
+      "validation_loss": [
+        2.9840035438537598,
+        2.232529401779175
+      ],
+      "steps": 30,
+      "data": {
+        "version": 2,
+        "train_lines": 128,
+        "validation_lines": 32,
+        "train_sha256": "bba6f604cbcbd7820b431ec34050de0f78673afe1287e911e9d4de585da4cab1",
+        "validation_sha256": "0a3a334ebce07acad6776d4074740936d55eb36a6a74b592e2cac060cea3defe",
+        "tokenizer_sha256": "6dd55c5383c60de4ef14710c7a19b02df3f57ce1792e5028373a9945b4173574",
+        "max_length": 4096
+      },
+      "model": "Qwen/Qwen3-0.6B",
+      "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+      "source_commit": "f1e96e5c7da0ad725f521f719d75db96fe573c0e",
+      "library_sha256": "70f8f08daff513aee8dcfd7cf9634c0fbe07160e5795ce223e721ffc84db2c4a",
+      "versions": {
+        "onnx": "1.23.2",
+        "onnx-ir": "1.1.0",
+        "onnxscript": "0.7.2",
+        "onnxruntime": "1.31.1",
+        "numpy": "2.4.6",
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "trl": "0.24.0",
+        "peft": "0.21.2"
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 8459199128,
+        "lifetime_peak_bytes": 14404098888,
+        "current_resident_bytes": 6911901696,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "frozen_buffers_unchanged": true,
+      "report_sha256": "b76aca0edabccaa11d95d02b3ee9a4f4b1d46a578ed2c1a805615221a9c814a3",
+      "journal_sha256": "b270b907afc9d09b3b2d472dd3c1fc9a3bca30d43943f0521a20e14c3e47c211"
+    },
+    "resumed": {
+      "training_loss": [
+        3.184457778930664,
+        2.2050328254699707
+      ],
+      "validation_loss": [
+        2.9840035438537598,
+        2.232529401779175
+      ],
+      "steps": 30,
+      "data": {
+        "version": 2,
+        "train_lines": 128,
+        "validation_lines": 32,
+        "train_sha256": "bba6f604cbcbd7820b431ec34050de0f78673afe1287e911e9d4de585da4cab1",
+        "validation_sha256": "0a3a334ebce07acad6776d4074740936d55eb36a6a74b592e2cac060cea3defe",
+        "tokenizer_sha256": "6dd55c5383c60de4ef14710c7a19b02df3f57ce1792e5028373a9945b4173574",
+        "max_length": 4096
+      },
+      "model": "Qwen/Qwen3-0.6B",
+      "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+      "source_commit": "f1e96e5c7da0ad725f521f719d75db96fe573c0e",
+      "library_sha256": "70f8f08daff513aee8dcfd7cf9634c0fbe07160e5795ce223e721ffc84db2c4a",
+      "versions": {
+        "onnx": "1.23.2",
+        "onnx-ir": "1.1.0",
+        "onnxscript": "0.7.2",
+        "onnxruntime": "1.31.1",
+        "numpy": "2.4.6",
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "trl": "0.24.0",
+        "peft": "0.21.2"
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 8463950584,
+        "lifetime_peak_bytes": 13805263784,
+        "current_resident_bytes": 8361132032,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "frozen_buffers_unchanged": true,
+      "report_sha256": "b76aca0edabccaa11d95d02b3ee9a4f4b1d46a578ed2c1a805615221a9c814a3",
+      "journal_sha256": "e9240cf352ddb9f7703f5f72092427d0660258bb59ae6286c4bb2547810c0ff8"
+    },
+    "loss_endpoints_equal": true,
+    "data_model_library_identity_equal": true,
+    "export_interface_equal": true,
+    "checkpoint_plan_equal": true
   }
 }
