@@ -123,13 +123,15 @@ and all 112 gradients on a 4096-token input with seven right-padding tokens.
 PEFT exchange preserved all 112 adapter arrays under both policies; the stable FP32 reference
 control aligned all adapter gradients at rtol=1e-4 and atol=1e-6.
 
-## 512-token strategy measurements
+## Strategy measurements
 
 The M1 Max measurements below use FP32 projection computation, packed NF4
 decoder weights, microbatch 1 and 128-token output-head chunks. Each strategy
 runs in a fresh process with 10 warmups and 100 measured updates. A training
 step includes forward, backward and one AdamW update. Peak process footprint
 includes model construction and runtime initialization.
+
+### FP32, 512 tokens
 
 | Strategy | Step median | Step P95 | Valid tokens/s | Peak process footprint |
 | --- | ---: | ---: | ---: | ---: |
@@ -138,9 +140,18 @@ includes model construction and runtime initialization.
 | Checkpoint every 2 layers | 2.837 s | 2.870 s | 180.1 | 6.86 GiB |
 | Checkpoint every 4 layers | 2.846 s | 2.916 s | 179.5 | 7.40 GiB |
 
-All four strategies produced identical loss values across all 110 updates.
-Saving all activations exceeded the 24 GiB process budget and was stopped by
-the guard.
+### FP32, 1024 tokens
+
+| Strategy | Step median | Step P95 | Valid tokens/s | Peak process footprint |
+| --- | ---: | ---: | ---: | ---: |
+| Whole-body recomputation | 4.586 s | 4.689 s | 223.1 | 15.98 GiB |
+| Checkpoint every layer | 4.531 s | 4.631 s | 225.8 | 7.26 GiB |
+| Checkpoint every 2 layers | 4.495 s | 4.608 s | 227.6 | 7.04 GiB |
+| Checkpoint every 4 layers | 4.561 s | 4.602 s | 224.3 | 8.03 GiB |
+
+At each sequence length, all four strategies produced identical loss values
+across all 110 updates. Saving all activations exceeded the 24 GiB process
+budget at both lengths and was stopped by the guard.
 
 ## Export and measure
 
