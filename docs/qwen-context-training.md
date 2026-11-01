@@ -149,9 +149,18 @@ includes model construction and runtime initialization.
 | Checkpoint every 2 layers | 4.495 s | 4.608 s | 227.6 | 7.04 GiB |
 | Checkpoint every 4 layers | 4.561 s | 4.602 s | 224.3 | 8.03 GiB |
 
-At each sequence length, all four strategies produced identical loss values
+At 512 and 1024 tokens, all four strategies produced identical loss values
 across all 110 updates. Saving all activations exceeded the 24 GiB process
 budget at both lengths and was stopped by the guard.
+
+### FP32, 4096 tokens
+
+| Strategy | Step median | Step P95 | Valid tokens/s | Peak process footprint |
+| --- | ---: | ---: | ---: | ---: |
+| Checkpoint every layer | 23.605 s | 23.749 s | 173.5 | 12.62 GiB |
+
+Whole-body recomputation and saving all activations exceeded the 24 GiB
+process budget during their capacity probes.
 
 ## Export and measure
 
