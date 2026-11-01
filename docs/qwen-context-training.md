@@ -166,6 +166,8 @@ All three checkpoint group sizes produced identical loss values across all
 
 Whole-body recomputation and saving all activations exceeded the 24 GiB
 process budget during their capacity probes.
+The 8192-token capacity probe with checkpoints every layer also exceeded this
+process budget.
 
 ## Export and measure
 
