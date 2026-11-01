@@ -93,6 +93,10 @@ Runnable examples cover [batching](https://github.com/justinchuby/onnax/blob/mai
 [autodiff and nonzero HVPs](https://github.com/justinchuby/onnax/blob/main/examples/autodiff.py),
 and [per-example parameter gradients](https://github.com/justinchuby/onnax/blob/main/examples/per_example_gradients.py).
 
+[Fused operator derivatives](https://www.justinchuby.com/onnax/fused-autodiff.html)
+retain Attention, RMSNormalization, LayerNormalization, RotaryEmbedding and
+Swish forward nodes while generating JVPs, VJPs and Hessian-vector products.
+
 Autodiff includes standard GELU and its `approximate="tanh"` variant for ONNX
 opsets 20 through 28, including Hessian-vector products and batched gradients.
 The derivative uses the same approximation as the source operator.

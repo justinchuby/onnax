@@ -278,7 +278,9 @@ class OnnxQwen3(PreTrainedModel):
         return CausalLMOutput(loss=loss, logits=logits)
 
 
-def _prepare_graph(real=False, *, nf4=False, projection_precision="fp32", checkpoints=False):
+def _prepare_graph(
+    real=False, *, nf4=False, projection_precision="fp32", checkpoints=False, fused_ops=False
+):
     """Build one canonical Mobius source and matching reconstructed reference."""
     if projection_precision not in ("fp32", "bf16"):
         raise ValueError("Expected fp32 or bf16 projection precision")
@@ -287,7 +289,7 @@ def _prepare_graph(real=False, *, nf4=False, projection_precision="fp32", checkp
     if checkpoints:
         protect_decoder_boundaries(base)
     adapted, params, mapping = inject(base)
-    graph = decompose(adapted)
+    graph = decompose(adapted, preserve_fused=fused_ops)
     quantization = None
     if nf4:
         from examples.huggingface.nf4 import lower_decoder
@@ -313,6 +315,7 @@ def prepare(
     nf4=False,
     projection_precision="fp32",
     session_factory=session,
+    fused_ops=False,
 ):
     _validate_checkpoints(mode, checkpoint_layers, save_activations)
     if projection_precision not in ("fp32", "bf16"):
@@ -324,6 +327,7 @@ def prepare(
         nf4=nf4,
         projection_precision=projection_precision,
         checkpoints=bool(checkpoint_layers),
+        fused_ops=fused_ops,
     )
     model = OnnxQwen3(
         reference.config,
@@ -497,6 +501,7 @@ def run(
     checkpoint_layers=0,
     evaluate_train=False,
     callbacks=None,
+    fused_ops=False,
 ):
     _validate_checkpoints(mode, checkpoint_layers, save_activations)
     if checkpoint_layers and fp64_audit:
@@ -532,6 +537,10 @@ def run(
         )
     if projection_precision == "bf16" and fp64_audit:
         raise ValueError("FP64 diagnostics require the FP32 projection policy")
+    if fused_ops and provider == "cpu":
+        raise ValueError(
+            "Fused Swish execution requires mlx or reference with the pinned ORT version"
+        )
     if projection_precision == "bf16" and provider == "cpu":
         raise ValueError("Select mlx or reference for BF16 projection execution")
     train_lines, validation_lines = _training_texts(train_file, validation_file)
@@ -566,6 +575,7 @@ def run(
         nf4=nf4,
         projection_precision=projection_precision,
         session_factory=runtime,
+        fused_ops=fused_ops,
     )
     _validate_max_length(max_length, limit=model.config.max_position_embeddings)
     initial_frozen = frozen_hashes(model.forward_graph)
@@ -673,6 +683,7 @@ def run(
         "provider": provider,
         "segment_target_nodes": segment_nodes,
         "ort_graph_optimization": None if provider == "reference" else "disabled",
+        "fused_ops": fused_ops,
         "frozen_buffers_unchanged": frozen_hashes(model.forward_graph) == initial_frozen,
     }
     if provider == "mlx":
@@ -808,6 +819,11 @@ if __name__ == "__main__":
     parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
     parser.add_argument("--peft-roundtrip", action="store_true")
     parser.add_argument("--provider", choices=["cpu", "mlx", "reference"], default="cpu")
+    parser.add_argument(
+        "--fused-ops",
+        action="store_true",
+        help="Preserve Attention, RMSNormalization, RotaryEmbedding and Swish",
+    )
     parser.add_argument("--library")
     parser.add_argument("--segment-nodes", type=int)
     parser.add_argument(
@@ -837,6 +853,7 @@ if __name__ == "__main__":
                 nf4=args.nf4,
                 peft_roundtrip=args.peft_roundtrip,
                 provider=args.provider,
+                fused_ops=args.fused_ops,
                 library=args.library,
                 segment_nodes=args.segment_nodes,
                 stable_reference=args.stable_reference,

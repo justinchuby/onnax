@@ -18,7 +18,13 @@ from onnax._diagnostics import _argument_context, _node_context, _value_context
 from onnax._inference import _infer_shapes
 from onnax._rules import _load_builtin_rules, _snapshot
 
-_OPSET_MIN = {"Gelu": 20}
+_OPSET_MIN = {
+    "Gelu": 20,
+    "Attention": 23,
+    "RMSNormalization": 23,
+    "RotaryEmbedding": 23,
+    "Swish": 24,
+}
 
 
 def _validate_rule_value(
@@ -259,6 +265,11 @@ class JvpPass(ir.passes.FunctionalPass):
           or approximate="tanh", including forward-over-reverse products.
           PRelu differentiates both data and its unidirectionally broadcast
           slope tensor, including selected stored parameters.
+        * Fused operators: Attention (opset 23+, cache-free, Y output, static head
+          counts, dynamic batch/sequence, MHA/GQA/MQA and masks), RMSNormalization
+          and RotaryEmbedding (23+), Swish (24+), LayerNormalization (18+).
+          Primal nodes remain fused; derivatives use standard ONNX operators.
+          RoPE also retains fused rotations for data products.
         * Linear algebra: MatMul (vectors, matrices, broadcast batches), Gemm
           (including transposes and broadcast bias).
         * Reductions: ReduceSum, ReduceMean, ReduceL1, ReduceLogSum, and ReduceSumSquare,
@@ -267,7 +278,8 @@ class JvpPass(ir.passes.FunctionalPass):
         * Layout/indexing: Reshape, Flatten, Squeeze, Unsqueeze, Transpose,
           Expand, Concat, Split, Gather (including repeated/negative indices).
           Also floating-point Cast, Where, Softmax, and LogSoftmax.
-          Forward mode additionally supports ScatterND with reduction="add";
+          Forward mode additionally supports Slice, constant/reflect/edge/wrap Pad,
+          and ScatterND with reduction="add";
           its data/updates are differentiable and its indices are structural.
           Pow accepts an inactive integer exponent; floating operands must have
           matching dtypes.

@@ -1,0 +1,1906 @@
+{
+  "version": 1,
+  "created_utc": "2026-11-01T18:56:02.319453+00:00",
+  "reviewed_commit": "bcb373f5fc38fba4d0a8ca17229f4f7d0b38654b",
+  "source_sha256": {
+    "examples/huggingface/__init__.py": "d0f10fa0374c4dc2f0437b585eb25a993a906f06753759d464657a3069e37fe3",
+    "examples/huggingface/benchmark.py": "57653ea9d4cc2e683310aac4686ccc63dc1277e967a1d45f2d080b4d4634750a",
+    "examples/huggingface/bf16_accumulation.py": "56e592f1e6ed8d79c7ad4517656ab6ae7e1457437a0c511f268632848a6f56b4",
+    "examples/huggingface/bf16_audit.py": "7e0403976c93d4f376b33cb31a7b21aff7e75ff1430606cc11a9886d1749db28",
+    "examples/huggingface/bridge.py": "1fd49edd2306928493bd81777193e197ec1694d3d64d060859b0e89e032391d0",
+    "examples/huggingface/checkpoint_adapter.py": "e896514d7bbbb7867a8b6806e54125a6a5746103821dc80fe5d7aaee97428ec5",
+    "examples/huggingface/checkpointing.py": "3a842e168a7ce9bd7313e58b1102d2e0aad0c37489238ebfec2408effde0cf4b",
+    "examples/huggingface/chunked_loss.py": "eee1d035b85b460174fa688cd62ac6b10de8aa0bb923a49de1280b2d892ec10f",
+    "examples/huggingface/context_comparison.py": "0d263c00c182cfaaf20ac026940e10fbe9c67761ce1914260bc46fc725479f9b",
+    "examples/huggingface/context_suite.py": "5c6ad7174f561367cf5116428fa6c760ac26bb575b2d4950ed18b8ddb2ada225",
+    "examples/huggingface/evaluation_benchmark.py": "1991b9900474b4a208a44e36cb10c4cd3a30f9d8b1aecf77a02ee14f9981d014",
+    "examples/huggingface/guard.py": "358ff6237713a2a234cdba2bc2447a41b804bfdc050b47e63f2911da31848243",
+    "examples/huggingface/head_reduction_audit.py": "8bbcf6789150465b99795a31a0a15289dee4a1a71d4f6620c8e06bf2774ef416",
+    "examples/huggingface/joint_loss.py": "b6edc93e34df4c3ff70973d87a9cb5dd33721de13a99f66061278b74878acfa2",
+    "examples/huggingface/layer_audit.py": "8fe47fc1165aa13b72513fb181f929c8378f19d58f286ce2eb74488414e15b9d",
+    "examples/huggingface/local_vjp_audit.py": "e9b7de4077966a63598a7de6c0e1f4b5ad265a797205d4909db6024584c26999",
+    "examples/huggingface/long_context.py": "b58913f5359a9a0c21aeb257985ea7564381ae258fac4a5935cd472128442e52",
+    "examples/huggingface/long_context_report.py": "64446aa805b71b2256e3b2a56077984974d20dcce0b0c5aba03b5f244e808020",
+    "examples/huggingface/long_corpus.py": "619e6362ae3d81386ab734028b139f0ac30b1919c92cda8dc0b9a03b91a39c5c",
+    "examples/huggingface/mixed_precision.py": "b31f3526f8f8b8ac509c4dfcf59d5bf93b81a08fb969f95b2f92dc41a6e5ac04",
+    "examples/huggingface/mlx_validation.py": "640ab0f7e10dcd1d62f359de13067662ae280b05093786748058952716cd722e",
+    "examples/huggingface/nf4.py": "a374f41406ed0b8967f723873b8bb9b5a563b8350895c299137905422522d9d7",
+    "examples/huggingface/numerics.py": "3c35803ad5c761283edd37f7641c0a3f0f524ff3b2095caaae28af5973698299",
+    "examples/huggingface/optimization.py": "ae152a66f388c1c5be1b4f49f5ef4183ddb37b91d51483fe3d9319f3906826ea",
+    "examples/huggingface/paired_audit.py": "826b21105da5282e01ae14a68658a3eec3b69d62270457b68dfba275be87ce69",
+    "examples/huggingface/peft_adapter.py": "897f88b19f825c7f0231b3788e8a76209044fe593a58c1a34679337fd5e55052",
+    "examples/huggingface/peft_reference.py": "4fc7a11ce7761a411eee811e4e6f460920e684cc4ec85af31b80fb80b2320da9",
+    "examples/huggingface/precision.py": "6d57236e79cc541020473898f274800e2ea8e8fee4a515f3c666a723a4ef8016",
+    "examples/huggingface/quality_corpus.py": "ee0d5ba059e6d0de76850efca200fc0f0cc746ff3deb24da78738941b37d33c6",
+    "examples/huggingface/qwen.py": "4ca553bcf0dc9c075f4c6e5c79d600b8af13d344669f5e8ebbf609e5cd9c88ae",
+    "examples/huggingface/reference_head.py": "c0f2127b7a1fb4974056ef03487217cbd87b68a1ea722fecfb7b849c7c33c913",
+    "examples/huggingface/reference_losses.py": "7f204e8d5b1539e6bf56f93a4874345caa09bbf9e02ddbd67852d39147c03015",
+    "examples/huggingface/reference_trajectory.py": "2812dda2eb75110484c19b78a6da6d895dc6030d479eb530d78a7d0be211cc94",
+    "examples/huggingface/replay.py": "cc99f6ab2a0262fd4c3e467428752b84c936ed6d1dde5bbbaca568b46b4b109f",
+    "examples/huggingface/residual_audit.py": "8729d31f7a391bace8d74dc88f94bea1b09695f99f0ec234140d7002fff0a24d",
+    "examples/huggingface/residuals.py": "585efaf7deab45072a27a28972111d193d539b5df87245d6a63dba5576882747",
+    "examples/huggingface/rms_audit.py": "0b6638fae45af2d20641863b22ab97ce908dbbea8abc7a4010011f31f94a2f11",
+    "examples/huggingface/segmented.py": "6dff62cdf4e8d251e38c8b8ef692de4534e024156ed39334da1dbd1db26a374a",
+    "examples/huggingface/serialization.py": "2eef08c22f22985c62515312a208898c365dcaccf4c6cf3c154e668826e42a53",
+    "examples/huggingface/sft.py": "0b56496cb9701bf3ee234a7032566509c6fae52afc5aa0faac5fcf60fff216a0",
+    "examples/huggingface/stable_losses.py": "941997d75d53696d381ccb856b2bba61f0a8156e9192e37e4b8444a0bfab5517",
+    "examples/huggingface/torch_context.py": "1a5b6bb771f837d1d6db6b885b65bb07edc75b8f2d3b8ecba7e76aa6be933f06",
+    "examples/huggingface/trainer.py": "1677373aeaaed9ac25b4c72f00ea29a8e859a1ed44784546ea516be9706cf240",
+    "examples/huggingface/training_impact.py": "5783bc30426c7d216200175d37390408521d6508296ba2da1be7fbcd9c68b96a",
+    "examples/huggingface/training_quality_compare.py": "24e5d072933ed411700ec9f171f2a0f867985d7d9c9b94fa2d8d9ad51b5eb099",
+    "examples/huggingface/training_quality_replay.py": "ab3eaf9a3a8968af6cdf57cae9193eb58edcac9a6936aeae5d29a99f1adf0eb4",
+    "examples/huggingface/training_quality_replay_compare.py": "781d1f237cd179e8123341fc271a8fbf08990d1f9e408271586f827137c76213",
+    "examples/huggingface/validation.py": "d33a12f738bbecdbebe4df2ed1519487b55156ed445c42175c517377a1b4c582",
+    "examples/lora/accumulation.py": "b22ae944245c49fbe364b23770da5ef9a64ca81b26f875f655d6d1a53bf1ca34",
+    "examples/lora/adam.py": "c45427a18e5c600b6ca97e7fd2247f3e8e2e8da0bd22735eb1e2cefff18fc2f6",
+    "examples/lora/bf16.py": "b015dba1146329a8b659d6f03c28fa8262a37652905f81aaef02d4fe6d4fe476",
+    "examples/lora/bf16_bounds.py": "e9455fed3abf98b8469816a6b9d376c6aa05471a19a262e8ca219c5483425bec",
+    "examples/lora/bf16_composed.py": "d947265868ccfd1806f4a606d69c62c49ac79cd559b65fcb106be2d0d3b53a81",
+    "examples/lora/bf16_inspector.py": "a4c6eef433b6b71853618a9f58fac8fad1ef608e7aa411fd1fc561f97a0429e0",
+    "examples/lora/bf16_rules.py": "6efbd3fa01e837c89dc57a7b3d25e6ce6cf914579ac75cb11c170283464e7a36",
+    "examples/lora/binding.py": "439fa21d4de0f84836d4e202e21a7cdbacf84e4d075e563ecebf8f1917cf8665",
+    "examples/lora/coreml.py": "e561558dd6a5522a8fb70fc08e08d252039fee52eb5e0ce982a4c24e8f2d9cc0",
+    "examples/lora/coreml_benchmark.py": "1bb17fa523e24226c11d0ebe22603f155736671b47821a83f00c712642cb4e0b",
+    "examples/lora/dlpack.py": "ac4a7bae7bed6e7dbeabb8c663afc4f45e8e531a77f053fa4837058e65c6dcc1",
+    "examples/lora/fp32_bounds.py": "d1e10f771d5bd53731162270cf2fd8b3aa275ba444ed88bef3d6b6dbf9c33f6e",
+    "examples/lora/intervals.py": "960d8d6e128d508892fe32d045426251c0b659696c374891d7a8530d1d89139b",
+    "examples/lora/iobinding.py": "0c59945e8c915f9aef1e394711b0e67c0997e6b0ba774f163185b7f265fec855",
+    "examples/lora/jax_training.py": "7184fc9354eb507ffd791b61eb8897992624d7f47ad0a75c7c8e106a0a4db17e",
+    "examples/lora/microbatch.py": "83ff1470a793baa57e6efbeb8727d90f187ff7a2cf76adca021d8f68ef955762",
+    "examples/lora/mlx_adam.py": "3a72ac07434abae7169110d23f2624f4a7b85bd5c0cea1546b24c2f1e2f0db0b",
+    "examples/lora/mlx_benchmark.py": "21a1a5f4c1f337aba1231f80d4d20491f2f66f5f62d06166663594c8345d687f",
+    "examples/lora/mlx_bf16.py": "1b6c183fc4fa2317c4bdbc8972ef852674d935ea35ff4eee8b63e0dbb07adfb1",
+    "examples/lora/mlx_exchange.py": "823240d2ff6ee54249239e516dd7aebf37e4ef3a6732c5870f1a67cb04e0333f",
+    "examples/lora/mlx_runtime.py": "a2cd63e4573f73f6325fc4cfef8411ccc5f5dc2c2f152afe8c4696cfd371f690",
+    "examples/lora/mlx_training.py": "297562c76aee73fc48e3ef2d14dd43074f484b9fc7a954f9041f7ca85dc5bf44",
+    "examples/lora/model.py": "dc91a5297b3a0331541f9a8da28047219c90207276f9b04e3111d827549c275a",
+    "examples/lora/nf4.py": "630aff7f933b20d6f13044627443f2464e0a6c5c1d04667d154b086cb451f131",
+    "examples/lora/nf4_train.py": "df586f5702896bdaffd2a8f6e64d031f329c5d8ea5669cb5b7a0ce71de8affb5",
+    "examples/lora/train.py": "d3c0a5b7b861bc79a175f327daff76daff817671b0adcf33fbb7559c9b31df86",
+    "examples/lora/validation.py": "c5dee4304bc7cc97e69d0bc6a4c4b68d746b0cf3f52eedec9e80888517587551",
+    "examples/lora/workloads.py": "10e13d5c040e6b3666fdabbc5e49d5fd3e8bb8c1cc3fa0e722043dc69cfc5485",
+    "src/onnax/__init__.py": "0e1c47246afe4a1ae2a0245f6bfd2bf95b76807dc24e14e749dbe94c796d3a97",
+    "src/onnax/_autodiff/__init__.py": "69355bd8d2b563a0dfc7e8fb0ecff8a6e0a1f07fded6a7ea87bc5188d5523a0d",
+    "src/onnax/_autodiff/_attention.py": "1c9d40ed497dcbb660cd9bfea76ee0ff234d5cb1b1417a14e8b31f600e5fb811",
+    "src/onnax/_autodiff/_common.py": "c92d24174b4d6c3ca3013340414fb1d24f6e3da5029a53b6204c1f9919b97042",
+    "src/onnax/_autodiff/_context.py": "9bff1cdfe2652d7ab3bf8e8213388871f4f5b9f5750153fbb12283109e8da878",
+    "src/onnax/_autodiff/_elementwise.py": "63e2ca8a4c4205a1d80964ff7b503af34c7f9aa3a309fd01acd31d67ac5bd02a",
+    "src/onnax/_autodiff/_extrema.py": "a99522ac42513d368eabdb7c17d544efb1621e43f0f523ceec9e0d1927405221",
+    "src/onnax/_autodiff/_interface.py": "05b1810043c60dc2aba4adba46207d6049daba6eda377a3689aedf7dd9b58ddb",
+    "src/onnax/_autodiff/_layout.py": "f37568b882e6080bd0215dc79c231449a89638cc9fdeb3bc24fbac5f70192ce8",
+    "src/onnax/_autodiff/_linalg.py": "d2bf046bf007b8e9e81c7c09655fc1153061f00a57a6215ff5495e7d507b7092",
+    "src/onnax/_autodiff/_normalization.py": "c0b6fdebf2cf5b3b32b7e6295d4dae6ffb6f6b5774ca7e8595c4d08703a654df",
+    "src/onnax/_autodiff/_reductions.py": "32ec3f8a081411f604a0f8eb76da0c1fcf4e8154c9ac68643085bab51dbe3572",
+    "src/onnax/_autodiff/_registry.py": "80a55f1282cc7e799620823fc0502dc3ade354b0326c58a617abe2b3b74e93bc",
+    "src/onnax/_autodiff/_rotary.py": "438eff0676ff1df2a083c319e29fba67ce1f4547a82ac1cc76c200addd681163",
+    "src/onnax/_autodiff/_transform.py": "9b9cf0e8d2d505affe40254a26d9cb42b1d1ad8e059489f0b1deabb38c4c9ace",
+    "src/onnax/_batching/__init__.py": "f904cf76d4a48c7c359c675a4f60477ddb4ef76e2d2d7a54e6a945ca63b91de6",
+    "src/onnax/_batching/_context.py": "951de21173c591a9a73c05796d67ab52be85ca29f9b5e91df756037b32d47d1a",
+    "src/onnax/_batching/_elementwise.py": "c77728f3e56c1b6eb22307949e77b3826bf5718d3a78b22cd0d5f2619e50d26a",
+    "src/onnax/_batching/_indexing.py": "21274a4e4a2afc03d41ce98243d47e68504bb29b8f55e441ddd914df5e276120",
+    "src/onnax/_batching/_layout.py": "9f1d9f356c396ca3a65aa7c2d8d562a05176f6a7f4b56575a37b42b17701eff9",
+    "src/onnax/_batching/_linalg.py": "c3e35ddeba29be78c233553b8be32c609596ad89e08515c22dca06fc1efb9746",
+    "src/onnax/_batching/_nn.py": "83d63b34d3f329d9f06c493305eb18040cce6319d42eb1cff6a08e6a3d8a6e1f",
+    "src/onnax/_batching/_reductions.py": "909942ca33d446d1f670d73fa558d54000f316cc5d64a6a8f6191f01829f758f",
+    "src/onnax/_batching/_registry.py": "e7cc42cab6f983ba97e7536e751294a96e33c4b0671e3703c08fe09df31492f4",
+    "src/onnax/_batching/_transform.py": "1dbe47ddc7f076597789625985b22045df908be7052ba046dd7fd384198ac5f1",
+    "src/onnax/_diagnostics.py": "e6a5eafe6c2533313a421fc7ec086aa6eea31d58b2bfe8296bb9be1264e63103",
+    "src/onnax/_functional.py": "968a751ecca324acae9fd029ae7aa2cdbcfbb4818caeac7e1e3feaf6b61502b1",
+    "src/onnax/_inference.py": "d29deda69b20afd4451c2a8678d2c14896f90c1618e3e6c032cad9b91cedec5e",
+    "src/onnax/_linear.py": "25d3c29a6f387b356f8141a71f1b2e5508e2fd1f7b89322aad46f28d0c3ca4fe",
+    "src/onnax/_rule_registry.py": "0f8673aeabd883f14503ee83d43dc3e9c4f4ea2aa93b3c492acfb472d11d96a8",
+    "src/onnax/_rules.py": "fcdc53fdb51a94e9cafe47a090f93f02df3fe1967f7186809f645683a8832b94"
+  },
+  "training": {
+    "fp32": {
+      "report": {
+        "model": "tiny-qwen3",
+        "revision": null,
+        "steps": 100,
+        "data": {
+          "version": 1,
+          "train_lines": 160,
+          "validation_lines": 4,
+          "train_sha256": "8fb20f0b72a487d00f3ff5d695c6b2f38a009a6ffd9a606d2ba98b096ddd2fdf",
+          "validation_sha256": "e70e7809f4049bfcbf40d3c459bd8e100d7c3393a991444624d31376b0939fbe",
+          "tokenizer_sha256": "104cfbcc4d85f522ad6dd6af187c5a478a11d40fe03b094a9e0a8d1eae03a470",
+          "max_length": 64
+        },
+        "mode": "chunked",
+        "checkpoint_layers": 1,
+        "projection_precision": "fp32",
+        "validation_loss": [
+          5.542850971221924,
+          5.417976379394531
+        ],
+        "fixed_training_loss": [
+          5.5434370040893555,
+          5.140574932098389
+        ],
+        "audits": [
+          {
+            "strict_loss_check_passed": true,
+            "reference_loss": 5.577284812927246,
+            "strict_logit_check_passed": true,
+            "logit_violations": 0,
+            "logits_relative_l2": 3.027322463822202e-07,
+            "logits_max_abs": 2.384185791015625e-07,
+            "gradients_max_abs": 2.444721758365631e-09,
+            "strict_gradient_check_passed": true,
+            "gradient_failures": {},
+            "loss": 5.577284336090088
+          },
+          {
+            "strict_loss_check_passed": true,
+            "reference_loss": 5.201505661010742,
+            "strict_logit_check_passed": true,
+            "logit_violations": 0,
+            "logits_relative_l2": 4.079063842254982e-07,
+            "logits_max_abs": 3.8743019104003906e-07,
+            "gradients_max_abs": 8.195638656616211e-08,
+            "strict_gradient_check_passed": true,
+            "gradient_failures": {},
+            "loss": 5.201505661010742
+          }
+        ],
+        "reference_retained_during_training": true,
+        "quantization": {
+          "format": "onnax-row-major-nf4-v1",
+          "codebook": [
+            -1.0,
+            -0.6961928009986877,
+            -0.5250730514526367,
+            -0.39491748809814453,
+            -0.28444138169288635,
+            -0.18477343022823334,
+            -0.09105003625154495,
+            0.0,
+            0.07958029955625534,
+            0.16093020141124725,
+            0.24611230194568634,
+            0.33791524171829224,
+            0.44070982933044434,
+            0.5626170039176941,
+            0.7229568362236023,
+            1.0
+          ],
+          "packing": "high nibble first; row-major transposed Linear weight",
+          "block_size": 64,
+          "compute_dtype": "float32",
+          "adapter_dtype": "float32",
+          "embedding_dtype": "float32",
+          "lm_head_dtype": "float32",
+          "weights": {
+            "model.layers.0.mlp.down_proj.weight_t": {
+              "packed": "model.layers.0.mlp.down_proj.weight_t.nf4",
+              "scales": "model.layers.0.mlp.down_proj.weight_t.absmax",
+              "shape": [
+                128,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.0.mlp.gate_proj.weight_t": {
+              "packed": "model.layers.0.mlp.gate_proj.weight_t.nf4",
+              "scales": "model.layers.0.mlp.gate_proj.weight_t.absmax",
+              "shape": [
+                64,
+                128
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.0.mlp.up_proj.weight_t": {
+              "packed": "model.layers.0.mlp.up_proj.weight_t.nf4",
+              "scales": "model.layers.0.mlp.up_proj.weight_t.absmax",
+              "shape": [
+                64,
+                128
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.0.self_attn.k_proj.weight_t": {
+              "packed": "model.layers.0.self_attn.k_proj.weight_t.nf4",
+              "scales": "model.layers.0.self_attn.k_proj.weight_t.absmax",
+              "shape": [
+                64,
+                32
+              ],
+              "block_size": 64,
+              "packed_bytes": 1024,
+              "scale_bytes": 128,
+              "original_bytes": 8192
+            },
+            "model.layers.0.self_attn.o_proj.weight_t": {
+              "packed": "model.layers.0.self_attn.o_proj.weight_t.nf4",
+              "scales": "model.layers.0.self_attn.o_proj.weight_t.absmax",
+              "shape": [
+                64,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 2048,
+              "scale_bytes": 256,
+              "original_bytes": 16384
+            },
+            "model.layers.0.self_attn.q_proj.weight_t": {
+              "packed": "model.layers.0.self_attn.q_proj.weight_t.nf4",
+              "scales": "model.layers.0.self_attn.q_proj.weight_t.absmax",
+              "shape": [
+                64,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 2048,
+              "scale_bytes": 256,
+              "original_bytes": 16384
+            },
+            "model.layers.0.self_attn.v_proj.weight_t": {
+              "packed": "model.layers.0.self_attn.v_proj.weight_t.nf4",
+              "scales": "model.layers.0.self_attn.v_proj.weight_t.absmax",
+              "shape": [
+                64,
+                32
+              ],
+              "block_size": 64,
+              "packed_bytes": 1024,
+              "scale_bytes": 128,
+              "original_bytes": 8192
+            },
+            "model.layers.1.mlp.down_proj.weight_t": {
+              "packed": "model.layers.1.mlp.down_proj.weight_t.nf4",
+              "scales": "model.layers.1.mlp.down_proj.weight_t.absmax",
+              "shape": [
+                128,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.1.mlp.gate_proj.weight_t": {
+              "packed": "model.layers.1.mlp.gate_proj.weight_t.nf4",
+              "scales": "model.layers.1.mlp.gate_proj.weight_t.absmax",
+              "shape": [
+                64,
+                128
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.1.mlp.up_proj.weight_t": {
+              "packed": "model.layers.1.mlp.up_proj.weight_t.nf4",
+              "scales": "model.layers.1.mlp.up_proj.weight_t.absmax",
+              "shape": [
+                64,
+                128
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.1.self_attn.k_proj.weight_t": {
+              "packed": "model.layers.1.self_attn.k_proj.weight_t.nf4",
+              "scales": "model.layers.1.self_attn.k_proj.weight_t.absmax",
+              "shape": [
+                64,
+                32
+              ],
+              "block_size": 64,
+              "packed_bytes": 1024,
+              "scale_bytes": 128,
+              "original_bytes": 8192
+            },
+            "model.layers.1.self_attn.o_proj.weight_t": {
+              "packed": "model.layers.1.self_attn.o_proj.weight_t.nf4",
+              "scales": "model.layers.1.self_attn.o_proj.weight_t.absmax",
+              "shape": [
+                64,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 2048,
+              "scale_bytes": 256,
+              "original_bytes": 16384
+            },
+            "model.layers.1.self_attn.q_proj.weight_t": {
+              "packed": "model.layers.1.self_attn.q_proj.weight_t.nf4",
+              "scales": "model.layers.1.self_attn.q_proj.weight_t.absmax",
+              "shape": [
+                64,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 2048,
+              "scale_bytes": 256,
+              "original_bytes": 16384
+            },
+            "model.layers.1.self_attn.v_proj.weight_t": {
+              "packed": "model.layers.1.self_attn.v_proj.weight_t.nf4",
+              "scales": "model.layers.1.self_attn.v_proj.weight_t.absmax",
+              "shape": [
+                64,
+                32
+              ],
+              "block_size": 64,
+              "packed_bytes": 1024,
+              "scale_bytes": 128,
+              "original_bytes": 8192
+            }
+          },
+          "original_decoder_bytes": 294912,
+          "packed_decoder_bytes": 41472
+        },
+        "provider": "mlx",
+        "segment_target_nodes": null,
+        "ort_graph_optimization": "disabled",
+        "fused_ops": true,
+        "frozen_buffers_unchanged": true,
+        "cpu_fallback_disabled": true,
+        "mlx_compile_disabled": true,
+        "lut4_fusion_disabled": false,
+        "library": "/tmp/onnax-ep-cache-budget-lib/libonnxruntime_mlx_ep.dylib",
+        "library_sha256": "70f8f08daff513aee8dcfd7cf9634c0fbe07160e5795ce223e721ffc84db2c4a",
+        "artifact_bytes": {
+          "adapter.npz": 9654,
+          "body.onnx": 96947,
+          "checkpoint_plan.json": 3853,
+          "decoder_0_1_backward.onnx": 87995,
+          "decoder_0_1_forward.onnx": 57924,
+          "decoder_1_2_backward.onnx": 80698,
+          "decoder_1_2_forward.onnx": 50908,
+          "forward.onnx": 105045,
+          "head_forward.onnx": 14576,
+          "head_gradient.onnx": 19278,
+          "head_loss.onnx": 15417,
+          "interface.json": 7163,
+          "prefix_forward.onnx": 13264,
+          "quantization.json": 5481,
+          "suffix_backward.onnx": 16030,
+          "suffix_forward.onnx": 13402,
+          "tokenizer.json": 4653,
+          "tokenizer_config.json": 218,
+          "weights-adb6abf9fab968cdfc3a271cf3a874f4a6e971cfce9b17f28f8f469254419745.data": 131072
+        },
+        "forward_nodes": 78,
+        "adapter_parameter_bytes": 7168,
+        "requested_audits": {
+          "reference": true,
+          "strict_reference": true,
+          "peft": false,
+          "fp64": false,
+          "stable_reference": false
+        }
+      },
+      "execution": {
+        "command": [
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.sft",
+          "--output-dir",
+          "/tmp/onnax-fused-final/fp32",
+          "--steps",
+          "100",
+          "--mode",
+          "chunked",
+          "--checkpoint-layers",
+          "1",
+          "--provider",
+          "mlx",
+          "--library",
+          "/tmp/onnax-ep-cache-budget-lib/libonnxruntime_mlx_ep.dylib",
+          "--nf4",
+          "--fused-ops",
+          "--strict-reference",
+          "--evaluate-train"
+        ],
+        "cwd": "/Users/justinc/Documents/GitHub/onnax",
+        "status": "complete",
+        "physical_memory_budget_bytes": 25769803776,
+        "minimum_free_disk_bytes": 5368709120,
+        "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+        "observation_errors": 0,
+        "temporary_directory": "/tmp/onnax-fused-final/fp32.guard/worker-tmp-k0yz4odu",
+        "pid": 87774,
+        "started": "2026-11-01T18:53:11.684915+00:00",
+        "returncode": 0,
+        "finished": "2026-11-01T18:53:27.769417+00:00",
+        "temporary_files_removed": true,
+        "physical_footprint_peak_bytes": 512657160,
+        "worker_log_sha256": "9ccb73f23d6c06dbd2e18f949e770947259de3326848f17788357318056905c0"
+      },
+      "retained_forward_operators": {
+        "Gather": 3,
+        "Cast": 1,
+        "Unsqueeze": 2,
+        "Shape": 3,
+        "Concat": 1,
+        "Expand": 1,
+        "RMSNormalization": 9,
+        "MatMul_64_64_64": 4,
+        "MatMul": 9,
+        "Constant": 4,
+        "Mul": 6,
+        "Add": 8,
+        "MatMul_64_32_64": 4,
+        "Reshape": 8,
+        "RotaryEmbedding": 4,
+        "Attention": 2,
+        "MatMul_64_128_64": 4,
+        "Swish": 2,
+        "MatMul_128_64_64": 2,
+        "Transpose": 1
+      },
+      "exported_module_sha256": {
+        "body.onnx": "d4ce1a5c0394390f530e22e216c927f97eb44c477b824454e8c4368a0db70909",
+        "decoder_0_1_backward.onnx": "6443904ceead385c3eec19b44315c969d5f2b7b81ec86ac89de5ba3e5b50b2ea",
+        "decoder_0_1_forward.onnx": "b6b9709d4d33ef91ed9e819880fc31d0abe3f5b7b0a07ee23901731450b86b23",
+        "decoder_1_2_backward.onnx": "0f65e182f5f373e106fd75a8cecce810745a008c8edb45f8a733be20bb422750",
+        "decoder_1_2_forward.onnx": "b57a718bfb1b5311bc585c802ddc4a35d3da1cd277674e49cf587d16374cefc2",
+        "forward.onnx": "2481f3c931a3967cd90a02908e23fdc8386bc85183b825623f9807693abd5fd9",
+        "head_forward.onnx": "8aab98d1cec3fcdfa20ed2f63ebb1affbb20723a864e6c285b1e27b0b0dd621b",
+        "head_gradient.onnx": "52b25ed778f5f5beb01cc2e6206a42d9b855cafb59fb820c971a1babb80b4443",
+        "head_loss.onnx": "dbd7e63f3871eeb73ada8d17ef38d02dd8dbc191119db8566d96f07543e16801",
+        "prefix_forward.onnx": "ba956e0c9a1e0aa31955101d55c98d33c2558793b8095a86208420b2f633790d",
+        "suffix_backward.onnx": "2f308b77cac2f98f83e71a81c56bb5936acc7851c25e0fe36457a8721a07f36b",
+        "suffix_forward.onnx": "82bdd84872bb02390ec24e6408e6af14b37da8e6040405097388711e244a3c91"
+      }
+    },
+    "bf16": {
+      "report": {
+        "model": "tiny-qwen3",
+        "revision": null,
+        "steps": 100,
+        "data": {
+          "version": 1,
+          "train_lines": 160,
+          "validation_lines": 4,
+          "train_sha256": "8fb20f0b72a487d00f3ff5d695c6b2f38a009a6ffd9a606d2ba98b096ddd2fdf",
+          "validation_sha256": "e70e7809f4049bfcbf40d3c459bd8e100d7c3393a991444624d31376b0939fbe",
+          "tokenizer_sha256": "104cfbcc4d85f522ad6dd6af187c5a478a11d40fe03b094a9e0a8d1eae03a470",
+          "max_length": 64
+        },
+        "mode": "chunked",
+        "checkpoint_layers": 1,
+        "projection_precision": "bf16",
+        "validation_loss": [
+          5.542887210845947,
+          5.408815383911133
+        ],
+        "fixed_training_loss": [
+          5.543398380279541,
+          5.142289638519287
+        ],
+        "audits": [
+          {
+            "strict_loss_check_passed": true,
+            "reference_loss": 5.577329635620117,
+            "strict_logit_check_passed": true,
+            "logit_violations": 0,
+            "logits_relative_l2": 6.439397015611803e-09,
+            "logits_max_abs": 5.960464477539063e-08,
+            "gradients_max_abs": 2.3865140974521637e-09,
+            "strict_gradient_check_passed": true,
+            "gradient_failures": {},
+            "loss": 5.577329635620117
+          },
+          {
+            "strict_loss_check_passed": true,
+            "reference_loss": 5.197592258453369,
+            "strict_logit_check_passed": true,
+            "logit_violations": 0,
+            "logits_relative_l2": 0.0,
+            "logits_max_abs": 0.0,
+            "gradients_max_abs": 5.587935447692871e-08,
+            "strict_gradient_check_passed": true,
+            "gradient_failures": {},
+            "loss": 5.1975932121276855
+          }
+        ],
+        "reference_retained_during_training": true,
+        "quantization": {
+          "format": "onnax-row-major-nf4-v1",
+          "codebook": [
+            -1.0,
+            -0.6961928009986877,
+            -0.5250730514526367,
+            -0.39491748809814453,
+            -0.28444138169288635,
+            -0.18477343022823334,
+            -0.09105003625154495,
+            0.0,
+            0.07958029955625534,
+            0.16093020141124725,
+            0.24611230194568634,
+            0.33791524171829224,
+            0.44070982933044434,
+            0.5626170039176941,
+            0.7229568362236023,
+            1.0
+          ],
+          "packing": "high nibble first; row-major transposed Linear weight",
+          "block_size": 64,
+          "compute_dtype": "bfloat16",
+          "adapter_dtype": "float32",
+          "embedding_dtype": "float32",
+          "lm_head_dtype": "float32",
+          "weights": {
+            "model.layers.0.mlp.down_proj.weight_t": {
+              "packed": "model.layers.0.mlp.down_proj.weight_t.nf4",
+              "scales": "model.layers.0.mlp.down_proj.weight_t.absmax",
+              "shape": [
+                128,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.0.mlp.gate_proj.weight_t": {
+              "packed": "model.layers.0.mlp.gate_proj.weight_t.nf4",
+              "scales": "model.layers.0.mlp.gate_proj.weight_t.absmax",
+              "shape": [
+                64,
+                128
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.0.mlp.up_proj.weight_t": {
+              "packed": "model.layers.0.mlp.up_proj.weight_t.nf4",
+              "scales": "model.layers.0.mlp.up_proj.weight_t.absmax",
+              "shape": [
+                64,
+                128
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.0.self_attn.k_proj.weight_t": {
+              "packed": "model.layers.0.self_attn.k_proj.weight_t.nf4",
+              "scales": "model.layers.0.self_attn.k_proj.weight_t.absmax",
+              "shape": [
+                64,
+                32
+              ],
+              "block_size": 64,
+              "packed_bytes": 1024,
+              "scale_bytes": 128,
+              "original_bytes": 8192
+            },
+            "model.layers.0.self_attn.o_proj.weight_t": {
+              "packed": "model.layers.0.self_attn.o_proj.weight_t.nf4",
+              "scales": "model.layers.0.self_attn.o_proj.weight_t.absmax",
+              "shape": [
+                64,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 2048,
+              "scale_bytes": 256,
+              "original_bytes": 16384
+            },
+            "model.layers.0.self_attn.q_proj.weight_t": {
+              "packed": "model.layers.0.self_attn.q_proj.weight_t.nf4",
+              "scales": "model.layers.0.self_attn.q_proj.weight_t.absmax",
+              "shape": [
+                64,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 2048,
+              "scale_bytes": 256,
+              "original_bytes": 16384
+            },
+            "model.layers.0.self_attn.v_proj.weight_t": {
+              "packed": "model.layers.0.self_attn.v_proj.weight_t.nf4",
+              "scales": "model.layers.0.self_attn.v_proj.weight_t.absmax",
+              "shape": [
+                64,
+                32
+              ],
+              "block_size": 64,
+              "packed_bytes": 1024,
+              "scale_bytes": 128,
+              "original_bytes": 8192
+            },
+            "model.layers.1.mlp.down_proj.weight_t": {
+              "packed": "model.layers.1.mlp.down_proj.weight_t.nf4",
+              "scales": "model.layers.1.mlp.down_proj.weight_t.absmax",
+              "shape": [
+                128,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.1.mlp.gate_proj.weight_t": {
+              "packed": "model.layers.1.mlp.gate_proj.weight_t.nf4",
+              "scales": "model.layers.1.mlp.gate_proj.weight_t.absmax",
+              "shape": [
+                64,
+                128
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.1.mlp.up_proj.weight_t": {
+              "packed": "model.layers.1.mlp.up_proj.weight_t.nf4",
+              "scales": "model.layers.1.mlp.up_proj.weight_t.absmax",
+              "shape": [
+                64,
+                128
+              ],
+              "block_size": 64,
+              "packed_bytes": 4096,
+              "scale_bytes": 512,
+              "original_bytes": 32768
+            },
+            "model.layers.1.self_attn.k_proj.weight_t": {
+              "packed": "model.layers.1.self_attn.k_proj.weight_t.nf4",
+              "scales": "model.layers.1.self_attn.k_proj.weight_t.absmax",
+              "shape": [
+                64,
+                32
+              ],
+              "block_size": 64,
+              "packed_bytes": 1024,
+              "scale_bytes": 128,
+              "original_bytes": 8192
+            },
+            "model.layers.1.self_attn.o_proj.weight_t": {
+              "packed": "model.layers.1.self_attn.o_proj.weight_t.nf4",
+              "scales": "model.layers.1.self_attn.o_proj.weight_t.absmax",
+              "shape": [
+                64,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 2048,
+              "scale_bytes": 256,
+              "original_bytes": 16384
+            },
+            "model.layers.1.self_attn.q_proj.weight_t": {
+              "packed": "model.layers.1.self_attn.q_proj.weight_t.nf4",
+              "scales": "model.layers.1.self_attn.q_proj.weight_t.absmax",
+              "shape": [
+                64,
+                64
+              ],
+              "block_size": 64,
+              "packed_bytes": 2048,
+              "scale_bytes": 256,
+              "original_bytes": 16384
+            },
+            "model.layers.1.self_attn.v_proj.weight_t": {
+              "packed": "model.layers.1.self_attn.v_proj.weight_t.nf4",
+              "scales": "model.layers.1.self_attn.v_proj.weight_t.absmax",
+              "shape": [
+                64,
+                32
+              ],
+              "block_size": 64,
+              "packed_bytes": 1024,
+              "scale_bytes": 128,
+              "original_bytes": 8192
+            }
+          },
+          "original_decoder_bytes": 294912,
+          "packed_decoder_bytes": 41472
+        },
+        "provider": "mlx",
+        "segment_target_nodes": null,
+        "ort_graph_optimization": "disabled",
+        "fused_ops": true,
+        "frozen_buffers_unchanged": true,
+        "cpu_fallback_disabled": true,
+        "mlx_compile_disabled": true,
+        "lut4_fusion_disabled": false,
+        "library": "/tmp/onnax-ep-cache-budget-lib/libonnxruntime_mlx_ep.dylib",
+        "library_sha256": "70f8f08daff513aee8dcfd7cf9634c0fbe07160e5795ce223e721ffc84db2c4a",
+        "artifact_bytes": {
+          "adapter.npz": 9654,
+          "body.onnx": 111671,
+          "checkpoint_plan.json": 3853,
+          "decoder_0_1_backward.onnx": 101908,
+          "decoder_0_1_forward.onnx": 69294,
+          "decoder_1_2_backward.onnx": 94663,
+          "decoder_1_2_forward.onnx": 62314,
+          "forward.onnx": 120467,
+          "head_forward.onnx": 15119,
+          "head_gradient.onnx": 19996,
+          "head_loss.onnx": 15960,
+          "interface.json": 7163,
+          "prefix_forward.onnx": 21316,
+          "quantization.json": 5482,
+          "suffix_backward.onnx": 25335,
+          "suffix_forward.onnx": 21454,
+          "tokenizer.json": 4653,
+          "tokenizer_config.json": 218,
+          "weights-adb6abf9fab968cdfc3a271cf3a874f4a6e971cfce9b17f28f8f469254419745.data": 131072
+        },
+        "forward_nodes": 159,
+        "adapter_parameter_bytes": 7168,
+        "requested_audits": {
+          "reference": true,
+          "strict_reference": true,
+          "peft": false,
+          "fp64": false,
+          "stable_reference": false
+        }
+      },
+      "execution": {
+        "command": [
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.sft",
+          "--output-dir",
+          "/tmp/onnax-fused-final/bf16",
+          "--steps",
+          "100",
+          "--mode",
+          "chunked",
+          "--checkpoint-layers",
+          "1",
+          "--provider",
+          "mlx",
+          "--library",
+          "/tmp/onnax-ep-cache-budget-lib/libonnxruntime_mlx_ep.dylib",
+          "--nf4",
+          "--fused-ops",
+          "--strict-reference",
+          "--evaluate-train",
+          "--projection-precision",
+          "bf16"
+        ],
+        "cwd": "/Users/justinc/Documents/GitHub/onnax",
+        "status": "complete",
+        "physical_memory_budget_bytes": 25769803776,
+        "minimum_free_disk_bytes": 5368709120,
+        "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+        "observation_errors": 0,
+        "temporary_directory": "/tmp/onnax-fused-final/bf16.guard/worker-tmp-rskqza_3",
+        "pid": 87796,
+        "started": "2026-11-01T18:53:37.835701+00:00",
+        "returncode": 0,
+        "finished": "2026-11-01T18:53:57.919342+00:00",
+        "temporary_files_removed": true,
+        "physical_footprint_peak_bytes": 520963752,
+        "worker_log_sha256": "c8cbcc4036b8330464b1e05f97b3c1b5bbdc02ea9ef318d8eb7cadb762c46be2"
+      },
+      "retained_forward_operators": {
+        "Gather": 3,
+        "Cast": 1,
+        "Unsqueeze": 2,
+        "Shape": 12,
+        "Concat": 10,
+        "Expand": 1,
+        "RMSNormalization": 9,
+        "MatMulBF16_64_64_64": 4,
+        "Constant": 40,
+        "Reshape": 26,
+        "MatMulBF16": 9,
+        "Slice": 9,
+        "Mul": 6,
+        "Add": 8,
+        "MatMulBF16_64_32_64": 4,
+        "RotaryEmbedding": 4,
+        "Attention": 2,
+        "MatMulBF16_64_128_64": 4,
+        "Swish": 2,
+        "MatMulBF16_128_64_64": 2,
+        "Transpose": 1
+      },
+      "exported_module_sha256": {
+        "body.onnx": "254b449ec38126a348c0fc6130e6a719c8b7b8f680c82b14b0def17b7fa9abc2",
+        "decoder_0_1_backward.onnx": "89a7c82037ab37e304efc3667e3418971d6b609f4c2f9345900a48083c9478ea",
+        "decoder_0_1_forward.onnx": "109eb8fddc29df01d1e3879f8c7f02da681f44289a56f5b8aee6192df29da24e",
+        "decoder_1_2_backward.onnx": "0853b0415694ebe65ce6f4a69d8f8d6cccbed38b605737e6ad53ba0447167fac",
+        "decoder_1_2_forward.onnx": "e6f39978680e7487e2374b143ae88cf11ea1913a21583995cbeacafb3ee02583",
+        "forward.onnx": "6d036d2250d44d162884e32255910508d87deb8bfb3799da06040f53eb34c080",
+        "head_forward.onnx": "a9c591134c0aaaa21d443e90d568cba816433be58474c27c08ca84274ebafb14",
+        "head_gradient.onnx": "310b6d68b18fb9e84de2f939b5743cc9fba4bc7ad2175b3bcca22afb9fef32a2",
+        "head_loss.onnx": "0143b226f4522d19ddf3ec3c0aee0605754955d265bd78065d79c6f62a045048",
+        "prefix_forward.onnx": "196d5073d3fb87de5ad73f35d7d91c21263ef49dbd99957fd503fa4fffb0c320",
+        "suffix_backward.onnx": "14715a98d32bf7eafa38d61c189bb5f427bbf24fa94b9b88b4d41623bc225190",
+        "suffix_forward.onnx": "86d495d3c02f1ded89ce9bf0dd40d455265024135df3e904ebf51d9ee2fa21bc"
+      }
+    }
+  },
+  "recovery": {
+    "report": {
+      "step": 100,
+      "input_shape": [
+        1,
+        8
+      ],
+      "input_sha256": "035e26423a2d93524151e02404754ccbba72e1d4cea53efad7b87cc54a02f984",
+      "padding_tokens": 0,
+      "forward_output_digests": [
+        {
+          "dtype": "float32",
+          "shape": [
+            1,
+            8,
+            256
+          ],
+          "sha256": "496ad1aaaaeb7893aef998d2b87c9c4400a46675f7c84aa88859eb7533c38c7e"
+        },
+        {
+          "dtype": "float32",
+          "shape": [
+            1,
+            8,
+            64
+          ],
+          "sha256": "4535b463fa874d64d13712fe5edc012447de762bf1b4c2a57646798a399077ad"
+        }
+      ],
+      "adapter_tensors": 8,
+      "checkpoint_tensors": 9,
+      "frozen_initializers": 43,
+      "adapter_bitwise_equal": true,
+      "checkpoint_bitwise_equal": true,
+      "optimizer_bitwise_equal": true,
+      "scheduler_equal": true,
+      "frozen_hashes_equal": true,
+      "export_load_outputs_bitwise_equal": true,
+      "provider": "mlx",
+      "ort_memory_reuse": null,
+      "export_load_loss_gradients_bitwise_equal": true,
+      "exported_gradient_tensors": 8,
+      "checked_onnx_modules": {
+        "fp32": 12,
+        "bf16": 12
+      }
+    },
+    "execution": {
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.sft",
+        "--output-dir",
+        "/tmp/onnax-fused-final/fp32-resume",
+        "--steps",
+        "100",
+        "--mode",
+        "chunked",
+        "--checkpoint-layers",
+        "1",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-ep-cache-budget-lib/libonnxruntime_mlx_ep.dylib",
+        "--nf4",
+        "--fused-ops",
+        "--strict-reference",
+        "--evaluate-train",
+        "--resume",
+        "/tmp/onnax-fused-final/fp32/checkpoint-50"
+      ],
+      "cwd": "/Users/justinc/Documents/GitHub/onnax",
+      "status": "complete",
+      "physical_memory_budget_bytes": 25769803776,
+      "minimum_free_disk_bytes": 5368709120,
+      "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+      "observation_errors": 0,
+      "temporary_directory": "/tmp/onnax-fused-final/fp32-resume.guard/worker-tmp-h64sadbj",
+      "pid": 87788,
+      "started": "2026-11-01T18:53:27.777176+00:00",
+      "returncode": 0,
+      "finished": "2026-11-01T18:53:37.828502+00:00",
+      "temporary_files_removed": true,
+      "physical_footprint_peak_bytes": 507020968,
+      "worker_log_sha256": "078a05e081b1555e28a2da33d8458dc54989d4608b72d1d04e9b830bd69fa6ff"
+    }
+  },
+  "context_4096": {
+    "4k-decomposed": {
+      "report": {
+        "mode": "chunked",
+        "checkpoint_layers": 4,
+        "save_activations": false,
+        "mlx_memory_limit_bytes": 21474836480,
+        "provider": "mlx",
+        "torch_chunked_head": false,
+        "mps_fallback_enabled": false,
+        "attention_implementation": "decomposed",
+        "fused_ops": false,
+        "synchronization": "synchronous CPU/ORT execution",
+        "segment_target_nodes": null,
+        "lut4_fusion_disabled": false,
+        "mlx_compile_disabled": true,
+        "real": true,
+        "weight_values": "nf4_reconstructed_fp32",
+        "projection_precision": "fp32",
+        "gradient_and_optimizer_dtype": "float32",
+        "base_storage": "packed_nf4_decoder",
+        "warmup": 1,
+        "samples": 3,
+        "losses": [
+          4.485726833343506,
+          4.329052448272705,
+          4.039088249206543,
+          3.814532518386841
+        ],
+        "batch": 1,
+        "sequence": 4096,
+        "valid_shifted_tokens": 4095,
+        "input_ids_sha256": "660484aa01216cb842ae8031a7946e3228916d51a9d9d5a65610d7c395b0f7b2",
+        "input_pattern": "Prefix of the first naturally long corpus example",
+        "head_chunk_size": 128,
+        "full_logits_bytes": 2489319424,
+        "chunk_logits_bytes": 77791232,
+        "initialization_seconds": 160.7461172080366,
+        "timings_ms": {
+          "forward_and_loss": {
+            "median": 9160.439416009467,
+            "p95": 9331.64915375528
+          },
+          "backward": {
+            "median": 15460.176916967612,
+            "p95": 27838.063928933112
+          },
+          "process_cpu": {
+            "median": 9938.690000000008,
+            "p95": 20091.558499999992
+          },
+          "adamw": {
+            "median": 14.968667004723102,
+            "p95": 30.430516676278785
+          },
+          "step": {
+            "median": 24635.584999981802,
+            "p95": 37200.143599364674
+          },
+          "onnx_execution": {
+            "median": 24592.219039797783,
+            "p95": 37119.374875788344
+          },
+          "head_loss_gradient_execution": {
+            "median": 4203.579248918686,
+            "p95": 4370.002148556523
+          },
+          "body_execution": {
+            "median": 20388.639790879097,
+            "p95": 32749.37272723182
+          }
+        },
+        "timing_samples_ms": [
+          {
+            "forward_and_loss": 9350.672457949258,
+            "backward": 29213.384708040394,
+            "process_cpu": 21219.654999999988,
+            "adamw": 32.148499973118305,
+            "step": 38596.20566596277,
+            "onnx_execution": 38511.281079787295,
+            "head_loss_gradient_execution": 4388.493581849616,
+            "body_execution": 34122.78749793768
+          },
+          {
+            "forward_and_loss": 9160.439416009467,
+            "backward": 15460.176916967612,
+            "process_cpu": 9938.690000000008,
+            "adamw": 14.968667004723102,
+            "step": 24635.584999981802,
+            "onnx_execution": 24592.219039797783,
+            "head_loss_gradient_execution": 4203.579248918686,
+            "body_execution": 20388.639790879097
+          },
+          {
+            "forward_and_loss": 7627.794249972794,
+            "backward": 13551.11704103183,
+            "process_cpu": 6021.877999999987,
+            "adamw": 5.8589999680407345,
+            "step": 21184.770290972665,
+            "onnx_execution": 21149.208126182202,
+            "head_loss_gradient_execution": 3506.726502208039,
+            "body_execution": 17642.481623974163
+          }
+        ],
+        "effective_tokens_per_second": 166.22296568167653,
+        "peak_rss_bytes": 6095290368,
+        "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+        "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+        "parameter_bytes": 2293760,
+        "threads": {
+          "torch": 1,
+          "ort_intra": 1,
+          "ort_inter": 1
+        },
+        "thread_environment": {
+          "OMP_NUM_THREADS": null,
+          "OPENBLAS_NUM_THREADS": null,
+          "MKL_NUM_THREADS": null,
+          "VECLIB_MAXIMUM_THREADS": null
+        },
+        "ort_optimizer": "disabled",
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "hardware": {
+          "cpu": "Apple M1 Max",
+          "logical_cores": 10,
+          "physical_memory_bytes": 34359738368
+        },
+        "versions": {
+          "torch": "2.15.0",
+          "transformers": "5.22.1",
+          "onnxruntime": "1.31.1",
+          "onnxscript": "0.7.2",
+          "mobius-onnx": "0.1.0"
+        },
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 25332652632,
+          "lifetime_peak_bytes": 25460594880,
+          "current_resident_bytes": 570687488,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_allocator": {
+          "active_bytes": 1782581032,
+          "cache_bytes": 19578254216,
+          "peak_bytes": 18774018164
+        },
+        "native_construction": {
+          "session_0": {
+            "factory_seconds": 0.07669100002385676,
+            "segments": 1,
+            "source": "gradient.onnx"
+          },
+          "session_1": {
+            "factory_seconds": 0.06096004199935123,
+            "segments": 1,
+            "source": "prefix_forward.onnx"
+          },
+          "session_2": {
+            "factory_seconds": 0.0549817499704659,
+            "segments": 1,
+            "source": "decoder_0_4_forward.onnx"
+          },
+          "session_3": {
+            "factory_seconds": 0.2945454999571666,
+            "segments": 1,
+            "source": "decoder_0_4_backward.onnx"
+          },
+          "session_4": {
+            "factory_seconds": 0.05065291601931676,
+            "segments": 1,
+            "source": "decoder_4_8_forward.onnx"
+          },
+          "session_5": {
+            "factory_seconds": 0.25763062498299405,
+            "segments": 1,
+            "source": "decoder_4_8_backward.onnx"
+          },
+          "session_6": {
+            "factory_seconds": 0.050070583005435765,
+            "segments": 1,
+            "source": "decoder_8_12_forward.onnx"
+          },
+          "session_7": {
+            "factory_seconds": 0.27187654201406986,
+            "segments": 1,
+            "source": "decoder_8_12_backward.onnx"
+          },
+          "session_8": {
+            "factory_seconds": 0.054133167024701834,
+            "segments": 1,
+            "source": "decoder_12_16_forward.onnx"
+          },
+          "session_9": {
+            "factory_seconds": 0.26340662501752377,
+            "segments": 1,
+            "source": "decoder_12_16_backward.onnx"
+          },
+          "session_10": {
+            "factory_seconds": 0.05958079098490998,
+            "segments": 1,
+            "source": "decoder_16_20_forward.onnx"
+          },
+          "session_11": {
+            "factory_seconds": 0.28100829100003466,
+            "segments": 1,
+            "source": "decoder_16_20_backward.onnx"
+          },
+          "session_12": {
+            "factory_seconds": 0.05708895798306912,
+            "segments": 1,
+            "source": "decoder_20_24_forward.onnx"
+          },
+          "session_13": {
+            "factory_seconds": 0.26892008300637826,
+            "segments": 1,
+            "source": "decoder_20_24_backward.onnx"
+          },
+          "session_14": {
+            "factory_seconds": 0.05608558299718425,
+            "segments": 1,
+            "source": "decoder_24_28_forward.onnx"
+          },
+          "session_15": {
+            "factory_seconds": 0.2769663750077598,
+            "segments": 1,
+            "source": "decoder_24_28_backward.onnx"
+          },
+          "session_16": {
+            "factory_seconds": 0.0009616250172257423,
+            "segments": 1,
+            "source": "suffix_forward.onnx"
+          },
+          "session_17": {
+            "factory_seconds": 0.0025212919572368264,
+            "segments": 1,
+            "source": "suffix_backward.onnx"
+          }
+        },
+        "cpu_fallback_disabled": true,
+        "library": "/tmp/onnax-ep-cache-budget-lib/libonnxruntime_mlx_ep.dylib",
+        "library_sha256": "70f8f08daff513aee8dcfd7cf9634c0fbe07160e5795ce223e721ffc84db2c4a",
+        "head_forward_session_created": false,
+        "initializer_bytes_by_session": {
+          "prefix_forward": 622329856,
+          "decoder_0_4_forward": 56398128,
+          "decoder_0_4_backward": 56398156,
+          "decoder_4_8_forward": 35426604,
+          "decoder_4_8_backward": 35426632,
+          "decoder_8_12_forward": 35426604,
+          "decoder_8_12_backward": 35426632,
+          "decoder_12_16_forward": 35426604,
+          "decoder_12_16_backward": 35426632,
+          "decoder_16_20_forward": 35426604,
+          "decoder_16_20_backward": 35426632,
+          "decoder_20_24_forward": 35426604,
+          "decoder_20_24_backward": 35426632,
+          "decoder_24_28_forward": 35426604,
+          "decoder_24_28_backward": 35426632,
+          "suffix_forward": 4108,
+          "suffix_backward": 4132,
+          "head_backward": 622329900
+        },
+        "initializer_scope": "Logical top-level initializer bytes for each execution session",
+        "decoder_storage_bytes": {
+          "original": 1761607680,
+          "packed": 247726080
+        },
+        "nodes": {
+          "prefix_forward": 1,
+          "decoder_0_4_forward": 499,
+          "decoder_0_4_backward": 4710,
+          "decoder_4_8_forward": 484,
+          "decoder_4_8_backward": 4695,
+          "decoder_8_12_forward": 484,
+          "decoder_8_12_backward": 4695,
+          "decoder_12_16_forward": 484,
+          "decoder_12_16_backward": 4695,
+          "decoder_16_20_forward": 484,
+          "decoder_16_20_backward": 4695,
+          "decoder_20_24_forward": 484,
+          "decoder_20_24_backward": 4695,
+          "decoder_24_28_forward": 484,
+          "decoder_24_28_backward": 4695,
+          "suffix_forward": 6,
+          "suffix_backward": 97,
+          "head_backward": 56
+        },
+        "logical_saved_activation_bytes": 205520896,
+        "saved_activation_count": 0,
+        "input_view_median_us": 76.91700011491776,
+        "input_view_scope": "Host data-input preparation; adapter preparation is included in forward",
+        "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
+      },
+      "execution": {
+        "command": [
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-c",
+          "from examples.huggingface.benchmark import measure; import json; r=measure('chunked',real=True,samples=3,warmup=1,batch_size=1,sequence_length=4096,chunk_size=128,nf4=True,provider='mlx',library='/tmp/onnax-ep-cache-budget-lib/libonnxruntime_mlx_ep.dylib',checkpoint_layers=4,train_file='/tmp/onnax-qwen-longalpaca-4k-with-benchmark/benchmark.jsonl',mlx_memory_limit_bytes=20*1024**3,progress_every=1,fused_ops=False);json.dump(r,open('/tmp/onnax-fused-acceptance/4k-decomposed.json','w'),indent=2)"
+        ],
+        "cwd": "/Users/justinc/Documents/GitHub/onnax",
+        "status": "complete",
+        "physical_memory_budget_bytes": 25769803776,
+        "minimum_free_disk_bytes": 5368709120,
+        "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+        "observation_errors": 0,
+        "temporary_directory": "/tmp/onnax-fused-acceptance/4k-decomposed.guard/worker-tmp-d3l0tyqi",
+        "pid": 85647,
+        "started": "2026-11-01T18:29:53.005062+00:00",
+        "returncode": 0,
+        "finished": "2026-11-01T18:34:31.950504+00:00",
+        "temporary_files_removed": true,
+        "physical_footprint_peak_bytes": 25460594880,
+        "worker_log_sha256": "fd41d345188f3d55f7ecc9661e20f39673f16b7d446832828bb62813b6b6f72b"
+      }
+    },
+    "4k-fused": {
+      "report": {
+        "mode": "chunked",
+        "checkpoint_layers": 4,
+        "save_activations": false,
+        "mlx_memory_limit_bytes": 21474836480,
+        "provider": "mlx",
+        "torch_chunked_head": false,
+        "mps_fallback_enabled": false,
+        "attention_implementation": "fused",
+        "fused_ops": true,
+        "synchronization": "synchronous CPU/ORT execution",
+        "segment_target_nodes": null,
+        "lut4_fusion_disabled": false,
+        "mlx_compile_disabled": true,
+        "real": true,
+        "weight_values": "nf4_reconstructed_fp32",
+        "projection_precision": "fp32",
+        "gradient_and_optimizer_dtype": "float32",
+        "base_storage": "packed_nf4_decoder",
+        "warmup": 1,
+        "samples": 3,
+        "losses": [
+          4.485727310180664,
+          4.329051494598389,
+          4.039088249206543,
+          3.814532518386841
+        ],
+        "batch": 1,
+        "sequence": 4096,
+        "valid_shifted_tokens": 4095,
+        "input_ids_sha256": "660484aa01216cb842ae8031a7946e3228916d51a9d9d5a65610d7c395b0f7b2",
+        "input_pattern": "Prefix of the first naturally long corpus example",
+        "head_chunk_size": 128,
+        "full_logits_bytes": 2489319424,
+        "chunk_logits_bytes": 77791232,
+        "initialization_seconds": 135.0098304580315,
+        "timings_ms": {
+          "forward_and_loss": {
+            "median": 6946.053416992072,
+            "p95": 7132.993467285996
+          },
+          "backward": {
+            "median": 12210.004707972985,
+            "p95": 12535.239470214583
+          },
+          "process_cpu": {
+            "median": 1386.636999999979,
+            "p95": 1403.663199999991
+          },
+          "adamw": {
+            "median": 2.745708974543959,
+            "p95": 2.842458977829665
+          },
+          "step": {
+            "median": 19366.25479196664,
+            "p95": 19504.783691983903
+          },
+          "onnx_execution": {
+            "median": 19346.034208952915,
+            "p95": 19477.865793101955
+          },
+          "head_loss_gradient_execution": {
+            "median": 3023.98958185222,
+            "p95": 3083.017355512129
+          },
+          "body_execution": {
+            "median": 16256.458211923018,
+            "p95": 16447.317569731968
+          }
+        },
+        "timing_samples_ms": [
+          {
+            "forward_and_loss": 6946.053416992072,
+            "backward": 12571.376666019205,
+            "process_cpu": 1386.636999999979,
+            "adamw": 2.745708974543959,
+            "step": 19520.17579198582,
+            "onnx_execution": 19492.513746896293,
+            "head_loss_gradient_execution": 3023.98958185222,
+            "body_execution": 16468.524165044073
+          },
+          {
+            "forward_and_loss": 7153.764583985321,
+            "backward": 12210.004707972985,
+            "process_cpu": 1405.5549999999926,
+            "adamw": 2.4855000083334744,
+            "step": 19366.25479196664,
+            "onnx_execution": 19346.034208952915,
+            "head_loss_gradient_execution": 3089.575997029897,
+            "body_execution": 16256.458211923018
+          },
+          {
+            "forward_and_loss": 6711.089624965098,
+            "backward": 11775.03225003602,
+            "process_cpu": 1304.425000000009,
+            "adamw": 2.8532089781947434,
+            "step": 18488.975083979312,
+            "onnx_execution": 18475.18341790419,
+            "head_loss_gradient_execution": 2886.8762098718435,
+            "body_execution": 15588.307208032347
+          }
+        ],
+        "effective_tokens_per_second": 211.4502800871264,
+        "peak_rss_bytes": 6229131264,
+        "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+        "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+        "parameter_bytes": 2293760,
+        "threads": {
+          "torch": 1,
+          "ort_intra": 1,
+          "ort_inter": 1
+        },
+        "thread_environment": {
+          "OMP_NUM_THREADS": null,
+          "OPENBLAS_NUM_THREADS": null,
+          "MKL_NUM_THREADS": null,
+          "VECLIB_MAXIMUM_THREADS": null
+        },
+        "ort_optimizer": "disabled",
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "hardware": {
+          "cpu": "Apple M1 Max",
+          "logical_cores": 10,
+          "physical_memory_bytes": 34359738368
+        },
+        "versions": {
+          "torch": "2.15.0",
+          "transformers": "5.22.1",
+          "onnxruntime": "1.31.1",
+          "onnxscript": "0.7.2",
+          "mobius-onnx": "0.1.0"
+        },
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 19130456688,
+          "lifetime_peak_bytes": 19130456688,
+          "current_resident_bytes": 5227495424,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_allocator": {
+          "active_bytes": 1782581423,
+          "cache_bytes": 13049114385,
+          "peak_bytes": 10779101587
+        },
+        "native_construction": {
+          "session_0": {
+            "factory_seconds": 0.06633670901646838,
+            "segments": 1,
+            "source": "gradient.onnx"
+          },
+          "session_1": {
+            "factory_seconds": 0.05726837500697002,
+            "segments": 1,
+            "source": "prefix_forward.onnx"
+          },
+          "session_2": {
+            "factory_seconds": 0.035822250007186085,
+            "segments": 1,
+            "source": "decoder_0_4_forward.onnx"
+          },
+          "session_3": {
+            "factory_seconds": 0.12983495800290257,
+            "segments": 1,
+            "source": "decoder_0_4_backward.onnx"
+          },
+          "session_4": {
+            "factory_seconds": 0.03588716697413474,
+            "segments": 1,
+            "source": "decoder_4_8_forward.onnx"
+          },
+          "session_5": {
+            "factory_seconds": 0.12546179100172594,
+            "segments": 1,
+            "source": "decoder_4_8_backward.onnx"
+          },
+          "session_6": {
+            "factory_seconds": 0.034565582987852395,
+            "segments": 1,
+            "source": "decoder_8_12_forward.onnx"
+          },
+          "session_7": {
+            "factory_seconds": 0.1307462920085527,
+            "segments": 1,
+            "source": "decoder_8_12_backward.onnx"
+          },
+          "session_8": {
+            "factory_seconds": 0.03635474998736754,
+            "segments": 1,
+            "source": "decoder_12_16_forward.onnx"
+          },
+          "session_9": {
+            "factory_seconds": 0.12286758300615475,
+            "segments": 1,
+            "source": "decoder_12_16_backward.onnx"
+          },
+          "session_10": {
+            "factory_seconds": 0.033112167031504214,
+            "segments": 1,
+            "source": "decoder_16_20_forward.onnx"
+          },
+          "session_11": {
+            "factory_seconds": 0.12950929097132757,
+            "segments": 1,
+            "source": "decoder_16_20_backward.onnx"
+          },
+          "session_12": {
+            "factory_seconds": 0.03516937495442107,
+            "segments": 1,
+            "source": "decoder_20_24_forward.onnx"
+          },
+          "session_13": {
+            "factory_seconds": 0.1348659589421004,
+            "segments": 1,
+            "source": "decoder_20_24_backward.onnx"
+          },
+          "session_14": {
+            "factory_seconds": 0.03663079102989286,
+            "segments": 1,
+            "source": "decoder_24_28_forward.onnx"
+          },
+          "session_15": {
+            "factory_seconds": 0.12854412500746548,
+            "segments": 1,
+            "source": "decoder_24_28_backward.onnx"
+          },
+          "session_16": {
+            "factory_seconds": 0.0012752090115100145,
+            "segments": 1,
+            "source": "suffix_forward.onnx"
+          },
+          "session_17": {
+            "factory_seconds": 0.001271583023481071,
+            "segments": 1,
+            "source": "suffix_backward.onnx"
+          }
+        },
+        "cpu_fallback_disabled": true,
+        "library": "/tmp/onnax-ep-cache-budget-lib/libonnxruntime_mlx_ep.dylib",
+        "library_sha256": "70f8f08daff513aee8dcfd7cf9634c0fbe07160e5795ce223e721ffc84db2c4a",
+        "head_forward_session_created": false,
+        "initializer_bytes_by_session": {
+          "prefix_forward": 622329856,
+          "decoder_0_4_forward": 56397888,
+          "decoder_0_4_backward": 56398105,
+          "decoder_4_8_forward": 35426360,
+          "decoder_4_8_backward": 35426585,
+          "decoder_8_12_forward": 35426360,
+          "decoder_8_12_backward": 35426585,
+          "decoder_12_16_forward": 35426360,
+          "decoder_12_16_backward": 35426585,
+          "decoder_16_20_forward": 35426360,
+          "decoder_16_20_backward": 35426585,
+          "decoder_20_24_forward": 35426360,
+          "decoder_20_24_backward": 35426585,
+          "decoder_24_28_forward": 35426360,
+          "decoder_24_28_backward": 35426585,
+          "suffix_forward": 4096,
+          "suffix_backward": 4108,
+          "head_backward": 622329900
+        },
+        "initializer_scope": "Logical top-level initializer bytes for each execution session",
+        "decoder_storage_bytes": {
+          "original": 1761607680,
+          "packed": 247726080
+        },
+        "nodes": {
+          "prefix_forward": 1,
+          "decoder_0_4_forward": 138,
+          "decoder_0_4_backward": 1720,
+          "decoder_4_8_forward": 128,
+          "decoder_4_8_backward": 1710,
+          "decoder_8_12_forward": 128,
+          "decoder_8_12_backward": 1710,
+          "decoder_12_16_forward": 128,
+          "decoder_12_16_backward": 1710,
+          "decoder_16_20_forward": 128,
+          "decoder_16_20_backward": 1710,
+          "decoder_20_24_forward": 128,
+          "decoder_20_24_backward": 1710,
+          "decoder_24_28_forward": 128,
+          "decoder_24_28_backward": 1710,
+          "suffix_forward": 1,
+          "suffix_backward": 14,
+          "head_backward": 56
+        },
+        "logical_saved_activation_bytes": 153092096,
+        "saved_activation_count": 0,
+        "input_view_median_us": 16.37497916817665,
+        "input_view_scope": "Host data-input preparation; adapter preparation is included in forward",
+        "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
+      },
+      "execution": {
+        "command": [
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-c",
+          "from examples.huggingface.benchmark import measure; import json; r=measure('chunked',real=True,samples=3,warmup=1,batch_size=1,sequence_length=4096,chunk_size=128,nf4=True,provider='mlx',library='/tmp/onnax-ep-cache-budget-lib/libonnxruntime_mlx_ep.dylib',checkpoint_layers=4,train_file='/tmp/onnax-qwen-longalpaca-4k-with-benchmark/benchmark.jsonl',mlx_memory_limit_bytes=20*1024**3,progress_every=1,fused_ops=True);json.dump(r,open('/tmp/onnax-fused-acceptance/4k-fused.json','w'),indent=2)"
+        ],
+        "cwd": "/Users/justinc/Documents/GitHub/onnax",
+        "status": "complete",
+        "physical_memory_budget_bytes": 25769803776,
+        "minimum_free_disk_bytes": 5368709120,
+        "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+        "observation_errors": 0,
+        "temporary_directory": "/tmp/onnax-fused-acceptance/4k-fused.guard/worker-tmp-kkhmsipx",
+        "pid": 86065,
+        "started": "2026-11-01T18:34:31.966865+00:00",
+        "returncode": 0,
+        "finished": "2026-11-01T18:38:12.187530+00:00",
+        "temporary_files_removed": true,
+        "physical_footprint_peak_bytes": 19130456688,
+        "worker_log_sha256": "33dbb407870a45a179f28947c59670475f2144b07f4003dd7c45b327d2d90657"
+      }
+    },
+    "4k-fused-reviewed": {
+      "report": {
+        "mode": "chunked",
+        "checkpoint_layers": 4,
+        "save_activations": false,
+        "mlx_memory_limit_bytes": 21474836480,
+        "provider": "mlx",
+        "torch_chunked_head": false,
+        "mps_fallback_enabled": false,
+        "attention_implementation": "fused",
+        "fused_ops": true,
+        "synchronization": "synchronous CPU/ORT execution",
+        "segment_target_nodes": null,
+        "lut4_fusion_disabled": false,
+        "mlx_compile_disabled": true,
+        "real": true,
+        "weight_values": "nf4_reconstructed_fp32",
+        "projection_precision": "fp32",
+        "gradient_and_optimizer_dtype": "float32",
+        "base_storage": "packed_nf4_decoder",
+        "warmup": 1,
+        "samples": 3,
+        "losses": [
+          4.485727310180664,
+          4.329051494598389,
+          4.039088249206543,
+          3.814532518386841
+        ],
+        "batch": 1,
+        "sequence": 4096,
+        "valid_shifted_tokens": 4095,
+        "input_ids_sha256": "660484aa01216cb842ae8031a7946e3228916d51a9d9d5a65610d7c395b0f7b2",
+        "input_pattern": "Prefix of the first naturally long corpus example",
+        "head_chunk_size": 128,
+        "full_logits_bytes": 2489319424,
+        "chunk_logits_bytes": 77791232,
+        "initialization_seconds": 135.15268775000004,
+        "timings_ms": {
+          "forward_and_loss": {
+            "median": 7744.746416981798,
+            "p95": 7983.118504489539
+          },
+          "backward": {
+            "median": 12206.26975002233,
+            "p95": 13424.940924736438
+          },
+          "process_cpu": {
+            "median": 2992.964000000001,
+            "p95": 3722.3833999999924
+          },
+          "adamw": {
+            "median": 3.618874994572252,
+            "p95": 5.732938076835126
+          },
+          "step": {
+            "median": 19954.6350419987,
+            "p95": 21413.792367302813
+          },
+          "onnx_execution": {
+            "median": 19929.870871303137,
+            "p95": 21386.045713559724
+          },
+          "head_loss_gradient_execution": {
+            "median": 3697.687415231485,
+            "p95": 3824.693542229943
+          },
+          "body_execution": {
+            "median": 16232.183456071652,
+            "p95": 17561.35217132978
+          }
+        },
+        "timing_samples_ms": [
+          {
+            "forward_and_loss": 7715.811875008512,
+            "backward": 11989.741333003622,
+            "process_cpu": 2557.3360000000207,
+            "adamw": 3.251250018365681,
+            "step": 19708.8044580305,
+            "onnx_execution": 19688.16541787237,
+            "head_loss_gradient_execution": 3634.792292956263,
+            "body_execution": 16053.373124916106
+          },
+          {
+            "forward_and_loss": 8009.604291990399,
+            "backward": 13560.348833038006,
+            "process_cpu": 3803.4299999999917,
+            "adamw": 5.967833974864334,
+            "step": 21575.92095900327,
+            "onnx_execution": 21547.8429182549,
+            "head_loss_gradient_execution": 3838.8053341186605,
+            "body_execution": 17709.03758413624
+          },
+          {
+            "forward_and_loss": 7744.746416981798,
+            "backward": 12206.26975002233,
+            "process_cpu": 2992.964000000001,
+            "adamw": 3.618874994572252,
+            "step": 19954.6350419987,
+            "onnx_execution": 19929.870871303137,
+            "head_loss_gradient_execution": 3697.687415231485,
+            "body_execution": 16232.183456071652
+          }
+        ],
+        "effective_tokens_per_second": 205.2154795806196,
+        "peak_rss_bytes": 6233833472,
+        "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+        "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+        "parameter_bytes": 2293760,
+        "threads": {
+          "torch": 1,
+          "ort_intra": 1,
+          "ort_inter": 1
+        },
+        "thread_environment": {
+          "OMP_NUM_THREADS": null,
+          "OPENBLAS_NUM_THREADS": null,
+          "MKL_NUM_THREADS": null,
+          "VECLIB_MAXIMUM_THREADS": null
+        },
+        "ort_optimizer": "disabled",
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "hardware": {
+          "cpu": "Apple M1 Max",
+          "logical_cores": 10,
+          "physical_memory_bytes": 34359738368
+        },
+        "versions": {
+          "torch": "2.15.0",
+          "transformers": "5.22.1",
+          "onnxruntime": "1.31.1",
+          "onnxscript": "0.7.2",
+          "mobius-onnx": "0.1.0"
+        },
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 19137649384,
+          "lifetime_peak_bytes": 19138321104,
+          "current_resident_bytes": 975060992,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_allocator": {
+          "active_bytes": 1782581423,
+          "cache_bytes": 13049114385,
+          "peak_bytes": 10779101587
+        },
+        "native_construction": {
+          "session_0": {
+            "factory_seconds": 0.06458241696236655,
+            "segments": 1,
+            "source": "gradient.onnx"
+          },
+          "session_1": {
+            "factory_seconds": 0.06284949998371303,
+            "segments": 1,
+            "source": "prefix_forward.onnx"
+          },
+          "session_2": {
+            "factory_seconds": 0.04041920800227672,
+            "segments": 1,
+            "source": "decoder_0_4_forward.onnx"
+          },
+          "session_3": {
+            "factory_seconds": 0.12251575000118464,
+            "segments": 1,
+            "source": "decoder_0_4_backward.onnx"
+          },
+          "session_4": {
+            "factory_seconds": 0.03313179197721183,
+            "segments": 1,
+            "source": "decoder_4_8_forward.onnx"
+          },
+          "session_5": {
+            "factory_seconds": 0.1172461659880355,
+            "segments": 1,
+            "source": "decoder_4_8_backward.onnx"
+          },
+          "session_6": {
+            "factory_seconds": 0.03309158299816772,
+            "segments": 1,
+            "source": "decoder_8_12_forward.onnx"
+          },
+          "session_7": {
+            "factory_seconds": 0.1261153329978697,
+            "segments": 1,
+            "source": "decoder_8_12_backward.onnx"
+          },
+          "session_8": {
+            "factory_seconds": 0.038390542031265795,
+            "segments": 1,
+            "source": "decoder_12_16_forward.onnx"
+          },
+          "session_9": {
+            "factory_seconds": 0.119451625039801,
+            "segments": 1,
+            "source": "decoder_12_16_backward.onnx"
+          },
+          "session_10": {
+            "factory_seconds": 0.03861358400899917,
+            "segments": 1,
+            "source": "decoder_16_20_forward.onnx"
+          },
+          "session_11": {
+            "factory_seconds": 0.13158029201440513,
+            "segments": 1,
+            "source": "decoder_16_20_backward.onnx"
+          },
+          "session_12": {
+            "factory_seconds": 0.03640108398394659,
+            "segments": 1,
+            "source": "decoder_20_24_forward.onnx"
+          },
+          "session_13": {
+            "factory_seconds": 0.1180296249804087,
+            "segments": 1,
+            "source": "decoder_20_24_backward.onnx"
+          },
+          "session_14": {
+            "factory_seconds": 0.03408658300759271,
+            "segments": 1,
+            "source": "decoder_24_28_forward.onnx"
+          },
+          "session_15": {
+            "factory_seconds": 0.11829012504313141,
+            "segments": 1,
+            "source": "decoder_24_28_backward.onnx"
+          },
+          "session_16": {
+            "factory_seconds": 0.0011435409542173147,
+            "segments": 1,
+            "source": "suffix_forward.onnx"
+          },
+          "session_17": {
+            "factory_seconds": 0.0009975829743780196,
+            "segments": 1,
+            "source": "suffix_backward.onnx"
+          }
+        },
+        "cpu_fallback_disabled": true,
+        "library": "/tmp/onnax-ep-cache-budget-lib/libonnxruntime_mlx_ep.dylib",
+        "library_sha256": "70f8f08daff513aee8dcfd7cf9634c0fbe07160e5795ce223e721ffc84db2c4a",
+        "head_forward_session_created": false,
+        "initializer_bytes_by_session": {
+          "prefix_forward": 622329856,
+          "decoder_0_4_forward": 56397888,
+          "decoder_0_4_backward": 56398105,
+          "decoder_4_8_forward": 35426360,
+          "decoder_4_8_backward": 35426585,
+          "decoder_8_12_forward": 35426360,
+          "decoder_8_12_backward": 35426585,
+          "decoder_12_16_forward": 35426360,
+          "decoder_12_16_backward": 35426585,
+          "decoder_16_20_forward": 35426360,
+          "decoder_16_20_backward": 35426585,
+          "decoder_20_24_forward": 35426360,
+          "decoder_20_24_backward": 35426585,
+          "decoder_24_28_forward": 35426360,
+          "decoder_24_28_backward": 35426585,
+          "suffix_forward": 4096,
+          "suffix_backward": 4108,
+          "head_backward": 622329900
+        },
+        "initializer_scope": "Logical top-level initializer bytes for each execution session",
+        "decoder_storage_bytes": {
+          "original": 1761607680,
+          "packed": 247726080
+        },
+        "nodes": {
+          "prefix_forward": 1,
+          "decoder_0_4_forward": 138,
+          "decoder_0_4_backward": 1724,
+          "decoder_4_8_forward": 128,
+          "decoder_4_8_backward": 1714,
+          "decoder_8_12_forward": 128,
+          "decoder_8_12_backward": 1714,
+          "decoder_12_16_forward": 128,
+          "decoder_12_16_backward": 1714,
+          "decoder_16_20_forward": 128,
+          "decoder_16_20_backward": 1714,
+          "decoder_20_24_forward": 128,
+          "decoder_20_24_backward": 1714,
+          "decoder_24_28_forward": 128,
+          "decoder_24_28_backward": 1714,
+          "suffix_forward": 1,
+          "suffix_backward": 14,
+          "head_backward": 56
+        },
+        "logical_saved_activation_bytes": 153092096,
+        "saved_activation_count": 0,
+        "input_view_median_us": 24.374981876462698,
+        "input_view_scope": "Host data-input preparation; adapter preparation is included in forward",
+        "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries",
+        "source_commit": "bcb373f"
+      },
+      "execution": {
+        "command": [
+          ".venv/bin/python",
+          "/tmp/onnax-fused-reviewed-benchmark.py"
+        ],
+        "cwd": "/Users/justinc/Documents/GitHub/onnax",
+        "status": "complete",
+        "physical_memory_budget_bytes": 25769803776,
+        "minimum_free_disk_bytes": 5368709120,
+        "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+        "observation_errors": 0,
+        "temporary_directory": "/tmp/onnax-fused-acceptance/4k-fused-reviewed.guard/worker-tmp-vb5z1t_5",
+        "pid": 87399,
+        "started": "2026-11-01T18:48:36.919664+00:00",
+        "returncode": 0,
+        "finished": "2026-11-01T18:52:20.232727+00:00",
+        "temporary_files_removed": true,
+        "physical_footprint_peak_bytes": 19138321104,
+        "worker_log_sha256": "a573fbec59ffe9c78c46674950d25dfd7d454b04bc2e50eaabcfa2ff816c515c"
+      }
+    }
+  },
+  "measurement_scope": {
+    "warmup_updates": 1,
+    "timed_updates": 3,
+    "timing_selection": "Reviewed fused build at bcb373f; initial fused smoke retained separately",
+    "process_memory": "macOS kernel peak physical footprint includes construction, host arrays and native runtime",
+    "mlx_allocator_limit_bytes": 21474836480,
+    "idle_cache_limit_environment": null,
+    "native_compilation": "disabled",
+    "ort_graph_optimizer": "disabled",
+    "optimizer": "External CPU FP32 AdamW",
+    "data": "Same pinned 4096-token input in all three runs"
+  },
+  "local_full_suite": {
+    "passed": 2470,
+    "skipped": 65,
+    "existing_failure": {
+      "test": "tests/test_qwen_bf16.py::test_qwen_bf16_forward_gradients_and_updates[fp32-storage-False]",
+      "assertion": "step 5: model.layers.0.self_attn.q_proj.lora.A parameter",
+      "runtime": "ONNX ReferenceEvaluator versus PyTorch",
+      "baseline_reproduction_commit": "02d2311",
+      "same_failure_on_baseline": true
+    }
+  },
+  "publication_script": "import collections,datetime,hashlib,json,math,subprocess\nfrom pathlib import Path\nimport numpy as np\nimport onnx\nroot=Path('/Users/justinc/Documents/GitHub/onnax')\nrun=Path('/tmp/onnax-fused-final')\nbench=Path('/tmp/onnax-fused-acceptance')\ndef read(p):return json.loads(p.read_text())\ndef digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()\ndef guard(p):\n r=read(p/'execution.json')\n assert r['status']=='complete' and r['returncode']==0 and r['temporary_files_removed']\n observations=r.pop('observations')\n r['physical_footprint_peak_bytes']=max(x['peak_bytes'] for x in observations)\n r['worker_log_sha256']=digest(p/'worker.log')\n return r\ntraining={}\nfor precision in ['fp32','bf16']:\n r=read(run/precision/'report.json')\n assert r['steps']==100 and r['fused_ops'] and r['frozen_buffers_unchanged']\n assert r['requested_audits']['strict_reference']\n for a in r['audits']:\n  assert all(a[k] for k in ['strict_loss_check_passed','strict_logit_check_passed','strict_gradient_check_passed'])\n for key in ['fixed_training_loss','validation_loss']:\n  assert all(math.isfinite(x) for x in r[key]) and r[key][1]<r[key][0]\n counts=collections.Counter(n.op_type for n in onnx.load(run/precision/'export/forward.onnx').graph.node)\n assert {'Attention','RMSNormalization','RotaryEmbedding','Swish'} <= counts.keys()\n training[precision]={'report':r,'execution':guard(run/(precision+'.guard')),'retained_forward_operators':dict(counts),'exported_module_sha256':{p.name:digest(p) for p in sorted((run/precision/'export').glob('*.onnx'))}}\nreplay=read(run/'replay.json')\nassert all(replay[k] for k in ['adapter_bitwise_equal','optimizer_bitwise_equal','scheduler_equal','frozen_hashes_equal','export_load_outputs_bitwise_equal','export_load_loss_gradients_bitwise_equal'])\nmeasurements={}\nfor name in ['4k-decomposed','4k-fused','4k-fused-reviewed']:\n r=read(bench/(name+'.json'))\n assert r['samples']==3 and r['warmup']==1 and len(r['losses'])==4\n assert all(math.isfinite(x) for x in r['losses'])\n measurements[name]={'report':r,'execution':guard(bench/(name+'.guard'))}\na=measurements['4k-decomposed']['report'];b=measurements['4k-fused-reviewed']['report']\nfor key in ['input_ids_sha256','sequence','batch','head_chunk_size','checkpoint_layers','parameter_bytes','library_sha256','projection_precision','versions','threads','hardware','decoder_storage_bytes','valid_shifted_tokens','weight_values','base_storage','gradient_and_optimizer_dtype','ort_optimizer','mlx_compile_disabled','mlx_memory_limit_bytes','cpu_fallback_disabled']:\n assert a[key]==b[key],key\nnp.testing.assert_allclose(a['losses'],b['losses'],rtol=1e-6,atol=1e-6)\nfiles=[*root.glob('src/onnax/**/*.py'),*root.glob('examples/huggingface/*.py'),*root.glob('examples/lora/*.py')]\nresult={'version':1,'created_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'reviewed_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),'source_sha256':{str(p.relative_to(root)):digest(p) for p in sorted(files)},'training':training,'recovery':{'report':replay,'execution':guard(run/'fp32-resume.guard')},'context_4096':measurements,'measurement_scope':{'warmup_updates':1,'timed_updates':3,'timing_selection':'Reviewed fused build at bcb373f; initial fused smoke retained separately','process_memory':'macOS kernel peak physical footprint includes construction, host arrays and native runtime','mlx_allocator_limit_bytes':20*1024**3,'idle_cache_limit_environment':None,'native_compilation':'disabled','ort_graph_optimizer':'disabled','optimizer':'External CPU FP32 AdamW','data':'Same pinned 4096-token input in all three runs'},'local_full_suite':{'passed':2470,'skipped':65,'existing_failure':{'test':'tests/test_qwen_bf16.py::test_qwen_bf16_forward_gradients_and_updates[fp32-storage-False]','assertion':'step 5: model.layers.0.self_attn.q_proj.lora.A parameter','runtime':'ONNX ReferenceEvaluator versus PyTorch','baseline_reproduction_commit':'02d2311','same_failure_on_baseline':True}},'publication_script':Path(__file__).read_text()}\noutput=root/'examples/huggingface/reports/qwen3-fused-operators-m1max.json'\noutput.write_text(json.dumps(result,indent=2,allow_nan=False)+'\\n')\nprint(output,output.stat().st_size)\nfor name,entry in measurements.items():\n r=entry['report'];print(name,r['timings_ms']['step'],r['physical_footprint']['lifetime_peak_bytes']/1024**3,sum(r['nodes'].values()))\n"
+}

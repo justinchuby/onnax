@@ -61,6 +61,7 @@ def measure(
     torch_chunked=False,
     torch_attention="eager",
     progress_every=0,
+    fused_ops=False,
 ):
     for name, value, minimum in (
         ("sequence_length", sequence_length, 2),
@@ -88,6 +89,8 @@ def measure(
         from examples.huggingface.long_context import memory_limit
 
         memory_limit(library, mlx_memory_limit_bytes)
+    if fused_ops and (mode == "pytorch" or provider == "cpu"):
+        raise ValueError("Fused ONNX operations require the MLX or reference provider")
     if torch_device not in ("cpu", "mps"):
         raise ValueError("Expected cpu or mps PyTorch device")
     if torch_attention not in ("eager", "sdpa"):
@@ -188,6 +191,7 @@ def measure(
             nf4=nf4,
             projection_precision=projection_precision,
             session_factory=TimedSession,
+            fused_ops=fused_ops,
         )
         del reference
     from examples.huggingface.torch_context import synchronize
@@ -302,7 +306,10 @@ def measure(
         "provider": "pytorch_" + torch_device if mode == "pytorch" else provider,
         "torch_chunked_head": torch_chunked,
         "mps_fallback_enabled": os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK") == "1",
-        "attention_implementation": torch_attention if mode == "pytorch" else "decomposed",
+        "attention_implementation": torch_attention
+        if mode == "pytorch"
+        else ("fused" if fused_ops else "decomposed"),
+        "fused_ops": fused_ops,
         "synchronization": "MPS at each phase boundary"
         if device == "mps"
         else "synchronous CPU/ORT execution",
@@ -492,6 +499,7 @@ if __name__ == "__main__":
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--torch-device", choices=["cpu", "mps"], default="cpu")
     parser.add_argument("--torch-chunked", action="store_true")
+    parser.add_argument("--fused-ops", action="store_true")
     parser.add_argument("--torch-attention", choices=["eager", "sdpa"], default="eager")
     parser.add_argument("--checkpoint-layers", type=int, default=0)
     parser.add_argument("--train-file")
@@ -541,6 +549,7 @@ if __name__ == "__main__":
                     torch_chunked=args.torch_chunked,
                     torch_attention=args.torch_attention,
                     progress_every=args.progress_every,
+                    fused_ops=args.fused_ops,
                     checkpoint_layers=args.checkpoint_layers,
                     train_file=args.train_file,
                     save_activations=args.save_activations,
@@ -608,6 +617,8 @@ if __name__ == "__main__":
                 )
                 if args.torch_chunked:
                     cmd.append("--torch-chunked")
+            if args.fused_ops and mode != "pytorch":
+                cmd.append("--fused-ops")
             if args.checkpoint_layers:
                 cmd.extend(["--checkpoint-layers", str(args.checkpoint_layers)])
             if args.save_activations:

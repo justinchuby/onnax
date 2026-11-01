@@ -177,3 +177,28 @@ def vjp(
         "Correct the private registry dispatch or implement and validate the missing "
         "layout rule; unsupported active paths cannot be replaced with zero cotangents."
     )
+
+
+@_builtin("jvp", frozenset(("Slice",)))
+def slice_jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Value]:
+    """Propagate structural slices used by fused-operator derivative graphs."""
+    return [ctx.tape.op("Slice", [d[0], *node.inputs[1:]], dict(node.attributes))]
+
+
+@_builtin("jvp", frozenset(("Pad",)))
+def pad_jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Value]:
+    if node.attributes.get_string("mode", "constant") != "constant":
+        return (
+            [ctx.tape.op("Pad", [d[0], *node.inputs[1:]], dict(node.attributes))]
+            if 0 in d
+            else [ctx.like(node.outputs[0])]
+        )
+    x = _input(node)
+    # Differentiating a fixed boundary value pads the tangent with zeros.
+    value = d[0] if 0 in d else ctx.like(x)
+    fill = d[2] if 2 in d else ctx.scalar(x, 0)
+    return [
+        ctx.tape.op(
+            "Pad", [value, _input(node, 1), fill, *node.inputs[3:]], dict(node.attributes)
+        )
+    ]

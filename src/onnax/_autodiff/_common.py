@@ -48,12 +48,19 @@ def _data_indices(node: ir.Node) -> Sequence[int]:
         return range(len(node.inputs))
     if node.op_type in _NO_DATA:
         return ()
+    if node.op_type == "Attention":
+        return range(min(4, len(node.inputs)))
+    if node.op_type == "RotaryEmbedding":
+        return range(min(3, len(node.inputs)))
     if node.op_type == "Where":
         return (1, 2)
+    if node.op_type == "Pad":
+        return (0, 2) if len(node.inputs) > 2 and node.inputs[2] is not None else (0,)
     if node.op_type == "ScatterND":
         return (0, 2)
     if node.op_type in _STRUCTURAL | {
         "Gather",
+        "Slice",
         "Split",
         "ReduceSum",
         "ReduceMean",

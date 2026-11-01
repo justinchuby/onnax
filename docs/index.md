@@ -15,6 +15,7 @@ lora
 nf4-lora
 huggingface
 qwen-sft
+fused-autodiff
 qwen-adapters
 qwen-context-training
 qwen-nf4
