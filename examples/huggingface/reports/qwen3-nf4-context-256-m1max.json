@@ -1,0 +1,1509 @@
+{
+  "version": 1,
+  "model": "Qwen/Qwen3-0.6B",
+  "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+  "source_commit": "0f2d0103e951d7d68e2b00cccb6b6c4aa5c0d584",
+  "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+  "source_sha256": {
+    "examples/huggingface/benchmark.py": "61be4bd786b53a4332a5077ef2d219ae377c439e7fd0c4928efec7fbd27cfd10",
+    "examples/huggingface/sft.py": "1bf7c1065b9fa72ddcaafcfb35527c80e770182f7a511e8c7b2130ee546c34b6",
+    "examples/huggingface/chunked_loss.py": "4283238dbab18f9d8119832379aa5e6f3355b3bb0f5b4e9956394e795360f3f5",
+    "examples/huggingface/nf4.py": "a374f41406ed0b8967f723873b8bb9b5a563b8350895c299137905422522d9d7",
+    "examples/huggingface/optimization.py": "ae152a66f388c1c5be1b4f49f5ef4183ddb37b91d51483fe3d9319f3906826ea",
+    "tests/test_qwen_adapters.py": "7b3404c62956797c0982d9ec4266dc82b1d2f62b6987e1b7e11ac6155671404d"
+  },
+  "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+  "matched_fields": [
+    "projection_precision",
+    "weight_values",
+    "real",
+    "samples",
+    "warmup",
+    "batch",
+    "sequence",
+    "valid_shifted_tokens",
+    "parameter_bytes",
+    "input_ids_sha256",
+    "threads",
+    "versions"
+  ],
+  "summary": [
+    {
+      "mode": "pytorch",
+      "step_median_seconds": 1.064912167028524,
+      "step_p95_seconds": 1.8181377145723672,
+      "effective_tokens_per_second": 239.45636822944644,
+      "whole_process_peak_rss_gib": 5.305145263671875,
+      "initialization_seconds": 13.025698625016958,
+      "initial_loss": 1.741966962814331,
+      "final_loss": 0.012579238973557949,
+      "full_logits_bytes": 155582464,
+      "chunk_logits_bytes": null
+    },
+    {
+      "mode": "optimized",
+      "step_median_seconds": 2.0236487080110237,
+      "step_p95_seconds": 3.056048747873865,
+      "effective_tokens_per_second": 126.01001299807164,
+      "whole_process_peak_rss_gib": 6.994537353515625,
+      "initialization_seconds": 160.93135625001742,
+      "initial_loss": 1.7419660091400146,
+      "final_loss": 0.01847994327545166,
+      "full_logits_bytes": 155582464,
+      "chunk_logits_bytes": null
+    },
+    {
+      "mode": "chunked",
+      "step_median_seconds": 2.041215146513423,
+      "step_p95_seconds": 3.1990638756280534,
+      "effective_tokens_per_second": 124.92558681801019,
+      "whole_process_peak_rss_gib": 7.98486328125,
+      "initialization_seconds": 163.58045770798344,
+      "initial_loss": 1.7420154809951782,
+      "final_loss": 0.01862831972539425,
+      "full_logits_bytes": 155582464,
+      "chunk_logits_bytes": 77791232
+    },
+    {
+      "mode": "joint",
+      "step_median_seconds": 1.709038666478591,
+      "step_p95_seconds": 2.7094769975839883,
+      "effective_tokens_per_second": 149.206688532927,
+      "whole_process_peak_rss_gib": 5.862457275390625,
+      "initialization_seconds": 158.21115129202371,
+      "initial_loss": 1.7420154809951782,
+      "final_loss": 0.01824808306992054,
+      "full_logits_bytes": 155582464,
+      "chunk_logits_bytes": null
+    }
+  ],
+  "components": [
+    {
+      "mode": "pytorch",
+      "provider": "pytorch_cpu",
+      "segment_target_nodes": null,
+      "lut4_fusion_disabled": false,
+      "mlx_compile_disabled": true,
+      "real": true,
+      "weight_values": "nf4_reconstructed_fp32",
+      "projection_precision": "fp32",
+      "gradient_and_optimizer_dtype": "float32",
+      "base_storage": "fp32",
+      "warmup": 10,
+      "samples": 100,
+      "losses": [
+        1.741966962814331,
+        1.6353827714920044,
+        1.4359169006347656,
+        1.213614821434021,
+        1.010780930519104,
+        0.8068958520889282,
+        0.6339620351791382,
+        0.502972424030304,
+        0.35895997285842896,
+        0.24322770535945892,
+        0.1589297652244568,
+        0.10559829324483871,
+        0.07695044577121735,
+        0.06728729605674744,
+        0.06491436064243317,
+        0.06215938925743103,
+        0.06220804899930954,
+        0.24147562682628632,
+        0.14893722534179688,
+        0.08806811273097992,
+        0.10275023430585861,
+        0.06030694767832756,
+        0.05934219807386398,
+        0.059497345238924026,
+        0.059597719460725784,
+        0.05921127274632454,
+        0.05870291590690613,
+        0.058237865567207336,
+        0.0579853281378746,
+        0.05775866284966469,
+        0.05742097645998001,
+        0.057033710181713104,
+        0.05667682737112045,
+        0.05637408792972565,
+        0.0561215877532959,
+        0.05590737983584404,
+        0.05571834743022919,
+        0.05554237961769104,
+        0.055371109396219254,
+        0.05520061403512955,
+        0.055031683295965195,
+        0.0548660084605217,
+        0.05470481142401695,
+        0.05454762652516365,
+        0.054393406957387924,
+        0.054240886121988297,
+        0.05408899858593941,
+        0.05393682047724724,
+        0.05378367006778717,
+        0.05362880229949951,
+        0.053471654653549194,
+        0.053311850875616074,
+        0.05314887315034866,
+        0.05298227444291115,
+        0.05281177535653114,
+        0.05263695865869522,
+        0.052457552403211594,
+        0.05227318033576012,
+        0.05208372324705124,
+        0.051888611167669296,
+        0.05168774351477623,
+        0.051480796188116074,
+        0.051267605274915695,
+        0.05104770138859749,
+        0.05082092434167862,
+        0.050587087869644165,
+        0.050345949828624725,
+        0.05009721219539642,
+        0.04984061419963837,
+        0.049576230347156525,
+        0.049303580075502396,
+        0.04902248457074165,
+        0.04873257875442505,
+        0.048433635383844376,
+        0.048125285655260086,
+        0.04780718311667442,
+        0.04747895523905754,
+        0.04714028909802437,
+        0.046790797263383865,
+        0.04643020033836365,
+        0.04605811461806297,
+        0.04567458853125572,
+        0.045279260724782944,
+        0.04487176612019539,
+        0.04445185139775276,
+        0.04401911050081253,
+        0.04357317090034485,
+        0.04311351478099823,
+        0.04263928905129433,
+        0.04214969277381897,
+        0.04164344072341919,
+        0.04111916571855545,
+        0.04057464003562927,
+        0.04000785946846008,
+        0.039415545761585236,
+        0.03879382088780403,
+        0.03813808411359787,
+        0.037441931664943695,
+        0.036698125302791595,
+        0.035896506160497665,
+        0.035024065524339676,
+        0.034062713384628296,
+        0.03298705443739891,
+        0.03175961971282959,
+        0.030322354286909103,
+        0.028580285608768463,
+        0.026368411257863045,
+        0.02338181436061859,
+        0.019032705575227737,
+        0.012579238973557949
+      ],
+      "batch": 1,
+      "sequence": 256,
+      "valid_shifted_tokens": 255,
+      "input_ids_sha256": "bb7ec37cfc2ae675254fed85677800fde959c46c0a63a2963f529cc967eb91b0",
+      "input_pattern": "Repeated prefix of the first eight local corpus lines",
+      "head_chunk_size": null,
+      "full_logits_bytes": 155582464,
+      "chunk_logits_bytes": null,
+      "initialization_seconds": 13.025698625016958,
+      "timings_ms": {
+        "forward_and_loss": {
+          "median": 472.25975000765175,
+          "p95": 494.42915145482397
+        },
+        "backward": {
+          "median": 589.1130625095684,
+          "p95": 639.9995207844767
+        },
+        "process_cpu": {
+          "median": 1560.6144999999997,
+          "p95": 1596.7435999999982
+        },
+        "adamw": {
+          "median": 1.9132085144519806,
+          "p95": 2.06237441743724
+        },
+        "step": {
+          "median": 1064.912167028524,
+          "p95": 1818.1377145723673
+        }
+      },
+      "effective_tokens_per_second": 239.45636822944644,
+      "peak_rss_bytes": 5696356352,
+      "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+      "initialization_scope": "PyTorch model construction and FP32 base reconstruction",
+      "parameter_bytes": 2293760,
+      "threads": {
+        "torch": 1,
+        "ort_intra": 1,
+        "ort_inter": 1
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      },
+      "ort_optimizer": "disabled",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      }
+    },
+    {
+      "mode": "optimized",
+      "provider": "mlx",
+      "segment_target_nodes": null,
+      "lut4_fusion_disabled": false,
+      "mlx_compile_disabled": true,
+      "real": true,
+      "weight_values": "nf4_reconstructed_fp32",
+      "projection_precision": "fp32",
+      "gradient_and_optimizer_dtype": "float32",
+      "base_storage": "packed_nf4_decoder",
+      "warmup": 10,
+      "samples": 100,
+      "losses": [
+        1.7419660091400146,
+        1.6353809833526611,
+        1.4359147548675537,
+        1.2136118412017822,
+        1.0107694864273071,
+        0.8068628311157227,
+        0.6339210271835327,
+        0.5029288530349731,
+        0.3589281141757965,
+        0.243205726146698,
+        0.15890473127365112,
+        0.10558390617370605,
+        0.0769452303647995,
+        0.06728719174861908,
+        0.06490886211395264,
+        0.062151409685611725,
+        0.06223390996456146,
+        0.24180515110492706,
+        0.15018406510353088,
+        0.08707422018051147,
+        0.05897612124681473,
+        0.059102173894643784,
+        0.059294797480106354,
+        0.05983015522360802,
+        0.05983790382742882,
+        0.059020381420850754,
+        0.058283522725105286,
+        0.057861328125,
+        0.057658035308122635,
+        0.05743241682648659,
+        0.05708407238125801,
+        0.05674407258629799,
+        0.05645204707980156,
+        0.05619673430919647,
+        0.05597227066755295,
+        0.055773720145225525,
+        0.05559425428509712,
+        0.05542760342359543,
+        0.05526956170797348,
+        0.05511791631579399,
+        0.05497138574719429,
+        0.05482843890786171,
+        0.05468759685754776,
+        0.054547324776649475,
+        0.05440659821033478,
+        0.05426474288105965,
+        0.054121483117341995,
+        0.05397680774331093,
+        0.05383051186800003,
+        0.05368245020508766,
+        0.05353229120373726,
+        0.05337964743375778,
+        0.05322428420186043,
+        0.05306575447320938,
+        0.052903737872838974,
+        0.052737899124622345,
+        0.052567873150110245,
+        0.052393410354852676,
+        0.05221416801214218,
+        0.052029844373464584,
+        0.051840201020240784,
+        0.051644980907440186,
+        0.05144390091300011,
+        0.05123668536543846,
+        0.05102307349443436,
+        0.050802912563085556,
+        0.050575897097587585,
+        0.05034170672297478,
+        0.05010019242763519,
+        0.04985098913311958,
+        0.04959377646446228,
+        0.049328263849020004,
+        0.049054160714149475,
+        0.04877108708024025,
+        0.04847877845168114,
+        0.04817691445350647,
+        0.04786526784300804,
+        0.04754358530044556,
+        0.047211624681949615,
+        0.04686916619539261,
+        0.04651602357625961,
+        0.04615189880132675,
+        0.04577661678195,
+        0.04538979008793831,
+        0.04499122127890587,
+        0.04458038508892059,
+        0.04415715113282204,
+        0.04372105374932289,
+        0.04327152669429779,
+        0.042807962745428085,
+        0.0423295795917511,
+        0.041835322976112366,
+        0.04132385924458504,
+        0.04079349339008331,
+        0.040242042392492294,
+        0.03966660052537918,
+        0.039063893258571625,
+        0.03842928633093834,
+        0.03775700554251671,
+        0.03703933581709862,
+        0.03626588359475136,
+        0.03542313724756241,
+        0.03449181467294693,
+        0.03344449773430824,
+        0.03224014863371849,
+        0.030812406912446022,
+        0.02904714271426201,
+        0.026733867824077606,
+        0.023470012471079826,
+        0.01847994327545166
+      ],
+      "batch": 1,
+      "sequence": 256,
+      "valid_shifted_tokens": 255,
+      "input_ids_sha256": "bb7ec37cfc2ae675254fed85677800fde959c46c0a63a2963f529cc967eb91b0",
+      "input_pattern": "Repeated prefix of the first eight local corpus lines",
+      "head_chunk_size": null,
+      "full_logits_bytes": 155582464,
+      "chunk_logits_bytes": null,
+      "initialization_seconds": 160.93135625001742,
+      "timings_ms": {
+        "forward_and_loss": {
+          "median": 322.7025000087451,
+          "p95": 349.0118416346377
+        },
+        "backward": {
+          "median": 1689.6082085149828,
+          "p95": 2725.0395107315853
+        },
+        "process_cpu": {
+          "median": 974.3880000000189,
+          "p95": 1028.618550000003
+        },
+        "adamw": {
+          "median": 6.529333506477997,
+          "p95": 7.643286869279109
+        },
+        "step": {
+          "median": 2023.6487080110237,
+          "p95": 3056.048747873865
+        }
+      },
+      "effective_tokens_per_second": 126.01001299807164,
+      "peak_rss_bytes": 7510327296,
+      "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+      "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+      "parameter_bytes": 2293760,
+      "threads": {
+        "torch": 1,
+        "ort_intra": 1,
+        "ort_inter": 1
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      },
+      "ort_optimizer": "disabled",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      },
+      "native_construction": {
+        "session_0": {
+          "factory_seconds": 0.4949424169608392,
+          "segments": 1,
+          "source": "forward.onnx"
+        },
+        "session_1": {
+          "factory_seconds": 3.599956749996636,
+          "segments": 1,
+          "source": "backward.onnx"
+        }
+      },
+      "cpu_fallback_disabled": true,
+      "library": "/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib",
+      "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+      "initializer_bytes_by_session": {
+        "forward": 891289904,
+        "backward": 891289932
+      },
+      "initializer_scope": "Logical top-level initializer bytes for each execution session",
+      "decoder_storage_bytes": {
+        "original": 1761607680,
+        "packed": 247726080
+      },
+      "nodes": {
+        "forward": 3412,
+        "raw_vjp": 46024,
+        "executed_vjp": 32649
+      },
+      "logical_saved_activation_bytes": 0,
+      "saved_activation_count": 0,
+      "input_view_median_us": 47.833018470555544,
+      "input_view_scope": "Host data-input preparation; adapter preparation is included in forward",
+      "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
+    },
+    {
+      "mode": "chunked",
+      "provider": "mlx",
+      "segment_target_nodes": null,
+      "lut4_fusion_disabled": false,
+      "mlx_compile_disabled": true,
+      "real": true,
+      "weight_values": "nf4_reconstructed_fp32",
+      "projection_precision": "fp32",
+      "gradient_and_optimizer_dtype": "float32",
+      "base_storage": "packed_nf4_decoder",
+      "warmup": 10,
+      "samples": 100,
+      "losses": [
+        1.7420154809951782,
+        1.635430097579956,
+        1.435960054397583,
+        1.2136543989181519,
+        1.0107908248901367,
+        0.8068591356277466,
+        0.6338813304901123,
+        0.5028806924819946,
+        0.35886096954345703,
+        0.24316100776195526,
+        0.1588798463344574,
+        0.10554686933755875,
+        0.0769340991973877,
+        0.06728526204824448,
+        0.06491107493638992,
+        0.0621492862701416,
+        0.06222856417298317,
+        0.24188058078289032,
+        0.15005376935005188,
+        0.08708742260932922,
+        0.05896269530057907,
+        0.059101976454257965,
+        0.05928284674882889,
+        0.0598570741713047,
+        0.059868860989809036,
+        0.05904107168316841,
+        0.058290403336286545,
+        0.05786268413066864,
+        0.05765818431973457,
+        0.05743211880326271,
+        0.057082399725914,
+        0.05674232915043831,
+        0.0564517118036747,
+        0.056198157370090485,
+        0.055975064635276794,
+        0.05577733740210533,
+        0.055598221719264984,
+        0.05543140694499016,
+        0.05527302622795105,
+        0.05512118712067604,
+        0.05497462674975395,
+        0.054831791669130325,
+        0.05469109117984772,
+        0.05455103889107704,
+        0.05441046878695488,
+        0.054268788546323776,
+        0.05412573739886284,
+        0.053981196135282516,
+        0.05383504554629326,
+        0.05368713289499283,
+        0.05353713035583496,
+        0.05338471382856369,
+        0.05322952941060066,
+        0.05307121202349663,
+        0.05290942266583443,
+        0.0527438186109066,
+        0.05257406458258629,
+        0.05239987373352051,
+        0.0522209070622921,
+        0.052036888897418976,
+        0.05184756591916084,
+        0.051652636379003525,
+        0.05145185813307762,
+        0.051244914531707764,
+        0.051031701266765594,
+        0.05081185698509216,
+        0.05058514326810837,
+        0.05035129934549332,
+        0.05011013150215149,
+        0.049861304461956024,
+        0.04960447549819946,
+        0.049339354038238525,
+        0.04906564950942993,
+        0.04878301918506622,
+        0.04849114269018173,
+        0.048189736902713776,
+        0.04787856712937355,
+        0.04755736142396927,
+        0.047225892543792725,
+        0.04688389599323273,
+        0.046531226485967636,
+        0.04616756737232208,
+        0.045792702585458755,
+        0.04540634900331497,
+        0.045008186250925064,
+        0.044597893953323364,
+        0.04417510703206062,
+        0.04373941197991371,
+        0.04329030215740204,
+        0.04282714053988457,
+        0.04234914854168892,
+        0.04185531288385391,
+        0.04134431481361389,
+        0.040814485400915146,
+        0.040263596922159195,
+        0.039688918739557266,
+        0.03908691927790642,
+        0.0384531170129776,
+        0.037781696766614914,
+        0.0370650477707386,
+        0.036292966455221176,
+        0.03545170649886131,
+        0.034522250294685364,
+        0.033477507531642914,
+        0.03227667137980461,
+        0.03085421770811081,
+        0.029097117483615875,
+        0.026798469945788383,
+        0.02356250025331974,
+        0.01862831972539425
+      ],
+      "batch": 1,
+      "sequence": 256,
+      "valid_shifted_tokens": 255,
+      "input_ids_sha256": "bb7ec37cfc2ae675254fed85677800fde959c46c0a63a2963f529cc967eb91b0",
+      "input_pattern": "Repeated prefix of the first eight local corpus lines",
+      "head_chunk_size": 128,
+      "full_logits_bytes": 155582464,
+      "chunk_logits_bytes": 77791232,
+      "initialization_seconds": 163.58045770798344,
+      "timings_ms": {
+        "forward_and_loss": {
+          "median": 448.90516650048085,
+          "p95": 469.4261809432646
+        },
+        "backward": {
+          "median": 1583.7501040077768,
+          "p95": 2743.050169374328
+        },
+        "process_cpu": {
+          "median": 884.1664999999921,
+          "p95": 922.4161000000024
+        },
+        "adamw": {
+          "median": 6.6949379979632795,
+          "p95": 7.903352426365019
+        },
+        "step": {
+          "median": 2041.215146513423,
+          "p95": 3199.063875628053
+        }
+      },
+      "effective_tokens_per_second": 124.92558681801019,
+      "peak_rss_bytes": 8573681664,
+      "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+      "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+      "parameter_bytes": 2293760,
+      "threads": {
+        "torch": 1,
+        "ort_intra": 1,
+        "ort_inter": 1
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      },
+      "ort_optimizer": "disabled",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      },
+      "native_construction": {
+        "session_0": {
+          "factory_seconds": 0.11162266600877047,
+          "segments": 1,
+          "source": "gradient.onnx"
+        },
+        "session_1": {
+          "factory_seconds": 0.08347304101334885,
+          "segments": 1,
+          "source": "forward.onnx"
+        },
+        "session_2": {
+          "factory_seconds": 0.45480795798357576,
+          "segments": 1,
+          "source": "forward.onnx"
+        },
+        "session_3": {
+          "factory_seconds": 3.579701541981194,
+          "segments": 1,
+          "source": "backward.onnx"
+        }
+      },
+      "cpu_fallback_disabled": true,
+      "library": "/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib",
+      "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+      "initializer_bytes_by_session": {
+        "forward": 891289904,
+        "backward": 891289932,
+        "head_forward": 622329856,
+        "head_backward": 622329900
+      },
+      "initializer_scope": "Logical top-level initializer bytes for each execution session",
+      "decoder_storage_bytes": {
+        "original": 1761607680,
+        "packed": 247726080
+      },
+      "nodes": {
+        "forward": 3410,
+        "raw_vjp": 46020,
+        "executed_vjp": 32646
+      },
+      "logical_saved_activation_bytes": 0,
+      "saved_activation_count": 0,
+      "input_view_median_us": 50.89599289931357,
+      "input_view_scope": "Host data-input preparation; adapter preparation is included in forward",
+      "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
+    },
+    {
+      "mode": "joint",
+      "provider": "mlx",
+      "segment_target_nodes": null,
+      "lut4_fusion_disabled": false,
+      "mlx_compile_disabled": true,
+      "real": true,
+      "weight_values": "nf4_reconstructed_fp32",
+      "projection_precision": "fp32",
+      "gradient_and_optimizer_dtype": "float32",
+      "base_storage": "packed_nf4_decoder",
+      "warmup": 10,
+      "samples": 100,
+      "losses": [
+        1.7420154809951782,
+        1.6354303359985352,
+        1.435959815979004,
+        1.213654637336731,
+        1.0107905864715576,
+        0.8068591356277466,
+        0.6338812708854675,
+        0.5028801560401917,
+        0.3588608205318451,
+        0.24316063523292542,
+        0.15887939929962158,
+        0.10554733127355576,
+        0.07693419605493546,
+        0.0672852098941803,
+        0.0649111419916153,
+        0.0621502622961998,
+        0.062227364629507065,
+        0.2418687790632248,
+        0.14989668130874634,
+        0.08697304874658585,
+        0.05896648392081261,
+        0.05910269916057587,
+        0.05928848311305046,
+        0.059864938259124756,
+        0.059867922216653824,
+        0.05903337150812149,
+        0.05828254669904709,
+        0.05785815790295601,
+        0.057658419013023376,
+        0.05743435397744179,
+        0.05708223953843117,
+        0.0567404106259346,
+        0.05644921585917473,
+        0.056195709854364395,
+        0.05597296357154846,
+        0.055775515735149384,
+        0.05559641867876053,
+        0.05542931705713272,
+        0.05527063086628914,
+        0.055118586868047714,
+        0.054971981793642044,
+        0.05482924357056618,
+        0.05468873679637909,
+        0.05454886332154274,
+        0.05440852418541908,
+        0.05426711589097977,
+        0.054124362766742706,
+        0.053980134427547455,
+        0.053834374994039536,
+        0.053686827421188354,
+        0.053537171334028244,
+        0.05338512733578682,
+        0.05323032662272453,
+        0.053072378039360046,
+        0.05291098356246948,
+        0.05274574086070061,
+        0.052576370537281036,
+        0.05240258574485779,
+        0.052224040031433105,
+        0.05204043909907341,
+        0.05185156315565109,
+        0.051657095551490784,
+        0.05145678669214249,
+        0.05125042423605919,
+        0.05103770270943642,
+        0.05081837251782417,
+        0.050592243671417236,
+        0.05035899952054024,
+        0.05011843889951706,
+        0.04987019672989845,
+        0.04961403086781502,
+        0.0493495799601078,
+        0.049076568335294724,
+        0.04879465699195862,
+        0.04850351810455322,
+        0.048202935606241226,
+        0.04789255931973457,
+        0.04757219925522804,
+        0.04724159836769104,
+        0.046900536864995956,
+        0.046548716723918915,
+        0.04618601128458977,
+        0.04581201821565628,
+        0.04542658478021622,
+        0.04502930864691734,
+        0.04461987316608429,
+        0.04419791325926781,
+        0.04376298561692238,
+        0.043314602226018906,
+        0.04285212606191635,
+        0.04237474501132965,
+        0.041881460696458817,
+        0.0413709357380867,
+        0.040841467678546906,
+        0.04029085487127304,
+        0.03971630334854126,
+        0.03911420330405235,
+        0.038479991257190704,
+        0.03780774027109146,
+        0.03708965331315994,
+        0.036315299570560455,
+        0.035470470786094666,
+        0.03453555330634117,
+        0.033482372760772705,
+        0.03226828575134277,
+        0.030824439600110054,
+        0.029031720012426376,
+        0.026672741398215294,
+        0.02333500050008297,
+        0.01824808306992054
+      ],
+      "batch": 1,
+      "sequence": 256,
+      "valid_shifted_tokens": 255,
+      "input_ids_sha256": "bb7ec37cfc2ae675254fed85677800fde959c46c0a63a2963f529cc967eb91b0",
+      "input_pattern": "Repeated prefix of the first eight local corpus lines",
+      "head_chunk_size": null,
+      "full_logits_bytes": 155582464,
+      "chunk_logits_bytes": null,
+      "initialization_seconds": 158.21115129202371,
+      "timings_ms": {
+        "loss_and_gradients": {
+          "median": 1701.0676249628887,
+          "p95": 2702.2409479744965
+        },
+        "gradient_scaling": {
+          "median": 1.9657500088214874,
+          "p95": 2.856429177336395
+        },
+        "process_cpu": {
+          "median": 807.6950000000096,
+          "p95": 834.375449999996
+        },
+        "adamw": {
+          "median": 5.425041483249515,
+          "p95": 6.454624381149188
+        },
+        "step": {
+          "median": 1709.038666478591,
+          "p95": 2709.476997583988
+        }
+      },
+      "effective_tokens_per_second": 149.206688532927,
+      "peak_rss_bytes": 6294765568,
+      "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+      "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+      "parameter_bytes": 2293760,
+      "threads": {
+        "torch": 1,
+        "ort_intra": 1,
+        "ort_inter": 1
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      },
+      "ort_optimizer": "disabled",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      },
+      "native_construction": {
+        "session_0": {
+          "factory_seconds": 4.317694083030801,
+          "segments": 1,
+          "source": "loss_gradient.onnx"
+        }
+      },
+      "cpu_fallback_disabled": true,
+      "library": "/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib",
+      "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+      "initializer_bytes_by_session": {
+        "loss_gradient": 891289984
+      },
+      "initializer_scope": "Logical top-level initializer bytes for each execution session",
+      "decoder_storage_bytes": {
+        "original": 1761607680,
+        "packed": 247726080
+      },
+      "nodes": {
+        "forward": 3412,
+        "loss_gradient": 32729
+      },
+      "logical_saved_activation_bytes": 0,
+      "saved_activation_count": 0,
+      "input_view_median_us": 781.7505102138966,
+      "input_view_scope": "Host data/adapter preparation and validation; runtime transfers are included in execution",
+      "autograd_saved_gradient_bytes": 2293760,
+      "public_session_payload_bytes": {
+        "inputs": 2301952,
+        "outputs": 2293764,
+        "scope": "Logical NumPy session arguments and results; excludes internal EP transfers"
+      },
+      "session_execution_ms": {
+        "median": 1698.7643955217209,
+        "p95": 2699.667911036522
+      },
+      "timing_scope": "Forward computes loss and gradients; PyTorch backward scales returned gradients",
+      "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
+    }
+  ],
+  "executions": [
+    {
+      "mode": "pytorch",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.benchmark",
+        "--mode",
+        "pytorch",
+        "--real",
+        "--nf4",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib",
+        "--batch-size",
+        "1",
+        "--sequence-length",
+        "256",
+        "--chunk-size",
+        "128",
+        "--warmup",
+        "10",
+        "--samples",
+        "100"
+      ],
+      "source_commit": "0f2d0103e951d7d68e2b00cccb6b6c4aa5c0d584",
+      "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+      "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+      "started": "2026-11-01T00:03:06.869302+00:00",
+      "operational_memory_limit_bytes": 25769803776,
+      "observations": [
+        {
+          "utc": "2026-11-01T00:03:07.471705+00:00",
+          "current_bytes": 14050918.4,
+          "peak_bytes": 14050918.4
+        },
+        {
+          "utc": "2026-11-01T00:03:23.443304+00:00",
+          "current_bytes": 4402341478.4,
+          "peak_bytes": 4402341478.4
+        },
+        {
+          "utc": "2026-11-01T00:03:39.378409+00:00",
+          "current_bytes": 4080218931.2,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-11-01T00:03:55.308580+00:00",
+          "current_bytes": 4402341478.4,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-11-01T00:04:11.241597+00:00",
+          "current_bytes": 4509715660.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-11-01T00:04:27.169174+00:00",
+          "current_bytes": 4724464025.6,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-11-01T00:04:43.089709+00:00",
+          "current_bytes": 4187593113.6,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-11-01T00:04:59.022828+00:00",
+          "current_bytes": 3972844748.8,
+          "peak_bytes": 5583457484.8
+        },
+        {
+          "utc": "2026-11-01T00:05:14.962992+00:00",
+          "current_bytes": 4294967296.0,
+          "peak_bytes": 5583457484.8
+        }
+      ],
+      "pid": 92244,
+      "returncode": 0,
+      "finished": "2026-11-01T00:05:29.973952+00:00"
+    },
+    {
+      "mode": "optimized",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.benchmark",
+        "--mode",
+        "optimized",
+        "--real",
+        "--nf4",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib",
+        "--batch-size",
+        "1",
+        "--sequence-length",
+        "256",
+        "--chunk-size",
+        "128",
+        "--warmup",
+        "10",
+        "--samples",
+        "100"
+      ],
+      "source_commit": "0f2d0103e951d7d68e2b00cccb6b6c4aa5c0d584",
+      "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+      "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+      "started": "2026-11-01T00:05:30.020909+00:00",
+      "operational_memory_limit_bytes": 25769803776,
+      "observations": [
+        {
+          "utc": "2026-11-01T00:05:45.921565+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 3543348019.2
+        },
+        {
+          "utc": "2026-11-01T00:06:01.844397+00:00",
+          "current_bytes": 4402341478.4,
+          "peak_bytes": 4402341478.4
+        },
+        {
+          "utc": "2026-11-01T00:06:17.753602+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:06:33.623770+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:06:49.518457+00:00",
+          "current_bytes": 3865470566.4,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:07:05.399243+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:07:21.289953+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:07:37.194141+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:07:53.112823+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:08:09.044263+00:00",
+          "current_bytes": 4402341478.4,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:08:25.272478+00:00",
+          "current_bytes": 8589934592.0,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:08:41.520455+00:00",
+          "current_bytes": 8589934592.0,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:08:57.753667+00:00",
+          "current_bytes": 8589934592.0,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:09:13.951092+00:00",
+          "current_bytes": 8589934592.0,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:09:30.181241+00:00",
+          "current_bytes": 8589934592.0,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:09:46.433259+00:00",
+          "current_bytes": 8482560409.6,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:10:02.653235+00:00",
+          "current_bytes": 8482560409.6,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:10:18.889292+00:00",
+          "current_bytes": 8482560409.6,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:10:35.119657+00:00",
+          "current_bytes": 8482560409.6,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:10:51.342820+00:00",
+          "current_bytes": 8482560409.6,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:11:07.559700+00:00",
+          "current_bytes": 8482560409.6,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:11:23.762087+00:00",
+          "current_bytes": 8482560409.6,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:11:39.955591+00:00",
+          "current_bytes": 8482560409.6,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:11:56.180467+00:00",
+          "current_bytes": 8482560409.6,
+          "peak_bytes": 8589934592.0
+        },
+        {
+          "utc": "2026-11-01T00:12:12.414807+00:00",
+          "current_bytes": 8482560409.6,
+          "peak_bytes": 8589934592.0
+        }
+      ],
+      "pid": 92643,
+      "returncode": 0,
+      "finished": "2026-11-01T00:12:27.425819+00:00"
+    },
+    {
+      "mode": "chunked",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.benchmark",
+        "--mode",
+        "chunked",
+        "--real",
+        "--nf4",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib",
+        "--batch-size",
+        "1",
+        "--sequence-length",
+        "256",
+        "--chunk-size",
+        "128",
+        "--warmup",
+        "10",
+        "--samples",
+        "100"
+      ],
+      "source_commit": "0f2d0103e951d7d68e2b00cccb6b6c4aa5c0d584",
+      "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+      "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+      "started": "2026-11-01T00:12:27.475786+00:00",
+      "operational_memory_limit_bytes": 25769803776,
+      "observations": [
+        {
+          "utc": "2026-11-01T00:12:43.395117+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 3543348019.2
+        },
+        {
+          "utc": "2026-11-01T00:12:59.289552+00:00",
+          "current_bytes": 4294967296.0,
+          "peak_bytes": 4294967296.0
+        },
+        {
+          "utc": "2026-11-01T00:13:15.233893+00:00",
+          "current_bytes": 5583457484.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-11-01T00:13:31.188935+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-11-01T00:13:47.118419+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-11-01T00:14:03.031872+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-11-01T00:14:18.956055+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-11-01T00:14:34.920749+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-11-01T00:14:50.839610+00:00",
+          "current_bytes": 5046586572.8,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-11-01T00:15:06.770515+00:00",
+          "current_bytes": 5261334937.6,
+          "peak_bytes": 6764573491.2
+        },
+        {
+          "utc": "2026-11-01T00:15:23.108200+00:00",
+          "current_bytes": 11703785881.6,
+          "peak_bytes": 11703785881.6
+        },
+        {
+          "utc": "2026-11-01T00:15:39.442103+00:00",
+          "current_bytes": 11703785881.6,
+          "peak_bytes": 11703785881.6
+        },
+        {
+          "utc": "2026-11-01T00:15:55.755678+00:00",
+          "current_bytes": 11703785881.6,
+          "peak_bytes": 11703785881.6
+        },
+        {
+          "utc": "2026-11-01T00:16:12.136882+00:00",
+          "current_bytes": 11703785881.6,
+          "peak_bytes": 11703785881.6
+        },
+        {
+          "utc": "2026-11-01T00:16:28.476105+00:00",
+          "current_bytes": 11703785881.6,
+          "peak_bytes": 11703785881.6
+        },
+        {
+          "utc": "2026-11-01T00:16:44.809931+00:00",
+          "current_bytes": 11703785881.6,
+          "peak_bytes": 11703785881.6
+        },
+        {
+          "utc": "2026-11-01T00:17:01.132828+00:00",
+          "current_bytes": 11703785881.6,
+          "peak_bytes": 11703785881.6
+        },
+        {
+          "utc": "2026-11-01T00:17:17.464050+00:00",
+          "current_bytes": 11703785881.6,
+          "peak_bytes": 11703785881.6
+        },
+        {
+          "utc": "2026-11-01T00:17:33.780424+00:00",
+          "current_bytes": 11703785881.6,
+          "peak_bytes": 11703785881.6
+        },
+        {
+          "utc": "2026-11-01T00:17:50.093701+00:00",
+          "current_bytes": 11703785881.6,
+          "peak_bytes": 11703785881.6
+        },
+        {
+          "utc": "2026-11-01T00:18:06.466784+00:00",
+          "current_bytes": 11703785881.6,
+          "peak_bytes": 11703785881.6
+        },
+        {
+          "utc": "2026-11-01T00:18:22.788370+00:00",
+          "current_bytes": 11918534246.4,
+          "peak_bytes": 11918534246.4
+        },
+        {
+          "utc": "2026-11-01T00:18:39.110473+00:00",
+          "current_bytes": 11918534246.4,
+          "peak_bytes": 11918534246.4
+        },
+        {
+          "utc": "2026-11-01T00:18:55.438655+00:00",
+          "current_bytes": 11918534246.4,
+          "peak_bytes": 11918534246.4
+        },
+        {
+          "utc": "2026-11-01T00:19:11.751426+00:00",
+          "current_bytes": 11918534246.4,
+          "peak_bytes": 11918534246.4
+        }
+      ],
+      "pid": 93475,
+      "returncode": 0,
+      "finished": "2026-11-01T00:19:26.762251+00:00"
+    },
+    {
+      "mode": "joint",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.benchmark",
+        "--mode",
+        "joint",
+        "--real",
+        "--nf4",
+        "--provider",
+        "mlx",
+        "--library",
+        "/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib",
+        "--batch-size",
+        "1",
+        "--sequence-length",
+        "256",
+        "--chunk-size",
+        "128",
+        "--warmup",
+        "10",
+        "--samples",
+        "100"
+      ],
+      "source_commit": "0f2d0103e951d7d68e2b00cccb6b6c4aa5c0d584",
+      "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+      "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+      "started": "2026-11-01T00:19:26.822234+00:00",
+      "operational_memory_limit_bytes": 25769803776,
+      "observations": [
+        {
+          "utc": "2026-11-01T00:19:42.718182+00:00",
+          "current_bytes": 3543348019.2,
+          "peak_bytes": 3543348019.2
+        },
+        {
+          "utc": "2026-11-01T00:19:58.602268+00:00",
+          "current_bytes": 4294967296.0,
+          "peak_bytes": 4294967296.0
+        },
+        {
+          "utc": "2026-11-01T00:20:14.476742+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:20:30.360133+00:00",
+          "current_bytes": 3865470566.4,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:20:46.234256+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:21:02.101571+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:21:17.967706+00:00",
+          "current_bytes": 3650722201.6,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:21:33.847572+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:21:49.751093+00:00",
+          "current_bytes": 3758096384.0,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:22:05.658292+00:00",
+          "current_bytes": 4080218931.2,
+          "peak_bytes": 5476083302.4
+        },
+        {
+          "utc": "2026-11-01T00:22:21.851182+00:00",
+          "current_bytes": 8375186227.2,
+          "peak_bytes": 8375186227.2
+        },
+        {
+          "utc": "2026-11-01T00:22:38.047772+00:00",
+          "current_bytes": 8375186227.2,
+          "peak_bytes": 8375186227.2
+        },
+        {
+          "utc": "2026-11-01T00:22:54.250850+00:00",
+          "current_bytes": 8375186227.2,
+          "peak_bytes": 8375186227.2
+        },
+        {
+          "utc": "2026-11-01T00:23:10.427558+00:00",
+          "current_bytes": 8375186227.2,
+          "peak_bytes": 8375186227.2
+        },
+        {
+          "utc": "2026-11-01T00:23:26.599930+00:00",
+          "current_bytes": 8375186227.2,
+          "peak_bytes": 8375186227.2
+        },
+        {
+          "utc": "2026-11-01T00:23:42.800041+00:00",
+          "current_bytes": 8267812044.8,
+          "peak_bytes": 8375186227.2
+        },
+        {
+          "utc": "2026-11-01T00:23:59.019561+00:00",
+          "current_bytes": 8267812044.8,
+          "peak_bytes": 8375186227.2
+        },
+        {
+          "utc": "2026-11-01T00:24:15.208587+00:00",
+          "current_bytes": 8267812044.8,
+          "peak_bytes": 8375186227.2
+        },
+        {
+          "utc": "2026-11-01T00:24:31.402845+00:00",
+          "current_bytes": 8267812044.8,
+          "peak_bytes": 8375186227.2
+        },
+        {
+          "utc": "2026-11-01T00:24:47.591679+00:00",
+          "current_bytes": 8267812044.8,
+          "peak_bytes": 8375186227.2
+        },
+        {
+          "utc": "2026-11-01T00:25:03.811382+00:00",
+          "current_bytes": 8267812044.8,
+          "peak_bytes": 8375186227.2
+        },
+        {
+          "utc": "2026-11-01T00:25:20.011540+00:00",
+          "current_bytes": 8267812044.8,
+          "peak_bytes": 8375186227.2
+        }
+      ],
+      "pid": 94304,
+      "returncode": 0,
+      "finished": "2026-11-01T00:25:35.022341+00:00"
+    }
+  ],
+  "execution_scope": "Four sequential isolated processes, batch 1, 256 context tokens, 255 shifted targets, FP32, NF4 decoder values. Ten warmup updates and 100 measured updates per mode. Whole-process RSS includes construction, runtime, arrays and optimizer; vmmap samples physical footprint every 15 seconds.",
+  "loss_implementations": {
+    "pytorch": "Mean standard causal token cross-entropy",
+    "optimized": "Mean standard causal token cross-entropy",
+    "chunked": "Stable target-excluded causal cross-entropy, 128-token chunks",
+    "joint": "Stable target-excluded causal cross-entropy in the combined ONNX graph"
+  },
+  "logical_memory_scope": "Logits byte counts describe one logical FP32 logits tensor, not process allocation peaks.",
+  "driver_script": "import datetime,hashlib,json,os,re,subprocess,time\nfrom pathlib import Path\nSOURCE=Path('/tmp/onnax-context-source')\nROOT=Path('/Users/justinc/Documents/GitHub/onnax')\nRUN=Path('/tmp/onnax-real-context-256')\nLIBRARY=Path('/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib')\nPYTHON=str(ROOT/'.venv/bin/python')\nCOMMIT='0f2d0103e951d7d68e2b00cccb6b6c4aa5c0d584'\nCORE='808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910'\nLIB='bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087'\ndef now():return datetime.datetime.now(datetime.timezone.utc).isoformat()\ndef save(path,data):path.write_text(json.dumps(data,indent=2)+'\\n')\ndef check():\n assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=SOURCE,text=True).strip()==COMMIT\n assert not subprocess.check_output(['git','status','--porcelain'],cwd=SOURCE,text=True).strip()\n h=hashlib.sha256()\n for p in sorted((ROOT/'src/onnax').rglob('*.py')):\n  h.update(str(p.relative_to(ROOT)).encode());h.update(p.read_bytes())\n assert h.hexdigest()==CORE\n assert hashlib.sha256(LIBRARY.read_bytes()).hexdigest()==LIB\nif RUN.exists():raise SystemExit('Run directory exists; inspect its handle before any new launch')\nassert json.loads(Path('/tmp/onnax-real-evaluation/sequence.json').read_text())['status']=='complete'\nassert json.loads(Path('/tmp/onnax-no-robots-quality/sequence.json').read_text())['status']=='complete'\nassert json.loads(Path('/tmp/onnax-real-raw-optimized/sequence.json').read_text())['status']=='complete'\ncheck();RUN.mkdir()\nstate={'status':'running','source_commit':COMMIT,'core_source_sha256':CORE,'library_sha256':LIB,'started':now(),'jobs':[]};save(RUN/'sequence.json',state)\ntry:\n for mode in ['pytorch','optimized','chunked','joint']:\n  check();prefix=RUN/mode\n  command=[PYTHON,'-m','examples.huggingface.benchmark','--mode',mode,'--real','--nf4','--provider','mlx','--library',str(LIBRARY),'--batch-size','1','--sequence-length','256','--chunk-size','128','--warmup','10','--samples','100']\n  record={'mode':mode,'command':command,'source_commit':COMMIT,'core_source_sha256':CORE,'library_sha256':LIB,'started':now(),'operational_memory_limit_bytes':24*1024**3,'observations':[]}\n  state['jobs'].append({'mode':mode,'status':'running','journal':str(prefix)+'.run.json'});save(RUN/'sequence.json',state)\n  print(json.dumps({'stage':'start','mode':mode}),flush=True)\n  with open(str(prefix)+'.json','w') as output,open(str(prefix)+'.log','w') as log:\n   child=subprocess.Popen(command,cwd=SOURCE,env={**os.environ,'HF_HUB_OFFLINE':'1','ONNXRUNTIME_EP_MLX_NO_COMPILE':'1'},stdout=output,stderr=log)\n   record['pid']=child.pid;save(Path(str(prefix)+'.run.json'),record)\n   while child.poll() is None:\n    try:\n     snapshot=subprocess.run(['vmmap','-summary',str(child.pid)],capture_output=True,text=True,timeout=8)\n     matches=re.findall(r'Physical footprint[^:]*:\\s*([0-9.]+)([KMG])',snapshot.stdout) if snapshot.returncode==0 else []\n     values=[float(n)*1024**{'K':1,'M':2,'G':3}[u] for n,u in matches]\n     if values:\n      record['observations'].append({'utc':now(),'current_bytes':values[0],'peak_bytes':max(values)})\n      if max(values)>record['operational_memory_limit_bytes']:\n       record['guard_triggered']=True;(RUN/f'{mode}-guard.vmmap').write_text(snapshot.stdout)\n       child.terminate()\n       try:child.wait(timeout=15)\n       except subprocess.TimeoutExpired:child.kill();child.wait()\n       break\n    except subprocess.TimeoutExpired:record['last_observation_error']='vmmap timeout; same child retained'\n    save(Path(str(prefix)+'.run.json'),record);time.sleep(15)\n   record.update(returncode=child.wait(),finished=now());save(Path(str(prefix)+'.run.json'),record)\n  state['jobs'][-1].update(status='complete' if record['returncode']==0 else 'failed',returncode=record['returncode']);save(RUN/'sequence.json',state)\n  assert record['returncode']==0 and not record.get('guard_triggered',False),'Benchmark failed'\n  report=json.loads(Path(str(prefix)+'.json').read_text())\n  assert report['samples']==100 and report['warmup']==10 and report['valid_shifted_tokens']==255 and report['sequence']==256\n  assert len(report['losses'])==110\n  assert report['mode']==mode and report['ort_optimizer']=='disabled'\n  print(json.dumps({'stage':'finish','mode':mode,'returncode':0}),flush=True)\n reports=[json.loads((RUN/f'{mode}.json').read_text()) for mode in ['pytorch','optimized','chunked','joint']]\n assert len({r['input_ids_sha256'] for r in reports})==1\n state.update(status='complete',finished=now());save(RUN/'sequence.json',state)\nexcept BaseException as error:\n state.update(status='failed',error=str(error),finished=now());save(RUN/'sequence.json',state)\n raise\n",
+  "publication_script": "import hashlib,json,math\nfrom pathlib import Path\nROOT=Path('/tmp/onnax-qwen-context-memory')\nSOURCE=Path('/tmp/onnax-context-source')\nRUN=Path('/tmp/onnax-real-context-256')\nstate=json.loads((RUN/'sequence.json').read_text())\nassert state['status']=='complete' and len(state['jobs'])==4\ncomponents=[];executions=[]\nfor mode in ['pytorch','optimized','chunked','joint']:\n report=json.loads((RUN/f'{mode}.json').read_text())\n journal=json.loads((RUN/f'{mode}.run.json').read_text())\n assert journal['returncode']==0 and not journal.get('guard_triggered',False)\n assert journal['source_commit']==state['source_commit']\n assert report['sequence']==256 and report['valid_shifted_tokens']==255\n assert report['samples']==100 and report['warmup']==10\n assert len(report['losses'])==110 and all(math.isfinite(x) for x in report['losses'])\n assert report['ort_optimizer']=='disabled'\n if mode!='pytorch':assert report['library_sha256']==state['library_sha256']\n components.append(report);executions.append(journal)\nmatched=['projection_precision','weight_values','real','samples','warmup','batch','sequence','valid_shifted_tokens','parameter_bytes','input_ids_sha256','threads','versions']\nfor field in matched:\n assert all(r[field]==components[0][field] for r in components),field\nsummary=[{'mode':r['mode'],'step_median_seconds':r['timings_ms']['step']['median']/1000,'step_p95_seconds':r['timings_ms']['step']['p95']/1000,'effective_tokens_per_second':r['effective_tokens_per_second'],'whole_process_peak_rss_gib':r['peak_rss_bytes']/1024**3,'initialization_seconds':r['initialization_seconds'],'initial_loss':r['losses'][0],'final_loss':r['losses'][-1],'full_logits_bytes':r['full_logits_bytes'],'chunk_logits_bytes':r['chunk_logits_bytes']} for r in components]\nfiles=['examples/huggingface/benchmark.py','examples/huggingface/sft.py','examples/huggingface/chunked_loss.py','examples/huggingface/nf4.py','examples/huggingface/optimization.py','tests/test_qwen_adapters.py']\nresult={'version':1,'model':'Qwen/Qwen3-0.6B','revision':'c1899de289a04d12100db370d81485cdf75e47ca','source_commit':state['source_commit'],'core_source_sha256':state['core_source_sha256'],'source_sha256':{name:hashlib.sha256((SOURCE/name).read_bytes()).hexdigest() for name in files},'library_sha256':state['library_sha256'],'matched_fields':matched,'summary':summary,'components':components,'executions':executions,'execution_scope':'Four sequential isolated processes, batch 1, 256 context tokens, 255 shifted targets, FP32, NF4 decoder values. Ten warmup updates and 100 measured updates per mode. Whole-process RSS includes construction, runtime, arrays and optimizer; vmmap samples physical footprint every 15 seconds.','loss_implementations':{'pytorch':'Mean standard causal token cross-entropy','optimized':'Mean standard causal token cross-entropy','chunked':'Stable target-excluded causal cross-entropy, 128-token chunks','joint':'Stable target-excluded causal cross-entropy in the combined ONNX graph'},'logical_memory_scope':'Logits byte counts describe one logical FP32 logits tensor, not process allocation peaks.','driver_script':Path('/tmp/onnax-context-256-sequence.py').read_text(),'publication_script':Path(__file__).read_text()}\noutput=ROOT/'examples/huggingface/reports/qwen3-nf4-context-256-m1max.json'\noutput.write_text(json.dumps(result,indent=2,allow_nan=False)+'\\n')\nprint(json.dumps(summary,indent=2))\n"
+}

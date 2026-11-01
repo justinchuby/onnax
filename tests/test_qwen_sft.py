@@ -311,7 +311,8 @@ def test_sft_stable_reference_includes_peft_control(tmp_path):
     assert control["update_check_passed"]
 
 
-def test_custom_text_training_fresh_process_resume(tmp_path, monkeypatch):
+@pytest.mark.parametrize("max_length", [32, 64])
+def test_custom_text_training_fresh_process_resume(tmp_path, monkeypatch, max_length):
     import json
     import subprocess
     import sys
@@ -331,6 +332,8 @@ def test_custom_text_training_fresh_process_resume(tmp_path, monkeypatch):
 
     def checkpoint_each_step(*args, **kwargs):
         trainer = original(*args, **kwargs)
+        assert trainer.args.max_length == max_length
+        assert max(map(len, trainer.train_dataset["input_ids"])) <= max_length
         trainer.args.save_steps = 1
         return trainer
 
@@ -343,7 +346,9 @@ def test_custom_text_training_fresh_process_resume(tmp_path, monkeypatch):
         nf4=True,
         train_file=train,
         validation_file=validation,
+        max_length=max_length,
     )
+    assert report["data"]["max_length"] == max_length
     assert report["data"]["train_lines"] == 9
     assert report["data"]["validation_lines"] == 2
     assert report["frozen_buffers_unchanged"]
@@ -363,6 +368,8 @@ def test_custom_text_training_fresh_process_resume(tmp_path, monkeypatch):
             "--nf4",
             "--steps",
             "4",
+            "--max-length",
+            str(max_length),
             "--resume",
             str(directory / "checkpoint-1"),
             "--train-file",
@@ -392,7 +399,7 @@ def test_custom_text_training_fresh_process_resume(tmp_path, monkeypatch):
     from examples.huggingface.replay import _equal_array, _training_outputs
     from examples.lora.train import session
 
-    encoded = tok(lines[0], truncation=True, max_length=64, return_tensors="np")
+    encoded = tok(lines[0], truncation=True, max_length=max_length, return_tensors="np")
     feeds = {name: encoded[name] for name in ("input_ids", "attention_mask")}
     feeds["position_ids"] = (np.cumsum(feeds["attention_mask"], axis=1) - 1).clip(min=0)
     factory = functools.partial(session, memory_reuse=False)
@@ -410,24 +417,44 @@ def test_custom_text_training_fresh_process_resume(tmp_path, monkeypatch):
         sft.run(str(tmp_path / "missing-checkpoint"), resume=True)
     saved_identity = json.loads((directory / "checkpoint-1" / "onnax_data.json").read_text())
     assert saved_identity == report["data"]
+    with monkeypatch.context() as context:
+
+        def unexpected_model(*args, **kwargs):
+            pytest.fail("A changed context must be rejected before model construction")
+
+        context.setattr(sft, "prepare", unexpected_model)
+        with pytest.raises(ValueError, match="context length differs"):
+            sft.run(
+                str(tmp_path / "changed-context"),
+                resume=directory / "checkpoint-1",
+                train_file=train,
+                validation_file=validation,
+                max_length=64 if max_length == 32 else 32,
+            )
     train.write_text("\n".join(reversed(lines)) + "\n", encoding="utf-8")
     reordered = sft.tokenizer(training_texts=list(reversed(lines)))
     assert sft._tokenizer_digest(reordered) == report["data"]["tokenizer_sha256"]
-    with pytest.raises(ValueError, match="Checkpoint training data or tokenizer differs"):
+    with pytest.raises(
+        ValueError, match="Checkpoint training data, tokenizer or context length differs"
+    ):
         sft.run(
             str(tmp_path / "changed"),
             resume=directory / "checkpoint-1",
             train_file=train,
             validation_file=validation,
+            max_length=max_length,
         )
     train.write_text("\n".join(lines) + "\n", encoding="utf-8")
     validation.write_text("A different held-out sequence.\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="Checkpoint training data or tokenizer differs"):
+    with pytest.raises(
+        ValueError, match="Checkpoint training data, tokenizer or context length differs"
+    ):
         sft.run(
             str(tmp_path / "changed-validation"),
             resume=directory / "checkpoint-1",
             train_file=train,
             validation_file=validation,
+            max_length=max_length,
         )
     (directory / "checkpoint-1" / "onnax_data.json").unlink()
     with pytest.raises(ValueError, match="requires checkpoint data identity"):
@@ -436,6 +463,7 @@ def test_custom_text_training_fresh_process_resume(tmp_path, monkeypatch):
             resume=directory / "checkpoint-1",
             train_file=train,
             validation_file=validation,
+            max_length=max_length,
         )
 
     with pytest.raises(ValueError, match="both training and validation"):
@@ -443,3 +471,63 @@ def test_custom_text_training_fresh_process_resume(tmp_path, monkeypatch):
     validation.write_text("\n", encoding="utf-8")
     with pytest.raises(ValueError, match="both be nonempty"):
         sft.run(str(tmp_path / "invalid"), train_file=train, validation_file=validation)
+
+
+@pytest.mark.parametrize("max_length", [1, True, 65, 2.5])
+def test_sft_rejects_invalid_context_before_model_construction(
+    tmp_path, monkeypatch, max_length
+):
+    from examples.huggingface import sft
+
+    def unexpected_model(*args, **kwargs):
+        pytest.fail("Invalid context must be rejected before model construction")
+
+    monkeypatch.setattr(sft, "prepare", unexpected_model)
+    with pytest.raises(ValueError, match="max_length"):
+        sft.run(str(tmp_path), max_length=max_length)
+
+
+def test_sft_reference_comparisons_are_diagnostics_by_default(tmp_path, monkeypatch):
+    from examples.huggingface import validation
+
+    original = validation.audit
+
+    def shifted_reference(model, reference, inputs, **kwargs):
+        # A uniform logit shift preserves the probability distribution and loss.
+        hook = reference.lm_head.register_forward_hook(
+            lambda module, args, output: output + 0.01
+        )
+        try:
+            return original(model, reference, inputs, **kwargs)
+        finally:
+            hook.remove()
+
+    monkeypatch.setattr(validation, "audit", shifted_reference)
+    report = run(str(tmp_path / "diagnostic"), steps=1, mode="joint")
+    assert not report["requested_audits"]["strict_reference"]
+    assert all(not row["strict_logit_check_passed"] for row in report["audits"])
+    assert report["frozen_buffers_unchanged"]
+    with pytest.raises(AssertionError):
+        run(str(tmp_path / "strict"), steps=1, mode="joint", diagnose_rounding=False)
+
+
+@pytest.mark.parametrize("failure", ["logits", "loss", "shape"])
+def test_diagnostic_audit_rejects_invalid_forward_values(failure):
+    model, reference = prepare()
+    reference = add_reference_adapters(reference, model)
+
+    def corrupt_forward(module, args, output):
+        if failure == "logits":
+            output.logits = torch.full_like(output.logits, float("nan"))
+        elif failure == "loss":
+            output.loss = output.loss * float("nan")
+        else:
+            output.logits = output.logits[..., :-1]
+        return output
+
+    hook = model.register_forward_hook(corrupt_forward)
+    try:
+        with pytest.raises(AssertionError, match=r"Nonfinite|shape mismatch"):
+            audit(model, reference, batch(), diagnose_rounding=True)
+    finally:
+        hook.remove()

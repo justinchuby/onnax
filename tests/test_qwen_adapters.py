@@ -340,3 +340,69 @@ def test_stable_peft_control_restores_gradients_on_failure(tmp_path, monkeypatch
             assert parameter.grad is None
         else:
             torch.testing.assert_close(parameter.grad, saved[name], rtol=0, atol=0)
+
+
+def test_context_benchmark_multi_chunk_tail():
+    from examples.huggingface.benchmark import measure
+
+    reports = {
+        mode: measure(
+            mode, samples=2, warmup=0, batch_size=1, sequence_length=17, chunk_size=5
+        )
+        for mode in ("pytorch", "chunked", "joint")
+    }
+    baseline = reports["pytorch"]
+    for report in reports.values():
+        assert report["sequence"] == 17
+        assert report["valid_shifted_tokens"] == 16
+        assert report["input_ids_sha256"] == baseline["input_ids_sha256"]
+        assert report["full_logits_bytes"] == 17 * 256 * 4
+        np.testing.assert_allclose(report["losses"], baseline["losses"], rtol=1e-4, atol=1e-6)
+    assert reports["chunked"]["head_chunk_size"] == 5
+    assert reports["chunked"]["chunk_logits_bytes"] == 5 * 256 * 4
+    assert reports["joint"]["head_chunk_size"] is None
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        {"sequence_length": 1},
+        {"sequence_length": True},
+        {"sequence_length": 65},
+        {"chunk_size": 0},
+        {"chunk_size": 1.5},
+    ],
+)
+def test_context_benchmark_rejects_invalid_dimensions(options):
+    from examples.huggingface.benchmark import measure
+
+    with pytest.raises(ValueError, match=r"sequence_length|chunk_size|context"):
+        measure("chunked", **options)
+
+
+def test_chunked_head_loads_prediction_session_once_with_frozen_weight_snapshot():
+    from examples.lora.train import session
+
+    created = []
+
+    def factory(source):
+        created.append(source)
+        return session(source)
+
+    rng = np.random.default_rng(17)
+    weight = rng.normal(size=(4, 9)).astype(np.float32)
+    original = weight.copy()
+    hidden = torch.from_numpy(rng.normal(size=(1, 7, 4)).astype(np.float32))
+    labels = torch.tensor([[1, 2, 3, 4, 5, 6, 7]])
+    head = ChunkedHead(weight, chunk_size=4, session_factory=factory)
+    assert len(created) == 1
+    assert head.forward_executor is None
+    before = head(hidden, labels)
+    assert len(created) == 1
+    weight.fill(0)
+    torch.testing.assert_close(head(hidden, labels), before, rtol=0, atol=0)
+    expected = hidden @ torch.from_numpy(original)
+    torch.testing.assert_close(head.forward(hidden), expected, rtol=1e-4, atol=1e-6)
+    assert len(created) == 2
+    torch.testing.assert_close(head.forward(hidden), expected, rtol=1e-4, atol=1e-6)
+    assert len(created) == 2

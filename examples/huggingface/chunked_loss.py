@@ -11,7 +11,7 @@ from onnx_ir.passes.common import ShapeInferencePass
 from torch.autograd.function import once_differentiable
 
 import onnax
-from examples.huggingface.bridge import graph_session
+from examples.huggingface.bridge import graph_session, graph_source
 from examples.huggingface.optimization import optimize_training_graph
 from examples.huggingface.stable_losses import hard_cross_entropy, install
 from examples.lora.train import session
@@ -96,12 +96,15 @@ class ChunkedHead:
         from onnxscript import optimizer
 
         optimizer.remove_unused_nodes(forward)
-        self.forward_executor = graph_session(
-            forward, self.directory.name, "forward", session_factory=session_factory
-        )
+        # Snapshot the frozen head now; load its prediction session on first use.
+        self._forward_source = graph_source(forward, self.directory.name, "forward")
+        self._session_factory = session_factory
+        self.forward_executor = None
 
     def forward(self, hidden):
         array = hidden.detach().contiguous().numpy()
+        if self.forward_executor is None:
+            self.forward_executor = self._session_factory(self._forward_source)
         logits = self.forward_executor.run(
             None, {"hidden": array.reshape(-1, array.shape[-1])}
         )[0]

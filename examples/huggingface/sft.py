@@ -300,7 +300,14 @@ def _training_texts(train_file=None, validation_file=None):
     return train, validation
 
 
-def _data_identity(train, validation, tok):
+def _validate_max_length(max_length, *, limit=None):
+    if isinstance(max_length, bool) or not isinstance(max_length, int) or max_length < 2:
+        raise ValueError("max_length must be an integer >= 2")
+    if limit is not None and max_length > limit:
+        raise ValueError(f"max_length exceeds the model context limit of {limit}")
+
+
+def _data_identity(train, validation, tok, *, max_length=64):
     return {
         "version": 1,
         "train_lines": len(train),
@@ -308,7 +315,7 @@ def _data_identity(train, validation, tok):
         "train_sha256": hashlib.sha256("\n".join(train).encode()).hexdigest(),
         "validation_sha256": hashlib.sha256("\n".join(validation).encode()).hexdigest(),
         "tokenizer_sha256": _tokenizer_digest(tok),
-        "max_length": 64,
+        "max_length": max_length,
     }
 
 
@@ -336,7 +343,9 @@ def make_trainer(
     callbacks=None,
     train_texts=None,
     eval_texts=None,
+    max_length=64,
 ):
+    _validate_max_length(max_length, limit=model.config.max_position_embeddings)
     if (train_texts is None) != (eval_texts is None):
         raise ValueError("Provide both training and evaluation texts")
     if train_texts is None:
@@ -356,7 +365,7 @@ def make_trainer(
         max_grad_norm=0,
         lr_scheduler_type="constant",
         prediction_loss_only=True,
-        max_length=64,
+        max_length=max_length,
         packing=False,
         gradient_checkpointing=False,
         dataset_num_proc=None,
@@ -376,7 +385,9 @@ def make_trainer(
         eval_dataset=Dataset.from_dict({"text": eval_texts}),
         callbacks=[
             *(callbacks or ()),
-            _DataIdentityCallback(_data_identity(train_texts, eval_texts, tok)),
+            _DataIdentityCallback(
+                _data_identity(train_texts, eval_texts, tok, max_length=max_length)
+            ),
         ],
     )
 
@@ -390,7 +401,7 @@ def run(
     mode="full",
     chunk_size=128,
     optimize=True,
-    diagnose_rounding=False,
+    diagnose_rounding=True,
     save_activations=False,
     fp64_audit=False,
     nf4=False,
@@ -402,7 +413,9 @@ def run(
     projection_precision="fp32",
     train_file=None,
     validation_file=None,
+    max_length=64,
 ):
+    _validate_max_length(max_length, limit=None if real else 64)
     if provider not in ("cpu", "mlx", "reference"):
         raise ValueError("Expected cpu, mlx or reference provider")
     if provider != "mlx" and (library is not None or segment_nodes is not None):
@@ -429,7 +442,7 @@ def run(
         raise ValueError("Select mlx or reference for BF16 projection execution")
     train_lines, validation_lines = _training_texts(train_file, validation_file)
     tok = tokenizer(real, training_texts=train_lines if train_file is not None else None)
-    data_identity = _data_identity(train_lines, validation_lines, tok)
+    data_identity = _data_identity(train_lines, validation_lines, tok, max_length=max_length)
     if resume is True:
         from transformers.trainer_utils import get_last_checkpoint
 
@@ -441,9 +454,13 @@ def run(
         if os.path.exists(path):
             with open(path, encoding="utf-8") as stream:
                 if json.load(stream) != data_identity:
-                    raise ValueError("Checkpoint training data or tokenizer differs")
-        elif train_file is not None:
-            raise ValueError("Custom-text resume requires checkpoint data identity metadata")
+                    raise ValueError(
+                        "Checkpoint training data, tokenizer or context length differs"
+                    )
+        elif train_file is not None or max_length != 64:
+            raise ValueError(
+                "Custom-text or context resume requires checkpoint data identity metadata"
+            )
     torch.set_num_threads(4 if real else 1)
     model, reference = prepare(
         real,
@@ -455,6 +472,7 @@ def run(
         projection_precision=projection_precision,
         session_factory=runtime,
     )
+    _validate_max_length(max_length, limit=model.config.max_position_embeddings)
     initial_frozen = frozen_hashes(model.forward_graph)
     from examples.huggingface.validation import add_reference_adapters, audit
 
@@ -463,7 +481,7 @@ def run(
         from examples.huggingface.mixed_precision import reference_projections
 
         reference = reference_projections(reference)
-    sample = tok(train_lines[0], truncation=True, max_length=64, return_tensors="pt")
+    sample = tok(train_lines[0], truncation=True, max_length=max_length, return_tensors="pt")
     sample = {k: v for k, v in sample.items() if k in ("input_ids", "attention_mask")}
     sample["labels"] = sample["input_ids"].clone()
     initial_params = model.onnx.arrays()
@@ -491,6 +509,7 @@ def run(
         steps=steps,
         train_texts=train_lines,
         eval_texts=validation_lines,
+        max_length=max_length,
     )
     before = trainer.evaluate()["eval_loss"]
     trainer.train(resume_from_checkpoint=resume)
@@ -567,6 +586,7 @@ def run(
         os.replace(path + ".tmp", path)
 
     report["requested_audits"] = {
+        "strict_reference": not diagnose_rounding,
         "peft": peft_roundtrip,
         "fp64": fp64_audit,
         "stable_reference": stable_reference,
@@ -617,7 +637,21 @@ if __name__ == "__main__":
     parser.add_argument("--validation-file", help="UTF-8 held-out text file")
     parser.add_argument("--mode", choices=["full", "chunked", "joint"], default="full")
     parser.add_argument("--chunk-size", type=int, default=128)
-    parser.add_argument("--diagnose-rounding", action="store_true")
+    parser.add_argument("--max-length", type=int, default=64)
+    reference_checks = parser.add_mutually_exclusive_group()
+    reference_checks.add_argument(
+        "--strict-reference",
+        dest="diagnose_rounding",
+        action="store_false",
+        help="Require pointwise reference comparisons to pass",
+    )
+    reference_checks.add_argument(
+        "--diagnose-rounding",
+        dest="diagnose_rounding",
+        action="store_true",
+        help="Record pointwise reference comparisons (default)",
+    )
+    parser.set_defaults(diagnose_rounding=True)
     parser.add_argument("--save-activations", action="store_true")
     parser.add_argument("--fp64-audit", action="store_true")
     parser.add_argument("--nf4", action="store_true")
@@ -643,6 +677,7 @@ if __name__ == "__main__":
                 validation_file=args.validation_file,
                 mode=args.mode,
                 chunk_size=args.chunk_size,
+                max_length=args.max_length,
                 diagnose_rounding=args.diagnose_rounding,
                 save_activations=args.save_activations,
                 fp64_audit=args.fp64_audit,
