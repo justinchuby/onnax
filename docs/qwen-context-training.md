@@ -50,7 +50,7 @@ validation loss before and after training.
 ```bash
 ONNXRUNTIME_EP_MLX_NO_COMPILE=1 \
 ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912 \
-uv run --extra huggingface python -m examples.huggingface.long_context \
+uv run --extra huggingface --extra native-mlx python -m examples.huggingface.long_context \
   --corpus /tmp/qwen-long-corpus --library /path/to/libonnxruntime_mlx_ep.dylib \
   --precision fp32 --output-dir /tmp/qwen-4k-fp32
 ```
@@ -70,7 +70,7 @@ footprint and allocator active/cache/peak bytes after updates. Use the external 
 reserve:
 
 ```bash
-uv run --extra huggingface python -m examples.huggingface.guard \
+uv run --extra huggingface --extra native-mlx python -m examples.huggingface.guard \
   --output-dir /tmp/qwen-4k-fp32-guard -- \
   python -m examples.huggingface.long_context \
   --corpus /tmp/qwen-long-corpus --library /path/to/libonnxruntime_mlx_ep.dylib \
@@ -94,10 +94,15 @@ records input identities, versions, allocator counters and phase boundaries.
 The export directory contains a bound ordinary ONNX forward model, shared
 frozen weight data, adapter arrays and grouped forward/VJP modules. See
 [checkpoint loading](qwen-adapters.md) for direct execution with an external
-optimizer. The training directory also contains a standard PEFT adapter. Validate its
-exchange through PyTorch PEFT with `python -m
-examples.huggingface.checkpoint_adapter --training-dir /tmp/qwen-4k-fp32
---output-dir /tmp/qwen-peft-check --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib`.
+optimizer. The training directory also contains a standard PEFT adapter.
+Validate its exchange through PyTorch PEFT:
+
+```bash
+python -m examples.huggingface.checkpoint_adapter \
+  --training-dir /tmp/qwen-4k-fp32 --output-dir /tmp/qwen-peft-check \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib
+```
+
 The audit reloads the saved training modules and restores the trained adapter
 after its one-step update comparison.
 
@@ -106,7 +111,7 @@ Benchmark the same graph strategy independently from quality training:
 ```bash
 ONNXRUNTIME_EP_MLX_NO_COMPILE=1 \
 ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912 \
-uv run --extra huggingface python -m examples.huggingface.benchmark \
+uv run --extra huggingface --extra native-mlx python -m examples.huggingface.benchmark \
   --mode chunked --checkpoint-layers 1 --real --nf4 --provider mlx \
   --library /path/to/libonnxruntime_mlx_ep.dylib \
   --train-file /tmp/qwen-long-corpus/benchmark.jsonl \
