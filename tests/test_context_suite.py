@@ -111,6 +111,7 @@ def test_comparison_rejects_unmatched_inputs_and_nonfinite_updates(tmp_path):
                 "input_ids_sha256": "same tokens",
                 "sequence": 4096,
                 "microbatch": 1,
+                "parameter_bytes": 100,
                 "threads": {"torch": 1},
                 "hardware": {"cpu": "same machine"},
                 "versions": {},
@@ -129,6 +130,10 @@ def test_comparison_rejects_unmatched_inputs_and_nonfinite_updates(tmp_path):
                 "batch": 1,
                 "sequence": 4096,
                 "provider": "pytorch_" + device,
+                "real": True,
+                "weight_values": "nf4_reconstructed_fp32",
+                "base_storage": "fp32",
+                "parameter_bytes": 100,
                 "checkpoint_layers": 4,
                 "head_chunk_size": 128,
                 "valid_shifted_tokens": 4095,
@@ -160,6 +165,24 @@ def test_comparison_rejects_unmatched_inputs_and_nonfinite_updates(tmp_path):
         row["onnx_speedup_over_pytorch"] == pytest.approx(0.5)
         for row in comparison["measurements"]
     )
+    original_queue = queue.read_text()
+    selected = json.loads(original_queue)
+    selected["omitted_measurements"] = {
+        "cpu-fp32-4096-group4": "GPU-first; capacity only",
+        "cpu-bf16-4096-group4": "Not scheduled",
+    }
+    selected["cases"].append({"name": "cpu-fp32-4096-group4-capacity", "status": "complete"})
+    (tmp_path / "cpu-fp32-4096-group4-capacity.json").write_text('{"samples":1,"warmup":0}')
+    queue.write_text(json.dumps(selected))
+    bounded = collect(tmp_path, onnx)
+    assert len(bounded["measurements"]) == 2
+    assert len(bounded["omitted_measurements"]) == 2
+    assert bounded["omitted_measurements"][0]["capacity_report"]["samples"] == 1
+    selected["cases"][-1]["status"] = "failed"
+    (tmp_path / "cpu-fp32-4096-group4-capacity.json").unlink()
+    queue.write_text(json.dumps(selected))
+    assert "capacity_report" not in collect(tmp_path, onnx)["omitted_measurements"][0]
+    queue.write_text(original_queue)
     path = tmp_path / "cpu-fp32-4096-group4.json"
     data = json.loads(path.read_text())
     data["input_ids_sha256"] = "different tokens"
@@ -171,3 +194,16 @@ def test_comparison_rejects_unmatched_inputs_and_nonfinite_updates(tmp_path):
     path.write_text(json.dumps(data))
     with pytest.raises(ValueError, match="nonfinite"):
         collect(tmp_path, onnx)
+
+
+def test_gpu_first_keeps_cpu_probe_without_full_cpu_timings(monkeypatch, tmp_path):
+    directory, corpus = setup(monkeypatch, tmp_path)
+    monkeypatch.setattr(context_suite, "run", worker)
+    report = context_suite.run_suite(directory, corpus, gpu_first=True)
+    names = {row["name"] for row in report["cases"]}
+    assert len(names) == 9
+    assert "cpu-fp32-4096-group4-capacity" in names
+    assert "cpu-fp32-4096-group4" not in names
+    assert not any(name.startswith("cpu-bf16") for name in names)
+    assert len(report["omitted_measurements"]) == 2
+    assert context_suite.run_suite(directory, corpus, gpu_first=True) == report

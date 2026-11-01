@@ -42,7 +42,7 @@ def source_identity():
     }
 
 
-def run_suite(directory, train_file, *, sdpa=True, memory_bytes=24 * 1024**3):
+def run_suite(directory, train_file, *, sdpa=True, gpu_first=False, memory_bytes=24 * 1024**3):
     if os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK") == "1":
         raise ValueError("Disable PyTorch MPS CPU fallback for the native comparison")
     os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "0"
@@ -55,6 +55,7 @@ def run_suite(directory, train_file, *, sdpa=True, memory_bytes=24 * 1024**3):
         "source": identity,
         "corpus_sha256": corpus,
         "sdpa": sdpa,
+        "gpu_first": gpu_first,
         "memory_bytes": memory_bytes,
     }
     os.makedirs(directory, exist_ok=True)
@@ -74,6 +75,14 @@ def run_suite(directory, train_file, *, sdpa=True, memory_bytes=24 * 1024**3):
             "cases": [],
         }
     queue["status"] = "running"
+    queue.setdefault("omitted_measurements", {})
+    if gpu_first:
+        queue["omitted_measurements"].update(
+            {
+                "cpu-fp32-4096-group4": "GPU-first qualification retains only the CPU FP32 capacity probe",
+                "cpu-bf16-4096-group4": "Not scheduled in GPU-first qualification",
+            }
+        )
 
     def persist():
         with open(path + ".tmp", "w") as stream:
@@ -89,8 +98,12 @@ def run_suite(directory, train_file, *, sdpa=True, memory_bytes=24 * 1024**3):
     if sdpa:
         configurations.extend(("mps", precision, "sdpa") for precision in ("fp32", "bf16"))
     for device, precision, attention in configurations:
+        if gpu_first and device == "cpu" and precision == "bf16":
+            continue
         base = f"{device}-{precision}-4096-group4" + ("-sdpa" if attention == "sdpa" else "")
         for probe in (True, False):
+            if gpu_first and device == "cpu" and not probe:
+                break
             name = base + ("-capacity" if probe else "")
             previous = next((row for row in queue["cases"] if row["name"] == name), None)
             if previous is not None:
@@ -194,5 +207,12 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--train-file", required=True)
     parser.add_argument("--no-sdpa", action="store_true")
+    parser.add_argument(
+        "--gpu-first",
+        action="store_true",
+        help="Keep the CPU FP32 capacity probe; time only MPS configurations",
+    )
     args = parser.parse_args()
-    run_suite(args.output_dir, args.train_file, sdpa=not args.no_sdpa)
+    run_suite(
+        args.output_dir, args.train_file, sdpa=not args.no_sdpa, gpu_first=args.gpu_first
+    )

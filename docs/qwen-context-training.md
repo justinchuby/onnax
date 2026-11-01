@@ -287,11 +287,13 @@ Run the isolated matrix with capacity probes and resumable records:
 HF_HUB_OFFLINE=1 PYTORCH_ENABLE_MPS_FALLBACK=0 \
 uv run --group training --group huggingface python -m examples.huggingface.context_suite \
   --train-file /tmp/qwen-long-corpus/benchmark.jsonl \
-  --output-dir /tmp/qwen-pytorch-context
+  --output-dir /tmp/qwen-pytorch-context --gpu-first
 ```
 
-The suite measures eager CPU/MPS in both precision policies and adds MPS SDPA
-cases. Each configuration first executes one capacity-probe update. Resuming the
+The GPU-first suite measures eager and SDPA MPS in both precision policies,
+and retains a single CPU FP32 capacity-probe update. Remove `--gpu-first` to
+include full CPU FP32/BF16 measurements. Each timed configuration first executes
+one capacity-probe update. Resuming the
 same command verifies source, corpus and completed report hashes before skipping
 finished cases. A process-budget finding skips that configuration's timing run;
 an execution error preserves the logs for inspection.
