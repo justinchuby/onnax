@@ -100,3 +100,25 @@ def test_unsupported_dimension_stays_portable():
     assert (
         ir.to_proto(result).SerializeToString() == ir.to_proto(derivative).SerializeToString()
     )
+
+
+@pytest.mark.parametrize("transform", [onnax.jvp, onnax.vjp])
+def test_singleton_additive_mask_has_zero_product(transform):
+    from onnx_ir.passes.common import RemoveUnusedNodesPass
+
+    rng = np.random.default_rng(17)
+    feeds = {
+        name: rng.normal(size=(1, 2, 3, 16)).astype(np.float32) for name in ("q", "k", "v")
+    }
+    feeds["mask"] = rng.normal(size=(1, 1, 3, 1)).astype(np.float32)
+    product = transform(_model_for("Attention", feeds), inputs=["mask"])
+    seed = product.graph.inputs[-1]
+    feeds[seed.name] = rng.normal(
+        size=(1, 1, 3, 1) if transform is onnax.jvp else (1, 2, 3, 16)
+    ).astype(np.float32)
+    outputs = list(product.graph.outputs)[1:]
+    product.graph.outputs.clear()
+    product.graph.outputs.extend(outputs)
+    RemoveUnusedNodesPass()(product)
+    actual = runtime_session(product).run(None, feeds)[0]
+    np.testing.assert_allclose(actual, np.zeros_like(actual), rtol=0, atol=1e-6)

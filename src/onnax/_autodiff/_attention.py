@@ -91,13 +91,7 @@ class _Attention:
                     "Attention derivatives support masks of rank 1 through 4"
                 )
             # Short masks are valid: remaining keys are excluded.
-            width = self.dim(mask, -1)
-            padding = ctx.op(
-                "Where",
-                ctx.op("Equal", width, ctx.constant([1])),
-                ctx.constant([0]),
-                ctx.op("Sub", self.dim(self.k4, 2), width),
-            )
+            padding = self.mask_padding(mask)
             pads = ctx.op("Concat", ctx.constant([0] * (2 * _rank(mask) - 1)), padding, axis=0)
             if mask.dtype == ir.DataType.BOOL:
                 mask = ctx.op("Pad", mask, pads, ctx.constant(False, ir.DataType.BOOL))
@@ -152,6 +146,16 @@ class _Attention:
     def dim(self, x, index):
         return self.ctx.op(
             "Gather", self.ctx.op("Shape", x), self.ctx.constant([index]), axis=0
+        )
+
+    def mask_padding(self, mask):
+        ctx = self.ctx
+        width = self.dim(mask, -1)
+        return ctx.op(
+            "Where",
+            ctx.op("Equal", width, ctx.constant([1])),
+            ctx.constant([0]),
+            ctx.op("Sub", self.dim(self.k4, 2), width),
         )
 
     def to4(self, value, heads):
@@ -242,9 +246,11 @@ def vjp(
         if 3 in indices:
             # Undo any mask padding before reducing broadcast axes.
             mask = _input(node, 3)
-            sliced = ctx.op(
-                "Slice", ds, ctx.constant([0]), a.dim(mask, -1), ctx.constant([-1])
+            width = a.dim(mask, -1)
+            end = ctx.op(
+                "Where", ctx.op("Equal", width, ctx.constant([1])), a.dim(a.k4, 2), width
             )
+            sliced = ctx.op("Slice", ds, ctx.constant([0]), end, ctx.constant([-1]))
             result[3] = ctx.unbroadcast(sliced, mask)
         if a.cap_slope is not None:
             ds = ctx.op("Mul", ds, a.cap_slope)
@@ -300,7 +306,7 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
             pads = ctx.op(
                 "Concat",
                 ctx.constant([0] * (2 * _rank(_input(node, 3)) - 1)),
-                ctx.op("Sub", a.dim(a.k4, 2), a.dim(_input(node, 3), -1)),
+                a.mask_padding(_input(node, 3)),
                 axis=0,
             )
             dm = ctx.op("Pad", mask, pads, ctx.scalar(a.q, 0))
