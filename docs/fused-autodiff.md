@@ -21,21 +21,21 @@ can override them for a selected domain and opset range.
 
 For one attention head, write
 
-\[
+$$
 S = sQK^T + M,\qquad P=\operatorname{softmax}(S),\qquad Y=PV.
-\]
+$$
 
-Given an upstream gradient \(G\), the reverse products are
+Given an upstream gradient $G$, the reverse products are
 
-\[
+$$
 \bar V=P^TG,\qquad \bar P=GV^T,
-\]
+$$
 
-\[
+$$
 \bar S=P\odot\left(\bar P-
 \operatorname{sum}_{\mathrm{keys}}(P\odot\bar P)\right),
 \qquad \bar Q=s\bar SK,\qquad \bar K=s\bar S^TQ.
-\]
+$$
 
 GQA and MQA group query heads around their shared KV heads. Their KV gradients
 sum across the group; the derivative graph avoids repeating K and V for each
@@ -55,15 +55,15 @@ tensors.
 
 ## Normalization, RoPE and Swish
 
-For RMSNorm, let \(r=(\operatorname{mean}(X^2)+\epsilon)^{-1/2}\),
-\(N=Xr\), and \(W=G\odot\mathrm{scale}\). Then
+For RMSNorm, let $r=(\operatorname{mean}(X^2)+\epsilon)^{-1/2}$,
+$N=Xr$, and $W=G\odot\mathrm{scale}$. Then
 
-\[
+$$
 \bar X=r\left(W-N\operatorname{mean}(WN)\right).
-\]
+$$
 
-The scale gradient reduces \(G\odot N\) over broadcast dimensions. LayerNorm
-also subtracts the mean of \(W\); its rules cover scale, bias and the optional
+The scale gradient reduces $G\odot N$ over broadcast dimensions. LayerNorm
+also subtracts the mean of $W$; its rules cover scale, bias and the optional
 mean and inverse-standard-deviation outputs. Statistics follow the operator's
 `axis`, `epsilon` and `stash_type` attributes.
 
@@ -74,9 +74,9 @@ are supported.
 
 Swish uses
 
-\[
+$$
 f'(x)=\sigma(\alpha x)+\alpha x\sigma(\alpha x)(1-\sigma(\alpha x)).
-\]
+$$
 
 Its derivative evaluates the sigmoid with a stable exponential tail.
 
@@ -101,3 +101,47 @@ CPU ORT version and graph optimization disabled, Swish needs a runtime execution
 implementation; the example selects MLX or ReferenceEvaluator for this path.
 CPU ORT also lacks the newer sliding-window attributes and short-mask behavior,
 which the operator tests exercise through ReferenceEvaluator.
+
+## Native qualification
+
+On an M1 Max with 32 GiB RAM, the two-layer Qwen NF4 example completes 100
+updates with strict PyTorch comparisons at the initial and final states:
+
+| Projection compute | Fixed training loss | Validation loss |
+| --- | ---: | ---: |
+| FP32 | 5.5434 → 5.1406 | 5.5429 → 5.4180 |
+| BF16 | 5.5434 → 5.1423 | 5.5429 → 5.4088 |
+
+Recovery from step 50 reproduces the step-100 adapters, AdamW and scheduler
+states, loaded predictions and adapter gradients byte for byte. All 24 exported
+FP32/BF16 modules pass the full ONNX checker. Native tests also compare three
+updates with PyTorch in full-logits, chunked/checkpointed and joint-loss modes.
+
+A Qwen3-0.6B 4096-token smoke comparison uses batch one, four-layer checkpoint
+groups, 128-token head chunks, NF4 storage and FP32 projection compute:
+
+| Path | Update median | Update P95 | Peak physical footprint | Session graph nodes |
+| --- | ---: | ---: | ---: | ---: |
+| Decomposed | 24.64 s | 37.20 s | 23.71 GiB | 36,443 |
+| Fused, reviewed build | 19.95 s | 21.41 s | 17.82 GiB | 12,986 |
+
+Timing uses one warmup and three measured updates, with the same token IDs,
+weights, optimizer and thread settings. Memory includes construction, host
+arrays, runtime state and native caches. MLX compilation and ORT graph
+optimization are disabled. All four losses align within `rtol=1e-6, atol=1e-6`.
+The {download}`qualification report
+<../examples/huggingface/reports/qwen3-fused-operators-m1max.json>` contains the
+raw timings, earlier fused smoke run, source hashes, recovery checks and
+reproduction commands.
+
+Reproduce the fused measurement with the
+[prepared long-context corpus](qwen-context-training.md):
+
+```bash
+export ONNXRUNTIME_EP_MLX_NO_COMPILE=1
+uv run python -m examples.huggingface.guard --output-dir fused_4k.guard -- \
+  .venv/bin/python -m examples.huggingface.benchmark --mode chunked \
+  --real --nf4 --fused-ops --provider mlx --checkpoint-layers 4 \
+  --sequence-length 4096 --batch-size 1 --chunk-size 128 --mlx-memory-limit-gib 20 \
+  --train-file /path/to/benchmark.jsonl --warmup 1 --samples 3
+```
