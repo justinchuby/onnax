@@ -2,7 +2,7 @@
 
 Attention training spends substantial memory on probabilities over every query/key
 pair. The optional deployment pass packages an onnax pullback as a local ONNX
-function. MLX EP then chooses a tiled Metal kernel or a GEMM implementation using
+function in the `pkg.onnax` domain. MLX EP then chooses a tiled Metal kernel or a GEMM implementation using
 an explicit workspace budget. Other runtimes execute the function's ONNX body.
 
 ## The backward computation
