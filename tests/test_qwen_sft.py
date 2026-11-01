@@ -487,7 +487,7 @@ def test_sft_rejects_invalid_context_before_model_construction(
         sft.run(str(tmp_path), max_length=max_length)
 
 
-def test_sft_reference_comparisons_are_diagnostics_by_default(tmp_path, monkeypatch):
+def test_requested_sft_reference_comparisons_are_diagnostics_by_default(tmp_path, monkeypatch):
     from examples.huggingface import validation
 
     original = validation.audit
@@ -503,8 +503,9 @@ def test_sft_reference_comparisons_are_diagnostics_by_default(tmp_path, monkeypa
             hook.remove()
 
     monkeypatch.setattr(validation, "audit", shifted_reference)
-    report = run(str(tmp_path / "diagnostic"), steps=1, mode="joint")
+    report = run(str(tmp_path / "diagnostic"), steps=1, mode="joint", reference_audit=True)
     assert not report["requested_audits"]["strict_reference"]
+    assert len(report["audits"]) == 2
     assert all(not row["strict_logit_check_passed"] for row in report["audits"])
     assert report["frozen_buffers_unchanged"]
     with pytest.raises(AssertionError):
@@ -531,3 +532,64 @@ def test_diagnostic_audit_rejects_invalid_forward_values(failure):
             audit(model, reference, batch(), diagnose_rounding=True)
     finally:
         hook.remove()
+
+
+def test_default_sft_releases_reference_and_preserves_training(tmp_path, monkeypatch):
+    import weakref
+
+    from examples.huggingface import sft
+
+    original_prepare, original_trainer = sft.prepare, sft.make_trainer
+    references, heads = [], []
+    expect_reference = False
+
+    def tracked_prepare(*args, **kwargs):
+        model, reference = original_prepare(*args, **kwargs)
+        references.append(weakref.ref(reference))
+        return model, reference
+
+    def checked_trainer(model, *args, **kwargs):
+        assert (references[-1]() is not None) == expect_reference
+        heads.append(model.head)
+        return original_trainer(model, *args, **kwargs)
+
+    monkeypatch.setattr(sft, "prepare", tracked_prepare)
+    monkeypatch.setattr(sft, "make_trainer", checked_trainer)
+    ordinary = sft.run(str(tmp_path / "ordinary"), mode="chunked", nf4=True, steps=2)
+    assert ordinary["audits"] == []
+    assert not ordinary["requested_audits"]["reference"]
+    assert not ordinary["reference_retained_during_training"]
+    assert heads[0].forward_executor is None
+    expect_reference = True
+    audited = sft.run(
+        str(tmp_path / "audited"), mode="chunked", nf4=True, steps=2, reference_audit=True
+    )
+    assert len(audited["audits"]) == 2
+    assert audited["requested_audits"]["reference"]
+    assert heads[1].forward_executor is not None
+    assert ordinary["validation_loss"] == audited["validation_loss"]
+    with (
+        np.load(tmp_path / "ordinary/export/adapter.npz") as a,
+        np.load(tmp_path / "audited/export/adapter.npz") as b,
+    ):
+        assert a.files == b.files
+        for name in a.files:
+            np.testing.assert_array_equal(a[name], b[name])
+
+
+def test_default_sft_rejects_nonfinite_update_before_export(tmp_path, monkeypatch):
+    from examples.huggingface import sft
+
+    original = sft.prepare
+
+    def invalid_gradient(*args, **kwargs):
+        model, reference = original(*args, **kwargs)
+        model.onnx.adapters[0].register_hook(
+            lambda gradient: torch.full_like(gradient, float("nan"))
+        )
+        return model, reference
+
+    monkeypatch.setattr(sft, "prepare", invalid_gradient)
+    with pytest.raises(FloatingPointError, match="Nonfinite adapter parameter"):
+        sft.run(str(tmp_path), mode="joint", steps=1)
+    assert not (tmp_path / "export" / "forward.onnx").exists()
