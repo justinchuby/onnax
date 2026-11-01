@@ -93,26 +93,34 @@ respectively. These include cold model construction and native runtime memory.
 The [capacity report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-4k-checkpoint-capacity-m1max.json)
 records input identities, versions, allocator counters and phase boundaries.
 
-## FP32 training result
+## Training results
 
-The complete 30-update FP32 run reduced loss on both fixed sets:
+Both computation policies completed 30 updates and reduced loss on the fixed
+training and validation sets:
 
-| Evaluation set | Before training | After 30 updates |
-| --- | ---: | ---: |
-| Training, 128 examples | 3.1839 | 2.2026 |
-| Validation, 32 examples | 2.9834 | 2.2320 |
+| Compute | Train before | Train after | Validation before | Validation after |
+| --- | ---: | ---: | ---: | ---: |
+| FP32 | 3.1839 | 2.2026 | 2.9834 | 2.2320 |
+| BF16 | 3.1845 | 2.2050 | 2.9840 | 2.2325 |
 
-All 112 adapter tensors changed during the second half of training. The final
-export retained the original hashes of all 532 frozen initializers. All 64
-exported ONNX modules passed the full checker; selected parameters are explicit
-FP32 inputs with matching FP32 gradient outputs. Whole-process peak physical
-footprint was 14.6 GiB, including construction, evaluation, training and export.
+In each run, all 112 adapter tensors changed during the second half of
+training, while all 532 frozen initializer hashes stayed unchanged. All 64
+exported ONNX modules passed the full checker. Trainable parameters remain
+explicit FP32 inputs with matching FP32 gradient outputs. Whole-process peak
+physical footprint was 14.6 GiB for FP32 and 13.4 GiB for BF16, including
+construction, evaluation, training and export.
 
-The [FP32 training report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-4k-nf4-fp32-training-m1max.json)
-records exact loss values, corpus identities, source hashes, checkpoint state
-audits and per-update memory observations. A fresh process resumed checkpoint 15
-and reproduced all 112 final adapter tensors, AdamW state, scheduler and random
-number generator state byte for byte at update 30. Loaded inference and training\nmodules also reproduced the complete forward outputs, loss and all 112\ngradients byte for byte on a 4096-token input with seven right-padding tokens.
+The [FP32 report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-4k-nf4-fp32-training-m1max.json)
+and [BF16 report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-4k-nf4-bf16-training-m1max.json)
+record exact losses, corpus identities, source hashes, checkpoint audits and
+per-update memory observations.
+
+The FP32 fresh-process checkpoint-15 recovery reproduced all final adapters,
+AdamW state, scheduler and RNG state byte for byte at update 30. Loaded
+inference and training modules also reproduced complete forward outputs, loss
+and all 112 gradients on a 4096-token input with seven right-padding tokens.
+PEFT exchange preserved all 112 adapter arrays; the stable FP32 reference
+control aligned all adapter gradients at rtol=1e-4 and atol=1e-6.
 
 ## Export and measure
 
@@ -129,7 +137,8 @@ python -m examples.huggingface.checkpoint_adapter \
 ```
 
 The audit reloads the saved training modules and restores the trained adapter
-after its one-step update comparison.
+after its one-step update comparison. Add `--stable-reference` to include the
+FP32 pairwise output-head reference control.
 
 Benchmark the same graph strategy independently from quality training:
 
