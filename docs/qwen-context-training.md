@@ -47,6 +47,10 @@ finite FP32 parameters, gradients and AdamW state, and records memory counters
 in `qualification.json`. `report.json` contains fixed training-set and
 validation loss before and after training.
 
+For evaluation, each example's loss averages its valid shifted tokens; Trainer
+then averages these example losses. Training accumulation normalizes the
+summed token loss over the valid tokens in its four microbatches.
+
 ```bash
 ONNXRUNTIME_EP_MLX_NO_COMPILE=1 \
 ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912 \
