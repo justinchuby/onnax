@@ -1,0 +1,669 @@
+{
+  "version": 1,
+  "baseline_report": "qwen3-nf4-context-256-m1max.json",
+  "baseline_source_commit": "0f2d0103e951d7d68e2b00cccb6b6c4aa5c0d584",
+  "source_commit": "cb1f52bad342efdc18d0838ff9ad403128c4edfe",
+  "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+  "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+  "source_sha256": {
+    "examples/huggingface/benchmark.py": "b554cd2b783dad2d6e38ef5b7b4639e64f7232d36a67fac05355afd9f618296f",
+    "examples/huggingface/bridge.py": "a3e79eb8e21f61fe9589cbaa02d584cdda59d7c6c59e97693e82f9362a1b38dd",
+    "examples/huggingface/chunked_loss.py": "46567bf8f482e0d65e5bc778fb19ddfa920ab73ef6b29e8702e0dc6840f8b912",
+    "examples/huggingface/sft.py": "11b9883eee3806ceb73d6d6356b39165911f2c847f47529214ab65cebec5a881",
+    "examples/huggingface/validation.py": "d33a12f738bbecdbebe4df2ed1519487b55156ed445c42175c517377a1b4c582",
+    "tests/test_qwen_adapters.py": "83b53c6d82c71cfbc984a9cda80cfcc3340144d94f40f5d10774c74acc71cb8b",
+    "tests/test_qwen_sft.py": "b2020a6d11496b2f69708443bf81a13f36c212f2258f29b733300ceaa972a34a"
+  },
+  "matched_fields": [
+    "projection_precision",
+    "weight_values",
+    "base_storage",
+    "samples",
+    "warmup",
+    "batch",
+    "sequence",
+    "valid_shifted_tokens",
+    "parameter_bytes",
+    "input_ids_sha256",
+    "threads",
+    "versions",
+    "library_sha256",
+    "ort_optimizer",
+    "head_chunk_size"
+  ],
+  "comparison": {
+    "losses_bitwise_equal_fp32": true,
+    "maximum_loss_gap": 0.0,
+    "removed_session_names": [
+      "head_forward"
+    ],
+    "removed_logical_initializer_bytes": 622329856,
+    "peak_rss_reduction_bytes": 617545728,
+    "step_median_ratio": 0.9976314042590548
+  },
+  "before": {
+    "mode": "chunked",
+    "provider": "mlx",
+    "segment_target_nodes": null,
+    "lut4_fusion_disabled": false,
+    "mlx_compile_disabled": true,
+    "real": true,
+    "weight_values": "nf4_reconstructed_fp32",
+    "projection_precision": "fp32",
+    "gradient_and_optimizer_dtype": "float32",
+    "base_storage": "packed_nf4_decoder",
+    "warmup": 10,
+    "samples": 100,
+    "losses": [
+      1.7420154809951782,
+      1.635430097579956,
+      1.435960054397583,
+      1.2136543989181519,
+      1.0107908248901367,
+      0.8068591356277466,
+      0.6338813304901123,
+      0.5028806924819946,
+      0.35886096954345703,
+      0.24316100776195526,
+      0.1588798463344574,
+      0.10554686933755875,
+      0.0769340991973877,
+      0.06728526204824448,
+      0.06491107493638992,
+      0.0621492862701416,
+      0.06222856417298317,
+      0.24188058078289032,
+      0.15005376935005188,
+      0.08708742260932922,
+      0.05896269530057907,
+      0.059101976454257965,
+      0.05928284674882889,
+      0.0598570741713047,
+      0.059868860989809036,
+      0.05904107168316841,
+      0.058290403336286545,
+      0.05786268413066864,
+      0.05765818431973457,
+      0.05743211880326271,
+      0.057082399725914,
+      0.05674232915043831,
+      0.0564517118036747,
+      0.056198157370090485,
+      0.055975064635276794,
+      0.05577733740210533,
+      0.055598221719264984,
+      0.05543140694499016,
+      0.05527302622795105,
+      0.05512118712067604,
+      0.05497462674975395,
+      0.054831791669130325,
+      0.05469109117984772,
+      0.05455103889107704,
+      0.05441046878695488,
+      0.054268788546323776,
+      0.05412573739886284,
+      0.053981196135282516,
+      0.05383504554629326,
+      0.05368713289499283,
+      0.05353713035583496,
+      0.05338471382856369,
+      0.05322952941060066,
+      0.05307121202349663,
+      0.05290942266583443,
+      0.0527438186109066,
+      0.05257406458258629,
+      0.05239987373352051,
+      0.0522209070622921,
+      0.052036888897418976,
+      0.05184756591916084,
+      0.051652636379003525,
+      0.05145185813307762,
+      0.051244914531707764,
+      0.051031701266765594,
+      0.05081185698509216,
+      0.05058514326810837,
+      0.05035129934549332,
+      0.05011013150215149,
+      0.049861304461956024,
+      0.04960447549819946,
+      0.049339354038238525,
+      0.04906564950942993,
+      0.04878301918506622,
+      0.04849114269018173,
+      0.048189736902713776,
+      0.04787856712937355,
+      0.04755736142396927,
+      0.047225892543792725,
+      0.04688389599323273,
+      0.046531226485967636,
+      0.04616756737232208,
+      0.045792702585458755,
+      0.04540634900331497,
+      0.045008186250925064,
+      0.044597893953323364,
+      0.04417510703206062,
+      0.04373941197991371,
+      0.04329030215740204,
+      0.04282714053988457,
+      0.04234914854168892,
+      0.04185531288385391,
+      0.04134431481361389,
+      0.040814485400915146,
+      0.040263596922159195,
+      0.039688918739557266,
+      0.03908691927790642,
+      0.0384531170129776,
+      0.037781696766614914,
+      0.0370650477707386,
+      0.036292966455221176,
+      0.03545170649886131,
+      0.034522250294685364,
+      0.033477507531642914,
+      0.03227667137980461,
+      0.03085421770811081,
+      0.029097117483615875,
+      0.026798469945788383,
+      0.02356250025331974,
+      0.01862831972539425
+    ],
+    "batch": 1,
+    "sequence": 256,
+    "valid_shifted_tokens": 255,
+    "input_ids_sha256": "bb7ec37cfc2ae675254fed85677800fde959c46c0a63a2963f529cc967eb91b0",
+    "input_pattern": "Repeated prefix of the first eight local corpus lines",
+    "head_chunk_size": 128,
+    "full_logits_bytes": 155582464,
+    "chunk_logits_bytes": 77791232,
+    "initialization_seconds": 163.58045770798344,
+    "timings_ms": {
+      "forward_and_loss": {
+        "median": 448.90516650048085,
+        "p95": 469.4261809432646
+      },
+      "backward": {
+        "median": 1583.7501040077768,
+        "p95": 2743.050169374328
+      },
+      "process_cpu": {
+        "median": 884.1664999999921,
+        "p95": 922.4161000000024
+      },
+      "adamw": {
+        "median": 6.6949379979632795,
+        "p95": 7.903352426365019
+      },
+      "step": {
+        "median": 2041.215146513423,
+        "p95": 3199.063875628053
+      }
+    },
+    "effective_tokens_per_second": 124.92558681801019,
+    "peak_rss_bytes": 8573681664,
+    "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+    "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+    "parameter_bytes": 2293760,
+    "threads": {
+      "torch": 1,
+      "ort_intra": 1,
+      "ort_inter": 1
+    },
+    "thread_environment": {
+      "OMP_NUM_THREADS": null,
+      "OPENBLAS_NUM_THREADS": null,
+      "MKL_NUM_THREADS": null,
+      "VECLIB_MAXIMUM_THREADS": null
+    },
+    "ort_optimizer": "disabled",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "hardware": {
+      "cpu": "Apple M1 Max",
+      "logical_cores": 10,
+      "physical_memory_bytes": 34359738368
+    },
+    "versions": {
+      "torch": "2.15.0",
+      "transformers": "5.22.1",
+      "onnxruntime": "1.31.1",
+      "onnxscript": "0.7.2",
+      "mobius-onnx": "0.1.0"
+    },
+    "native_construction": {
+      "session_0": {
+        "factory_seconds": 0.11162266600877047,
+        "segments": 1,
+        "source": "gradient.onnx"
+      },
+      "session_1": {
+        "factory_seconds": 0.08347304101334885,
+        "segments": 1,
+        "source": "forward.onnx"
+      },
+      "session_2": {
+        "factory_seconds": 0.45480795798357576,
+        "segments": 1,
+        "source": "forward.onnx"
+      },
+      "session_3": {
+        "factory_seconds": 3.579701541981194,
+        "segments": 1,
+        "source": "backward.onnx"
+      }
+    },
+    "cpu_fallback_disabled": true,
+    "library": "/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib",
+    "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+    "initializer_bytes_by_session": {
+      "forward": 891289904,
+      "backward": 891289932,
+      "head_forward": 622329856,
+      "head_backward": 622329900
+    },
+    "initializer_scope": "Logical top-level initializer bytes for each execution session",
+    "decoder_storage_bytes": {
+      "original": 1761607680,
+      "packed": 247726080
+    },
+    "nodes": {
+      "forward": 3410,
+      "raw_vjp": 46020,
+      "executed_vjp": 32646
+    },
+    "logical_saved_activation_bytes": 0,
+    "saved_activation_count": 0,
+    "input_view_median_us": 50.89599289931357,
+    "input_view_scope": "Host data-input preparation; adapter preparation is included in forward",
+    "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
+  },
+  "after": {
+    "mode": "chunked",
+    "provider": "mlx",
+    "segment_target_nodes": null,
+    "lut4_fusion_disabled": false,
+    "mlx_compile_disabled": true,
+    "real": true,
+    "weight_values": "nf4_reconstructed_fp32",
+    "projection_precision": "fp32",
+    "gradient_and_optimizer_dtype": "float32",
+    "base_storage": "packed_nf4_decoder",
+    "warmup": 10,
+    "samples": 100,
+    "losses": [
+      1.7420154809951782,
+      1.635430097579956,
+      1.435960054397583,
+      1.2136543989181519,
+      1.0107908248901367,
+      0.8068591356277466,
+      0.6338813304901123,
+      0.5028806924819946,
+      0.35886096954345703,
+      0.24316100776195526,
+      0.1588798463344574,
+      0.10554686933755875,
+      0.0769340991973877,
+      0.06728526204824448,
+      0.06491107493638992,
+      0.0621492862701416,
+      0.06222856417298317,
+      0.24188058078289032,
+      0.15005376935005188,
+      0.08708742260932922,
+      0.05896269530057907,
+      0.059101976454257965,
+      0.05928284674882889,
+      0.0598570741713047,
+      0.059868860989809036,
+      0.05904107168316841,
+      0.058290403336286545,
+      0.05786268413066864,
+      0.05765818431973457,
+      0.05743211880326271,
+      0.057082399725914,
+      0.05674232915043831,
+      0.0564517118036747,
+      0.056198157370090485,
+      0.055975064635276794,
+      0.05577733740210533,
+      0.055598221719264984,
+      0.05543140694499016,
+      0.05527302622795105,
+      0.05512118712067604,
+      0.05497462674975395,
+      0.054831791669130325,
+      0.05469109117984772,
+      0.05455103889107704,
+      0.05441046878695488,
+      0.054268788546323776,
+      0.05412573739886284,
+      0.053981196135282516,
+      0.05383504554629326,
+      0.05368713289499283,
+      0.05353713035583496,
+      0.05338471382856369,
+      0.05322952941060066,
+      0.05307121202349663,
+      0.05290942266583443,
+      0.0527438186109066,
+      0.05257406458258629,
+      0.05239987373352051,
+      0.0522209070622921,
+      0.052036888897418976,
+      0.05184756591916084,
+      0.051652636379003525,
+      0.05145185813307762,
+      0.051244914531707764,
+      0.051031701266765594,
+      0.05081185698509216,
+      0.05058514326810837,
+      0.05035129934549332,
+      0.05011013150215149,
+      0.049861304461956024,
+      0.04960447549819946,
+      0.049339354038238525,
+      0.04906564950942993,
+      0.04878301918506622,
+      0.04849114269018173,
+      0.048189736902713776,
+      0.04787856712937355,
+      0.04755736142396927,
+      0.047225892543792725,
+      0.04688389599323273,
+      0.046531226485967636,
+      0.04616756737232208,
+      0.045792702585458755,
+      0.04540634900331497,
+      0.045008186250925064,
+      0.044597893953323364,
+      0.04417510703206062,
+      0.04373941197991371,
+      0.04329030215740204,
+      0.04282714053988457,
+      0.04234914854168892,
+      0.04185531288385391,
+      0.04134431481361389,
+      0.040814485400915146,
+      0.040263596922159195,
+      0.039688918739557266,
+      0.03908691927790642,
+      0.0384531170129776,
+      0.037781696766614914,
+      0.0370650477707386,
+      0.036292966455221176,
+      0.03545170649886131,
+      0.034522250294685364,
+      0.033477507531642914,
+      0.03227667137980461,
+      0.03085421770811081,
+      0.029097117483615875,
+      0.026798469945788383,
+      0.02356250025331974,
+      0.01862831972539425
+    ],
+    "batch": 1,
+    "sequence": 256,
+    "valid_shifted_tokens": 255,
+    "input_ids_sha256": "bb7ec37cfc2ae675254fed85677800fde959c46c0a63a2963f529cc967eb91b0",
+    "input_pattern": "Repeated prefix of the first eight local corpus lines",
+    "head_chunk_size": 128,
+    "full_logits_bytes": 155582464,
+    "chunk_logits_bytes": 77791232,
+    "initialization_seconds": 160.70111712504877,
+    "timings_ms": {
+      "forward_and_loss": {
+        "median": 445.41049998952076,
+        "p95": 468.54607708519325
+      },
+      "backward": {
+        "median": 1583.4800624870695,
+        "p95": 2707.0198378612986
+      },
+      "process_cpu": {
+        "median": 876.1644999999874,
+        "p95": 903.9331499999988
+      },
+      "adamw": {
+        "median": 6.992812501266599,
+        "p95": 7.960930973058566
+      },
+      "step": {
+        "median": 2036.3803330110386,
+        "p95": 3161.2440167053137
+      }
+    },
+    "effective_tokens_per_second": 125.2221875581322,
+    "peak_rss_bytes": 7956135936,
+    "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+    "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+    "parameter_bytes": 2293760,
+    "threads": {
+      "torch": 1,
+      "ort_intra": 1,
+      "ort_inter": 1
+    },
+    "thread_environment": {
+      "OMP_NUM_THREADS": null,
+      "OPENBLAS_NUM_THREADS": null,
+      "MKL_NUM_THREADS": null,
+      "VECLIB_MAXIMUM_THREADS": null
+    },
+    "ort_optimizer": "disabled",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "hardware": {
+      "cpu": "Apple M1 Max",
+      "logical_cores": 10,
+      "physical_memory_bytes": 34359738368
+    },
+    "versions": {
+      "torch": "2.15.0",
+      "transformers": "5.22.1",
+      "onnxruntime": "1.31.1",
+      "onnxscript": "0.7.2",
+      "mobius-onnx": "0.1.0"
+    },
+    "native_construction": {
+      "session_0": {
+        "factory_seconds": 0.10975362500175834,
+        "segments": 1,
+        "source": "gradient.onnx"
+      },
+      "session_1": {
+        "factory_seconds": 0.46207612502621487,
+        "segments": 1,
+        "source": "forward.onnx"
+      },
+      "session_2": {
+        "factory_seconds": 3.674621083016973,
+        "segments": 1,
+        "source": "backward.onnx"
+      }
+    },
+    "cpu_fallback_disabled": true,
+    "library": "/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib",
+    "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+    "head_forward_session_created": false,
+    "initializer_bytes_by_session": {
+      "forward": 891289904,
+      "backward": 891289932,
+      "head_backward": 622329900
+    },
+    "initializer_scope": "Logical top-level initializer bytes for each execution session",
+    "decoder_storage_bytes": {
+      "original": 1761607680,
+      "packed": 247726080
+    },
+    "nodes": {
+      "forward": 3410,
+      "raw_vjp": 46020,
+      "executed_vjp": 32646
+    },
+    "logical_saved_activation_bytes": 0,
+    "saved_activation_count": 0,
+    "input_view_median_us": 50.0839960295707,
+    "input_view_scope": "Host data-input preparation; adapter preparation is included in forward",
+    "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries"
+  },
+  "execution": {
+    "mode": "chunked",
+    "command": [
+      "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+      "-m",
+      "examples.huggingface.benchmark",
+      "--mode",
+      "chunked",
+      "--real",
+      "--nf4",
+      "--provider",
+      "mlx",
+      "--library",
+      "/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib",
+      "--batch-size",
+      "1",
+      "--sequence-length",
+      "256",
+      "--chunk-size",
+      "128",
+      "--warmup",
+      "10",
+      "--samples",
+      "100"
+    ],
+    "source_commit": "cb1f52bad342efdc18d0838ff9ad403128c4edfe",
+    "core_source_sha256": "808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910",
+    "library_sha256": "bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087",
+    "started": "2026-11-01T00:30:01.272429+00:00",
+    "operational_memory_limit_bytes": 25769803776,
+    "observations": [
+      {
+        "utc": "2026-11-01T00:30:17.160186+00:00",
+        "current_bytes": 3543348019.2,
+        "peak_bytes": 3543348019.2
+      },
+      {
+        "utc": "2026-11-01T00:30:33.084392+00:00",
+        "current_bytes": 4402341478.4,
+        "peak_bytes": 4402341478.4
+      },
+      {
+        "utc": "2026-11-01T00:30:48.978617+00:00",
+        "current_bytes": 4402341478.4,
+        "peak_bytes": 6120328396.8
+      },
+      {
+        "utc": "2026-11-01T00:31:04.867889+00:00",
+        "current_bytes": 4509715660.8,
+        "peak_bytes": 6120328396.8
+      },
+      {
+        "utc": "2026-11-01T00:31:20.746899+00:00",
+        "current_bytes": 4402341478.4,
+        "peak_bytes": 6120328396.8
+      },
+      {
+        "utc": "2026-11-01T00:31:36.644127+00:00",
+        "current_bytes": 4402341478.4,
+        "peak_bytes": 6120328396.8
+      },
+      {
+        "utc": "2026-11-01T00:31:52.533430+00:00",
+        "current_bytes": 4402341478.4,
+        "peak_bytes": 6120328396.8
+      },
+      {
+        "utc": "2026-11-01T00:32:08.426844+00:00",
+        "current_bytes": 4402341478.4,
+        "peak_bytes": 6120328396.8
+      },
+      {
+        "utc": "2026-11-01T00:32:24.343756+00:00",
+        "current_bytes": 4402341478.4,
+        "peak_bytes": 6120328396.8
+      },
+      {
+        "utc": "2026-11-01T00:32:40.280580+00:00",
+        "current_bytes": 5046586572.8,
+        "peak_bytes": 6120328396.8
+      },
+      {
+        "utc": "2026-11-01T00:32:56.619062+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:33:12.898386+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:33:29.195667+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:33:45.467446+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:34:01.773350+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:34:18.061454+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:34:34.382217+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:34:50.653829+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:35:06.986258+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:35:23.288351+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:35:39.583049+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:35:55.894996+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:36:12.191802+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:36:28.483610+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      },
+      {
+        "utc": "2026-11-01T00:36:44.778306+00:00",
+        "current_bytes": 10630044057.6,
+        "peak_bytes": 10630044057.6
+      }
+    ],
+    "pid": 95199,
+    "returncode": 0,
+    "finished": "2026-11-01T00:36:59.790198+00:00"
+  },
+  "execution_scope": "Matched 256-token NF4/FP32 chunked training, batch 1, 255 shifted targets, 128-token head chunk; ten warmup updates and 100 measured updates. Whole-process RSS includes construction, runtime, arrays and optimizer.",
+  "driver_script": "import datetime,hashlib,json,os,re,subprocess,time\nfrom pathlib import Path\nSOURCE=Path('/tmp/onnax-context-lazy-source')\nROOT=Path('/Users/justinc/Documents/GitHub/onnax')\nRUN=Path('/tmp/onnax-real-context-256-lazy')\nLIBRARY=Path('/tmp/onnax-inverse-target/release/libonnxruntime_mlx_ep.dylib')\nPYTHON=str(ROOT/'.venv/bin/python')\nCOMMIT='cb1f52bad342efdc18d0838ff9ad403128c4edfe'\nCORE='808ebdde8c36c55b60be666f86c158f3edb6ea5e211bfd0ce7e9e31c1b338910'\nLIB='bbdfe266ec628e133e8db4ff317076e0fe40e6f3bb36efb66b6283c3b7ef4087'\ndef now():return datetime.datetime.now(datetime.timezone.utc).isoformat()\ndef save(path,data):path.write_text(json.dumps(data,indent=2)+'\\n')\ndef check():\n assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=SOURCE,text=True).strip()==COMMIT\n assert not subprocess.check_output(['git','status','--porcelain'],cwd=SOURCE,text=True).strip()\n h=hashlib.sha256()\n for p in sorted((ROOT/'src/onnax').rglob('*.py')):\n  h.update(str(p.relative_to(ROOT)).encode());h.update(p.read_bytes())\n assert h.hexdigest()==CORE\n assert hashlib.sha256(LIBRARY.read_bytes()).hexdigest()==LIB\nif RUN.exists():raise SystemExit('Run directory exists; inspect its handle before any new launch')\nassert json.loads(Path('/tmp/onnax-real-evaluation/sequence.json').read_text())['status']=='complete'\nassert json.loads(Path('/tmp/onnax-no-robots-quality/sequence.json').read_text())['status']=='complete'\nassert json.loads(Path('/tmp/onnax-real-raw-optimized/sequence.json').read_text())['status']=='complete'\nassert json.loads(Path('/tmp/onnax-real-context-256/sequence.json').read_text())['status']=='complete'\ncheck();RUN.mkdir()\nstate={'status':'running','source_commit':COMMIT,'core_source_sha256':CORE,'library_sha256':LIB,'started':now(),'jobs':[]};save(RUN/'sequence.json',state)\ntry:\n for mode in ['chunked']:\n  check();prefix=RUN/mode\n  command=[PYTHON,'-m','examples.huggingface.benchmark','--mode',mode,'--real','--nf4','--provider','mlx','--library',str(LIBRARY),'--batch-size','1','--sequence-length','256','--chunk-size','128','--warmup','10','--samples','100']\n  record={'mode':mode,'command':command,'source_commit':COMMIT,'core_source_sha256':CORE,'library_sha256':LIB,'started':now(),'operational_memory_limit_bytes':24*1024**3,'observations':[]}\n  state['jobs'].append({'mode':mode,'status':'running','journal':str(prefix)+'.run.json'});save(RUN/'sequence.json',state)\n  print(json.dumps({'stage':'start','mode':mode}),flush=True)\n  with open(str(prefix)+'.json','w') as output,open(str(prefix)+'.log','w') as log:\n   child=subprocess.Popen(command,cwd=SOURCE,env={**os.environ,'HF_HUB_OFFLINE':'1','ONNXRUNTIME_EP_MLX_NO_COMPILE':'1'},stdout=output,stderr=log)\n   record['pid']=child.pid;save(Path(str(prefix)+'.run.json'),record)\n   while child.poll() is None:\n    try:\n     snapshot=subprocess.run(['vmmap','-summary',str(child.pid)],capture_output=True,text=True,timeout=8)\n     matches=re.findall(r'Physical footprint[^:]*:\\s*([0-9.]+)([KMG])',snapshot.stdout) if snapshot.returncode==0 else []\n     values=[float(n)*1024**{'K':1,'M':2,'G':3}[u] for n,u in matches]\n     if values:\n      record['observations'].append({'utc':now(),'current_bytes':values[0],'peak_bytes':max(values)})\n      if max(values)>record['operational_memory_limit_bytes']:\n       record['guard_triggered']=True;(RUN/f'{mode}-guard.vmmap').write_text(snapshot.stdout)\n       child.terminate()\n       try:child.wait(timeout=15)\n       except subprocess.TimeoutExpired:child.kill();child.wait()\n       break\n    except subprocess.TimeoutExpired:record['last_observation_error']='vmmap timeout; same child retained'\n    save(Path(str(prefix)+'.run.json'),record);time.sleep(15)\n   record.update(returncode=child.wait(),finished=now());save(Path(str(prefix)+'.run.json'),record)\n  state['jobs'][-1].update(status='complete' if record['returncode']==0 else 'failed',returncode=record['returncode']);save(RUN/'sequence.json',state)\n  assert record['returncode']==0 and not record.get('guard_triggered',False),'Benchmark failed'\n  report=json.loads(Path(str(prefix)+'.json').read_text())\n  assert report['samples']==100 and report['warmup']==10 and report['valid_shifted_tokens']==255 and report['sequence']==256\n  assert len(report['losses'])==110\n  assert report['head_forward_session_created'] is False\n  assert 'head_forward' not in report['initializer_bytes_by_session']\n  baseline=json.loads(Path('/tmp/onnax-real-context-256/chunked.json').read_text())\n  assert report['input_ids_sha256']==baseline['input_ids_sha256']\n  assert report['mode']==mode and report['ort_optimizer']=='disabled'\n  print(json.dumps({'stage':'finish','mode':mode,'returncode':0}),flush=True)\n reports=[json.loads((RUN/f'{mode}.json').read_text()) for mode in ['chunked']]\n assert len({r['input_ids_sha256'] for r in reports})==1\n state.update(status='complete',finished=now());save(RUN/'sequence.json',state)\nexcept BaseException as error:\n state.update(status='failed',error=str(error),finished=now());save(RUN/'sequence.json',state)\n raise\n",
+  "publication_script": "import hashlib,json,math,struct\nfrom pathlib import Path\nROOT=Path('/tmp/onnax-qwen-context-memory')\nSOURCE=Path('/tmp/onnax-context-lazy-source')\nRUN=Path('/tmp/onnax-real-context-256-lazy')\nstate=json.loads((RUN/'sequence.json').read_text())\nassert state['status']=='complete' and len(state['jobs'])==1\nbefore=json.loads(Path('/tmp/onnax-real-context-256/chunked.json').read_text())\nafter=json.loads((RUN/'chunked.json').read_text())\njournal=json.loads((RUN/'chunked.run.json').read_text())\nassert journal['returncode']==0 and not journal.get('guard_triggered',False)\nassert after['head_forward_session_created'] is False\nassert 'head_forward' not in after['initializer_bytes_by_session']\nassert len(after['losses'])==110 and all(math.isfinite(v) for v in after['losses'])\nmatched=['projection_precision','weight_values','base_storage','samples','warmup','batch','sequence','valid_shifted_tokens','parameter_bytes','input_ids_sha256','threads','versions','library_sha256','ort_optimizer','head_chunk_size']\nassert all(before[k]==after[k] for k in matched)\nassert all(before['initializer_bytes_by_session'][k]==v for k,v in after['initializer_bytes_by_session'].items())\npack=lambda values:struct.pack('<'+'f'*len(values),*values)\ncomparison={'losses_bitwise_equal_fp32':pack(before['losses'])==pack(after['losses']),'maximum_loss_gap':max(abs(a-b) for a,b in zip(before['losses'],after['losses'],strict=True)),'removed_session_names':sorted(set(before['initializer_bytes_by_session'])-set(after['initializer_bytes_by_session'])),'removed_logical_initializer_bytes':sum(before['initializer_bytes_by_session'].values())-sum(after['initializer_bytes_by_session'].values()),'peak_rss_reduction_bytes':before['peak_rss_bytes']-after['peak_rss_bytes'],'step_median_ratio':after['timings_ms']['step']['median']/before['timings_ms']['step']['median']}\nfiles=['examples/huggingface/benchmark.py','examples/huggingface/bridge.py','examples/huggingface/chunked_loss.py','examples/huggingface/sft.py','examples/huggingface/validation.py','tests/test_qwen_adapters.py','tests/test_qwen_sft.py']\nresult={'version':1,'baseline_report':'qwen3-nf4-context-256-m1max.json','baseline_source_commit':'0f2d0103e951d7d68e2b00cccb6b6c4aa5c0d584','source_commit':state['source_commit'],'core_source_sha256':state['core_source_sha256'],'library_sha256':state['library_sha256'],'source_sha256':{name:hashlib.sha256((SOURCE/name).read_bytes()).hexdigest() for name in files},'matched_fields':matched,'comparison':comparison,'before':before,'after':after,'execution':journal,'execution_scope':'Matched 256-token NF4/FP32 chunked training, batch 1, 255 shifted targets, 128-token head chunk; ten warmup updates and 100 measured updates. Whole-process RSS includes construction, runtime, arrays and optimizer.','driver_script':Path('/tmp/onnax-context-256-lazy-sequence.py').read_text(),'publication_script':Path(__file__).read_text()}\noutput=ROOT/'examples/huggingface/reports/qwen3-nf4-context-256-lazy-head-m1max.json'\noutput.write_text(json.dumps(result,indent=2,allow_nan=False)+'\\n')\nprint(json.dumps(comparison,indent=2))\nprint(json.dumps({'step_ms':after['timings_ms']['step'],'tokens_per_second':after['effective_tokens_per_second'],'peak_rss_gib':after['peak_rss_bytes']/1024**3},indent=2))\n"
+}

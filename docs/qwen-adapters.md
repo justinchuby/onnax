@@ -26,6 +26,12 @@ Training returns the scalar loss. Calling the wrapper without labels requests
 full logits. A small SFTTrainer subclass uses Trainer's loss handling directly
 for the chunked path, avoiding a full-logits pass for TRL token metrics.
 
+The loss/gradient head session is created for training. The prediction session
+is created on the first full-logits request and reused thereafter. Its serialized
+weight snapshot is captured when the head is constructed, so predictions and
+training use the same frozen weights. Reference audits that request full logits
+also initialize this prediction session.
+
 ## Save or recompute
 
 `prepare(save_activations=True)` cuts the flat VJP at the exact primal/derivative
@@ -87,16 +93,26 @@ step timings to choose the context and head chunk size.
 ### Recorded 256-token workload
 
 Qwen3-0.6B uses the same frozen NF4 decoder values and FP32 adapters, gradients
-and AdamW across four isolated processes. Each processes 255 shifted targets
-with batch one, ten warmup updates and 100 measured updates. ONNX paths use
+and AdamW across four baseline processes and one matched on-demand-head rerun.
+Each processes 255 shifted targets with batch one, ten warmup updates and 100
+measured updates. ONNX paths use
 MLX EP with compilation and ORT graph optimization disabled.
 
 | Path | Step median / P95 (s) | Tokens/s | Peak RSS (GiB) |
 | --- | ---: | ---: | ---: |
 | PyTorch CPU | 1.065 / 1.818 | 239.46 | 5.31 |
 | Complete ONNX VJP | 2.024 / 3.056 | 126.01 | 6.99 |
-| Chunked head, 128-token chunks | 2.041 / 3.199 | 124.93 | 7.98 |
+| Chunked head, eager prediction session | 2.041 / 3.199 | 124.93 | 7.98 |
+| Chunked head, on-demand prediction session | 2.036 / 3.161 | 125.22 | 7.41 |
 | Joint loss/gradient | 1.709 / 2.709 | 149.21 | 5.86 |
+
+Loading the prediction session on demand removes one 593.5 MiB head-weight
+instance. In the matched rerun, process peak RSS falls by 588.94 MiB, from
+7.98 to 7.41 GiB. All 110 FP32 losses match the original chunked path bit for
+bit. The step medians are 2.041 and 2.036 seconds. The
+{download}`on-demand head report
+<../examples/huggingface/reports/qwen3-nf4-context-256-lazy-head-m1max.json>`
+records both runs, retained-session initializer sizes and source/runtime hashes.
 
 The chunked head uses a 74.19 MiB logical logits tensor per full chunk; the
 complete 256-token logits tensor is 148.38 MiB. Session weights, activation

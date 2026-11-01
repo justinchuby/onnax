@@ -643,7 +643,7 @@ if __name__ == "__main__":
         "--strict-reference",
         dest="diagnose_rounding",
         action="store_false",
-        help="Require pointwise reference logits, loss, gradients and updates to match",
+        help="Require pointwise reference comparisons to pass",
     )
     reference_checks.add_argument(
         "--diagnose-rounding",
