@@ -29,6 +29,9 @@ dependencies = [
     "onnx-shape-inference>=0.4.0",
 ]
 
+[project.optional-dependencies]
+torch = ["torch>=2.6", "onnxruntime>=1.29"]
+
 [project.urls]
 Source = "https://github.com/justinchuby/onnax"
 Issues = "https://github.com/justinchuby/onnax/issues"
@@ -138,3 +141,7 @@ disable_error_code = ["import-untyped"]
 
 [tool.uv.sources]
 mobius-onnx = { git = "https://github.com/onnxruntime/mobius", rev = "304622181f6418520b332de4f5de0694f2ab576f" }
+
+[[tool.mypy.overrides]]
+module = ["torch", "torch.*"]
+ignore_missing_imports = true

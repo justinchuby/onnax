@@ -14,6 +14,7 @@ onnxscript
 lora
 nf4-lora
 huggingface
+torch
 qwen-sft
 fused-autodiff
 qwen-adapters

@@ -13,9 +13,9 @@ import torch
 from datasets import Dataset
 from transformers import Trainer, TrainerCallback, TrainingArguments
 
-from examples.huggingface.bridge import OnnxModule
 from examples.lora.model import adapt, base_model
 from examples.lora.train import problem, reference, session
+from onnax.torch import OnnxModule
 
 
 class RegressionModel(torch.nn.Module):
@@ -27,7 +27,7 @@ class RegressionModel(torch.nn.Module):
             from examples.lora.nf4 import lower
 
             graph, _ = lower(graph)
-        self.onnx = OnnxModule(graph, params)
+        self.onnx = OnnxModule(graph, params, input_gradients=())
 
     def forward(self, features, labels=None):
         prediction = self.onnx(features=features)
@@ -78,7 +78,9 @@ def worker(directory, *, resume=None, stop=None, nf4=False):
     torch.set_num_threads(1)
     trainer = make_trainer(directory, stop=stop, nf4=nf4)
     trainer.train(resume_from_checkpoint=resume)
-    trainer.model.onnx.export(os.path.join(directory, "export"))
+    export = os.path.join(directory, f"export-{trainer.state.global_step}")
+    trainer.model.onnx.export(export)
+    np.savez(os.path.join(export, "adapter.npz"), **trainer.model.onnx.arrays())
     return trainer
 
 
@@ -101,7 +103,7 @@ def run(directory, *, nf4=False):
         ],
         check=True,
     )
-    with np.load(os.path.join(interrupted, "export", "adapter.npz")) as saved:
+    with np.load(os.path.join(interrupted, "export-200", "adapter.npz")) as saved:
         for name, array in full.model.onnx.arrays().items():
             np.testing.assert_array_equal(array, saved[name])
     w, c, x, y, vx, vy, initial = problem()
@@ -119,9 +121,9 @@ def run(directory, *, nf4=False):
     }
     assert report["train_loss"][1] < report["train_loss"][0] * 0.5
     assert report["validation_loss"][1] < report["validation_loss"][0] * 0.5
-    prediction = session(os.path.join(directory, "continuous", "export", "forward.onnx")).run(
-        None, {"features": vx}
-    )[0]
+    prediction = session(
+        os.path.join(directory, "continuous", "export-200", "forward.onnx")
+    ).run(None, {"features": vx})[0]
     np.testing.assert_allclose(
         prediction, reference(vx, vy, final, w, c)[0], rtol=1e-4, atol=1e-6
     )
