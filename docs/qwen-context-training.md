@@ -112,7 +112,7 @@ The [FP32 training report](https://github.com/justinchuby/onnax/blob/main/exampl
 records exact loss values, corpus identities, source hashes, checkpoint state
 audits and per-update memory observations. A fresh process resumed checkpoint 15
 and reproduced all 112 final adapter tensors, AdamW state, scheduler and random
-number generator state byte for byte at update 30.
+number generator state byte for byte at update 30. Loaded inference and training\nmodules also reproduced the complete forward outputs, loss and all 112\ngradients byte for byte on a 4096-token input with seven right-padding tokens.
 
 ## Export and measure
 

@@ -1743,7 +1743,6 @@
   },
   "training_files_identical_to_commit": "02f6925fa7d3a5f4f8d8058019e64b7600ab4b3f",
   "pending_stages": [
-    "loaded 4096-token inference/loss/gradient replay",
     "PEFT exchange",
     "BF16 training and recovery",
     "isolated strategy timing and capacity measurements"
@@ -1808,5 +1807,150 @@
     "unshifted_tokens": 17,
     "model_accepts_loss_kwargs": true,
     "trainer_recognizes_causal_shift": true
+  },
+  "completed_recovery_run": {
+    "continuous": {
+      "training_loss": [
+        3.183854103088379,
+        2.202641010284424
+      ],
+      "validation_loss": [
+        2.983370304107666,
+        2.2319540977478027
+      ],
+      "steps": 30,
+      "data": {
+        "version": 2,
+        "train_lines": 128,
+        "validation_lines": 32,
+        "train_sha256": "bba6f604cbcbd7820b431ec34050de0f78673afe1287e911e9d4de585da4cab1",
+        "validation_sha256": "0a3a334ebce07acad6776d4074740936d55eb36a6a74b592e2cac060cea3defe",
+        "tokenizer_sha256": "6dd55c5383c60de4ef14710c7a19b02df3f57ce1792e5028373a9945b4173574",
+        "max_length": 4096
+      },
+      "model": "Qwen/Qwen3-0.6B",
+      "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+      "source_commit": "37136084aebd822d38ee3a51b93bf86ca4063396",
+      "library_sha256": "70f8f08daff513aee8dcfd7cf9634c0fbe07160e5795ce223e721ffc84db2c4a",
+      "versions": {
+        "onnx": "1.23.2",
+        "onnx-ir": "1.1.0",
+        "onnxscript": "0.7.2",
+        "onnxruntime": "1.31.1",
+        "numpy": "2.4.6",
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "trl": "0.24.0",
+        "peft": "0.21.2"
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 7210164504,
+        "lifetime_peak_bytes": 15669468288,
+        "current_resident_bytes": 5144870912,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "frozen_buffers_unchanged": true,
+      "report_sha256": "a6241ec57d0493a19627b8d0090fe2b2d16bcd4e55e2f5f4022084c25403f358",
+      "journal_sha256": "ac8047884ba30af2e7e133ec613bee16d87c207e5aab2680a77045d3f64975ad"
+    },
+    "resumed": {
+      "training_loss": [
+        3.183854103088379,
+        2.202641010284424
+      ],
+      "validation_loss": [
+        2.983370304107666,
+        2.2319540977478027
+      ],
+      "steps": 30,
+      "data": {
+        "version": 2,
+        "train_lines": 128,
+        "validation_lines": 32,
+        "train_sha256": "bba6f604cbcbd7820b431ec34050de0f78673afe1287e911e9d4de585da4cab1",
+        "validation_sha256": "0a3a334ebce07acad6776d4074740936d55eb36a6a74b592e2cac060cea3defe",
+        "tokenizer_sha256": "6dd55c5383c60de4ef14710c7a19b02df3f57ce1792e5028373a9945b4173574",
+        "max_length": 4096
+      },
+      "model": "Qwen/Qwen3-0.6B",
+      "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+      "source_commit": "02f6925fa7d3a5f4f8d8058019e64b7600ab4b3f",
+      "library_sha256": "70f8f08daff513aee8dcfd7cf9634c0fbe07160e5795ce223e721ffc84db2c4a",
+      "versions": {
+        "onnx": "1.23.2",
+        "onnx-ir": "1.1.0",
+        "onnxscript": "0.7.2",
+        "onnxruntime": "1.31.1",
+        "numpy": "2.4.6",
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "trl": "0.24.0",
+        "peft": "0.21.2"
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 7132766296,
+        "lifetime_peak_bytes": 14765284192,
+        "current_resident_bytes": 6516916224,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "frozen_buffers_unchanged": true,
+      "report_sha256": "a6241ec57d0493a19627b8d0090fe2b2d16bcd4e55e2f5f4022084c25403f358",
+      "journal_sha256": "afcbbc894e275339c856397f63fd3addbcca7eeaca49f6492bffcf506d4d71cc"
+    },
+    "loss_endpoints_equal": true,
+    "data_model_library_identity_equal": true,
+    "export_interface_equal": true,
+    "checkpoint_plan_equal": true
+  },
+  "loaded_4096_recovery": {
+    "step": 30,
+    "input_shape": [
+      1,
+      4096
+    ],
+    "input_sha256": "fff263c503736efdac985501cfab855043a91c990373608a2e082767fe703b87",
+    "padding_tokens": 7,
+    "forward_output_digests": [
+      {
+        "dtype": "float32",
+        "shape": [
+          1,
+          4096,
+          151936
+        ],
+        "sha256": "99a5d76b17b4c78ed0174a2beb7c6a3746e33a2bc84d0dc8b6828712dff7a44f"
+      },
+      {
+        "dtype": "float32",
+        "shape": [
+          1,
+          4096,
+          1024
+        ],
+        "sha256": "de0034af7df63bf21322b89bbafae3ea3e996528ddf6894cff351897eb566581"
+      }
+    ],
+    "adapter_tensors": 112,
+    "checkpoint_tensors": 113,
+    "frozen_initializers": 532,
+    "adapter_bitwise_equal": true,
+    "checkpoint_bitwise_equal": true,
+    "optimizer_bitwise_equal": true,
+    "scheduler_equal": true,
+    "frozen_hashes_equal": true,
+    "export_load_outputs_bitwise_equal": true,
+    "provider": "mlx",
+    "ort_memory_reuse": null,
+    "export_load_loss_gradients_bitwise_equal": true,
+    "exported_gradient_tensors": 112
+  },
+  "loaded_4096_memory": {
+    "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+    "observation_errors": 0,
+    "physical_peak_bytes": 10766450624,
+    "physical_budget_bytes": 25769803776,
+    "execution_sha256": "d5defe5199fb0fcb6508889062cf0431019f7a912cd10282168deed6a437ec6d"
   }
 }
