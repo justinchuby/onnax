@@ -19,7 +19,7 @@ from examples.huggingface.sft import OnnxQwen3
 from examples.lora.train import session
 
 
-def verify(directory, output, *, session_factory=session):
+def verify(directory, output, *, session_factory=session, stable_reference=False):
     if os.path.exists(output):
         raise FileExistsError("Select a new PEFT audit directory")
     export = os.path.join(directory, "export")
@@ -66,7 +66,14 @@ def verify(directory, output, *, session_factory=session):
         ]
 
     before = capture()
-    report = roundtrip(model, reference, batch, output, diagnose_rounding=True)
+    report = roundtrip(
+        model,
+        reference,
+        batch,
+        output,
+        diagnose_rounding=True,
+        stable_reference=stable_reference,
+    )
     # Restore the trained checkpoint after the audit's independent one-step update.
     with torch.no_grad():
         for name, parameter in zip(model.onnx.names, model.onnx.adapters, strict=True):
@@ -93,6 +100,7 @@ def main():
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--provider", choices=("cpu", "mlx"), default="cpu")
     parser.add_argument("--library")
+    parser.add_argument("--stable-reference", action="store_true")
     args = parser.parse_args()
     torch.set_num_threads(1)
     factory = functools.partial(session, memory_reuse=False)
@@ -105,7 +113,16 @@ def main():
         factory = mlx_session
     elif args.library:
         parser.error("--library requires --provider mlx")
-    print(json.dumps(verify(args.training_dir, args.output_dir, session_factory=factory)))
+    print(
+        json.dumps(
+            verify(
+                args.training_dir,
+                args.output_dir,
+                session_factory=factory,
+                stable_reference=args.stable_reference,
+            )
+        )
+    )
 
 
 if __name__ == "__main__":
