@@ -162,6 +162,12 @@ intermediates; use the recorded eager path as the baseline. Qualify each candida
 with adapter gradients, updates, held-out loss, recovery and export before
 extending it to 8192-token training.
 
+Direct JVP/VJP rules now retain Attention, RMSNormalization, RotaryEmbedding,
+Swish and LayerNormalization. The Qwen `--fused-ops` path selects native MLX
+forward implementations and has a portable ONNX backward. Next, tile the
+attention backward to reduce probability-matrix intermediates; qualify its
+gradients and updates against this baseline. See [fused derivatives](fused-autodiff.md).
+
 Then promote the model-independent integration into an optional `onnax.torch`
 module. The first package interface should own explicit trainable parameters,
 connect forward and VJP sessions to PyTorch autograd, preserve stable parameter

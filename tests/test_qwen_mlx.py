@@ -163,3 +163,58 @@ def test_hybrid_stable_reference_updates(forward, backward):
     assert report["forward_provider"] == forward
     assert report["backward_provider"] == backward
     assert report["cpu_fallback_scope"] == "MLX sessions"
+
+
+@pytest.mark.skipif(os.environ.get("ONNAX_TEST_MLX_EP") != "1", reason="Native MLX opt-in")
+@pytest.mark.parametrize("mode", ["full", "chunked", "joint"])
+def test_native_fused_operator_updates(mode):
+    import numpy as np
+
+    torch = pytest.importorskip("torch")
+    pytest.importorskip("mobius")
+    pytest.importorskip("trl")
+    from examples.huggingface.bridge import frozen_hashes
+    from examples.huggingface.sft import prepare
+    from examples.huggingface.validation import add_reference_adapters, audit
+    from examples.lora.mlx_runtime import register_library, session
+
+    library = os.environ.get("ONNAX_MLX_EP_LIBRARY")
+    if library:
+        register_library(library)
+    torch.set_num_threads(1)
+    model, reference = prepare(
+        mode=mode,
+        fused_ops=True,
+        checkpoint_layers=1 if mode == "chunked" else 0,
+        session_factory=session,
+    )
+    reference = add_reference_adapters(reference, model)
+    frozen = frozen_hashes(model.forward_graph)
+    assert {"Attention", "RMSNormalization", "RotaryEmbedding", "Swish"} <= {
+        node.op_type for node in model.forward_graph.graph
+    }
+    ids = torch.tensor([[1, 4, 5, 2], [1, 7, 2, 0]])
+    mask = ids.ne(0).long()
+    labels = ids.masked_fill(mask == 0, -100)
+    batch = {
+        "input_ids": ids,
+        "attention_mask": mask,
+        "position_ids": (mask.cumsum(-1) - 1).clamp(min=0),
+        "labels": labels,
+    }
+    actual = torch.optim.AdamW(model.parameters(), lr=0.003, weight_decay=0)
+    expected = torch.optim.AdamW(
+        [p for p in reference.parameters() if p.requires_grad], lr=0.003, weight_decay=0
+    )
+    for _ in range(3):
+        audit(model, reference, batch, sync=False)
+        actual.step()
+        expected.step()
+        arrays = model.onnx.arrays()
+        for row in model.mapping:
+            layer = reference.get_submodule(row["module"])
+            for key in ("A", "B"):
+                np.testing.assert_allclose(
+                    arrays[row[key]], getattr(layer, key).detach(), rtol=1e-4, atol=1e-6
+                )
+    assert frozen_hashes(model.forward_graph) == frozen

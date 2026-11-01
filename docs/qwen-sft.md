@@ -27,7 +27,7 @@ set one budget for all sessions in the process:
 export ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912
 export ONNXRUNTIME_EP_MLX_NO_COMPILE=1
 uv run python -m examples.huggingface.sft --real --mode chunked --nf4 \
-  --mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
   --max-length 256 --chunk-size 128 --output-dir qwen_mlx
 ```
 
@@ -87,6 +87,14 @@ the same identities, and the final ONNX export includes the tokenizer.
 
 The [pinned instruction-corpus preparation](pinned-instruction-corpus)
 provides a reproducible source of training and official-test examples.
+
+## Retain fused operators
+
+Use `--fused-ops --provider mlx` to retain Attention, RMSNormalization,
+RotaryEmbedding and Swish in the training graph. onnax differentiates these
+operators directly, and MLX EP selects its SDPA, RMSNorm and RoPE implementations.
+See [fused operator derivatives](fused-autodiff.md) for the equations, execution
+requirements and measured results.
 
 ## Model and training graph
 

@@ -130,10 +130,13 @@ def reference_model(real=False):
     return Qwen3ForCausalLM(config).eval()
 
 
-def decompose(model):
+def decompose(model, *, preserve_fused=False):
     """Lower the Qwen3 FP32 normalization, RoPE and attention operations."""
     result = model.clone()
     ShapeInferencePass()(result)
+    if preserve_fused:
+        result.graph.sort()
+        return result
     # The pinned Mobius decomposition accepts additive masks; ONNX Attention
     # also accepts bool masks, where False must exclude the key entirely.
     for index, node in enumerate(list(result.graph)):

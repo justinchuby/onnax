@@ -86,8 +86,14 @@ def test_tiny_sft_complete_training(tmp_path, mode, nf4):
     assert tokenizer().padding_side == "right"
 
 
-def test_independent_multi_step_updates():
-    model, reference = prepare()
+@pytest.mark.parametrize("fused", [False, True])
+def test_independent_multi_step_updates(fused):
+    from examples.huggingface.serialization import reference_session
+    from examples.lora.train import session
+
+    model, reference = prepare(
+        fused_ops=fused, session_factory=reference_session if fused else session
+    )
     reference = add_reference_adapters(reference, model)
     actual_optimizer = torch.optim.AdamW(model.parameters(), lr=0.003, weight_decay=0)
     expected_optimizer = torch.optim.AdamW(
@@ -107,15 +113,16 @@ def test_independent_multi_step_updates():
 
 
 @pytest.mark.parametrize(
-    "mode,nf4,precision,provider",
+    "mode,nf4,precision,provider,fused",
     [
-        ("full", False, "fp32", "cpu"),
-        ("joint", True, "fp32", "cpu"),
-        ("joint", False, "bf16", "reference"),
-        ("joint", True, "bf16", "reference"),
+        ("full", False, "fp32", "cpu", False),
+        ("joint", True, "fp32", "cpu", False),
+        ("joint", False, "bf16", "reference", False),
+        ("joint", True, "bf16", "reference", False),
+        ("full", True, "fp32", "reference", True),
     ],
 )
-def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4, precision, provider):
+def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4, precision, provider, fused):
     import os
     import subprocess
     import sys
@@ -127,6 +134,7 @@ def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4, precision, pro
         projection_precision=precision,
         provider=provider,
         diagnose_rounding=precision == "bf16",
+        fused_ops=fused,
     )
     assert result["frozen_buffers_unchanged"]
     assert result["validation_loss"][1] < result["validation_loss"][0]
@@ -150,6 +158,7 @@ def test_sft_fresh_process_checkpoint_resume(tmp_path, mode, nf4, precision, pro
             provider,
             *(["--diagnose-rounding"] if precision == "bf16" else []),
             *(["--nf4"] if nf4 else []),
+            *(["--fused-ops"] if fused else []),
         ],
         check=True,
         capture_output=True,
