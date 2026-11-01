@@ -125,8 +125,8 @@ control aligned all adapter gradients at rtol=1e-4 and atol=1e-6.
 
 ## Strategy measurements
 
-The M1 Max measurements below use FP32 projection computation, packed NF4
-decoder weights, microbatch 1 and 128-token output-head chunks. Each strategy
+The M1 Max measurements below use packed NF4 decoder weights, microbatch 1
+and 128-token output-head chunks. Each strategy
 runs in a fresh process with 10 warmups and 100 measured updates. A training
 step includes forward, backward and one AdamW update. Peak process footprint
 includes model construction and runtime initialization.
@@ -169,6 +169,18 @@ process budget during their capacity probes.
 The 8192-token capacity probe with checkpoints every layer also exceeded this
 process budget.
 
+### BF16, 512 tokens
+
+| Strategy | Step median | Step P95 | Valid tokens/s | Peak process footprint |
+| --- | ---: | ---: | ---: | ---: |
+| Whole-body recomputation | 3.269 s | 3.311 s | 156.3 | 11.22 GiB |
+| Checkpoint every layer | 3.453 s | 3.488 s | 148.0 | 7.69 GiB |
+| Checkpoint every 2 layers | 3.471 s | 3.497 s | 147.2 | 7.67 GiB |
+| Checkpoint every 4 layers | 3.313 s | 3.347 s | 154.3 | 8.02 GiB |
+
+All four strategies produced identical loss values across all 110 updates.
+Saving all activations exceeded the 24 GiB process budget.
+
 ## Export and measure
 
 The export directory contains a bound ordinary ONNX forward model, shared
@@ -200,6 +212,8 @@ uv run --extra huggingface --extra native-mlx python -m examples.huggingface.ben
   --mlx-memory-limit-gib 20 \
   --warmup 10 --samples 100
 ```
+
+Add `--projection-precision bf16` for BF16 projection arithmetic.
 
 Each benchmark step executes one microbatch, its backward pass and one AdamW
 update. The benchmark takes a naturally long example's token prefix and uses every
