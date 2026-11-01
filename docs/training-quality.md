@@ -15,6 +15,15 @@ The default engine list includes PyTorch CPU, PyTorch CUDA, ONNX ReferenceEvalua
 CPU and MLX. The report lists the engines executed and those unavailable on the
 host. `--engines torch_cpu torch_cuda` selects a same-framework CPU/CUDA baseline.
 
+## Interpret precision differences
+
+Use the declared computation and accumulation dtypes, independent derivative
+checks, finite updates, validation curves and seed variation to assess training.
+Shared-parameter replay separates runtime arithmetic from independently evolved
+adapters. Pointwise comparisons help locate discrepancies; their effect on
+convergence, stability and held-out loss determines the priority of a fix.
+CPU/CUDA comparisons are an optional diagnostic.
+
 ## Matched training conditions
 
 Mobius constructs the canonical Qwen graph and source parameter mapping. The
@@ -100,7 +109,7 @@ remain unchanged. Final adapter entries differ by as much as 0.00336 between
 PyTorch CPU and MLX while their held-out losses remain close.
 
 This experiment finds similar training outcomes across the three engines on the
-tiny workload. CUDA was unavailable on the recorded Mac. The real-model comparison follows below; CUDA remains a separate measurement.
+tiny workload. CUDA was unavailable on the recorded Mac. The real-model comparison follows below.
 
 The {download}`recorded report <../examples/huggingface/reports/tiny-nf4-bf16-training-impact-m1max.json>`
 contains every seed, training loss, validation curve, gradient norm and paired
@@ -170,8 +179,7 @@ or testing a training path, then evaluate BF16 with the same data and optimizer.
 The {download}`FP32 report
 <../examples/huggingface/reports/qwen3-nf4-fp32-training-quality-m1max.json>`
 contains all paired losses, gradients, parameter metrics, execution journals and
-source/capture hashes. The CPU/CUDA baseline remains a measurement for a
-CUDA-equipped host.
+source/capture hashes.
 
 ## Compare trajectories and checkpoint replay
 

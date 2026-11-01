@@ -100,23 +100,25 @@ further differentiation. Exported function bodies use standard ONNX operations.
 
 ## Workload acceptance
 
-| Workload | Completed | Next acceptance |
+| Workload | Completed | Ongoing coverage |
 | --- | --- | --- |
-| External regression LoRA + Trainer | 200 steps, checkpoint replay, export | Maintain regression coverage |
-| Tiny Qwen3 | 100-step BF16 training, masking, PEFT exchange, chunked head, fresh-process recovery and loaded ONNX execution | Maintain precision and recovery regressions |
-| Qwen3-0.6B FP32 | 30 updates, checkpoint replay, export and matched three-seed instruction-data training | Continue strict independent-update diagnosis in [#116](https://github.com/justinchuby/onnax/issues/116) |
-| Qwen3-0.6B BF16/NF4 | 30 updates, recovery, saved-module loss/all-gradient qualification at three shared states, and matched three-seed instruction-data training | Compare the matched PyTorch CPU/CUDA baseline when CUDA is available |
+| External regression LoRA + Trainer | 200 steps, checkpoint replay, export | Gradients, updates and recovery |
+| Tiny Qwen3 | 100-step BF16 training, masking, PEFT exchange, chunked head, fresh-process recovery and loaded ONNX execution | Precision policy and recovery |
+| Qwen3-0.6B FP32 | 30 updates, checkpoint replay, export and matched three-seed instruction-data training | Gradient correctness, training quality and recovery |
+| Qwen3-0.6B BF16/NF4 | 30 updates, recovery, saved-module loss/all-gradient qualification at three shared states, and matched three-seed instruction-data training | Gradient correctness, training quality and memory |
 
 The [training-quality report](training-quality.md) compares FP32 and BF16 CPU/MLX
-validation curves on the pinned No Robots split. The [Qwen SFT tutorial](qwen-sft.md)
-records full-model precision policies and the measured loss-only evaluation path.
-Pointwise forward and independent-update differences remain in #116, alongside
-the reference-reduction controls and captured Adam trajectories.
-| NF4 | Tiny Qwen SFT/recovery/PEFT; real Qwen 30-step training; isolated tiny benchmarks | Real-model gradient qualification, decoding lifetime and fused backend |
+validation curves and shared-parameter replays on the pinned No Robots split.
+The [Qwen SFT tutorial](qwen-sft.md) records precision policies and measured
+loss-only evaluation. The [NF4 tutorial](qwen-nf4.md) covers packed decoder
+execution, PEFT exchange and real-model recovery.
 
-The real-model FP32 elementwise comparison remains open. FP64 diagnostics help
-locate arithmetic differences; the acceptance target is FP32 and lower precision
-compute with FP32 accumulation.
+Acceptance follows gradient correctness, finite updates, convergence, held-out
+loss across seeds and checkpoint recovery. Cross-runtime pointwise differences
+help diagnose arithmetic and optimizer sensitivity; [#116](https://github.com/justinchuby/onnax/issues/116)
+retains those measurements and reference-reduction controls. CUDA comparison is
+optional. FP64 is used for selected scalar diagnostics; training uses FP32 and
+lower-precision computation with FP32 accumulation.
 
 ## Locate Qwen3 differences at identical inputs
 
