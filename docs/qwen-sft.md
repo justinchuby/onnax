@@ -25,14 +25,18 @@ uv run python -m examples.huggingface.sft --mode joint --nf4 \
   --output-dir qwen_custom
 ```
 
-TRL handles batches, AdamW and checkpoints. Sequences use right padding and a
-64-token limit; loss covers all shifted nonpadding text tokens. The tiny model
-builds its tokenizer from the training file. `--real` uses the pinned Qwen3-0.6B
-model and tokenizer.
+TRL handles batches, AdamW and checkpoints. Sequences use right padding;
+`--max-length` sets truncation, with a default of 64 tokens. Loss covers all
+shifted nonpadding text tokens. The tiny model accepts up to 64 tokens and builds
+its tokenizer from the training file. `--real` uses the pinned Qwen3-0.6B model
+and tokenizer and accepts longer contexts within the model's configured limit.
+The [context benchmark](qwen-long-context) measures time
+and memory for a selected length and head chunk size.
 
 Resume with the same data options and `--resume qwen_custom/checkpoint-50`.
 Each checkpoint includes `onnax_data.json`; the CLI checks its training,
-validation and tokenizer identities before rebuilding the graph. Reports record
+validation and tokenizer identities and context length before rebuilding the graph.
+Pass the same `--max-length` when resuming. Reports record
 the same identities, and the final ONNX export includes the tokenizer.
 
 The [pinned instruction-corpus preparation](pinned-instruction-corpus)
@@ -304,11 +308,14 @@ initial and final adapter states. Maximum logit error is 1.99e-13 and maximum
 adapter-gradient error is 3.79e-15. This comparison uses the same stored RoPE
 and scalar constants, and evaluates the transformer independently in PyTorch.
 
-The FP32 report retains its original elementwise failures. `--diagnose-rounding`
-records logits and per-parameter gradient violations and continues training;
-it keeps the loss comparison and all original tolerances. Without this flag,
-the first failed comparison raises. FP64 results qualify graph/derivative
-semantics; FP32 elementwise agreement remains a separate acceptance result.
+SFT records reference logits, loss and per-parameter gradient comparisons by
+default, using the original tolerances. `--strict-reference` makes pointwise
+failures fatal. Nonfinite values and shape mismatches always raise. The legacy
+`--diagnose-rounding` flag selects the default diagnostic mode.
+
+Training acceptance uses gradient correctness, finite updates, convergence,
+held-out loss and recovery. The FP32 report preserves its original elementwise
+failures; selected FP64 diagnostics help locate arithmetic differences.
 
 The real PEFT comparison passes loss and final-gradient checks. Its first
 independent AdamW update exceeds the parameter tolerance for some entries;

@@ -46,6 +46,8 @@ saving `X @ A` needs `4*T*r` logical bytes in FP32 and avoids its `2*T*d*r`
 recomputation FLOPs. The full cut also saves other backward dependencies;
 the benchmark reports their logical extents and the process's measured RSS.
 
+(qwen-long-context)=
+
 ## Measure longer contexts
 
 The benchmark accepts `--sequence-length` and `--chunk-size`. For example,
@@ -64,10 +66,51 @@ requested context and records its input checksum and valid shifted-token count.
 The tiny model accepts 2–64 tokens; the real model uses its configured context
 limit.
 
+For SFTTrainer, `--max-length` controls training and evaluation truncation:
+
+```bash
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run python -m examples.huggingface.sft \
+  --real --nf4 --mode joint --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --max-length 256 --train-file train.txt --validation-file validation.txt \
+  --steps 30 --output-dir qwen-context-256
+```
+
+Each UTF-8 line supplies one training sequence. The checkpoint records context
+length with data and tokenizer identities; resume uses the same `--max-length`.
+A changed context is rejected before model construction. The default is 64.
+
 `full_logits_bytes` and `chunk_logits_bytes` describe one logical FP32 logits
 tensor at the selected dimensions. Process peak RSS includes construction,
 runtime sessions, activations and optimizer state. Use measured memory and
 step timings to choose the context and head chunk size.
+
+### Recorded 256-token workload
+
+Qwen3-0.6B uses the same frozen NF4 decoder values and FP32 adapters, gradients
+and AdamW across four isolated processes. Each processes 255 shifted targets
+with batch one, ten warmup updates and 100 measured updates. ONNX paths use
+MLX EP with compilation and ORT graph optimization disabled.
+
+| Path | Step median / P95 (s) | Tokens/s | Peak RSS (GiB) |
+| --- | ---: | ---: | ---: |
+| PyTorch CPU | 1.065 / 1.818 | 239.46 | 5.31 |
+| Complete ONNX VJP | 2.024 / 3.056 | 126.01 | 6.99 |
+| Chunked head, 128-token chunks | 2.041 / 3.199 | 124.93 | 7.98 |
+| Joint loss/gradient | 1.709 / 2.709 | 149.21 | 5.86 |
+
+The chunked head uses a 74.19 MiB logical logits tensor per full chunk; the
+complete 256-token logits tensor is 148.38 MiB. Session weights, activation
+lifetimes and runtime allocations determine the complete process footprint.
+All paths reduce the repeated-input training loss, from about 1.742 to
+0.0126–0.0187. The [No Robots experiment](training-quality.md) measures held-out
+training quality on instruction data.
+
+The {download}`256-token report
+<../examples/huggingface/reports/qwen3-nf4-context-256-m1max.json>` contains all
+losses, component timings, initialization, session initializer sizes, node counts,
+source/library hashes and physical-footprint observations. PyTorch stores the
+reconstructed FP32 base; ONNX stores packed NF4 decoder tensors. Peak RSS covers
+model construction, runtime sessions, arrays and optimizer state.
 
 ## Joint loss and adapter gradients
 

@@ -259,9 +259,10 @@ def measure(
             else {"forward": model.onnx.model, "backward": model.onnx.optimized_vjp}
         )
         if mode == "chunked":
-            executed_graphs.update(
-                head_forward=model.head.model, head_backward=model.head.gradient
-            )
+            executed_graphs["head_backward"] = model.head.gradient
+            report["head_forward_session_created"] = model.head.forward_executor is not None
+            if model.head.forward_executor is not None:
+                executed_graphs["head_forward"] = model.head.model
         report["initializer_bytes_by_session"] = {
             name: sum(value.const_value.nbytes for value in graph.graph.initializers.values())
             for name, graph in executed_graphs.items()

@@ -45,6 +45,15 @@ def add_reference_parameters(reference, arrays, mapping):
     return reference
 
 
+def _finite_pair(actual, expected, name):
+    if actual.shape != expected.shape:
+        raise AssertionError(
+            f"Reference shape mismatch for {name}: {actual.shape} != {expected.shape}"
+        )
+    if not np.isfinite(actual).all() or not np.isfinite(expected).all():
+        raise AssertionError(f"Nonfinite {name}")
+
+
 def audit(model, reference, batch, *, sync=True, diagnose_rounding=False, reference_loss=None):
     arrays = model.onnx.arrays()
     for row in model.mapping:
@@ -66,6 +75,8 @@ def audit(model, reference, batch, *, sync=True, diagnose_rounding=False, refere
     valid = batch["attention_mask"].bool()
     actual_values = actual.logits.detach()[valid].numpy()
     expected_values = expected.detach()[valid].numpy()
+    _finite_pair(actual_values, expected_values, "logits")
+    _finite_pair(actual.loss.detach().numpy(), expected_loss.detach().numpy(), "loss")
     difference = np.abs(actual_values - expected_values)
     violations = difference > 1e-6 + 1e-4 * np.abs(expected_values)
     if not diagnose_rounding:
@@ -89,8 +100,7 @@ def audit(model, reference, batch, *, sync=True, diagnose_rounding=False, refere
             index = model.onnx.names.index(row[key])
             gradient = model.onnx.adapters[index].grad.numpy()
             expected_gradient = getattr(layer, key).grad.numpy()
-            if not np.isfinite(gradient).all() or not np.isfinite(expected_gradient).all():
-                raise AssertionError(f"Nonfinite gradient: {row[key]}")
+            _finite_pair(gradient, expected_gradient, f"gradient: {row[key]}")
             maximum = max(maximum, float(np.max(np.abs(gradient - expected_gradient))))
             failed = np.abs(gradient - expected_gradient) > 1e-6 + 1e-4 * np.abs(
                 expected_gradient

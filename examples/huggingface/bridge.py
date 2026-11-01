@@ -27,14 +27,19 @@ def frozen_hashes(model):
     }
 
 
-def graph_session(model, directory, name, *, session_factory=session):
-    """Use external data for large graphs and in-memory protobufs for small ones."""
+def graph_source(model, directory, name):
+    """Snapshot a graph as protobuf bytes or a path with external tensor data."""
     size = sum(v.const_value.nbytes for v in model.graph.initializers.values())
     if size < 64 * 1024**2:
-        return session_factory(ir.to_proto(model).SerializeToString())
+        return ir.to_proto(model).SerializeToString()
     path = os.path.join(directory, name + ".onnx")
     save_graph(model, path, data_name=name + ".data")
-    return session_factory(path)
+    return path
+
+
+def graph_session(model, directory, name, *, session_factory=session):
+    """Use external data for large graphs and in-memory protobufs for small ones."""
+    return session_factory(graph_source(model, directory, name))
 
 
 class _OnnxFunction(torch.autograd.Function):
