@@ -207,3 +207,44 @@ def test_gpu_first_keeps_cpu_probe_without_full_cpu_timings(monkeypatch, tmp_pat
     assert not any(name.startswith("cpu-bf16") for name in names)
     assert len(report["omitted_measurements"]) == 2
     assert context_suite.run_suite(directory, corpus, gpu_first=True) == report
+
+
+def test_runtime_summary_uses_final_cumulative_counters(tmp_path):
+    from examples.huggingface.context_comparison import profile_summary
+
+    report = {
+        "mode": "chunked",
+        "timings_ms": {},
+        "input_ids_sha256": "tokens",
+        "library_sha256": "runtime",
+        "checkpoint_layers": 4,
+        "sequence": 4096,
+        "batch": 1,
+        "projection_precision": "fp32",
+        "head_chunk_size": 128,
+        "warmup": 1,
+        "samples": 3,
+        "losses": [1.0] * 4,
+    }
+    (tmp_path / "execution.json").write_text(
+        '{"status":"complete","returncode":0,"observations":[]}'
+    )
+    marker = "===== MLX EP session summary =====\n"
+    log = (
+        "loading\rloaded\n"
+        + marker
+        + "timing: translate=100us (x1)\n===================================\n"
+        + json.dumps(report)
+        + "\n"
+        + marker
+        + "timing: translate=900us (x4), eval=300us (x4)\n===================================\n"
+    )
+    (tmp_path / "worker.log").write_bytes(log.encode())
+    summary = profile_summary(
+        tmp_path, {"input_ids_sha256": "tokens", "library_sha256": "runtime"}
+    )
+    assert summary["phases"]["translate"] == {"wall_microseconds": 900, "calls": 4}
+    assert summary["phases"]["eval"]["wall_microseconds"] == 300
+    import hashlib
+
+    assert summary["log_sha256"] == hashlib.sha256(log.encode()).hexdigest()

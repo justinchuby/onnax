@@ -60,6 +60,7 @@ def measure(
     torch_device="cpu",
     torch_chunked=False,
     torch_attention="eager",
+    progress_every=0,
 ):
     for name, value, minimum in (
         ("sequence_length", sequence_length, 2),
@@ -284,6 +285,15 @@ def measure(
                         records[-1]["onnx_execution"]
                         - records[-1]["head_loss_gradient_execution"]
                     )
+        if progress_every and (
+            (index + 1) % progress_every == 0 or index + 1 == warmup + samples
+        ):
+            print(
+                f"benchmark step {index + 1}/{warmup + samples}: "
+                f"loss={losses[-1]:.6g}, step={finished - before:.3f}s",
+                file=sys.stderr,
+                flush=True,
+            )
     report = {
         "mode": mode,
         "checkpoint_layers": checkpoint_layers,
@@ -332,6 +342,9 @@ def measure(
             }
             for key in records[0]
         },
+        "timing_samples_ms": [
+            {key: value * 1000 for key, value in row.items()} for row in records
+        ],
         "effective_tokens_per_second": tokens / float(np.median([r["step"] for r in records])),
         "peak_rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         * (1 if sys.platform == "darwin" else 1024),
@@ -490,12 +503,20 @@ if __name__ == "__main__":
     parser.add_argument("--library", help="Development MLX EP library")
     parser.add_argument("--segment-nodes", type=int)
     parser.add_argument("--samples", type=int, default=100)
+    parser.add_argument(
+        "--progress-every",
+        type=int,
+        default=10,
+        help="Report progress to stderr; zero disables it",
+    )
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--sequence-length", type=int, default=64)
     parser.add_argument("--chunk-size", type=int, default=128)
     parser.add_argument("--output", default="qwen-benchmark.json")
     args = parser.parse_args()
+    if args.progress_every < 0:
+        parser.error("Require a nonnegative progress interval")
     if args.samples < 1 or args.warmup < 0 or args.batch_size < 1:
         parser.error("Require positive samples/batch and nonnegative warmup")
     if args.sequence_length < 2 or args.chunk_size < 1:
@@ -519,6 +540,7 @@ if __name__ == "__main__":
                     torch_device=args.torch_device,
                     torch_chunked=args.torch_chunked,
                     torch_attention=args.torch_attention,
+                    progress_every=args.progress_every,
                     checkpoint_layers=args.checkpoint_layers,
                     train_file=args.train_file,
                     save_activations=args.save_activations,
@@ -562,6 +584,8 @@ if __name__ == "__main__":
                 str(args.samples),
                 "--warmup",
                 str(args.warmup),
+                "--progress-every",
+                str(args.progress_every),
                 "--batch-size",
                 str(args.batch_size),
                 "--sequence-length",

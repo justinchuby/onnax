@@ -7,6 +7,7 @@ import hashlib
 import json
 import math
 import os
+import re
 
 
 def _read(path):
@@ -14,7 +15,62 @@ def _read(path):
         return json.load(stream)
 
 
-def collect(suite, onnx_report):
+def profile_summary(directory, expected):
+    guarded = _read(os.path.join(directory, "execution.json"))
+    if guarded["status"] != "complete" or guarded["returncode"] != 0:
+        raise ValueError("Runtime profile did not complete")
+    with open(os.path.join(directory, "worker.log"), "rb") as stream:
+        raw_log = stream.read()
+    log = raw_log.decode()
+    reports = [json.loads(line) for line in log.splitlines() if line.startswith("{")]
+    reports = [row for row in reports if row.get("mode") == "chunked" and "timings_ms" in row]
+    if len(reports) != 1:
+        raise ValueError("Expected one profiling worker report")
+    report = reports[0]
+    for key, value in {
+        "input_ids_sha256": expected["input_ids_sha256"],
+        "library_sha256": expected["library_sha256"],
+        "checkpoint_layers": 4,
+        "sequence": 4096,
+        "batch": 1,
+        "projection_precision": "fp32",
+        "head_chunk_size": 128,
+        "warmup": 1,
+        "samples": 3,
+    }.items():
+        if report[key] != value:
+            raise ValueError(f"Runtime profile differs: {key}")
+    if len(report["losses"]) != 4 or not all(map(math.isfinite, report["losses"])):
+        raise ValueError("Incomplete runtime profiling updates")
+    marker = "===== MLX EP session summary ====="
+    if marker not in log:
+        raise ValueError("Native execution summary is missing")
+    summary = (
+        marker
+        + log.rsplit(marker, 1)[1].split("===================================", 1)[0]
+        + "==================================="
+    )
+    phases = {
+        name: {"wall_microseconds": int(duration), "calls": int(calls)}
+        for name, duration, calls in re.findall(r"([a-z_]+)=(\d+)us \(x(\d+)\)", summary)
+    }
+    if not phases:
+        raise ValueError("Native timing attribution is missing")
+    return {
+        "scope": "One warmup and three updates; native phases are cumulative across all four updates and all sessions",
+        "guard": {key: value for key, value in guarded.items() if key != "observations"},
+        "measurement": report,
+        "ep_summary": summary,
+        "phases": phases,
+        "phase_scope": "Wall time in the translator, synchronous eval and copy regions; translator handlers may synchronize device work",
+        "log_sha256": hashlib.sha256(raw_log).hexdigest(),
+        "capture_policy": _read(os.path.join(directory, "capture-policy.json"))
+        if os.path.exists(os.path.join(directory, "capture-policy.json"))
+        else None,
+    }
+
+
+def collect(suite, onnx_report, *, profile_directory=None):
     queue = _read(os.path.join(suite, "queue.json"))
     if queue["status"] != "complete":
         raise ValueError("Wait for the complete measurement suite")
@@ -86,7 +142,7 @@ def collect(suite, onnx_report):
             raise ValueError(f"Incomplete or nonfinite updates: {name}")
         if measured["threads"]["torch"] != expected["threads"]["torch"]:
             raise ValueError(f"Different CPU thread count: {name}")
-        attention = "sdpa" if name.endswith("-sdpa") else "eager"
+        attention = "sdpa" if "-sdpa" in name else "eager"
         if measured["attention_implementation"] != attention:
             raise ValueError(f"Different attention path: {name}")
         if measured["hardware"] != expected["hardware"]:
@@ -112,10 +168,24 @@ def collect(suite, onnx_report):
         )
     with open(onnx_report, "rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
+    capacity = []
+    for case in queue["cases"]:
+        if case["name"].endswith("-capacity"):
+            record = {"case": case}
+            if case["status"] == "complete":
+                record["report"] = _read(os.path.join(suite, case["name"] + ".json"))
+            capacity.append(record)
+    profile = None
+    if profile_directory is not None:
+        expected = next(
+            row for row in onnx["measurements"] if row["case"] == "fp32-4096-group4"
+        )
+        profile = profile_summary(profile_directory, expected)
     return {
         "version": 1,
         "source_commit": queue["source_commit"],
         "supplemental_source_commit": queue.get("supplemental_source_commit"),
+        "repeat_policy": queue.get("repeat_policy"),
         "model": "Qwen/Qwen3-0.6B",
         "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
         "onnx_report": os.path.basename(onnx_report),
@@ -125,12 +195,14 @@ def collect(suite, onnx_report):
         "parameter_devices": "PyTorch parameters, gradients and AdamW state reside on the selected CPU/MPS device; ONNX uses CPU-owned adapters and optimizer state with MLX execution",
         "inputs": "Fixed benchmark tokens are prepared once before timing; ONNX execution times include runtime transfers",
         "loss": "PyTorch native cross entropy and ONNX target-excluded stable CE use the same shifted valid-token mean",
-        "attention": "PyTorch eager and SDPA cases are labeled separately; ONNX uses decomposed attention. No PyTorch compilation, ONNX Runtime optimization or native MLX compilation",
+        "attention": "PyTorch eager and SDPA cases are labeled separately; ONNX uses decomposed attention. No torch.compile, ONNX Runtime graph optimization or native MLX graph compilation",
         "timing": "10 warmups and 100 updates, phase synchronization on MPS; initialization reported separately",
         "memory": "Whole-process physical footprint includes construction, device allocations and runtime; RSS is recorded separately",
         "measurements": rows,
         "findings": findings,
         "omitted_measurements": omitted,
+        "capacity_probes": capacity,
+        "runtime_profile": profile,
     }
 
 
@@ -139,7 +211,13 @@ if __name__ == "__main__":
     parser.add_argument("--suite", required=True)
     parser.add_argument("--onnx-report", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--profile-dir")
     args = parser.parse_args()
     with open(args.output, "w") as stream:
-        json.dump(collect(args.suite, args.onnx_report), stream, indent=2, allow_nan=False)
+        json.dump(
+            collect(args.suite, args.onnx_report, profile_directory=args.profile_dir),
+            stream,
+            indent=2,
+            allow_nan=False,
+        )
         stream.write("\n")

@@ -90,6 +90,11 @@ def test_benchmark_checkpoint_policy_and_input_identity():
     )
     assert grouped["input_ids_sha256"] == full["input_ids_sha256"]
     assert grouped["head_chunk_size"] == 3
+    assert len(grouped["timing_samples_ms"]) == 1
+    sample = grouped["timing_samples_ms"][0]
+    assert sample["step"] == pytest.approx(
+        sample["forward_and_loss"] + sample["backward"] + sample["adamw"]
+    )
     assert grouped["provider"] == "pytorch_cpu"
     assert grouped["checkpoint_layers"] == 2
     assert grouped["gradient_and_optimizer_dtype"] == "float32"
