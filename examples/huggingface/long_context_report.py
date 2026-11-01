@@ -191,6 +191,7 @@ def collect(suite):
                 "save_activations": report["save_activations"],
                 "warmup": report["warmup"],
                 "samples": report["samples"],
+                "losses": report["losses"],
                 "microbatch": report["batch"],
                 "gradient_accumulation": 1,
                 "valid_shifted_tokens": report["valid_shifted_tokens"],
@@ -238,6 +239,37 @@ def collect(suite):
         )
         if probe.get("status") == "complete":
             _require(name in names, "Successful 8192-token probe requires measurement")
+    comparisons = []
+    for precision in ("fp32", "bf16"):
+        for length in (512, 1024, 4096, 8192):
+            group = [
+                row
+                for row in measurements
+                if row["precision"] == precision and row["sequence"] == length
+            ]
+            if not group:
+                continue
+            reference = next(
+                (row for row in group if row["case"].endswith("-recompute")), group[0]
+            )
+            for row in group:
+                if row is reference:
+                    continue
+                pairs = list(zip(reference["losses"], row["losses"], strict=True))
+                comparisons.append(
+                    {
+                        "reference_case": reference["case"],
+                        "compared_case": row["case"],
+                        "updates": len(pairs),
+                        "loss_values_equal": all(a == b for a, b in pairs),
+                        "max_absolute_loss_gap": max(abs(a - b) for a, b in pairs),
+                        "rtol": 1e-4,
+                        "atol": 1e-6,
+                        "within_tolerance": all(
+                            abs(a - b) <= 1e-6 + 1e-4 * abs(a) for a, b in pairs
+                        ),
+                    }
+                )
     return {
         "version": 1,
         "training_policy": {
@@ -254,6 +286,7 @@ def collect(suite):
         "queue_sha256": _sha(os.path.join(suite, "queue.json")),
         "training": training,
         "measurements": measurements,
+        "strategy_loss_comparisons": comparisons,
         "capacity": capacity,
     }
 
