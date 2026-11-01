@@ -80,6 +80,13 @@ def _validate_gradient_interface(directory, seeds, gradients, inputs, outputs):
         raise ValueError("Cached derivative name mapping differs from the bundle interface")
 
 
+def _validate_bundle_specs(source, interface):
+    for key, values in (("inputs", source.graph.inputs), ("outputs", source.graph.outputs)):
+        recorded = interface.get(key)
+        if recorded is not None and recorded != {v.name: _spec(v) for v in values}:
+            raise ValueError(f"Bundle {key} shapes or dtypes differ from its source graph")
+
+
 def _derivative_mismatch() -> None:
     raise ValueError("Bundle derivative belongs to a different source graph")
 
@@ -498,6 +505,8 @@ class OnnxModule(torch.nn.Module):
                     "version": 1,
                     "identity": self._identity,
                     "specification": self._specification,
+                    "inputs": self._input_specs,
+                    "outputs": self._output_specs,
                     "seeds": self._seeds,
                     "gradients": self.gradient_names,
                     "files": files,
@@ -539,6 +548,7 @@ class OnnxModule(torch.nn.Module):
                     os.path.join(directory, name), os.path.join(module._directory.name, name)
                 )
             source = ir.load(os.path.join(module._directory.name, "model.onnx"))
+            _validate_bundle_specs(source, interface)
             if interface["gradients"]:
                 derivative = ir.load(os.path.join(module._directory.name, "derivative.onnx"))
                 if (

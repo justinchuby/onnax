@@ -39,6 +39,12 @@ The runnable [Trainer example](https://github.com/justinchuby/onnax/blob/main/ex
 trains the LoRA regression model for 200 steps, restores a checkpoint in a fresh
 process, and checks the exported ONNX predictions.
 
+Run the [MLP example](https://github.com/justinchuby/onnax/blob/main/examples/torch_mlp.py)
+with `python -m examples.torch_mlp --output-dir torch_mlp_models`. It trains
+four weight/bias tensors for 50 steps, checks logits, loss, gradients and every
+update against PyTorch, and reloads the exported bundle. Tiny Qwen3 also has an
+independent three-update regression through this public interface.
+
 For outputs \(y=f(x,\theta)\), PyTorch supplies \(\bar y=\partial L/\partial y\).
 The ONNX backward computes \(\bar\theta=J_\theta^T\bar y\) and, when requested,
 \(\bar x=J_x^T\bar y\). PyTorch then accumulates these gradients and updates

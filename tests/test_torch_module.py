@@ -78,6 +78,9 @@ def test_multio_output_gradients_and_external_updates(tmp_path):
             expected_optimizer.step()
             torch.testing.assert_close(model.trainable[0], reference, rtol=1e-4, atol=1e-6)
         model.export(tmp_path / "bundle")
+        interface = json.loads((tmp_path / "bundle/interface.json").read_text())
+        assert interface["inputs"]["block.weight"] == {"dtype": 1, "shape": [3, 2]}
+        assert interface["outputs"]["hidden"] == {"dtype": 1, "shape": [None, 2]}
         with OnnxModule.load(tmp_path / "bundle") as restored:
             for a, b in zip(model.parameters(), restored.parameters(), strict=True):
                 torch.testing.assert_close(a, b, rtol=0, atol=0)
@@ -334,3 +337,14 @@ def test_output_views_cannot_change_saved_inputs_or_parameters():
         torch.testing.assert_close(
             model.trainable[0].grad, (features.detach() * (features.detach() + 0.5)).sum(0)
         )
+
+
+def test_bundle_shape_manifest_is_checked(tmp_path):
+    with OnnxModule(graph(), weights()) as model:
+        model.export(tmp_path / "bundle")
+    path = tmp_path / "bundle/interface.json"
+    interface = json.loads(path.read_text())
+    interface["inputs"]["block.weight"]["shape"] = [2, 3]
+    path.write_text(json.dumps(interface))
+    with pytest.raises(ValueError, match="shapes or dtypes"):
+        OnnxModule.load(tmp_path / "bundle")

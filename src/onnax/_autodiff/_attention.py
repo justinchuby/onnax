@@ -8,6 +8,7 @@ keep KV heads grouped instead of copying them to every query head.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping, Sequence
 
 import onnx_ir as ir
@@ -90,7 +91,13 @@ class _Attention:
                     "Attention derivatives support masks of rank 1 through 4"
                 )
             # Short masks are valid: remaining keys are excluded.
-            padding = ctx.op("Sub", self.dim(self.k4, 2), self.dim(mask, -1))
+            width = self.dim(mask, -1)
+            padding = ctx.op(
+                "Where",
+                ctx.op("Equal", width, ctx.constant([1])),
+                ctx.constant([0]),
+                ctx.op("Sub", self.dim(self.k4, 2), width),
+            )
             pads = ctx.op("Concat", ctx.constant([0] * (2 * _rank(mask) - 1)), padding, axis=0)
             if mask.dtype == ir.DataType.BOOL:
                 mask = ctx.op("Pad", mask, pads, ctx.constant(False, ir.DataType.BOOL))
@@ -223,6 +230,7 @@ class _Attention:
 def vjp(
     ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
 ) -> dict[int, ir.Value]:
+    start = len(ctx.tape.nodes)
     a = _Attention(ctx, node)
     g5 = a.group(a.to4(gs[0], a.hq))
     result = {}
@@ -247,6 +255,26 @@ def vjp(
         if 1 in indices:
             dk = ctx.op("Mul", ctx.op("MatMul", ctx.transpose(ds5, 5), a.qs), a.root_scale)
             result[1] = a.reduce_kv(dk, a.k)
+    # Keep the portable derivative intact and describe its boundary for optional
+    # deployment passes. These annotations do not alter execution or higher AD.
+    region = ctx.tape.nodes[start:]
+    if region and result and set(result) <= {0, 1, 2}:
+        group = region[0].name
+        assert group is not None
+        descriptor = {
+            "inputs": [v.name for v in (a.q, a.k, a.v, node.outputs[0], gs[0])],
+            "mask": node.inputs[3].name
+            if len(node.inputs) > 3 and node.inputs[3] is not None
+            else None,
+            "outputs": {str(i): v.name for i, v in sorted(result.items())},
+            "rank": a.rank,
+            "hq": a.hq,
+            "hk": a.hk,
+            "attributes": {name: attr.value for name, attr in node.attributes.items()},
+        }
+        for generated in region:
+            generated.metadata_props["onnax.attention_vjp.region"] = group
+        region[0].metadata_props["onnax.attention_vjp.interface"] = json.dumps(descriptor)
     return result
 
 

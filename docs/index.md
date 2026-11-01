@@ -17,6 +17,7 @@ huggingface
 torch
 qwen-sft
 fused-autodiff
+attention-vjp
 qwen-adapters
 qwen-context-training
 qwen-nf4
