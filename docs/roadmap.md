@@ -167,7 +167,9 @@ Swish and LayerNormalization. The Qwen `--fused-ops` path selects native MLX
 forward implementations and a portable ONNX backward. The optional
 [attention deployment pass](attention-vjp.md) now exposes a tiled or GEMM
 pullback to MLX EP, with a workspace policy and ordinary ONNX function fallback.
-See [fused derivatives](fused-autodiff.md) for the transformation API.
+See [fused derivatives](fused-autodiff.md) for the transformation API. The
+{ref}`100-sample comparison <m1-max-measurements>` now records native
+training throughput alongside PyTorch MPS for FP32 and BF16.
 
 The optional [`onnax.torch` module](torch.md) now owns explicit parameters,
 connects forward/VJP sessions to autograd, and exports reloadable ONNX bundles.
