@@ -194,3 +194,6 @@ attention workspace and output-head chunking.
 - Separate measured execution, exchange and update costs; never infer acceleration
   from executability or a smaller graph.
 - FP8 and distributed execution follow the quantized fine-tuning work.
+
+The [MLX precision workflow](mlx-precision.md) covers BF16/FP16 projections,
+FP32 adjoints and precision-preserving lookup-4 deployment.

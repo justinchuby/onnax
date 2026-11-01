@@ -44,7 +44,7 @@ def lower_decoder(model, reference, *, block_size=64, precision="fp32"):
         "codebook": CODEBOOK.tolist(),
         "packing": "high nibble first; row-major transposed Linear weight",
         "block_size": block_size,
-        "compute_dtype": "bfloat16" if precision == "bf16" else "float32",
+        "compute_dtype": {"bf16": "bfloat16", "fp16": "float16", "fp32": "float32"}[precision],
         "adapter_dtype": "float32",
         "embedding_dtype": "float32",
         "lm_head_dtype": "float32",

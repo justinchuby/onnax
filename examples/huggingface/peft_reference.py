@@ -33,8 +33,8 @@ def stable_control(model, peft, batch, actual_loss):
     try:
         peft.zero_grad(set_to_none=True)
         inputs = {name: value for name, value in batch.items() if name != "labels"}
-        bf16 = getattr(model, "projection_precision", "fp32") == "bf16"
-        with pairwise_head(peft, projection_precision="bf16" if bf16 else "fp32"):
+        precision = getattr(model, "projection_precision", "fp32")
+        with pairwise_head(peft, projection_precision=precision):
             logits = peft(**inputs, use_cache=False).logits
             loss = stable_token_loss(logits, batch["labels"])
             loss.backward()
@@ -60,8 +60,8 @@ def stable_control(model, peft, batch, actual_loss):
         return {
             "reference_loss": float(loss.detach()),
             "reference_computation": (
-                "target-excluded stable CE; BF16 forward; FP32 pairwise head backward, K blocks 128"
-                if bf16
+                f"target-excluded stable CE; {precision.upper()} forward; FP32 pairwise head backward, K blocks 128"
+                if precision != "fp32"
                 else "target-excluded stable CE; FP32 pairwise head backward, K blocks 128"
             ),
             "loss_check_passed": bool(

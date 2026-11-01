@@ -12,9 +12,9 @@ DOMAIN = "onnax.example.precision"
 OP = "MatMulBF16"
 
 
-def rounded(ctx, value):
+def rounded(ctx, value, dtype=ir.DataType.BFLOAT16):
     """Expose a BF16-rounded primal operand as FP32 for derivative arithmetic."""
-    return ctx.op("Cast", ctx.op("Cast", value, to=ir.DataType.BFLOAT16), to=ir.DataType.FLOAT)
+    return ctx.op("Cast", ctx.op("Cast", value, to=dtype), to=ir.DataType.FLOAT)
 
 
 def operands(ctx, node):
@@ -27,39 +27,46 @@ def operands(ctx, node):
     return values
 
 
+@onnax.register_jvp(DOMAIN, "MatMulFP16", since_version=1, until_version=1)
 @onnax.register_jvp(DOMAIN, OP, since_version=1, until_version=1)
 def matmul_jvp(ctx, node, tangents):
     a, b = operands(ctx, node)
+    dtype = ir.DataType.FLOAT16 if node.op_type == "MatMulFP16" else ir.DataType.BFLOAT16
     terms = []
     if 0 in tangents:
-        terms.append(ctx.op("MatMul", tangents[0], rounded(ctx, b)))
+        terms.append(ctx.op("MatMul", tangents[0], rounded(ctx, b, dtype)))
     if 1 in tangents:
-        terms.append(ctx.op("MatMul", rounded(ctx, a), tangents[1]))
+        terms.append(ctx.op("MatMul", rounded(ctx, a, dtype), tangents[1]))
     return [ctx.sum(terms)]
 
 
+@onnax.register_vjp(DOMAIN, "MatMulFP16", since_version=1, until_version=1)
 @onnax.register_vjp(DOMAIN, OP, since_version=1, until_version=1)
 def matmul_vjp(ctx, node, cotangents, input_indices):
     a, b = operands(ctx, node)
+    dtype = ir.DataType.FLOAT16 if node.op_type == "MatMulFP16" else ir.DataType.BFLOAT16
     g = cotangents[0]
     contributions = {}
     if 0 in input_indices:
-        contributions[0] = ctx.op("MatMul", g, ctx.transpose(rounded(ctx, b), 2))
+        contributions[0] = ctx.op("MatMul", g, ctx.transpose(rounded(ctx, b, dtype), 2))
     if 1 in input_indices:
-        contributions[1] = ctx.op("MatMul", ctx.transpose(rounded(ctx, a), 2), g)
+        contributions[1] = ctx.op("MatMul", ctx.transpose(rounded(ctx, a, dtype), 2), g)
     return contributions
 
 
-def matmul_function(opset=18):
+def matmul_function(opset=18, *, precision="bf16"):
     """Portable BF16 product with an FP32 public boundary."""
+    if precision not in ("bf16", "fp16"):
+        raise ValueError("Expected bf16 or fp16 product precision")
+    dtype = ir.DataType.BFLOAT16 if precision == "bf16" else ir.DataType.FLOAT16
     args = [ir.val(n) for n in ("a", "b")]
     tape = ir.tape.Tape()
-    reduced = [tape.op("Cast", [arg], {"to": int(ir.DataType.BFLOAT16)}) for arg in args]
+    reduced = [tape.op("Cast", [arg], {"to": int(dtype)}) for arg in args]
     product = tape.op("MatMul", reduced)
     output = tape.op("Cast", [product], {"to": int(ir.DataType.FLOAT)})
     return ir.Function(
         DOMAIN,
-        OP,
+        OP if precision == "bf16" else "MatMulFP16",
         graph=ir.Graph(
             args,
             [output],

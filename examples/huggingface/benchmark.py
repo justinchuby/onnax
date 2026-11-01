@@ -73,8 +73,8 @@ def measure(
         raise ValueError(
             "Tiny Qwen context is limited to 64 tokens; use --real for longer contexts"
         )
-    if projection_precision not in ("fp32", "bf16"):
-        raise ValueError("Expected fp32 or bf16 projection precision")
+    if projection_precision not in ("fp32", "bf16", "fp16"):
+        raise ValueError("Expected fp32, bf16 or fp16 projection precision")
     if save_activations and mode != "chunked":
         raise ValueError("Explicit saved activations require chunked mode")
     if mlx_memory_limit_bytes is not None:
@@ -103,11 +103,11 @@ def measure(
         raise ValueError("The PyTorch MPS device is unavailable")
     if checkpoint_layers and mode not in ("chunked", "pytorch"):
         raise ValueError("Decoder checkpoints require chunked or pytorch mode")
-    if projection_precision == "bf16" and (
+    if projection_precision != "fp32" and (
         mode not in ("pytorch", "joint", "chunked")
         or (mode != "pytorch" and provider != "mlx")
     ):
-        raise ValueError("BF16 measurement uses PyTorch or MLX joint/chunked mode")
+        raise ValueError("Half-precision measurement uses PyTorch or MLX joint/chunked mode")
     torch.set_num_threads(1)
     session_totals = {}
     start = time.perf_counter()
@@ -129,7 +129,7 @@ def measure(
                 b = np.zeros((4, layer.out_features), np.float32)
                 setattr(model.get_submodule(parent), child, TorchLora(layer, a, b, 0.25))
                 count += 2
-        if projection_precision == "bf16":
+        if projection_precision != "fp32":
             from examples.huggingface.mixed_precision import reference_projections
 
             model = reference_projections(model)
@@ -506,7 +506,9 @@ if __name__ == "__main__":
     parser.add_argument("--save-activations", action="store_true")
     parser.add_argument("--mlx-memory-limit-gib", type=int)
     parser.add_argument("--nf4", action="store_true")
-    parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
+    parser.add_argument(
+        "--projection-precision", choices=["fp32", "bf16", "fp16"], default="fp32"
+    )
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
     parser.add_argument("--library", help="Development MLX EP library")
     parser.add_argument("--segment-nodes", type=int)
@@ -575,7 +577,7 @@ if __name__ == "__main__":
         reports = []
         modes = (
             ("pytorch", "joint")
-            if args.projection_precision == "bf16"
+            if args.projection_precision != "fp32"
             else ("pytorch", "raw", "optimized", "saved", "chunked", "joint")
         )
         if args.checkpoint_layers or args.save_activations:

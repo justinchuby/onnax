@@ -18,6 +18,7 @@ torch
 qwen-sft
 fused-autodiff
 attention-vjp
+mlx-precision
 qwen-adapters
 qwen-context-training
 qwen-nf4

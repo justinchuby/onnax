@@ -31,11 +31,17 @@ def batch():
 
 @pytest.mark.parametrize(
     "layers,nf4,precision",
-    [(1, False, "fp32"), (2, True, "fp32"), (4, True, "fp32"), (1, True, "bf16")],
+    [
+        (1, False, "fp32"),
+        (2, True, "fp32"),
+        (4, True, "fp32"),
+        (1, True, "bf16"),
+        (1, True, "fp16"),
+    ],
 )
 def test_checkpoint_gradients_and_updates_match_flat(layers, nf4, precision):
     torch.set_num_threads(1)
-    options = {"session_factory": reference_session} if precision == "bf16" else {}
+    options = {"session_factory": reference_session} if precision != "fp32" else {}
     flat, _ = prepare(mode="chunked", nf4=nf4, projection_precision=precision, **options)
     grouped, _ = prepare(
         mode="chunked",
@@ -200,7 +206,7 @@ def test_checkpoint_against_independent_transformers_reference():
     assert report["strict_logit_check_passed"]
 
 
-@pytest.mark.parametrize("precision", ["fp32", "bf16"])
+@pytest.mark.parametrize("precision", ["fp32", "bf16", "fp16"])
 def test_native_checkpoint_gradients(precision, tmp_path):
     if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
         pytest.skip("Native MLX opt-in")
@@ -242,13 +248,13 @@ def test_native_checkpoint_gradients(precision, tmp_path):
         torch.testing.assert_close(a.grad, b.grad, rtol=0, atol=0)
 
 
-@pytest.mark.parametrize("precision", ["fp32", "bf16"])
+@pytest.mark.parametrize("precision", ["fp32", "bf16", "fp16"])
 def test_exported_head_and_body_training(tmp_path, monkeypatch, precision):
     import onnax
     from examples.huggingface.checkpointing import CheckpointedModule
     from examples.huggingface.chunked_loss import ChunkedHead
 
-    options = {"session_factory": reference_session} if precision == "bf16" else {}
+    options = {"session_factory": reference_session} if precision != "fp32" else {}
     model, _ = prepare(
         mode="chunked",
         nf4=True,
