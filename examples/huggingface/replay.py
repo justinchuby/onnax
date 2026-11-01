@@ -44,6 +44,19 @@ def _equal_tree(a, b):
         raise AssertionError(f"State values differ: {a} versus {b}")
 
 
+def _output_digest(value):
+    array = np.ascontiguousarray(value)
+    flat = array.reshape(-1)
+    for start in range(0, flat.size, 1024**2):
+        if not np.isfinite(flat[start : start + 1024**2]).all():
+            raise FloatingPointError("Nonfinite reloaded forward output")
+    return {
+        "dtype": str(array.dtype),
+        "shape": list(array.shape),
+        "sha256": hashlib.sha256(memoryview(array).cast("B")).hexdigest(),
+    }
+
+
 def _training_outputs(directory, interface, feeds, session_factory):
     if interface.get("kind") == "checkpointed_vjp":
         from examples.huggingface.checkpointing import CheckpointedModule
@@ -152,18 +165,7 @@ def verify(first, replay, *, step=30, provider="cpu", library=None, feeds=None):
     for directory in (first, replay):
         executor = factory(os.path.join(directory, "export/forward.onnx"))
         arrays = executor.run(None, feeds)
-        outputs.append(
-            [
-                {
-                    "dtype": str(value.dtype),
-                    "shape": list(value.shape),
-                    "sha256": hashlib.sha256(
-                        memoryview(np.ascontiguousarray(value)).cast("B")
-                    ).hexdigest(),
-                }
-                for value in arrays
-            ]
-        )
+        outputs.append([_output_digest(value) for value in arrays])
         del arrays, executor
     _equal_tree(outputs[0], outputs[1])
     result = {

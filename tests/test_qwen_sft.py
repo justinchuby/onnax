@@ -274,6 +274,18 @@ def test_replay_verification_checks_state_bytes():
         _equal_tree(state, {"optimizer": [torch.tensor([0.0, 1.0]), {"step": 4}]})
 
 
+def test_reloaded_output_digests_preserve_bytes_and_reject_nonfinite():
+    from examples.huggingface.replay import _output_digest
+
+    value = np.arange(24, dtype=np.float32).reshape(4, 6).T
+    assert _output_digest(value) == _output_digest(value.copy())
+    assert _output_digest(np.array([0.0], np.float32)) != _output_digest(
+        np.array([-0.0], np.float32)
+    )
+    with pytest.raises(FloatingPointError, match="Nonfinite"):
+        _output_digest(np.array([np.nan], np.float32))
+
+
 @pytest.mark.parametrize("side", ["onnx", "reference"])
 def test_diagnostic_gradient_audit_rejects_nonfinite_values(side):
     from examples.huggingface.validation import add_reference_adapters, audit
