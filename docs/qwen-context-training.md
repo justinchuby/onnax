@@ -199,12 +199,21 @@ Saving all activations exceeded the 24 GiB process budget.
 | --- | ---: | ---: | ---: | ---: |
 | Checkpoint every layer | 22.625 s | 22.866 s | 181.0 | 13.60 GiB |
 | Checkpoint every 2 layers | 21.661 s | 21.838 s | 189.0 | 14.81 GiB |
+| Checkpoint every 4 layers | 20.728 s | 21.257 s | 197.6 | 19.54 GiB |
 
-Checkpointing every layer and every two layers produced identical loss values
-across all 110 updates.
+All three checkpoint group sizes produced identical loss values across all
+110 updates.
 
 Whole-body recomputation and saving all activations exceeded the 24 GiB
 process budget during their capacity probes.
+The 8192-token capacity probe with checkpoints every layer also exceeded this
+process budget.
+
+The [complete qualification report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-4k-nf4-qualification-m1max.json)
+contains all 22 timing runs, four successful capacity probes and ten process
+budget findings. It records exact commands, input hashes, all loss values,
+session creation, body/head execution, AdamW, host preparation, RSS, physical
+footprint, allocator counters, graph sizes, thread settings and versions.
 
 ## Export and measure
 

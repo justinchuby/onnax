@@ -192,6 +192,10 @@ def collect(suite):
         measurements.append(
             {
                 "case": case["name"],
+                "command": case["command"],
+                "source_commit": case["source_commit"],
+                "started": case["started"],
+                "finished": case["finished"],
                 "sequence": length,
                 "precision": report["projection_precision"],
                 "checkpoint_layers": report["checkpoint_layers"],
@@ -203,6 +207,7 @@ def collect(suite):
                 "gradient_accumulation": 1,
                 "valid_shifted_tokens": report["valid_shifted_tokens"],
                 "input_ids_sha256": identity,
+                "input_pattern": report["input_pattern"],
                 "timings_ms": report["timings_ms"],
                 "tokens_per_second": report["effective_tokens_per_second"],
                 "peak_rss_bytes": report["peak_rss_bytes"],

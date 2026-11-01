@@ -1735,9 +1735,7 @@
     "examples/lora/mlx_runtime.py": "a2cd63e4573f73f6325fc4cfef8411ccc5f5dc2c2f152afe8c4696cfd371f690",
     "examples/process_memory.py": "721e33dfc07f93c945f8c44dc60d701bc65ab212c0bab85599508d8a420a47b1"
   },
-  "pending_stages": [
-    "isolated strategy timing and capacity measurements"
-  ],
+  "pending_stages": [],
   "checkpoint15_to30_state_recovery": {
     "step": 30,
     "projection_compute": "bf16",
@@ -2825,5 +2823,6 @@
     "restored_loss_and_gradients_bitwise_equal": true,
     "projection_precision": "bf16",
     "source": "/tmp/onnax-qwen-4k-qualification-suite-v2/bf16-training"
-  }
+  },
+  "qualification_report": "qwen3-4k-nf4-qualification-m1max.json"
 }
