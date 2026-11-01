@@ -147,6 +147,30 @@ memory milestone is to profile construction and execution peaks, then choose
 session and recomputation boundaries for an 8192-token training run. Device
 binding and data exchange measurements will guide subsequent runtime work.
 
+### Next milestone: matched runtime baselines and reusable integration
+
+Measure the qualified 4096-token workload with PyTorch CPU and MPS using the
+same frozen NF4 decoder values, initial adapters, input tokens, precision policy,
+four-layer checkpoint groups and 128-token loss chunks. Synchronize MPS at
+phase boundaries and report whole-process physical footprint alongside RSS.
+Use these results to prioritize execution, recomputation and runtime exchange
+work before extending the context length.
+
+Then promote the model-independent integration into an optional `onnax.torch`
+module. The first package interface should own explicit trainable parameters,
+connect forward and VJP sessions to PyTorch autograd, preserve stable parameter
+and gradient names, and load/export ordinary ONNX artifacts. A caller-supplied
+session factory selects the execution backend. Importing `onnax` should keep
+Torch, ONNX Runtime and Hugging Face dependencies optional.
+
+Qualify that interface with regression, an MLP classifier and Qwen. Cover
+caller-defined losses, upstream gradients, dynamic batches, gradient accumulation,
+parameter version checks, checkpoint identity, loading and export. Validate the
+installed wheel outside the repository so the integration has no dependency on
+example modules. Keep model construction, adapter injection, tokenization, loss
+selection and PEFT conventions in task adapters. Trainer and TRL continue to own
+training loops, optimizers, schedulers and checkpoint policy.
+
 ## Engineering boundaries
 
 - Preserve model-first transforms and global decorator registration; later

@@ -32,7 +32,7 @@ for fixed 4096/8192-token performance prefixes. LongAlpaca uses CC BY-NC 4.0; se
 [dataset card](https://huggingface.co/datasets/Yukang/LongAlpaca-12k).
 
 ```bash
-uv run --extra huggingface python -m examples.huggingface.long_corpus \
+uv run --group training --group huggingface python -m examples.huggingface.long_corpus \
   --output-dir /tmp/qwen-long-corpus
 ```
 
@@ -54,7 +54,7 @@ summed token loss over the valid tokens in its four microbatches.
 ```bash
 ONNXRUNTIME_EP_MLX_NO_COMPILE=1 \
 ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912 \
-uv run --extra huggingface --extra native-mlx python -m examples.huggingface.long_context \
+uv run --group training --group huggingface --group native-mlx python -m examples.huggingface.long_context \
   --corpus /tmp/qwen-long-corpus --library /path/to/libonnxruntime_mlx_ep.dylib \
   --precision fp32 --output-dir /tmp/qwen-4k-fp32
 ```
@@ -74,7 +74,7 @@ footprint and allocator active/cache/peak bytes after updates. Use the external 
 reserve:
 
 ```bash
-uv run --extra huggingface --extra native-mlx python -m examples.huggingface.guard \
+uv run --group training --group huggingface --group native-mlx python -m examples.huggingface.guard \
   --output-dir /tmp/qwen-4k-fp32-guard -- \
   python -m examples.huggingface.long_context \
   --corpus /tmp/qwen-long-corpus --library /path/to/libonnxruntime_mlx_ep.dylib \
@@ -238,7 +238,7 @@ Benchmark the same graph strategy independently from quality training:
 ```bash
 ONNXRUNTIME_EP_MLX_NO_COMPILE=1 \
 ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912 \
-uv run --extra huggingface --extra native-mlx python -m examples.huggingface.benchmark \
+uv run --group training --group huggingface --group native-mlx python -m examples.huggingface.benchmark \
   --mode chunked --checkpoint-layers 1 --real --nf4 --provider mlx \
   --library /path/to/libonnxruntime_mlx_ep.dylib \
   --train-file /tmp/qwen-long-corpus/benchmark.jsonl \
@@ -256,3 +256,27 @@ execution, AdamW time, host-input preparation, process memory and graph sizes.
 ONNX Runtime execution is synchronous, so session times include runtime
 transfers. ORT graph optimization is disabled; ONNXScript optimizes the graphs.
 Use fixed input tokens, precision and batch size when comparing strategies.
+
+## PyTorch CPU and MPS baselines
+
+Use the same benchmark input and update policy for PyTorch. This path stores
+the reconstructed NF4 values in FP32, checkpoints four decoder layers per group,
+and recomputes 128-row head/loss chunks during backward:
+
+```bash
+HF_HUB_OFFLINE=1 PYTORCH_ENABLE_MPS_FALLBACK=0 \
+uv run --group training --group huggingface python -m examples.huggingface.benchmark \
+  --mode pytorch --real --nf4 --torch-device mps --torch-chunked \
+  --checkpoint-layers 4 --projection-precision fp32 \
+  --train-file /tmp/qwen-long-corpus/benchmark.jsonl \
+  --sequence-length 4096 --batch-size 1 --chunk-size 128 \
+  --warmup 10 --samples 100
+```
+
+Use `--torch-device cpu` for CPU execution and `--projection-precision bf16`
+for the BF16-forward/FP32-adjoint policy. The default eager attention path
+provides a baseline for decomposed ONNX attention. `--torch-attention sdpa`
+selects PyTorch's scaled-dot-product attention implementation. MPS timing
+synchronizes forward, backward and AdamW boundaries. Reports record process
+physical footprint, RSS and the final MPS allocator snapshot. Apply the same
+external process guard used for ONNX measurements.

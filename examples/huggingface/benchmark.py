@@ -59,6 +59,7 @@ def measure(
     mlx_memory_limit_bytes=None,
     torch_device="cpu",
     torch_chunked=False,
+    torch_attention="eager",
 ):
     for name, value, minimum in (
         ("sequence_length", sequence_length, 2),
@@ -88,7 +89,11 @@ def measure(
         memory_limit(library, mlx_memory_limit_bytes)
     if torch_device not in ("cpu", "mps"):
         raise ValueError("Expected cpu or mps PyTorch device")
-    if mode != "pytorch" and (torch_device != "cpu" or torch_chunked):
+    if torch_attention not in ("eager", "sdpa"):
+        raise ValueError("Expected eager or sdpa PyTorch attention")
+    if mode != "pytorch" and (
+        torch_device != "cpu" or torch_chunked or torch_attention != "eager"
+    ):
         raise ValueError("PyTorch device/head options require pytorch mode")
     if torch_device == "mps" and not torch.backends.mps.is_available():
         raise ValueError("The PyTorch MPS device is unavailable")
@@ -104,6 +109,7 @@ def measure(
     start = time.perf_counter()
     if mode == "pytorch":
         model = reference_model(real)
+        model.set_attn_implementation(torch_attention)
         if nf4:
             from examples.huggingface.nf4 import quantize_reference
 
@@ -286,7 +292,7 @@ def measure(
         "provider": "pytorch_" + torch_device if mode == "pytorch" else provider,
         "torch_chunked_head": torch_chunked,
         "mps_fallback_enabled": os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK") == "1",
-        "attention_implementation": "eager",
+        "attention_implementation": torch_attention if mode == "pytorch" else "decomposed",
         "synchronization": "MPS at each phase boundary"
         if device == "mps"
         else "synchronous CPU/ORT execution",
@@ -473,6 +479,7 @@ if __name__ == "__main__":
     parser.add_argument("--real", action="store_true")
     parser.add_argument("--torch-device", choices=["cpu", "mps"], default="cpu")
     parser.add_argument("--torch-chunked", action="store_true")
+    parser.add_argument("--torch-attention", choices=["eager", "sdpa"], default="eager")
     parser.add_argument("--checkpoint-layers", type=int, default=0)
     parser.add_argument("--train-file")
     parser.add_argument("--save-activations", action="store_true")
@@ -511,6 +518,7 @@ if __name__ == "__main__":
                     real=args.real,
                     torch_device=args.torch_device,
                     torch_chunked=args.torch_chunked,
+                    torch_attention=args.torch_attention,
                     checkpoint_layers=args.checkpoint_layers,
                     train_file=args.train_file,
                     save_activations=args.save_activations,
@@ -541,7 +549,7 @@ if __name__ == "__main__":
         )
         if args.checkpoint_layers or args.save_activations:
             modes = ("chunked",)
-        if args.torch_chunked or args.torch_device != "cpu":
+        if args.torch_chunked or args.torch_device != "cpu" or args.torch_attention != "eager":
             modes = ("pytorch",)
         for mode in modes:
             cmd = [
@@ -566,7 +574,14 @@ if __name__ == "__main__":
                 args.projection_precision,
             ]
             if mode == "pytorch":
-                cmd.extend(["--torch-device", args.torch_device])
+                cmd.extend(
+                    [
+                        "--torch-device",
+                        args.torch_device,
+                        "--torch-attention",
+                        args.torch_attention,
+                    ]
+                )
                 if args.torch_chunked:
                     cmd.append("--torch-chunked")
             if args.checkpoint_layers:

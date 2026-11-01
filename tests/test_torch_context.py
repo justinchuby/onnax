@@ -40,9 +40,11 @@ def inputs():
 
 @pytest.mark.parametrize("group_size", [1, 2, 4])
 @pytest.mark.parametrize("precision", ["fp32", "bf16"])
-def test_grouped_chunked_gradients_and_updates(group_size, precision):
+@pytest.mark.parametrize("attention", ["eager", "sdpa"])
+def test_grouped_chunked_gradients_and_updates(group_size, precision, attention):
     torch.set_num_threads(1)
     full = model()
+    full.set_attn_implementation(attention)
     if precision == "bf16":
         from examples.huggingface.mixed_precision import reference_projections
 
