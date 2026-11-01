@@ -280,3 +280,27 @@ selects PyTorch's scaled-dot-product attention implementation. MPS timing
 synchronizes forward, backward and AdamW boundaries. Reports record process
 physical footprint, RSS and the final MPS allocator snapshot. Apply the same
 external process guard used for ONNX measurements.
+
+Run the isolated matrix with capacity probes and resumable records:
+
+```bash
+HF_HUB_OFFLINE=1 PYTORCH_ENABLE_MPS_FALLBACK=0 \
+uv run --group training --group huggingface python -m examples.huggingface.context_suite \
+  --train-file /tmp/qwen-long-corpus/benchmark.jsonl \
+  --output-dir /tmp/qwen-pytorch-context
+```
+
+The suite measures eager CPU/MPS in both precision policies and adds MPS SDPA
+cases. Each configuration first executes one capacity-probe update. Resuming the
+same command verifies source, corpus and completed report hashes before skipping
+finished cases. A process-budget finding skips that configuration's timing run;
+an execution error preserves the logs for inspection.
+
+Collect a comparison with the published ONNX measurements:
+
+```bash
+python -m examples.huggingface.context_comparison \
+  --suite /tmp/qwen-pytorch-context \
+  --onnx-report examples/huggingface/reports/qwen3-4k-nf4-qualification-m1max.json \
+  --output /tmp/qwen-context-comparison.json
+```

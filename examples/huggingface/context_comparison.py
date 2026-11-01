@@ -5,6 +5,7 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 
 
@@ -19,64 +20,74 @@ def collect(suite, onnx_report):
         raise ValueError("Wait for the complete measurement suite")
     onnx = _read(onnx_report)
     rows, findings = [], []
-    for device in ("cpu", "mps"):
-        for precision in ("fp32", "bf16"):
-            name = f"{device}-{precision}-4096-group4"
-            cases = {case["name"]: case for case in queue["cases"]}
-            case = cases.get(name, cases.get(name + "-capacity"))
-            if case is None:
-                raise ValueError(f"Missing measurement: {name}")
-            guard = _read(os.path.join(suite, case["name"] + ".guard", "execution.json"))
-            if case["status"] != "complete":
-                findings.append({"case": case, "guard": guard})
-                continue
-            report_path = os.path.join(suite, name + ".json")
-            measured = _read(report_path)
-            expected = next(
-                row
-                for row in onnx["measurements"]
-                if row["case"] == precision + "-4096-group4"
-            )
-            for key in ("input_ids_sha256", "projection_precision", "batch", "sequence"):
-                other = {"projection_precision": "precision", "batch": "microbatch"}.get(
-                    key, key
-                )
-                if measured[key] != expected[other]:
-                    raise ValueError(f"Unmatched {key}: {name}")
-            for key, value in {
-                "provider": "pytorch_" + device,
-                "checkpoint_layers": 4,
-                "head_chunk_size": 128,
-                "valid_shifted_tokens": 4095,
-                "warmup": 10,
-                "samples": 100,
-                "gradient_and_optimizer_dtype": "float32",
-                "torch_chunked_head": True,
-                "mps_fallback_enabled": False,
-            }.items():
-                if measured[key] != value:
-                    raise ValueError(f"Unexpected {key}: {name}")
-            if measured["hardware"] != expected["hardware"]:
-                raise ValueError(f"Different measurement hardware: {name}")
-            if measured["versions"] != expected["versions"]:
-                raise ValueError(f"Different dependency versions: {name}")
-            with open(report_path, "rb") as stream:
-                digest = hashlib.file_digest(stream, "sha256").hexdigest()
-            rows.append(
-                {
-                    "case": case,
-                    "pytorch": measured,
-                    "guard_peak_physical_bytes": case["physical_footprint_peak_bytes"],
-                    "report_sha256": digest,
-                    "onnx_case": expected["case"],
-                    "onnx_step_median_ms": expected["timings_ms"]["step"]["median"],
-                    "onnx_peak_physical_bytes": expected["physical_footprint"][
-                        "lifetime_peak_bytes"
-                    ],
-                    "onnx_speedup_over_pytorch": measured["timings_ms"]["step"]["median"]
-                    / expected["timings_ms"]["step"]["median"],
-                }
-            )
+    cases = {case["name"]: case for case in queue["cases"]}
+    requested = [
+        f"{device}-{precision}-4096-group4"
+        for device in ("cpu", "mps")
+        for precision in ("fp32", "bf16")
+    ]
+    requested.extend(
+        sorted({name.removesuffix("-capacity") for name in cases if "-sdpa" in name})
+    )
+    for name in requested:
+        device, precision = name.split("-")[:2]
+        case = cases.get(name, cases.get(name + "-capacity"))
+        if case is None:
+            raise ValueError(f"Missing measurement: {name}")
+        guard = _read(os.path.join(suite, case["name"] + ".guard", "execution.json"))
+        if case["status"] != "complete":
+            findings.append({"case": case, "guard": guard})
+            continue
+        report_path = os.path.join(suite, name + ".json")
+        measured = _read(report_path)
+        expected = next(
+            row for row in onnx["measurements"] if row["case"] == precision + "-4096-group4"
+        )
+        for key in ("input_ids_sha256", "projection_precision", "batch", "sequence"):
+            other = {"projection_precision": "precision", "batch": "microbatch"}.get(key, key)
+            if measured[key] != expected[other]:
+                raise ValueError(f"Unmatched {key}: {name}")
+        for key, value in {
+            "provider": "pytorch_" + device,
+            "checkpoint_layers": 4,
+            "head_chunk_size": 128,
+            "valid_shifted_tokens": 4095,
+            "warmup": 10,
+            "samples": 100,
+            "gradient_and_optimizer_dtype": "float32",
+            "torch_chunked_head": True,
+            "mps_fallback_enabled": False,
+        }.items():
+            if measured[key] != value:
+                raise ValueError(f"Unexpected {key}: {name}")
+        if len(measured["losses"]) != 110 or not all(map(math.isfinite, measured["losses"])):
+            raise ValueError(f"Incomplete or nonfinite updates: {name}")
+        if measured["threads"]["torch"] != expected["threads"]["torch"]:
+            raise ValueError(f"Different CPU thread count: {name}")
+        attention = "sdpa" if name.endswith("-sdpa") else "eager"
+        if measured["attention_implementation"] != attention:
+            raise ValueError(f"Different attention path: {name}")
+        if measured["hardware"] != expected["hardware"]:
+            raise ValueError(f"Different measurement hardware: {name}")
+        if measured["versions"] != expected["versions"]:
+            raise ValueError(f"Different dependency versions: {name}")
+        with open(report_path, "rb") as stream:
+            digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        rows.append(
+            {
+                "case": case,
+                "pytorch": measured,
+                "guard_peak_physical_bytes": case["physical_footprint_peak_bytes"],
+                "report_sha256": digest,
+                "onnx_case": expected["case"],
+                "onnx_step_median_ms": expected["timings_ms"]["step"]["median"],
+                "onnx_peak_physical_bytes": expected["physical_footprint"][
+                    "lifetime_peak_bytes"
+                ],
+                "onnx_speedup_over_pytorch": measured["timings_ms"]["step"]["median"]
+                / expected["timings_ms"]["step"]["median"],
+            }
+        )
     with open(onnx_report, "rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
     return {
@@ -87,7 +98,7 @@ def collect(suite, onnx_report):
         "scope": "M1 Max Qwen3-0.6B; batch 1, accumulation 1, rank-4 q/v, frozen NF4 decoder values; FP32 adapters/gradients/AdamW; four-layer decoder checkpoints and 128-row loss chunks",
         "storage": "PyTorch stores reconstructed FP32 base weights; ONNX uses packed NF4 decoder weights",
         "loss": "PyTorch native cross entropy and ONNX target-excluded stable CE use the same shifted valid-token mean",
-        "attention": "Eager attention on both paths; no PyTorch compilation, ONNX Runtime optimization or native MLX compilation",
+        "attention": "PyTorch eager and SDPA cases are labeled separately; ONNX uses decomposed attention. No PyTorch compilation, ONNX Runtime optimization or native MLX compilation",
         "timing": "10 warmups and 100 updates, phase synchronization on MPS; initialization reported separately",
         "memory": "Whole-process physical footprint includes construction, device allocations and runtime; RSS is recorded separately",
         "measurements": rows,

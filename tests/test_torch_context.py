@@ -59,7 +59,7 @@ def test_grouped_chunked_gradients_and_updates(group_size, precision, attention)
         for optimizer in optimizers:
             optimizer.zero_grad(set_to_none=True)
         loss = token_loss(full(**batch, use_cache=False).logits, labels)
-        # Seven rows exercise a tail chunk and padding across a batch boundary.
+        # Eight shifted rows exercise a tail chunk and a padded batch boundary.
         bounded = chunked_token_loss(grouped, batch, labels, 7)
         torch.testing.assert_close(loss, bounded, rtol=1e-4, atol=1e-6)
         loss.backward()

@@ -165,7 +165,10 @@ Torch, ONNX Runtime and Hugging Face dependencies optional.
 
 Qualify that interface with regression, an MLP classifier and Qwen. Cover
 caller-defined losses, upstream gradients, dynamic batches, gradient accumulation,
-parameter version checks, checkpoint identity, loading and export. Validate the
+parameter version checks, source-graph/checkpoint identity, loading and export.
+Include gradients for floating data inputs, so an ONNX block can propagate into
+trainable PyTorch layers before it. Define ownership and explicit session/tempfile
+cleanup for long-running processes. Validate the
 installed wheel outside the repository so the integration has no dependency on
 example modules. Keep model construction, adapter injection, tokenization, loss
 selection and PEFT conventions in task adapters. Trainer and TRL continue to own
