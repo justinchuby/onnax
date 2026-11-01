@@ -120,7 +120,7 @@ uv run --extra huggingface --extra native-mlx python -m examples.huggingface.ben
   --warmup 10 --samples 100
 ```
 
-The benchmark takes a naturally long example's token prefix and uses every
+Each benchmark step executes one microbatch, its backward pass and one AdamW\nupdate. The benchmark takes a naturally long example's token prefix and uses every
 shifted token. It reports step median/P95, tokens/s, output-head and body
 execution, AdamW time, host-input preparation, process memory and graph sizes.
 ONNX Runtime execution is synchronous, so session times include runtime
