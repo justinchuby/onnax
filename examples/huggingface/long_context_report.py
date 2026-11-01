@@ -166,6 +166,13 @@ def collect(suite):
             "Benchmark runtime policy differs",
         )
         _require(
+            report["cpu_fallback_disabled"]
+            and report["mlx_memory_limit_bytes"] == 20 * 1024**3
+            and report["base_storage"] == "packed_nf4_decoder"
+            and report["gradient_and_optimizer_dtype"] == "float32",
+            "Benchmark memory, provider or parameter policy differs",
+        )
+        _require(
             report["library_sha256"] == queue["library_sha256"], "Measurement library differs"
         )
         _require(
@@ -203,10 +210,29 @@ def collect(suite):
                 "guard_peak_physical_bytes": case["physical_footprint_peak_bytes"],
                 "mlx_allocator": report["mlx_allocator"],
                 "logical_saved_activation_bytes": report["logical_saved_activation_bytes"],
+                "saved_activation_count": report["saved_activation_count"],
                 "initialization_seconds": report["initialization_seconds"],
+                "initialization_scope": report["initialization_scope"],
+                "native_construction": report["native_construction"],
+                "input_view_median_us": report["input_view_median_us"],
+                "input_view_scope": report["input_view_scope"],
+                "exchange_scope": report["exchange_scope"],
                 "nodes": report["nodes"],
                 "parameter_bytes": report["parameter_bytes"],
+                "parameter_bytes_scope": "FP32 trainable LoRA tensors",
+                "initializer_bytes_by_session": report["initializer_bytes_by_session"],
+                "initializer_scope": report["initializer_scope"],
+                "decoder_storage_bytes": report["decoder_storage_bytes"],
+                "base_storage": report["base_storage"],
+                "gradient_and_optimizer_dtype": report["gradient_and_optimizer_dtype"],
+                "head_chunk_size": report["head_chunk_size"],
+                "head_forward_session_created": report["head_forward_session_created"],
+                "full_logits_bytes": report["full_logits_bytes"],
+                "chunk_logits_bytes": report["chunk_logits_bytes"],
                 "threads": report["threads"],
+                "thread_environment": report["thread_environment"],
+                "cpu_fallback_disabled": report["cpu_fallback_disabled"],
+                "mlx_memory_limit_bytes": report["mlx_memory_limit_bytes"],
                 "hardware": report["hardware"],
                 "library_sha256": report["library_sha256"],
                 "versions": report["versions"],
