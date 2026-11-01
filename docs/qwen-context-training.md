@@ -115,11 +115,12 @@ and [BF16 report](https://github.com/justinchuby/onnax/blob/main/examples/huggin
 record exact losses, corpus identities, source hashes, checkpoint audits and
 per-update memory observations.
 
-The FP32 fresh-process checkpoint-15 recovery reproduced all final adapters,
-AdamW state, scheduler and RNG state byte for byte at update 30. Loaded
-inference and training modules also reproduced complete forward outputs, loss
+Fresh processes resumed checkpoint 15 under both computation policies and
+reproduced all final adapters, AdamW state, scheduler and RNG state byte for
+byte at update 30. Loaded FP32 inference and training modules also reproduced
+complete forward outputs, loss
 and all 112 gradients on a 4096-token input with seven right-padding tokens.
-PEFT exchange preserved all 112 adapter arrays; the stable FP32 reference
+FP32 PEFT exchange preserved all 112 adapter arrays; the stable FP32 reference
 control aligned all adapter gradients at rtol=1e-4 and atol=1e-6.
 
 ## Export and measure

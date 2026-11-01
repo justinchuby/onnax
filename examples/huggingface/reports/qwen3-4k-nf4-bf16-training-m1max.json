@@ -1736,9 +1736,35 @@
     "examples/process_memory.py": "721e33dfc07f93c945f8c44dc60d701bc65ab212c0bab85599508d8a420a47b1"
   },
   "pending_stages": [
-    "fresh-process checkpoint-15 to 30 recovery",
     "loaded 4096-token inference/loss/gradient replay",
     "PEFT exchange",
     "isolated strategy timing and capacity measurements"
-  ]
+  ],
+  "checkpoint15_to30_state_recovery": {
+    "step": 30,
+    "projection_compute": "bf16",
+    "checkpoint_tensors": 113,
+    "adapter_tensors": 112,
+    "parameters_and_base_identity_bitwise_equal": true,
+    "optimizer_bitwise_equal": true,
+    "scheduler_equal": true,
+    "rng_state_equal": true,
+    "data_identity_equal": true,
+    "sha256": {
+      "continuous": {
+        "model.safetensors": "1171e11914406f37eb8fca8222270a6ad8f6523b11c4fe035e18ddd05785cb79",
+        "optimizer.pt": "f7ceea8c89312e585624fa96b5983c8df344a7544462b36bc0f15654e2fa0a47",
+        "scheduler.pt": "e1a1b4356da4666ea0cd6f4475a694e54c3413d4edcefe1d5921816adeb2712a",
+        "rng_state.pth": "7c895883683cdf8d12ff93b34d0570e00a8e243652872b9842a38b04310587f9",
+        "onnax_data.json": "724c8a9fdf13f60f108deb314a79251c64d7d7860653f877193fc4b935a5af18"
+      },
+      "resumed": {
+        "model.safetensors": "1171e11914406f37eb8fca8222270a6ad8f6523b11c4fe035e18ddd05785cb79",
+        "optimizer.pt": "f7ceea8c89312e585624fa96b5983c8df344a7544462b36bc0f15654e2fa0a47",
+        "scheduler.pt": "e1a1b4356da4666ea0cd6f4475a694e54c3413d4edcefe1d5921816adeb2712a",
+        "rng_state.pth": "7c895883683cdf8d12ff93b34d0570e00a8e243652872b9842a38b04310587f9",
+        "onnax_data.json": "724c8a9fdf13f60f108deb314a79251c64d7d7860653f877193fc4b935a5af18"
+      }
+    }
+  }
 }
