@@ -20,8 +20,8 @@ from examples.lora.train import session
 
 
 def head_graph(weight, *, projection_precision="fp32"):
-    if projection_precision not in ("fp32", "bf16"):
-        raise ValueError("Expected fp32 or bf16 head projection precision")
+    if projection_precision not in ("fp32", "bf16", "fp16"):
+        raise ValueError("Expected fp32, bf16 or fp16 head projection precision")
     width, vocab = weight.shape
     hidden = ir.val("hidden", dtype=ir.DataType.FLOAT, shape=["tokens", width])
     labels = ir.val("labels", dtype=ir.DataType.INT64, shape=["tokens"])
@@ -47,10 +47,10 @@ def head_graph(weight, *, projection_precision="fp32"):
     model = ir.Model(graph, ir_version=12)
     install(model)
     ShapeInferencePass()(model)
-    if projection_precision == "bf16":
-        from examples.huggingface.mixed_precision import bf16_projections
+    if projection_precision != "fp32":
+        from examples.huggingface.mixed_precision import precision_projections
 
-        model = bf16_projections(model)
+        model = precision_projections(model, precision=projection_precision)
     return model
 
 
@@ -122,7 +122,9 @@ class ChunkedHead:
         if list(weight.shape)[1] != self.vocab_size:
             raise ValueError("Exported head vocabulary differs from its interface")
         policy = json.loads(self.model.metadata_props.get("onnax.example.precision", "{}"))
-        actual_precision = "bf16" if policy.get("projection_compute") == "bfloat16" else "fp32"
+        actual_precision = {"bfloat16": "bf16", "float16": "fp16"}.get(
+            policy.get("projection_compute"), "fp32"
+        )
         if actual_precision != self.projection_precision:
             raise ValueError("Output-head projection precision differs from its interface")
         self.executor = session_factory(sources["gradient"])
@@ -160,7 +162,7 @@ class ChunkedHead:
             isinstance(record["chunk_size"], bool)
             or not isinstance(record["chunk_size"], int)
             or record["chunk_size"] < 1
-            or record["projection_precision"] not in ("fp32", "bf16")
+            or record["projection_precision"] not in ("fp32", "bf16", "fp16")
         ):
             raise ValueError("Invalid output-head execution options")
         result = cls.__new__(cls)

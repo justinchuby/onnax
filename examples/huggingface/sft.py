@@ -168,7 +168,7 @@ class OnnxQwen3(PreTrainedModel):
             candidates = [
                 node.inputs[1]
                 for node in model.graph
-                if node.op_type in ("MatMul", "MatMulBF16")
+                if node.op_type in ("MatMul", "MatMulBF16", "MatMulFP16")
                 and len(node.inputs) == 2
                 and node.inputs[1].shape is not None
                 and list(node.inputs[1].shape) == [config.hidden_size, config.vocab_size]
@@ -282,8 +282,8 @@ def _prepare_graph(
     real=False, *, nf4=False, projection_precision="fp32", checkpoints=False, fused_ops=False
 ):
     """Build one canonical Mobius source and matching reconstructed reference."""
-    if projection_precision not in ("fp32", "bf16"):
-        raise ValueError("Expected fp32 or bf16 projection precision")
+    if projection_precision not in ("fp32", "bf16", "fp16"):
+        raise ValueError("Expected fp32, bf16 or fp16 projection precision")
     reference = reference_model(real)
     base = build_base(reference)
     if checkpoints:
@@ -295,10 +295,10 @@ def _prepare_graph(
         from examples.huggingface.nf4 import lower_decoder
 
         graph, quantization = lower_decoder(graph, reference, precision=projection_precision)
-    if projection_precision == "bf16":
-        from examples.huggingface.mixed_precision import bf16_projections
+    if projection_precision != "fp32":
+        from examples.huggingface.mixed_precision import precision_projections
 
-        graph = bf16_projections(graph)
+        graph = precision_projections(graph, precision=projection_precision)
     if checkpoints:
         restore_decoder_outputs(graph)
     return reference, graph, params, mapping, quantization
@@ -318,10 +318,10 @@ def prepare(
     fused_ops=False,
 ):
     _validate_checkpoints(mode, checkpoint_layers, save_activations)
-    if projection_precision not in ("fp32", "bf16"):
-        raise ValueError("Expected fp32 or bf16 projection precision")
-    if projection_precision == "bf16" and mode not in ("joint", "chunked"):
-        raise ValueError("BF16 projection training uses joint or chunked execution")
+    if projection_precision not in ("fp32", "bf16", "fp16"):
+        raise ValueError("Expected fp32, bf16 or fp16 projection precision")
+    if projection_precision != "fp32" and mode not in ("joint", "chunked"):
+        raise ValueError("Half-precision projection training uses joint or chunked execution")
     reference, graph, params, mapping, quantization = _prepare_graph(
         real,
         nf4=nf4,
@@ -535,14 +535,14 @@ def run(
         raise ValueError(
             "FP64 oracle expects an FP32 base; use the dequantized FP32 NF4 reference"
         )
-    if projection_precision == "bf16" and fp64_audit:
+    if projection_precision != "fp32" and fp64_audit:
         raise ValueError("FP64 diagnostics require the FP32 projection policy")
     if fused_ops and provider == "cpu":
         raise ValueError(
             "Fused Swish execution requires mlx or reference with the pinned ORT version"
         )
-    if projection_precision == "bf16" and provider == "cpu":
-        raise ValueError("Select mlx or reference for BF16 projection execution")
+    if projection_precision != "fp32" and provider == "cpu":
+        raise ValueError("Select mlx or reference for Half-precision projection execution")
     train_lines, validation_lines = _training_texts(train_file, validation_file)
     tok = tokenizer(real, training_texts=train_lines if train_file is not None else None)
     data_identity = _data_identity(train_lines, validation_lines, tok, max_length=max_length)
@@ -584,10 +584,10 @@ def run(
     initial_audit = sample = None
     if reference_audit:
         reference = add_reference_adapters(reference, model)
-        if projection_precision == "bf16":
+        if projection_precision != "fp32":
             from examples.huggingface.mixed_precision import reference_projections
 
-            reference = reference_projections(reference)
+            reference = reference_projections(reference, precision=projection_precision)
         sample = tok(
             train_lines[0], truncation=True, max_length=max_length, return_tensors="pt"
         )
@@ -702,8 +702,8 @@ def run(
         report["stable_reference_audits"] = {
             "loss": "target-excluded stable CE",
             "head_backward": (
-                "FP32 pairwise K blocks of 128 using BF16-rounded weights"
-                if projection_precision == "bf16"
+                f"FP32 pairwise K blocks of 128 using {projection_precision.upper()}-rounded weights"
+                if projection_precision != "fp32"
                 else "FP32 pairwise K blocks of 128"
             ),
             "checks": [initial_stable, final_stable],
@@ -816,7 +816,9 @@ if __name__ == "__main__":
     parser.add_argument("--evaluate-train", action="store_true")
     parser.add_argument("--fp64-audit", action="store_true")
     parser.add_argument("--nf4", action="store_true")
-    parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
+    parser.add_argument(
+        "--projection-precision", choices=["fp32", "bf16", "fp16"], default="fp32"
+    )
     parser.add_argument("--peft-roundtrip", action="store_true")
     parser.add_argument("--provider", choices=["cpu", "mlx", "reference"], default="cpu")
     parser.add_argument(

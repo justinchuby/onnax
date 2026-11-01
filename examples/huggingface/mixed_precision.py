@@ -13,29 +13,36 @@ from examples.huggingface.validation import TorchLora
 from examples.lora.bf16_rules import DOMAIN, OP, matmul_function
 
 
-def bf16_projections(model):
+def precision_projections(model, *, precision="bf16"):
     """Lower matrix projections; keep attention, normalization and loss in FP32.
 
-    Each product rounds its operands and result to BF16. The shared registered
+    Each product rounds its operands and result to the selected half dtype. The shared registered
     rules compute straight-through adjoints in FP32 using rounded operands.
     Parameters and external optimizer state remain FP32. Packed NF4 decoder
-    calls retain their storage and supply BF16 forward/FP32 derivative rules.
+    calls retain their storage and supply half forward/FP32 derivative rules.
     """
+    if precision not in ("bf16", "fp16"):
+        raise ValueError("Expected bf16 or fp16 projection precision")
+    suffix = "FP16" if precision == "fp16" else "BF16"
     result = model.clone()
     from examples.lora.nf4 import DOMAIN as NF4_DOMAIN
 
     if any(
-        node.domain == NF4_DOMAIN and node.op_type.startswith("MatMul_")
+        node.domain == NF4_DOMAIN
+        and node.op_type.startswith(("MatMul_", "MatMulBF16_", "MatMulFP16_"))
+        and not node.op_type.startswith("MatMul" + suffix + "_")
         for node in result.graph
     ):
-        raise ValueError("Lower NF4 projections with precision='bf16' before BF16 conversion")
+        raise ValueError(
+            f"Lower NF4 projections with precision={precision!r} before conversion"
+        )
     packed_count = sum(
-        node.domain == NF4_DOMAIN and node.op_type.startswith("MatMulBF16_")
+        node.domain == NF4_DOMAIN and node.op_type.startswith("MatMul" + suffix + "_")
         for node in result.graph
     )
-    function = matmul_function(result.graph.opset_imports[""])
+    function = matmul_function(result.graph.opset_imports[""], precision=precision)
     if function.identifier() in result.functions:
-        raise ValueError("The model already defines the BF16 product function")
+        raise ValueError("The model already defines the selected half product function")
     context = onnax.AutodiffContext(result.graph)
     count = 0
     for node in list(result.graph):
@@ -51,7 +58,9 @@ def bf16_projections(model):
             or b.dtype != ir.DataType.FLOAT
             or not all(isinstance(d, int) and d > 0 for d in b.shape)
         ):
-            raise ValueError("BF16 projections require FP32 activations and a static matrix")
+            raise ValueError(
+                "Half-precision projections require FP32 activations and a static matrix"
+            )
         k, n = b.shape
         tape = ir.tape.Tape()
 
@@ -63,7 +72,9 @@ def bf16_projections(model):
         flat = tape.op("Reshape", [a, constant([-1, k])]) if len(a.shape) > 2 else a
         if flat is not a:
             flat.dtype, flat.shape = ir.DataType.FLOAT, ir.Shape(["projection_rows", k])
-        product = tape.op(OP, [flat, b], domain=DOMAIN)
+        product = tape.op(
+            OP if precision == "bf16" else "MatMulFP16", [flat, b], domain=DOMAIN
+        )
         product.dtype, product.shape = ir.DataType.FLOAT, ir.Shape(["projection_rows", n])
         output = product
         if len(a.shape) > 2:
@@ -87,7 +98,7 @@ def bf16_projections(model):
     result.metadata_props["onnax.example.precision"] = json.dumps(
         {
             "version": 1,
-            "projection_compute": "bfloat16",
+            "projection_compute": "bfloat16" if precision == "bf16" else "float16",
             "projection_products": count + packed_count,
             "attention_and_normalization": "float32",
             "parameters_and_storage": (
@@ -100,6 +111,11 @@ def bf16_projections(model):
     )
     result.graph.sort()
     return result
+
+
+def bf16_projections(model):
+    """Apply Half-precision projections with FP32 adjoints."""
+    return precision_projections(model, precision="bf16")
 
 
 class _Product(torch.autograd.Function):
@@ -122,15 +138,27 @@ class _Product(torch.autograd.Function):
         return da, db
 
 
-def reference_projections(reference):
-    """Apply the declared BF16-forward/FP32-adjoint policy to Transformers."""
+class _FP16Product(_Product):
+    @staticmethod
+    def forward(ctx, a, b):
+        qa, qb = a.to(torch.float16), b.to(torch.float16)
+        if any(ctx.needs_input_grad):
+            ctx.save_for_backward(qa.float(), qb.float())
+        return (qa @ qb).float()
+
+
+def reference_projections(reference, *, precision="bf16"):
+    """Apply the selected half-forward/FP32-adjoint policy to Transformers."""
+    if precision not in ("bf16", "fp16"):
+        raise ValueError("Expected bf16 or fp16 projection precision")
+    product = _Product if precision == "bf16" else _FP16Product
 
     def linear(module, x):
-        value = _Product.apply(x, module.weight.T)
+        value = product.apply(x, module.weight.T)
         return value if module.bias is None else value + module.bias
 
     def lora(module, x):
-        delta = _Product.apply(_Product.apply(x, module.A), module.B)
+        delta = product.apply(product.apply(x, module.A), module.B)
         return module.base(x) + module.scale * delta
 
     for module in reference.modules():
