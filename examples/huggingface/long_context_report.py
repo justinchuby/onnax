@@ -247,6 +247,8 @@ def collect(suite):
             "learning_rate": 0.003,
             "head_chunk_tokens": 128,
         },
+        "training_loss_reduction": "Valid-token mean across accumulated microbatches",
+        "evaluation_loss_reduction": "Mean of per-example valid-token means",
         "benchmark_step": "One microbatch forward/backward and one AdamW update",
         "source_commit": queue["source_commit"],
         "queue_sha256": _sha(os.path.join(suite, "queue.json")),
