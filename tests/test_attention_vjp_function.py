@@ -43,6 +43,7 @@ def test_portable_function(rank, mask_type, selected):
     optimized = fuse_attention_vjp(derivative)
     CheckerPass(full_check=True)(optimized)
     assert len(optimized.functions) == 1
+    assert next(iter(optimized.functions))[0] == "pkg.onnax"
     assert len(optimized.graph) < len(derivative.graph)
     assert any(n.op_type.startswith("AttentionVJP_v1_") for n in optimized.graph)
     assert ir.to_proto(derivative).SerializeToString() == before

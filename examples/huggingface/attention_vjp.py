@@ -10,7 +10,7 @@ import struct
 import numpy as np
 import onnx_ir as ir
 
-DOMAIN = "ai.onnax"
+DOMAIN = "pkg.onnax"
 REGION = "onnax.attention_vjp.region"
 INTERFACE = "onnax.attention_vjp.interface"
 
