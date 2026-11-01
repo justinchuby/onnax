@@ -159,9 +159,10 @@ budget at both lengths and was stopped by the guard.
 | --- | ---: | ---: | ---: | ---: |
 | Checkpoint every layer | 23.605 s | 23.749 s | 173.5 | 12.62 GiB |
 | Checkpoint every 2 layers | 21.899 s | 22.040 s | 187.0 | 14.19 GiB |
+| Checkpoint every 4 layers | 21.123 s | 21.385 s | 193.9 | 19.36 GiB |
 
-Checkpointing every layer and every two layers produced identical loss values
-across all 110 updates.
+All three checkpoint group sizes produced identical loss values across all
+110 updates.
 
 Whole-body recomputation and saving all activations exceeded the 24 GiB
 process budget during their capacity probes.
