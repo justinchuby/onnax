@@ -181,6 +181,18 @@ process budget.
 All four strategies produced identical loss values across all 110 updates.
 Saving all activations exceeded the 24 GiB process budget.
 
+### BF16, 1024 tokens
+
+| Strategy | Step median | Step P95 | Valid tokens/s | Peak process footprint |
+| --- | ---: | ---: | ---: | ---: |
+| Whole-body recomputation | 4.479 s | 4.540 s | 228.4 | 15.96 GiB |
+| Checkpoint every layer | 4.588 s | 4.632 s | 223.0 | 7.74 GiB |
+| Checkpoint every 2 layers | 4.604 s | 4.637 s | 222.2 | 8.00 GiB |
+| Checkpoint every 4 layers | 4.475 s | 4.528 s | 228.6 | 8.60 GiB |
+
+All four strategies produced identical loss values across all 110 updates.
+Saving all activations exceeded the 24 GiB process budget.
+
 ## Export and measure
 
 The export directory contains a bound ordinary ONNX forward model, shared
