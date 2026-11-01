@@ -123,6 +123,32 @@ record data and tokenizer identities and reject changed inputs before model
 construction. Optimization, scheduling and checkpoint ownership stay with
 Trainer and the external training code.
 
+### Current milestone: 4096-token Qwen fine-tuning
+
+Use the pinned Qwen3-0.6B base with rank-4 q/v adapters in all 28 decoder
+layers. Group decoder layers into ordinary ONNX forward/VJP modules; retain
+group inputs and recompute internal activations during backward. Compare groups
+of 1, 2 and 4 layers with whole-body recomputation and saved activations.
+
+The acceptance workload uses complete short and 3k–4k-token LongAlpaca QA,
+with shared documents held out together. Run 30 updates in FP32 and BF16
+compute, keeping adapters, accumulated gradients and AdamW state in FP32.
+Use microbatch 1, accumulation 4, learning rate 0.003 and 128-token output-head
+chunks. Evaluate fixed training and held-out sets, resume checkpoint 15 in a
+fresh process, exchange PEFT adapters, and reload exported inference/training
+graphs. Keep the model and tokenizer revision fixed.
+
+Measure 512/1024-token regressions and 4096-token execution in isolated
+processes with 10 warmups and 100 samples. Record whole-step and component
+times, tokens/s, process RSS, physical footprint and MLX allocator counters.
+The Mac process budget is 24 GiB, with a 512 MiB free-cache target and 5 GiB
+free-disk reserve. Probe 8192-token capacity before starting that measurement.
+ONNXScript optimizes the graphs; numerical acceptance disables ORT graph
+optimization and native MLX compilation.
+
+Deliver graph partitioning, loading and regression tests first; follow with
+the reproducible corpus, real-model training results and measurement report.
+
 ## Engineering boundaries
 
 - Preserve model-first transforms and global decorator registration; later

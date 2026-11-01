@@ -47,6 +47,23 @@ def _validate_checkpoints(mode, layers, save_activations):
 
 def texts(path=None):
     path = os.path.join(os.path.dirname(__file__), "corpus.txt") if path is None else path
+    if os.path.splitext(os.fspath(path))[1].lower() == ".jsonl":
+        result = []
+        with open(path, encoding="utf-8") as stream:
+            for number, line in enumerate(stream, 1):
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except json.JSONDecodeError as error:
+                    raise ValueError(f"Invalid JSONL text at {path}:{number}") from error
+                value = row.get("text") if isinstance(row, dict) else None
+                if not isinstance(value, str) or not value.strip():
+                    raise ValueError(
+                        f"Expected a nonempty JSONL text string at {path}:{number}"
+                    )
+                result.append(value)
+        return result
     with open(path, encoding="utf-8") as stream:
         return [line.strip() for line in stream if line.strip()]
 
@@ -358,12 +375,24 @@ def _validate_max_length(max_length, *, limit=None):
 
 
 def _data_identity(train, validation, tok, *, max_length=64):
+    multiline = any(
+        "\n" in text or "\r" in text for rows in (train, validation) for text in rows
+    )
+
+    def digest(rows):
+        content = (
+            json.dumps(rows, ensure_ascii=False, separators=(",", ":"))
+            if multiline
+            else "\n".join(rows)
+        )
+        return hashlib.sha256(content.encode()).hexdigest()
+
     return {
-        "version": 1,
+        "version": 2 if multiline else 1,
         "train_lines": len(train),
         "validation_lines": len(validation),
-        "train_sha256": hashlib.sha256("\n".join(train).encode()).hexdigest(),
-        "validation_sha256": hashlib.sha256("\n".join(validation).encode()).hexdigest(),
+        "train_sha256": digest(train),
+        "validation_sha256": digest(validation),
         "tokenizer_sha256": _tokenizer_digest(tok),
         "max_length": max_length,
     }
@@ -466,6 +495,8 @@ def run(
     max_length=64,
     reference_audit=False,
     checkpoint_layers=0,
+    evaluate_train=False,
+    callbacks=None,
 ):
     _validate_checkpoints(mode, checkpoint_layers, save_activations)
     if checkpoint_layers and fp64_audit:
@@ -581,6 +612,14 @@ def run(
         train_texts=train_lines,
         eval_texts=validation_lines,
         max_length=max_length,
+        callbacks=callbacks,
+    )
+    train_before = (
+        trainer.evaluate(eval_dataset=trainer.train_dataset, metric_key_prefix="fixed_train")[
+            "fixed_train_loss"
+        ]
+        if evaluate_train
+        else None
     )
     before = trainer.evaluate()["eval_loss"]
     if not math.isfinite(before):
@@ -589,6 +628,15 @@ def run(
     if any(not torch.isfinite(parameter.detach()).all() for parameter in model.onnx.adapters):
         raise FloatingPointError("Nonfinite adapter parameter after training")
     after = trainer.evaluate()["eval_loss"]
+    train_after = (
+        trainer.evaluate(eval_dataset=trainer.train_dataset, metric_key_prefix="fixed_train")[
+            "fixed_train_loss"
+        ]
+        if evaluate_train
+        else None
+    )
+    if evaluate_train and not (math.isfinite(train_before) and math.isfinite(train_after)):
+        raise FloatingPointError("Nonfinite fixed training-set loss")
     if not math.isfinite(after):
         raise FloatingPointError("Nonfinite validation loss after training")
     final_audit = (
@@ -618,6 +666,7 @@ def run(
         "checkpoint_layers": checkpoint_layers,
         "projection_precision": projection_precision,
         "validation_loss": [before, after],
+        "fixed_training_loss": [train_before, train_after] if evaluate_train else None,
         "audits": [initial_audit, final_audit] if reference_audit else [],
         "reference_retained_during_training": reference_audit,
         "quantization": model.quantization,
@@ -726,7 +775,7 @@ if __name__ == "__main__":
     parser.add_argument("--steps", type=int)
     parser.add_argument("--resume")
     parser.add_argument(
-        "--train-file", help="UTF-8 training text, one sequence per nonempty line"
+        "--train-file", help="UTF-8 text lines or JSONL records with a text field"
     )
     parser.add_argument("--validation-file", help="UTF-8 held-out text file")
     parser.add_argument("--mode", choices=["full", "chunked", "joint"], default="full")
@@ -753,6 +802,7 @@ if __name__ == "__main__":
     parser.set_defaults(diagnose_rounding=None)
     parser.add_argument("--save-activations", action="store_true")
     parser.add_argument("--checkpoint-layers", type=int, default=0)
+    parser.add_argument("--evaluate-train", action="store_true")
     parser.add_argument("--fp64-audit", action="store_true")
     parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
@@ -782,6 +832,7 @@ if __name__ == "__main__":
                 diagnose_rounding=args.diagnose_rounding,
                 save_activations=args.save_activations,
                 checkpoint_layers=args.checkpoint_layers,
+                evaluate_train=args.evaluate_train,
                 fp64_audit=args.fp64_audit,
                 nf4=args.nf4,
                 peft_roundtrip=args.peft_roundtrip,

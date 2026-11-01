@@ -53,6 +53,8 @@ def measure(
     library=None,
     segment_nodes=None,
     projection_precision="fp32",
+    checkpoint_layers=0,
+    train_file=None,
 ):
     for name, value, minimum in (
         ("sequence_length", sequence_length, 2),
@@ -66,10 +68,13 @@ def measure(
         )
     if projection_precision not in ("fp32", "bf16"):
         raise ValueError("Expected fp32 or bf16 projection precision")
+    if checkpoint_layers and mode != "chunked":
+        raise ValueError("Decoder checkpoints require chunked mode")
     if projection_precision == "bf16" and (
-        mode not in ("pytorch", "joint") or (mode == "joint" and provider != "mlx")
+        mode not in ("pytorch", "joint", "chunked")
+        or (mode != "pytorch" and provider != "mlx")
     ):
-        raise ValueError("BF16 measurement uses PyTorch or MLX joint mode")
+        raise ValueError("BF16 measurement uses PyTorch or MLX joint/chunked mode")
     torch.set_num_threads(1)
     start = time.perf_counter()
     if mode == "pytorch":
@@ -123,6 +128,7 @@ def measure(
             mode=mode if mode in ("chunked", "joint") else "full",
             optimize=mode != "raw",
             chunk_size=chunk_size,
+            checkpoint_layers=checkpoint_layers,
             save_activations=mode == "saved",
             nf4=nf4,
             projection_precision=projection_precision,
@@ -135,11 +141,21 @@ def measure(
     tok = tokenizer(real)
     if sequence_length > model.config.max_position_embeddings:
         raise ValueError("Sequence length exceeds the model context limit")
-    # Repeat the corpus token prefix so every requested position contributes work.
-    # The default 64-token prefix matches the original benchmark input.
-    source_ids = tok(" ".join(texts()[:8]), truncation=True, max_length=sequence_length)[
-        "input_ids"
-    ]
+    if train_file is not None:
+        source_ids = next(
+            (
+                ids
+                for text in texts(train_file)
+                if len(ids := tok(text)["input_ids"]) >= sequence_length
+            ),
+            None,
+        )
+        if source_ids is None:
+            raise ValueError("No corpus example reaches the requested benchmark length")
+    else:
+        source_ids = tok(" ".join(texts()[:8]), truncation=True, max_length=sequence_length)[
+            "input_ids"
+        ]
     if not source_ids:
         raise ValueError("Benchmark corpus must tokenize to at least one token")
     ids = (source_ids * ((sequence_length + len(source_ids) - 1) // len(source_ids)))[
@@ -184,6 +200,7 @@ def measure(
             )
     report = {
         "mode": mode,
+        "checkpoint_layers": checkpoint_layers,
         "provider": "pytorch_cpu" if mode == "pytorch" else provider,
         "segment_target_nodes": segment_nodes
         if mode != "pytorch" and provider == "mlx"
@@ -203,7 +220,11 @@ def measure(
         "sequence": batch["input_ids"].shape[1],
         "valid_shifted_tokens": tokens,
         "input_ids_sha256": hashlib.sha256(batch["input_ids"].numpy().tobytes()).hexdigest(),
-        "input_pattern": "Repeated prefix of the first eight local corpus lines",
+        "input_pattern": (
+            "Prefix of the first naturally long corpus example"
+            if train_file is not None
+            else "Repeated prefix of the first eight local corpus lines"
+        ),
         "head_chunk_size": chunk_size if mode == "chunked" else None,
         "full_logits_bytes": batch_size * sequence_length * model.config.vocab_size * 4,
         "chunk_logits_bytes": min(chunk_size, tokens) * model.config.vocab_size * 4
@@ -253,11 +274,18 @@ def measure(
             with open(library, "rb") as stream:
                 report["library_sha256"] = hashlib.file_digest(stream, "sha256").hexdigest()
     if mode != "pytorch":
-        executed_graphs = (
-            {"loss_gradient": model.onnx.gradient}
-            if mode == "joint"
-            else {"forward": model.onnx.model, "backward": model.onnx.optimized_vjp}
-        )
+        if checkpoint_layers:
+            executed_graphs = {}
+            for execution in model.onnx.executions:
+                executed_graphs[execution.block.name + "_forward"] = execution.block.model
+                if execution.derivative is not None:
+                    executed_graphs[execution.block.name + "_backward"] = execution.derivative
+        else:
+            executed_graphs = (
+                {"loss_gradient": model.onnx.gradient}
+                if mode == "joint"
+                else {"forward": model.onnx.model, "backward": model.onnx.optimized_vjp}
+            )
         if mode == "chunked":
             executed_graphs["head_backward"] = model.head.gradient
             report["head_forward_session_created"] = model.head.forward_executor is not None
@@ -276,22 +304,26 @@ def measure(
                 "packed": model.quantization["packed_decoder_bytes"],
             }
         report["nodes"] = (
-            {
-                "forward": len(model.forward_graph.graph),
-                "loss_gradient": len(model.onnx.gradient.graph),
-            }
-            if mode == "joint"
-            else {
-                "forward": len(model.onnx.model.graph),
-                "raw_vjp": len(model.onnx.vjp_model.graph),
-                "executed_vjp": len(model.onnx.optimized_vjp.graph),
-            }
+            {name: len(graph.graph) for name, graph in executed_graphs.items()}
+            if checkpoint_layers
+            else (
+                {
+                    "forward": len(model.forward_graph.graph),
+                    "loss_gradient": len(model.onnx.gradient.graph),
+                }
+                if mode == "joint"
+                else {
+                    "forward": len(model.onnx.model.graph),
+                    "raw_vjp": len(model.onnx.vjp_model.graph),
+                    "executed_vjp": len(model.onnx.optimized_vjp.graph),
+                }
+            )
         )
         report["logical_saved_activation_bytes"] = getattr(
             model.onnx, "last_residual_bytes", 0
         )
         report["saved_activation_count"] = (
-            0 if mode == "joint" else len(model.onnx.residual_names)
+            0 if mode == "joint" or checkpoint_layers else len(model.onnx.residual_names)
         )
         report["input_view_median_us"] = float(
             np.median(model.onnx.timings["exchange"][warmup:]) * 1e6
@@ -329,6 +361,8 @@ if __name__ == "__main__":
         "--mode", choices=["pytorch", "raw", "optimized", "saved", "chunked", "joint"]
     )
     parser.add_argument("--real", action="store_true")
+    parser.add_argument("--checkpoint-layers", type=int, default=0)
+    parser.add_argument("--train-file")
     parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--projection-precision", choices=["fp32", "bf16"], default="fp32")
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
@@ -359,6 +393,8 @@ if __name__ == "__main__":
                 measure(
                     args.mode,
                     real=args.real,
+                    checkpoint_layers=args.checkpoint_layers,
+                    train_file=args.train_file,
                     samples=args.samples,
                     warmup=args.warmup,
                     batch_size=args.batch_size,
@@ -379,6 +415,8 @@ if __name__ == "__main__":
             if args.projection_precision == "bf16"
             else ("pytorch", "raw", "optimized", "saved", "chunked", "joint")
         )
+        if args.checkpoint_layers:
+            modes = ("chunked",)
         for mode in modes:
             cmd = [
                 sys.executable,
@@ -401,6 +439,10 @@ if __name__ == "__main__":
                 "--projection-precision",
                 args.projection_precision,
             ]
+            if args.checkpoint_layers:
+                cmd.extend(["--checkpoint-layers", str(args.checkpoint_layers)])
+            if args.train_file:
+                cmd.extend(["--train-file", args.train_file])
             if args.library:
                 cmd.extend(["--library", args.library])
             if args.segment_nodes:

@@ -593,3 +593,32 @@ def test_default_sft_rejects_nonfinite_update_before_export(tmp_path, monkeypatc
     with pytest.raises(FloatingPointError, match="Nonfinite adapter parameter"):
         sft.run(str(tmp_path), mode="joint", steps=1)
     assert not (tmp_path / "export" / "forward.onnx").exists()
+
+
+def test_jsonl_preserves_multiline_training_examples(tmp_path):
+    import json
+
+    from examples.huggingface.sft import texts
+
+    path = tmp_path / "train.jsonl"
+    expected = ["User: line one\nline two\nAssistant: answer", " next sample "]
+    path.write_text("\n".join(json.dumps({"text": text}) for text in expected))
+    assert texts(path) == expected
+    path.write_text('{"text": ""}\n')
+    with pytest.raises(ValueError, match="text"):
+        texts(path)
+
+
+def test_multiline_data_identity_preserves_example_boundaries():
+    import hashlib
+
+    from examples.huggingface.sft import _data_identity
+
+    tok = tokenizer()
+    plain = _data_identity(["a", "b"], ["c"], tok)
+    assert plain["version"] == 1
+    assert plain["train_sha256"] == hashlib.sha256(b"a\nb").hexdigest()
+    left = _data_identity(["a\nb", "c"], ["heldout"], tok)
+    right = _data_identity(["a", "b\nc"], ["heldout"], tok)
+    assert left["version"] == right["version"] == 2
+    assert left["train_sha256"] != right["train_sha256"]
