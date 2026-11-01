@@ -37,6 +37,11 @@ def profile_summary(directory, expected):
         "head_chunk_size": 128,
         "warmup": 1,
         "samples": 3,
+        "ort_optimizer": "disabled",
+        "mlx_compile_disabled": True,
+        "cpu_fallback_disabled": True,
+        "base_storage": "packed_nf4_decoder",
+        "gradient_and_optimizer_dtype": "float32",
     }.items():
         if report[key] != value:
             raise ValueError(f"Runtime profile differs: {key}")
@@ -151,6 +156,8 @@ def collect(suite, onnx_report, *, profile_directory=None):
             raise ValueError(f"Different dependency versions: {name}")
         with open(report_path, "rb") as stream:
             digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        if case.get("report_sha256", digest) != digest:
+            raise ValueError(f"Measurement report checksum changed: {name}")
         rows.append(
             {
                 "case": case,
@@ -181,8 +188,11 @@ def collect(suite, onnx_report, *, profile_directory=None):
             row for row in onnx["measurements"] if row["case"] == "fp32-4096-group4"
         )
         profile = profile_summary(profile_directory, expected)
+    with open(os.path.join(suite, "queue.json"), "rb") as stream:
+        queue_digest = hashlib.file_digest(stream, "sha256").hexdigest()
     return {
         "version": 1,
+        "queue_sha256": queue_digest,
         "source_commit": queue["source_commit"],
         "supplemental_source_commit": queue.get("supplemental_source_commit"),
         "repeat_policy": queue.get("repeat_policy"),

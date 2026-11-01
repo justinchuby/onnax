@@ -259,6 +259,41 @@ Use fixed input tokens, precision and batch size when comparing strategies.
 
 ## PyTorch CPU and MPS baselines
 
+### Recorded M1 Max runs
+
+All rows use batch one, 4095 valid shifted targets, four-layer decoder groups,
+128-token head chunks, 10 warmups and 100 measured updates.
+
+| Projection compute | Execution | Step median | Step P95 | Valid tokens/s | Peak physical footprint |
+| --- | --- | ---: | ---: | ---: | ---: |
+| FP32 | ONNX / MLX | 21.123 s | 21.385 s | 193.9 | 19.36 GiB |
+| FP32 | PyTorch / MPS eager | 9.103 s | 9.126 s | 449.8 | 12.89 GiB |
+| FP32 | PyTorch / MPS sdpa | 19.203 s | 23.156 s | 213.3 | 12.90 GiB |
+| BF16 | ONNX / MLX | 20.728 s | 21.257 s | 197.6 | 19.54 GiB |
+| BF16 | PyTorch / MPS eager | 10.469 s | 10.514 s | 391.2 | 14.51 GiB |
+| BF16 | PyTorch / MPS sdpa | 10.636 s | 40.269 s | 385.0 | 14.51 GiB |
+
+PyTorch stores the reconstructed NF4 values in FP32 and keeps adapters, gradients
+and AdamW state on MPS. ONNX stores packed NF4 decoder weights and uses CPU-owned
+adapters and AdamW state with MLX execution. Both use FP32 adjoints. PyTorch uses
+native cross entropy; ONNX uses target-excluded stable CE with the same valid-token mean.
+
+The eager MPS runs measured 2.32× and 1.98× the ONNX/MLX throughput for FP32 and
+BF16 projection compute, respectively. The first FP32 SDPA run measured 10.397 s
+median and 12.004 s P95. It overlapped disk-cache cleanup, so a repeat was declared
+before running again. The table uses that post-cleanup repeat. Both runs produced
+exactly the same 110 losses; the report retains both sets of timing statistics.
+
+The CPU FP32 capacity probe completed one update in 61.597 s with 10.62 GiB peak
+physical footprint. The GPU-first qualification retains this single-update probe
+and omits full CPU timing runs.
+
+The [comparison report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-4k-pytorch-comparison-m1max.json)
+records commands, source revisions, all losses, timing scopes, memory counters,
+capacity probes and the native execution-phase summary.
+
+### Run matched benchmarks
+
 Use the same benchmark input and update policy for PyTorch. This path stores
 the reconstructed NF4 values in FP32, checkpoints four decoder layers per group,
 and recomputes 128-row head/loss chunks during backward:
@@ -308,3 +343,28 @@ python -m examples.huggingface.context_comparison \
   --onnx-report examples/huggingface/reports/qwen3-4k-nf4-qualification-m1max.json \
   --output /tmp/qwen-context-comparison.json
 ```
+
+### Execution attribution
+
+The native audit uses one warmup and three measured updates. Across all four
+updates and sessions, the EP records:
+
+| Region | Cumulative wall time | Calls |
+| --- | ---: | ---: |
+| Graph translation | 5.519 s | 196 |
+| MLX evaluation | 90.633 s | 196 |
+| Output copying | 0.426 s | 784 |
+
+MLX evaluation includes CPU scheduling and synchronous GPU work. It accounts for
+93.8% of recorded phase time. The exported execution graphs contain 36,443 nodes;
+this makes fused/captured evaluation and intermediate lifetimes the next
+optimization targets. Capability negotiation includes NF4 function expansion;
+executed sessions keep CPU fallback disabled.
+
+To capture the summary, set `RUST_LOG=info` and
+`ONNXRUNTIME_EP_MLX_VERBOSE=1` on the guarded ONNX benchmark above, with
+`--checkpoint-layers 4 --projection-precision fp32 --warmup 1 --samples 3`.
+Pass that guard directory to the collector using
+`--profile-dir`. The report preserves the final cumulative summary and capture
+settings. The benchmark CLI also writes progress to stderr and records per-step
+timing samples for future runs.

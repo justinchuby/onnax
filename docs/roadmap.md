@@ -147,14 +147,20 @@ memory milestone is to profile construction and execution peaks, then choose
 session and recomputation boundaries for an 8192-token training run. Device
 binding and data exchange measurements will guide subsequent runtime work.
 
-### Next milestone: matched runtime baselines and reusable integration
+### Next milestone: evaluator execution and reusable integration
 
-Measure the qualified 4096-token workload with PyTorch CPU and MPS using the
-same frozen NF4 decoder values, initial adapters, input tokens, precision policy,
-four-layer checkpoint groups and 128-token loss chunks. Synchronize MPS at
-phase boundaries and report whole-process physical footprint alongside RSS.
-Use these results to prioritize execution, recomputation and runtime exchange
-work before extending the context length.
+The [matched 4k comparison](qwen-context-training.md) now includes eager and
+SDPA PyTorch MPS runs for both precision policies, plus a CPU capacity probe.
+Eager MPS measured 9.103/10.469 s per update for FP32/BF16 projection compute,
+compared with 21.123/20.728 s for the recorded ONNX/MLX runs. The reports retain
+SDPA timing variability and the declared post-cleanup repeat.
+
+A native four-update audit records 90.63 s in MLX evaluation, 5.52 s in graph
+translation and 0.43 s in output copying. Evaluation includes CPU scheduling and
+GPU execution. Prioritize fused or captured evaluation and fewer materialized
+intermediates; use the recorded eager path as the baseline. Qualify each candidate
+with adapter gradients, updates, held-out loss, recovery and export before
+extending it to 8192-token training.
 
 Then promote the model-independent integration into an optional `onnax.torch`
 module. The first package interface should own explicit trainable parameters,
@@ -168,8 +174,7 @@ caller-defined losses, upstream gradients, dynamic batches, gradient accumulatio
 parameter version checks, source-graph/checkpoint identity, loading and export.
 Include gradients for floating data inputs, so an ONNX block can propagate into
 trainable PyTorch layers before it. Define ownership and explicit session/tempfile
-cleanup for long-running processes. Validate the
-installed wheel outside the repository so the integration has no dependency on
+cleanup for long-running processes. Validate the installed wheel outside the repository so the integration has no dependency on
 example modules. Keep model construction, adapter injection, tokenization, loss
 selection and PEFT conventions in task adapters. Trainer and TRL continue to own
 training loops, optimizers, schedulers and checkpoint policy.

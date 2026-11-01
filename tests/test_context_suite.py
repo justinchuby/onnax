@@ -225,6 +225,11 @@ def test_runtime_summary_uses_final_cumulative_counters(tmp_path):
         "warmup": 1,
         "samples": 3,
         "losses": [1.0] * 4,
+        "ort_optimizer": "disabled",
+        "mlx_compile_disabled": True,
+        "cpu_fallback_disabled": True,
+        "base_storage": "packed_nf4_decoder",
+        "gradient_and_optimizer_dtype": "float32",
     }
     (tmp_path / "execution.json").write_text(
         '{"status":"complete","returncode":0,"observations":[]}'
