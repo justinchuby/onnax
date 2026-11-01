@@ -76,6 +76,7 @@ def measure(
     ):
         raise ValueError("BF16 measurement uses PyTorch or MLX joint/chunked mode")
     torch.set_num_threads(1)
+    session_totals = {}
     start = time.perf_counter()
     if mode == "pytorch":
         model = reference_model(real)
@@ -123,6 +124,24 @@ def measure(
                 }
                 return executor
 
+        selected_factory = factory
+
+        class TimedSession:
+            def __init__(self, source):
+                self.executor = selected_factory(source)
+                self.name = os.path.basename(source) if isinstance(source, str) else "body"
+
+            def run(self, *args, **kwargs):
+                before = time.perf_counter()
+                result = self.executor.run(*args, **kwargs)
+                session_totals[self.name] = (
+                    session_totals.get(self.name, 0.0) + time.perf_counter() - before
+                )
+                return result
+
+            def __getattr__(self, name):
+                return getattr(self.executor, name)
+
         model, reference = prepare(
             real,
             mode=mode if mode in ("chunked", "joint") else "full",
@@ -132,7 +151,7 @@ def measure(
             save_activations=mode == "saved",
             nf4=nf4,
             projection_precision=projection_precision,
-            session_factory=factory,
+            session_factory=TimedSession,
         )
         del reference
     params = [p for p in model.parameters() if p.requires_grad]
@@ -171,6 +190,7 @@ def measure(
     records = []
     losses = []
     for index in range(warmup + samples):
+        sessions_before = session_totals.copy()
         before = time.perf_counter()
         cpu_before = time.process_time()
         update.zero_grad(set_to_none=True)
@@ -198,6 +218,20 @@ def measure(
                     "step": finished - before,
                 }
             )
+            if mode != "pytorch":
+                durations = {
+                    name: value - sessions_before.get(name, 0.0)
+                    for name, value in session_totals.items()
+                }
+                records[-1]["onnx_execution"] = sum(durations.values())
+                if mode == "chunked":
+                    records[-1]["head_loss_gradient_execution"] = sum(
+                        value for name, value in durations.items() if name == "gradient.onnx"
+                    )
+                    records[-1]["body_execution"] = (
+                        records[-1]["onnx_execution"]
+                        - records[-1]["head_loss_gradient_execution"]
+                    )
     report = {
         "mode": mode,
         "checkpoint_layers": checkpoint_layers,
@@ -266,7 +300,22 @@ def measure(
             for n in ("torch", "transformers", "onnxruntime", "onnxscript", "mobius-onnx")
         },
     }
+    from examples.process_memory import physical_footprint
+
+    report["physical_footprint"] = physical_footprint()
     if provider == "mlx" and mode != "pytorch":
+        import ctypes
+
+        if library:
+            api = ctypes.CDLL(library)
+            report["mlx_allocator"] = {}
+            for name in ("active", "cache", "peak"):
+                fn = getattr(api, f"mlx_get_{name}_memory")
+                fn.argtypes, fn.restype = [ctypes.POINTER(ctypes.c_size_t)], ctypes.c_int
+                value = ctypes.c_size_t()
+                if fn(ctypes.byref(value)) != 0:
+                    raise RuntimeError("MLX memory query failed")
+                report["mlx_allocator"][name + "_bytes"] = value.value
         report["native_construction"] = native_construction
         report["cpu_fallback_disabled"] = True
         report["library"] = os.path.abspath(library) if library else "installed plugin"

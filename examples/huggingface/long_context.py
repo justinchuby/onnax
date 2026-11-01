@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import resource
+import subprocess
 import time
 
 
@@ -51,15 +52,47 @@ def main():
     from examples.huggingface.sft import run
     from examples.process_memory import physical_footprint
 
+    with open(os.path.join(args.corpus, "manifest.json"), encoding="utf-8") as stream:
+        manifest = json.load(stream)
+    for metadata in manifest["files"].values():
+        with open(os.path.join(args.corpus, metadata["filename"]), "rb") as stream:
+            actual = hashlib.file_digest(stream, "sha256").hexdigest()
+        if actual != metadata["sha256"]:
+            raise ValueError("Corpus file digest differs from its manifest")
     os.makedirs(args.output_dir)
     journal = {
         "status": "running",
         "precision": args.precision,
+        "source_commit": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True
+        ).strip(),
+        "working_tree_dirty": bool(
+            subprocess.check_output(["git", "status", "--porcelain"], text=True).strip()
+        ),
+        "versions": {},
         "mlx_memory_limit_bytes": 20 * 1024**3,
         "previous_mlx_memory_limit_bytes": previous,
         "mlx_cache_limit_bytes": int(os.environ["ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES"]),
         "updates": [],
     }
+    from importlib.metadata import version
+
+    journal["versions"] = {
+        name: version(name)
+        for name in (
+            "onnx",
+            "onnx-ir",
+            "onnxscript",
+            "onnxruntime",
+            "numpy",
+            "torch",
+            "transformers",
+            "trl",
+            "peft",
+        )
+    }
+    with open(args.library, "rb") as stream:
+        journal["library_sha256"] = hashlib.file_digest(stream, "sha256").hexdigest()
     for name in ("active", "cache", "peak"):
         fn = getattr(api, f"mlx_get_{name}_memory")
         fn.argtypes, fn.restype = [ctypes.POINTER(ctypes.c_size_t)], ctypes.c_int

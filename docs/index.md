@@ -16,6 +16,7 @@ nf4-lora
 huggingface
 qwen-sft
 qwen-adapters
+qwen-context-training
 qwen-nf4
 training-quality
 qwen-runtime-audit

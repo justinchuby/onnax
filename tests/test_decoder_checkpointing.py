@@ -371,3 +371,24 @@ def test_checkpointed_sft_fresh_process_recovery(tmp_path, monkeypatch):
     assert report["adapter_bitwise_equal"] and report["optimizer_bitwise_equal"]
     assert report["export_load_loss_gradients_bitwise_equal"]
     assert report["exported_gradient_tensors"] == 8
+
+
+def test_checkpoint_benchmark_reports_executed_groups_and_components():
+    from examples.huggingface.benchmark import measure
+
+    report = measure(
+        "chunked",
+        checkpoint_layers=2,
+        samples=2,
+        warmup=1,
+        batch_size=1,
+        sequence_length=8,
+    )
+    assert report["checkpoint_layers"] == 2
+    assert report["valid_shifted_tokens"] == 7
+    assert "decoder_0_2_backward" in report["nodes"]
+    assert report["logical_saved_activation_bytes"] > 0
+    times = report["timings_ms"]
+    assert times["head_loss_gradient_execution"]["median"] > 0
+    assert times["body_execution"]["median"] > 0
+    assert times["onnx_execution"]["median"] < times["step"]["median"]
