@@ -296,7 +296,9 @@ include full CPU FP32/BF16 measurements. Each timed configuration first executes
 one capacity-probe update. Resuming the
 same command verifies source, corpus and completed report hashes before skipping
 finished cases. A process-budget finding skips that configuration's timing run;
-an execution error preserves the logs for inspection.
+an execution error preserves the logs for inspection. The guard places each
+worker's temporary graphs in its own run directory and removes them after the
+worker exits, including when a memory budget stops it.
 
 Collect a comparison with the published ONNX measurements:
 

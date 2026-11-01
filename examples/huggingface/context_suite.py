@@ -23,6 +23,8 @@ def source_identity():
         "mixed_precision.py",
         "nf4.py",
         "context_suite.py",
+        "guard.py",
+        "../process_memory.py",
         "../lora/nf4.py",
     )
     hashes = {}
