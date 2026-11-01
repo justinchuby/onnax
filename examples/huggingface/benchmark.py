@@ -57,6 +57,10 @@ def measure(
     train_file=None,
     save_activations=False,
     mlx_memory_limit_bytes=None,
+    torch_device="cpu",
+    torch_chunked=False,
+    torch_attention="eager",
+    progress_every=0,
 ):
     for name, value, minimum in (
         ("sequence_length", sequence_length, 2),
@@ -84,8 +88,18 @@ def measure(
         from examples.huggingface.long_context import memory_limit
 
         memory_limit(library, mlx_memory_limit_bytes)
-    if checkpoint_layers and mode != "chunked":
-        raise ValueError("Decoder checkpoints require chunked mode")
+    if torch_device not in ("cpu", "mps"):
+        raise ValueError("Expected cpu or mps PyTorch device")
+    if torch_attention not in ("eager", "sdpa"):
+        raise ValueError("Expected eager or sdpa PyTorch attention")
+    if mode != "pytorch" and (
+        torch_device != "cpu" or torch_chunked or torch_attention != "eager"
+    ):
+        raise ValueError("PyTorch device/head options require pytorch mode")
+    if torch_device == "mps" and not torch.backends.mps.is_available():
+        raise ValueError("The PyTorch MPS device is unavailable")
+    if checkpoint_layers and mode not in ("chunked", "pytorch"):
+        raise ValueError("Decoder checkpoints require chunked or pytorch mode")
     if projection_precision == "bf16" and (
         mode not in ("pytorch", "joint", "chunked")
         or (mode != "pytorch" and provider != "mlx")
@@ -96,6 +110,7 @@ def measure(
     start = time.perf_counter()
     if mode == "pytorch":
         model = reference_model(real)
+        model.set_attn_implementation(torch_attention)
         if nf4:
             from examples.huggingface.nf4 import quantize_reference
 
@@ -115,6 +130,11 @@ def measure(
             from examples.huggingface.mixed_precision import reference_projections
 
             model = reference_projections(model)
+        if checkpoint_layers:
+            from examples.huggingface.torch_context import checkpoint_qwen
+
+            model = checkpoint_qwen(model, checkpoint_layers)
+        model.to(torch_device)
     else:
         from examples.lora.train import session as cpu_session
 
@@ -170,6 +190,10 @@ def measure(
             session_factory=TimedSession,
         )
         del reference
+    from examples.huggingface.torch_context import synchronize
+
+    device = torch_device if mode == "pytorch" else "cpu"
+    synchronize(device)
     params = [p for p in model.parameters() if p.requires_grad]
     update = torch.optim.AdamW(params, lr=0.003, weight_decay=0)
     initialized = time.perf_counter()
@@ -203,22 +227,35 @@ def measure(
     labels = batch["input_ids"].clone()
     labels[batch["attention_mask"] == 0] = -100
     tokens = int(labels[:, 1:].ne(-100).sum())
+    input_digest = hashlib.sha256(batch["input_ids"].numpy().tobytes()).hexdigest()
+    batch = {name: value.to(device) for name, value in batch.items()}
+    labels = labels.to(device)
+    synchronize(device)
     records = []
     losses = []
     for index in range(warmup + samples):
         sessions_before = session_totals.copy()
+        synchronize(device)
         before = time.perf_counter()
         cpu_before = time.process_time()
         update.zero_grad(set_to_none=True)
         if mode == "pytorch":
-            prediction = model(**batch, use_cache=False).logits
-            loss = token_loss(prediction, labels)
+            if torch_chunked:
+                from examples.huggingface.torch_context import chunked_token_loss
+
+                loss = chunked_token_loss(model, batch, labels, chunk_size)
+            else:
+                prediction = model(**batch, use_cache=False).logits
+                loss = token_loss(prediction, labels)
         else:
             loss = model(**batch, labels=labels).loss
+        synchronize(device)
         forward = time.perf_counter()
         loss.backward()
+        synchronize(device)
         backward = time.perf_counter()
         update.step()
+        synchronize(device)
         finished = time.perf_counter()
         losses.append(float(loss.detach()))
         if not np.isfinite(losses[-1]):
@@ -248,12 +285,27 @@ def measure(
                         records[-1]["onnx_execution"]
                         - records[-1]["head_loss_gradient_execution"]
                     )
+        if progress_every and (
+            (index + 1) % progress_every == 0 or index + 1 == warmup + samples
+        ):
+            print(
+                f"benchmark step {index + 1}/{warmup + samples}: "
+                f"loss={losses[-1]:.6g}, step={finished - before:.3f}s",
+                file=sys.stderr,
+                flush=True,
+            )
     report = {
         "mode": mode,
         "checkpoint_layers": checkpoint_layers,
         "save_activations": mode == "saved" or save_activations,
         "mlx_memory_limit_bytes": mlx_memory_limit_bytes,
-        "provider": "pytorch_cpu" if mode == "pytorch" else provider,
+        "provider": "pytorch_" + torch_device if mode == "pytorch" else provider,
+        "torch_chunked_head": torch_chunked,
+        "mps_fallback_enabled": os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK") == "1",
+        "attention_implementation": torch_attention if mode == "pytorch" else "decomposed",
+        "synchronization": "MPS at each phase boundary"
+        if device == "mps"
+        else "synchronous CPU/ORT execution",
         "segment_target_nodes": segment_nodes
         if mode != "pytorch" and provider == "mlx"
         else None,
@@ -271,16 +323,16 @@ def measure(
         "batch": batch_size,
         "sequence": batch["input_ids"].shape[1],
         "valid_shifted_tokens": tokens,
-        "input_ids_sha256": hashlib.sha256(batch["input_ids"].numpy().tobytes()).hexdigest(),
+        "input_ids_sha256": input_digest,
         "input_pattern": (
             "Prefix of the first naturally long corpus example"
             if train_file is not None
             else "Repeated prefix of the first eight local corpus lines"
         ),
-        "head_chunk_size": chunk_size if mode == "chunked" else None,
+        "head_chunk_size": chunk_size if mode == "chunked" or torch_chunked else None,
         "full_logits_bytes": batch_size * sequence_length * model.config.vocab_size * 4,
         "chunk_logits_bytes": min(chunk_size, tokens) * model.config.vocab_size * 4
-        if mode == "chunked"
+        if mode == "chunked" or torch_chunked
         else None,
         "initialization_seconds": initialized - start,
         "timings_ms": {
@@ -290,6 +342,9 @@ def measure(
             }
             for key in records[0]
         },
+        "timing_samples_ms": [
+            {key: value * 1000 for key, value in row.items()} for row in records
+        ],
         "effective_tokens_per_second": tokens / float(np.median([r["step"] for r in records])),
         "peak_rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         * (1 if sys.platform == "darwin" else 1024),
@@ -321,6 +376,13 @@ def measure(
     from examples.process_memory import physical_footprint
 
     report["physical_footprint"] = physical_footprint()
+    if device == "mps":
+        report["mps_allocator"] = {
+            "active_bytes": torch.mps.current_allocated_memory(),
+            "driver_bytes": torch.mps.driver_allocated_memory(),
+            "recommended_max_bytes": torch.mps.recommended_max_memory(),
+            "scope": "Allocator snapshot after synchronized final update; process peak is reported separately",
+        }
     if provider == "mlx" and mode != "pytorch":
         import ctypes
 
@@ -428,6 +490,9 @@ if __name__ == "__main__":
         "--mode", choices=["pytorch", "raw", "optimized", "saved", "chunked", "joint"]
     )
     parser.add_argument("--real", action="store_true")
+    parser.add_argument("--torch-device", choices=["cpu", "mps"], default="cpu")
+    parser.add_argument("--torch-chunked", action="store_true")
+    parser.add_argument("--torch-attention", choices=["eager", "sdpa"], default="eager")
     parser.add_argument("--checkpoint-layers", type=int, default=0)
     parser.add_argument("--train-file")
     parser.add_argument("--save-activations", action="store_true")
@@ -438,12 +503,20 @@ if __name__ == "__main__":
     parser.add_argument("--library", help="Development MLX EP library")
     parser.add_argument("--segment-nodes", type=int)
     parser.add_argument("--samples", type=int, default=100)
+    parser.add_argument(
+        "--progress-every",
+        type=int,
+        default=10,
+        help="Report progress to stderr; zero disables it",
+    )
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--sequence-length", type=int, default=64)
     parser.add_argument("--chunk-size", type=int, default=128)
     parser.add_argument("--output", default="qwen-benchmark.json")
     args = parser.parse_args()
+    if args.progress_every < 0:
+        parser.error("Require a nonnegative progress interval")
     if args.samples < 1 or args.warmup < 0 or args.batch_size < 1:
         parser.error("Require positive samples/batch and nonnegative warmup")
     if args.sequence_length < 2 or args.chunk_size < 1:
@@ -464,6 +537,10 @@ if __name__ == "__main__":
                 measure(
                     args.mode,
                     real=args.real,
+                    torch_device=args.torch_device,
+                    torch_chunked=args.torch_chunked,
+                    torch_attention=args.torch_attention,
+                    progress_every=args.progress_every,
                     checkpoint_layers=args.checkpoint_layers,
                     train_file=args.train_file,
                     save_activations=args.save_activations,
@@ -494,6 +571,8 @@ if __name__ == "__main__":
         )
         if args.checkpoint_layers or args.save_activations:
             modes = ("chunked",)
+        if args.torch_chunked or args.torch_device != "cpu" or args.torch_attention != "eager":
+            modes = ("pytorch",)
         for mode in modes:
             cmd = [
                 sys.executable,
@@ -505,6 +584,8 @@ if __name__ == "__main__":
                 str(args.samples),
                 "--warmup",
                 str(args.warmup),
+                "--progress-every",
+                str(args.progress_every),
                 "--batch-size",
                 str(args.batch_size),
                 "--sequence-length",
@@ -516,6 +597,17 @@ if __name__ == "__main__":
                 "--projection-precision",
                 args.projection_precision,
             ]
+            if mode == "pytorch":
+                cmd.extend(
+                    [
+                        "--torch-device",
+                        args.torch_device,
+                        "--torch-attention",
+                        args.torch_attention,
+                    ]
+                )
+                if args.torch_chunked:
+                    cmd.append("--torch-chunked")
             if args.checkpoint_layers:
                 cmd.extend(["--checkpoint-layers", str(args.checkpoint_layers)])
             if args.save_activations:

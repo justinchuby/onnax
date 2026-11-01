@@ -10,6 +10,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 
 from examples.process_memory import physical_footprint
@@ -49,8 +50,20 @@ def run(command, directory, *, memory_bytes=24 * 1024**3, reserve_bytes=5 * 1024
     def now():
         return datetime.datetime.now(datetime.UTC).isoformat()
 
-    with open(os.path.join(directory, "worker.log"), "w") as log:
-        child = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT)
+    with (
+        tempfile.TemporaryDirectory(prefix="worker-tmp-", dir=directory) as temporary,
+        open(os.path.join(directory, "worker.log"), "w") as log,
+    ):
+        report["temporary_directory"] = os.path.abspath(temporary)
+        environment = dict(
+            os.environ,
+            TMPDIR=os.path.abspath(temporary),
+            TMP=os.path.abspath(temporary),
+            TEMP=os.path.abspath(temporary),
+        )
+        child = subprocess.Popen(
+            command, stdout=log, stderr=subprocess.STDOUT, env=environment
+        )
         report.update(pid=child.pid, started=now())
         persist()
         try:
@@ -97,6 +110,8 @@ def run(command, directory, *, memory_bytes=24 * 1024**3, reserve_bytes=5 * 1024
                 else "failed"
             )
             persist()
+    report["temporary_files_removed"] = not os.path.exists(temporary)
+    persist()
     return report
 
 
