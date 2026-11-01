@@ -51,8 +51,8 @@ class _RUsageInfoV4(ctypes.Structure):
     ]
 
 
-def physical_footprint():
-    """Return current and lifetime peak process footprint in bytes on macOS."""
+def physical_footprint(pid=None):
+    """Return kernel footprint counters for the current process or a supplied PID."""
     if sys.platform != "darwin":
         return {"available": False, "reason": "macOS proc_pid_rusage is required"}
     library = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
@@ -60,7 +60,8 @@ def physical_footprint():
     function.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_void_p]
     function.restype = ctypes.c_int
     usage = _RUsageInfoV4()
-    if function(os.getpid(), 4, ctypes.byref(usage)) != 0:
+    process_id = os.getpid() if pid is None else pid
+    if function(process_id, 4, ctypes.byref(usage)) != 0:
         error = ctypes.get_errno()
         raise OSError(error, os.strerror(error))
     return {

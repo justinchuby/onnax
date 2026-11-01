@@ -53,3 +53,22 @@ def test_failed_kernel_query_is_an_error(monkeypatch):
     with pytest.raises(OSError) as error:
         process_memory.physical_footprint()
     assert error.value.errno == 13
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="macOS kernel counters")
+def test_child_process_counters():
+    import subprocess
+    import time
+
+    child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(5)"])
+    try:
+        result = process_memory.physical_footprint(child.pid)
+        deadline = time.monotonic() + 1
+        while result["current_bytes"] == 0 and time.monotonic() < deadline:
+            time.sleep(0.01)
+            result = process_memory.physical_footprint(child.pid)
+        assert result["available"]
+        assert 0 < result["current_bytes"] <= result["lifetime_peak_bytes"]
+    finally:
+        child.terminate()
+        child.wait(timeout=5)

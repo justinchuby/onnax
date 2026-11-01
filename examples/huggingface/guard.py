@@ -6,17 +6,18 @@ import argparse
 import datetime
 import json
 import os
-import re
 import shutil
 import signal
 import subprocess
 import sys
 import time
 
+from examples.process_memory import physical_footprint
+
 
 def run(command, directory, *, memory_bytes=24 * 1024**3, reserve_bytes=5 * 1024**3):
     if sys.platform != "darwin":
-        raise ValueError("The physical-footprint guard requires macOS vmmap")
+        raise ValueError("The physical-footprint guard requires macOS kernel counters")
     if shutil.disk_usage(os.getcwd()).free < reserve_bytes:
         raise OSError("Free disk is below the qualification reserve")
     os.makedirs(directory, exist_ok=False)
@@ -27,6 +28,8 @@ def run(command, directory, *, memory_bytes=24 * 1024**3, reserve_bytes=5 * 1024
         "physical_memory_budget_bytes": memory_bytes,
         "minimum_free_disk_bytes": reserve_bytes,
         "observations": [],
+        "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+        "observation_errors": 0,
     }
     path = os.path.join(directory, "execution.json")
 
@@ -50,30 +53,21 @@ def run(command, directory, *, memory_bytes=24 * 1024**3, reserve_bytes=5 * 1024
         child = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT)
         report.update(pid=child.pid, started=now())
         persist()
-        misses = 0
         try:
             while child.poll() is None:
+                usage = None
                 try:
-                    snapshot = subprocess.run(
-                        ["vmmap", "-summary", str(child.pid)],
-                        capture_output=True,
-                        text=True,
-                        timeout=3,
-                        check=False,
-                    )
-                    values = (
-                        re.findall(
-                            r"Physical footprint[^:]*:\s*([0-9.]+)([KMG])", snapshot.stdout
-                        )
-                        if snapshot.returncode == 0
-                        else []
-                    )
-                except subprocess.TimeoutExpired:
-                    values = []
+                    counters = physical_footprint(child.pid)
+                    if counters["available"]:
+                        usage = (counters["current_bytes"], counters["lifetime_peak_bytes"])
+                    else:
+                        report["observation_errors"] += 1
+                        report["last_observation_error"] = counters["reason"]
+                except OSError as error:
+                    report["observation_errors"] += 1
+                    report["last_observation_error"] = str(error)
                 if child.poll() is not None:
                     break
-                misses = 0 if values else misses + 1
-                usage = [float(n) * 1024 ** {"K": 1, "M": 2, "G": 3}[u] for n, u in values]
                 free = shutil.disk_usage(os.getcwd()).free
                 if usage:
                     report["observations"].append(
@@ -88,10 +82,6 @@ def run(command, directory, *, memory_bytes=24 * 1024**3, reserve_bytes=5 * 1024
                     report["guard_reason"] = "Physical-footprint budget exceeded"
                 elif free < reserve_bytes:
                     report["guard_reason"] = "Free disk below reserve"
-                elif misses >= 3:
-                    report["guard_reason"] = (
-                        "Three consecutive footprint observations unavailable"
-                    )
                 if "guard_reason" in report:
                     stop(child)
                     break
