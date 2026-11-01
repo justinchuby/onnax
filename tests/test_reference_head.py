@@ -118,7 +118,14 @@ def test_failed_trajectory_cli_keeps_report(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "projection_precision,provider", [("fp32", "cpu"), ("bf16", "reference"), ("bf16", "mlx")]
+    "projection_precision,provider",
+    [
+        ("fp32", "cpu"),
+        ("bf16", "reference"),
+        ("bf16", "mlx"),
+        ("fp16", "reference"),
+        ("fp16", "mlx"),
+    ],
 )
 def test_tiny_head_scalar_oracle(projection_precision, provider):
     pytest.importorskip("mobius")
