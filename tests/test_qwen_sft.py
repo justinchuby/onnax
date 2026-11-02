@@ -286,6 +286,9 @@ def test_replay_verification_checks_state_bytes():
 def test_reloaded_output_digests_preserve_bytes_and_reject_nonfinite():
     from examples.huggingface.replay import _output_digest
 
+    scalar = _output_digest(np.array(1, np.float32))
+    assert scalar["shape"] == []
+    assert scalar != _output_digest(np.array([1], np.float32))
     value = np.arange(24, dtype=np.float32).reshape(4, 6).T
     assert _output_digest(value) == _output_digest(value.copy())
     assert _output_digest(np.array([0.0], np.float32)) != _output_digest(

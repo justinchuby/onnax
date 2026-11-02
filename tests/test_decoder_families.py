@@ -188,6 +188,22 @@ def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size
         os.path.join(full, "checkpoint-4/scheduler.pt"), weights_only=True
     ) == torch.load(os.path.join(resumed, "checkpoint-4/scheduler.pt"), weights_only=True)
 
+    from examples.huggingface.replay import verify
+
+    report = verify(full, resumed, step=4)
+    assert report["checkpoint_bitwise_equal"] and report["optimizer_bitwise_equal"]
+    assert report["standalone_outputs_bitwise_equal"]
+    assert report["exported_gradient_tensors"] == {"phi3": 4, "qwen35": 10}[family]
+    assert report["adapter_metadata_equal"]
+    config_path = os.path.join(resumed, "adapter/adapter_config.json")
+    with open(config_path, encoding="utf-8") as stream:
+        config = json.load(stream)
+    config["lora_alpha"] += 1
+    with open(config_path, "w", encoding="utf-8") as stream:
+        json.dump(config, stream)
+    with pytest.raises(AssertionError):
+        verify(full, resumed, step=4)
+
 
 @pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
 def test_native_family_gradients_and_peft(tmp_path, family):

@@ -346,6 +346,23 @@ tensor records agree. The [recovery report](../examples/huggingface/reports/qwen
 records these checks and source-weight hashes. The resumed export was rebuilt
 from its completed checkpoint after the disk guard interrupted its first export.
 
+Use the shared replay CLI to check your own continuous and resumed runs:
+
+```sh
+python -m examples.huggingface.replay \
+  --uninterrupted /tmp/qwen35-bounded-training \
+  --resumed /tmp/qwen35-bounded-resumed --step 30 \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --output /tmp/qwen35-recovery.json
+```
+
+The same command supports every decoder family and the full-head route.
+It checks checkpoint tensors, Adam/scheduler state, PEFT files, named tensor
+contents and full ONNX checker validation. It compares loaded loss/gradient
+outputs and standalone inference outputs between the two runs independently.
+The [real-model CLI report](../examples/huggingface/reports/qwen35-bounded-head-replay-mlx.json)
+retains the output digests and named-tensor manifest digest.
+
 ### FP32 inference across execution boundaries
 
 At the recovered adapter state, a fixed eight-token probe compares checkpointed

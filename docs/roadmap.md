@@ -270,15 +270,19 @@ runtime measurement, training and checkpoint qualification.
    Thirty SFT updates, fresh-process recovery, PEFT export and loaded execution
    reproduce the per-session control. The [runtime study](block-runtime.md)
    records timing scopes, initialization costs and frozen-tensor verification.
-4. **In progress: bounded head across decoder families.** The shared
+4. **Delivered: bounded heads across decoder families.** The shared
    Qwen3/Qwen3.5/Phi-3 task exports hidden states, source-layout frozen head
    modules and standalone inference ONNX. `Gemm(transB=1)` preserves the
    `[vocab, hidden]` layout for tied-weight sharing. Tests align gradients and
-   updates with Transformers, cover unequal-token accumulation and ignored
-   labels, and check export/reload and frozen-head checkpoint identity.
-   Fresh-process Trainer recovery matches parameters, Adam state and scheduler.
-   Complete matched real-model MLX measurements of head execution, exchange,
-   full-task time and process memory before extending context length.
+   updates with Transformers and cover unequal-token accumulation and ignored
+   labels. Real Qwen3.5 completes 30 SFT updates and exact fresh-process recovery.
+   At 512 context tokens and 128 supervised targets, median step time falls
+   from 3.132 to 2.578 seconds; peak physical footprint falls from 8.57 to
+   7.04 GiB, while peak RSS rises from 9.67 to 11.68 GiB. The
+   [decoder tutorial](decoder-families.md) records measurement scopes and FP32
+   execution-boundary comparisons. The shared replay CLI checks exports,
+   optimizer state and same-route loss/gradient/inference results. Extend
+   context length alongside measured block-local recomputation.
 5. **Choose selective recomputation from measured peaks.** Record retained
    values, replay subgraphs, invocation counts and release points. Start with one
    decoder block, then extend to multi-layer Qwen and diffusion. Preserve shared
