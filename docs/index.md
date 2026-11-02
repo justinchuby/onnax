@@ -16,6 +16,7 @@ nf4-lora
 huggingface
 torch
 checkpointing
+decoder-families
 qwen-sft
 fused-autodiff
 attention-vjp

@@ -186,9 +186,15 @@ decoders validate independent gradients and multi-step updates; the execution
 bundle restores saved derivatives and supports fresh-process optimizer recovery.
 Model adapters supply boundaries, while Trainer/TRL retain training ownership.
 
-Next, use this execution interface to qualify a second Mobius model family,
-then measure construction/execution peaks for an 8192-token workload. Choose
-recomputation, attention workspace and output-head chunking from those measurements.
+The [Mobius family adapter](decoder-families.md) now exercises Qwen3 and Phi-3
+through the public checkpoint module. Phi-3 preserves one source QKV adapter
+across Mobius's split projections and exchanges it with PEFT. Independent
+Transformers updates, TRL training, export/load and fresh-process recovery
+validate the family interface. Shared graph construction and decomposition
+also remain in use by the original Qwen workload.
+
+Next, measure construction/execution peaks for an 8192-token Qwen workload.
+Choose recomputation, attention workspace and output-head chunking from those measurements.
 
 ## Engineering boundaries
 
