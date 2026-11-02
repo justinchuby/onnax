@@ -1,0 +1,561 @@
+{
+  "version": 1,
+  "sequence": 512,
+  "pretrained_source": {
+    "checkpoint_to_reference_prefix": {
+      "model.language_model.": "model."
+    },
+    "dtype": "float32",
+    "loading": {
+      "error_msgs": [],
+      "mismatched_keys": [],
+      "missing_keys": [],
+      "unexpected_keys": []
+    },
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "parameter_count": 752393024,
+    "reference_class": "Qwen3_5ForCausalLM",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "version": 1
+  },
+  "loss": 0.43246200680732727,
+  "calls": [
+    {
+      "session": "block_0_forward.onnx",
+      "allocator": {
+        "active_bytes": 1017118720,
+        "cache_bytes": 2101768,
+        "peak_bytes": 1019224584
+      },
+      "cumulative_declared_initializer_bytes": 1017118720,
+      "unique_initializer_region_bytes": 1017118720
+    },
+    {
+      "session": "block_1_forward.onnx",
+      "allocator": {
+        "active_bytes": 1103364808,
+        "cache_bytes": 180089496,
+        "peak_bytes": 1285661408
+      },
+      "cumulative_declared_initializer_bytes": 1103364856,
+      "unique_initializer_region_bytes": 1103364856
+    },
+    {
+      "session": "block_2_forward.onnx",
+      "allocator": {
+        "active_bytes": 1189610896,
+        "cache_bytes": 180089496,
+        "peak_bytes": 1371907496
+      },
+      "cumulative_declared_initializer_bytes": 1189610992,
+      "unique_initializer_region_bytes": 1189586296
+    },
+    {
+      "session": "block_3_forward.onnx",
+      "allocator": {
+        "active_bytes": 1275856984,
+        "cache_bytes": 180089496,
+        "peak_bytes": 1458153584
+      },
+      "cumulative_declared_initializer_bytes": 1275857128,
+      "unique_initializer_region_bytes": 1275807736
+    },
+    {
+      "session": "block_4_forward.onnx",
+      "allocator": {
+        "active_bytes": 1416376516,
+        "cache_bytes": 219269387,
+        "peak_bytes": 1524250951
+      },
+      "cumulative_declared_initializer_bytes": 1416376772,
+      "unique_initializer_region_bytes": 1416327376
+    },
+    {
+      "session": "block_5_forward.onnx",
+      "allocator": {
+        "active_bytes": 1502622604,
+        "cache_bytes": 219269387,
+        "peak_bytes": 1684919204
+      },
+      "cumulative_declared_initializer_bytes": 1502622908,
+      "unique_initializer_region_bytes": 1502548816
+    },
+    {
+      "session": "block_6_forward.onnx",
+      "allocator": {
+        "active_bytes": 1588868692,
+        "cache_bytes": 219269387,
+        "peak_bytes": 1771165292
+      },
+      "cumulative_declared_initializer_bytes": 1588869044,
+      "unique_initializer_region_bytes": 1588770256
+    },
+    {
+      "session": "block_7_forward.onnx",
+      "allocator": {
+        "active_bytes": 1675114780,
+        "cache_bytes": 219269387,
+        "peak_bytes": 1857411380
+      },
+      "cumulative_declared_initializer_bytes": 1675115180,
+      "unique_initializer_region_bytes": 1674991696
+    },
+    {
+      "session": "block_8_forward.onnx",
+      "allocator": {
+        "active_bytes": 1748525344,
+        "cache_bytes": 219269387,
+        "peak_bytes": 1857411380
+      },
+      "cumulative_declared_initializer_bytes": 1748525832,
+      "unique_initializer_region_bytes": 1748402256
+    },
+    {
+      "session": "block_9_forward.onnx",
+      "allocator": {
+        "active_bytes": 1834771432,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2017068032
+      },
+      "cumulative_declared_initializer_bytes": 1834771968,
+      "unique_initializer_region_bytes": 1834623696
+    },
+    {
+      "session": "block_10_forward.onnx",
+      "allocator": {
+        "active_bytes": 1921017520,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2103314120
+      },
+      "cumulative_declared_initializer_bytes": 1921018104,
+      "unique_initializer_region_bytes": 1920845136
+    },
+    {
+      "session": "block_11_forward.onnx",
+      "allocator": {
+        "active_bytes": 2007263608,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2189560208
+      },
+      "cumulative_declared_initializer_bytes": 2007264240,
+      "unique_initializer_region_bytes": 2007066576
+    },
+    {
+      "session": "block_12_forward.onnx",
+      "allocator": {
+        "active_bytes": 2080674172,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2189560208
+      },
+      "cumulative_declared_initializer_bytes": 2080674892,
+      "unique_initializer_region_bytes": 2080477136
+    },
+    {
+      "session": "block_13_forward.onnx",
+      "allocator": {
+        "active_bytes": 2166920260,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2349216860
+      },
+      "cumulative_declared_initializer_bytes": 2166921028,
+      "unique_initializer_region_bytes": 2166698576
+    },
+    {
+      "session": "block_14_forward.onnx",
+      "allocator": {
+        "active_bytes": 2253166348,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2435462948
+      },
+      "cumulative_declared_initializer_bytes": 2253167164,
+      "unique_initializer_region_bytes": 2252920016
+    },
+    {
+      "session": "block_15_forward.onnx",
+      "allocator": {
+        "active_bytes": 2339412436,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2521709036
+      },
+      "cumulative_declared_initializer_bytes": 2339413300,
+      "unique_initializer_region_bytes": 2339141456
+    },
+    {
+      "session": "block_16_forward.onnx",
+      "allocator": {
+        "active_bytes": 2412823000,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2521709036
+      },
+      "cumulative_declared_initializer_bytes": 2412823952,
+      "unique_initializer_region_bytes": 2412552016
+    },
+    {
+      "session": "block_17_forward.onnx",
+      "allocator": {
+        "active_bytes": 2499069088,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2681365688
+      },
+      "cumulative_declared_initializer_bytes": 2499070088,
+      "unique_initializer_region_bytes": 2498773456
+    },
+    {
+      "session": "block_18_forward.onnx",
+      "allocator": {
+        "active_bytes": 2585315176,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2767611776
+      },
+      "cumulative_declared_initializer_bytes": 2585316224,
+      "unique_initializer_region_bytes": 2584994896
+    },
+    {
+      "session": "block_19_forward.onnx",
+      "allocator": {
+        "active_bytes": 2671561264,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2853857864
+      },
+      "cumulative_declared_initializer_bytes": 2671562360,
+      "unique_initializer_region_bytes": 2671216336
+    },
+    {
+      "session": "block_20_forward.onnx",
+      "allocator": {
+        "active_bytes": 2744971828,
+        "cache_bytes": 219269387,
+        "peak_bytes": 2853857864
+      },
+      "cumulative_declared_initializer_bytes": 2744973012,
+      "unique_initializer_region_bytes": 2744626896
+    },
+    {
+      "session": "block_21_forward.onnx",
+      "allocator": {
+        "active_bytes": 2831217916,
+        "cache_bytes": 219269387,
+        "peak_bytes": 3013514516
+      },
+      "cumulative_declared_initializer_bytes": 2831219148,
+      "unique_initializer_region_bytes": 2830848336
+    },
+    {
+      "session": "block_22_forward.onnx",
+      "allocator": {
+        "active_bytes": 2917464004,
+        "cache_bytes": 219269387,
+        "peak_bytes": 3099760604
+      },
+      "cumulative_declared_initializer_bytes": 2917465284,
+      "unique_initializer_region_bytes": 2917069776
+    },
+    {
+      "session": "block_23_forward.onnx",
+      "allocator": {
+        "active_bytes": 3003710092,
+        "cache_bytes": 219269387,
+        "peak_bytes": 3186006692
+      },
+      "cumulative_declared_initializer_bytes": 3003711420,
+      "unique_initializer_region_bytes": 3003291216
+    },
+    {
+      "session": "block_24_forward.onnx",
+      "allocator": {
+        "active_bytes": 3077120656,
+        "cache_bytes": 219269387,
+        "peak_bytes": 3186006692
+      },
+      "cumulative_declared_initializer_bytes": 3077122072,
+      "unique_initializer_region_bytes": 3076701776
+    },
+    {
+      "session": "block_25_forward.onnx",
+      "allocator": {
+        "active_bytes": 4094243472,
+        "cache_bytes": 727828747,
+        "peak_bytes": 4606997136
+      },
+      "cumulative_declared_initializer_bytes": 4094244888,
+      "unique_initializer_region_bytes": 4093824592
+    },
+    {
+      "session": "block_25_backward.onnx",
+      "allocator": {
+        "active_bytes": 5111366292,
+        "cache_bytes": 593494024,
+        "peak_bytes": 5699621536
+      },
+      "cumulative_declared_initializer_bytes": 5111367716,
+      "unique_initializer_region_bytes": 4093824592
+    },
+    {
+      "session": "block_24_backward.onnx",
+      "allocator": {
+        "active_bytes": 5184777004,
+        "cache_bytes": 468075981,
+        "peak_bytes": 5699621536
+      },
+      "cumulative_declared_initializer_bytes": 5184778588,
+      "unique_initializer_region_bytes": 4093824756
+    },
+    {
+      "session": "block_23_backward.onnx",
+      "allocator": {
+        "active_bytes": 5271047832,
+        "cache_bytes": 549798479,
+        "peak_bytes": 6119488820
+      },
+      "cumulative_declared_initializer_bytes": 5271049480,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_22_backward.onnx",
+      "allocator": {
+        "active_bytes": 5357318660,
+        "cache_bytes": 551679092,
+        "peak_bytes": 6228811808
+      },
+      "cumulative_declared_initializer_bytes": 5357320372,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_21_backward.onnx",
+      "allocator": {
+        "active_bytes": 5443589488,
+        "cache_bytes": 552711088,
+        "peak_bytes": 6315082636
+      },
+      "cumulative_declared_initializer_bytes": 5443591264,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_20_backward.onnx",
+      "allocator": {
+        "active_bytes": 5521358344,
+        "cache_bytes": 543569967,
+        "peak_bytes": 6315082636
+      },
+      "cumulative_declared_initializer_bytes": 5517002136,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_19_backward.onnx",
+      "allocator": {
+        "active_bytes": 5603271028,
+        "cache_bytes": 549581940,
+        "peak_bytes": 6474764176
+      },
+      "cumulative_declared_initializer_bytes": 5603273028,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_18_backward.onnx",
+      "allocator": {
+        "active_bytes": 5689541856,
+        "cache_bytes": 552727668,
+        "peak_bytes": 6561035004
+      },
+      "cumulative_declared_initializer_bytes": 5689543920,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_17_backward.onnx",
+      "allocator": {
+        "active_bytes": 5775812684,
+        "cache_bytes": 550613936,
+        "peak_bytes": 6647305832
+      },
+      "cumulative_declared_initializer_bytes": 5775814812,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_16_backward.onnx",
+      "allocator": {
+        "active_bytes": 5849223396,
+        "cache_bytes": 541472815,
+        "peak_bytes": 6647305832
+      },
+      "cumulative_declared_initializer_bytes": 5849225684,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_15_backward.onnx",
+      "allocator": {
+        "active_bytes": 5935494224,
+        "cache_bytes": 549569652,
+        "peak_bytes": 6806987372
+      },
+      "cumulative_declared_initializer_bytes": 5935496576,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_14_backward.onnx",
+      "allocator": {
+        "active_bytes": 6021765052,
+        "cache_bytes": 551679088,
+        "peak_bytes": 6893258200
+      },
+      "cumulative_declared_initializer_bytes": 6021767468,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_13_backward.onnx",
+      "allocator": {
+        "active_bytes": 6108035880,
+        "cache_bytes": 551679088,
+        "peak_bytes": 6979529028
+      },
+      "cumulative_declared_initializer_bytes": 6108038360,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_12_backward.onnx",
+      "allocator": {
+        "active_bytes": 6181446592,
+        "cache_bytes": 542537967,
+        "peak_bytes": 6979529028
+      },
+      "cumulative_declared_initializer_bytes": 6181449232,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_11_backward.onnx",
+      "allocator": {
+        "active_bytes": 6267717420,
+        "cache_bytes": 550630324,
+        "peak_bytes": 7139210568
+      },
+      "cumulative_declared_initializer_bytes": 6267720124,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_10_backward.onnx",
+      "allocator": {
+        "active_bytes": 6353988248,
+        "cache_bytes": 552727536,
+        "peak_bytes": 7225481396
+      },
+      "cumulative_declared_initializer_bytes": 6353991016,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_9_backward.onnx",
+      "allocator": {
+        "active_bytes": 6440259076,
+        "cache_bytes": 550622128,
+        "peak_bytes": 7311752224
+      },
+      "cumulative_declared_initializer_bytes": 6440261908,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_8_backward.onnx",
+      "allocator": {
+        "active_bytes": 6546482852,
+        "cache_bytes": 541481007,
+        "peak_bytes": 7311752224
+      },
+      "cumulative_declared_initializer_bytes": 6513672780,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_7_backward.onnx",
+      "allocator": {
+        "active_bytes": 6599940616,
+        "cache_bytes": 544289456,
+        "peak_bytes": 7448381604
+      },
+      "cumulative_declared_initializer_bytes": 6599943672,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_6_backward.onnx",
+      "allocator": {
+        "active_bytes": 6686211444,
+        "cache_bytes": 551679088,
+        "peak_bytes": 7557704592
+      },
+      "cumulative_declared_initializer_bytes": 6686214564,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_5_backward.onnx",
+      "allocator": {
+        "active_bytes": 6772482272,
+        "cache_bytes": 551679088,
+        "peak_bytes": 7643975420
+      },
+      "cumulative_declared_initializer_bytes": 6772485456,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_4_backward.onnx",
+      "allocator": {
+        "active_bytes": 6913001916,
+        "cache_bytes": 542058357,
+        "peak_bytes": 7643975420
+      },
+      "cumulative_declared_initializer_bytes": 6913005276,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_3_backward.onnx",
+      "allocator": {
+        "active_bytes": 6999272744,
+        "cache_bytes": 550630452,
+        "peak_bytes": 7870765892
+      },
+      "cumulative_declared_initializer_bytes": 6999276168,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_2_backward.onnx",
+      "allocator": {
+        "active_bytes": 7085543572,
+        "cache_bytes": 551679088,
+        "peak_bytes": 7957036720
+      },
+      "cumulative_declared_initializer_bytes": 7085547060,
+      "unique_initializer_region_bytes": 4093849460
+    },
+    {
+      "session": "block_1_backward.onnx",
+      "allocator": {
+        "active_bytes": 7171814388,
+        "cache_bytes": 537076824,
+        "peak_bytes": 8090460352
+      },
+      "cumulative_declared_initializer_bytes": 7171817940,
+      "unique_initializer_region_bytes": 4093849460
+    }
+  ],
+  "after_close": {
+    "active_bytes": 0,
+    "cache_bytes": 537076824,
+    "peak_bytes": 8090460352
+  },
+  "scope": "One full task forward/backward; after-call active allocations, declared initializer bytes and distinct immutable region/shape keys; no optimizer updates",
+  "guard": {
+    "command": [
+      ".venv/bin/python",
+      "/tmp/onnax-full-weight-probe.py"
+    ],
+    "cwd": "/Users/justinc/Documents/GitHub/onnax",
+    "status": "complete",
+    "physical_memory_budget_bytes": 25769803776,
+    "minimum_free_disk_bytes": 5368709120,
+    "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+    "observation_errors": 0,
+    "temporary_directory": "/tmp/onnax-full-weight-probe-guard/worker-tmp-aqom26aq",
+    "pid": 3119,
+    "started": "2026-11-02T19:26:27.336547+00:00",
+    "returncode": 0,
+    "finished": "2026-11-02T19:26:54.581456+00:00",
+    "temporary_files_removed": true,
+    "peak_physical_bytes": 11311424968
+  },
+  "probe_source": "import gc,json,os\nfrom pathlib import Path\nimport onnx_ir as ir\nimport torch\nfrom transformers import AutoConfig\nfrom examples.huggingface.block_runtime import MlxMemory,capture\nfrom examples.huggingface.pretrained import PretrainedSource,load_tokenizer\nfrom examples.lora.mlx_runtime import register_library,session\nroot='/tmp/onnax-qwen35-real-sft/export';lib='/tmp/onnax-gated-test-runtime/libonnxruntime_mlx_ep.dylib'\nregister_library(lib);memory=MlxMemory(lib);torch.set_num_threads(1)\nrows=[];seen=set();total_declared=0;unique_bytes=0\nclass Observe:\n def __init__(self,source):\n  self.original=session(source);self.name=os.path.basename(source);self.regions=[]\n  m=ir.load(source)\n  for value in m.graph.initializers.values():\n   if value in m.graph.inputs:continue\n   tensor=value.const_value\n   if isinstance(tensor,ir.ExternalTensor):key=(tensor.location,tensor.offset,tensor.length,str(tensor.dtype),tuple(tensor.shape))\n   else:key=('inline',str(tensor.dtype),tuple(tensor.shape),tensor.tobytes())\n   self.regions.append((key,tensor.nbytes))\n def __getattr__(self,name):return getattr(self.original,name)\n def run(self,outputs,feeds):\n  global total_declared,unique_bytes\n  result=self.original.run(outputs,feeds)\n  total_declared+=sum(size for _,size in self.regions)\n  for key,size in self.regions:\n   if key not in seen:seen.add(key);unique_bytes+=size\n  rows.append({'session':self.name,'allocator':memory.snapshot(),'cumulative_declared_initializer_bytes':total_declared,'unique_initializer_region_bytes':unique_bytes})\n  return result\nconfig=AutoConfig.from_pretrained(root,local_files_only=True);p=config.onnax_pretrained\ntok=load_tokenizer(PretrainedSource(p['model_id'],p['revision']),cache_dir='/tmp/onnax-qwen35-real-cache')\ntext='ONNX models learn from examples. Low-rank adapters update a small set of parameters. '\nrepeat=1;ids=[]\nwhile len(ids)<512:ids=tok.encode(text*repeat,add_special_tokens=False);repeat*=2\nids=torch.tensor([ids[:512]],dtype=torch.int64)\nbatch={'input_ids':ids,'attention_mask':torch.ones_like(ids),'position_ids':torch.arange(512)[None],'labels':ids.clone()}\nresult=capture(root,names=['decoder_0_1','decoder_3_4'],batch=batch,output='/tmp/onnax-weight-probe-capture',factory=Observe)\ngc.collect()\nreport={'version':1,'sequence':512,'pretrained_source':p,'loss':result['loss'],'calls':rows,'after_close':memory.snapshot(),'scope':'One full task forward/backward; after-call active allocations, declared initializer bytes and distinct immutable region/shape keys; no optimizer updates'}\nPath('/tmp/onnax-full-weight-probe.json').write_text(json.dumps(report,indent=2)+'\\n')\nprint(json.dumps({'calls':len(rows),'last':rows[-1],'after_close':report['after_close']}))\n",
+  "isolated_block_peak_explains_full_peak": true
+}

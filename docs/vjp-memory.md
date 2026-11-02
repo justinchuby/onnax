@@ -120,3 +120,6 @@ The {download}`complete block reports
 revision and bundle identity, shapes, producers/consumers, timelines and peak sets.
 They provide inputs for selecting a recomputation boundary, followed by gradient,
 checkpoint-recovery and runtime-memory comparisons.
+
+The [block runtime study](block-runtime.md) measures these exported recomputation
+modules with captured task inputs and native allocator counters.

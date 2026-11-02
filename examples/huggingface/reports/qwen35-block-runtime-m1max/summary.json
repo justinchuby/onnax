@@ -1,0 +1,960 @@
+{
+  "version": 1,
+  "hardware": {
+    "cpu": "Apple M1 Max",
+    "physical_memory_bytes": 34359738368,
+    "logical_cores": 10,
+    "platform": "macOS-27.0.1-arm64-arm-64bit"
+  },
+  "cases": [
+    {
+      "sequence": 64,
+      "block": "decoder_0_1",
+      "reports": {
+        "fused": "runtime-64-decoder_0_1-fused.json",
+        "unfused": "runtime-64-decoder_0_1-unfused.json"
+      },
+      "logical_report": "logical-64-decoder_0_1.json",
+      "guards": {
+        "fused": {
+          "command": [
+            "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+            "-m",
+            "examples.huggingface.block_runtime",
+            "measure",
+            "--bundle",
+            "/tmp/onnax-qwen35-real-sft/export/execution",
+            "--captures",
+            "/tmp/onnax-block-runtime-capture64",
+            "--block",
+            "decoder_0_1",
+            "--provider",
+            "mlx",
+            "--library",
+            "/tmp/onnax-gated-test-runtime/libonnxruntime_mlx_ep.dylib",
+            "--warmup",
+            "10",
+            "--samples",
+            "100",
+            "--output",
+            "/Users/justinc/Documents/GitHub/onnax/examples/huggingface/reports/qwen35-block-runtime-m1max/runtime-64-decoder_0_1-fused.json"
+          ],
+          "cwd": "/Users/justinc/Documents/GitHub/onnax",
+          "status": "complete",
+          "physical_memory_budget_bytes": 25769803776,
+          "minimum_free_disk_bytes": 31035658240,
+          "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+          "observation_errors": 0,
+          "temporary_directory": "/tmp/onnax-block-matrix-64-decoder_0_1-fused-guard/worker-tmp-0d8xsi56",
+          "pid": 1674,
+          "started": "2026-11-02T19:06:32.056788+00:00",
+          "returncode": 0,
+          "finished": "2026-11-02T19:06:39.110641+00:00",
+          "temporary_files_removed": true,
+          "peak_physical_bytes": 502547560
+        },
+        "unfused": {
+          "command": [
+            "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+            "-m",
+            "examples.huggingface.block_runtime",
+            "measure",
+            "--bundle",
+            "/tmp/onnax-qwen35-real-sft/export/execution",
+            "--captures",
+            "/tmp/onnax-block-runtime-capture64",
+            "--block",
+            "decoder_0_1",
+            "--provider",
+            "mlx",
+            "--library",
+            "/tmp/onnax-gated-test-runtime/libonnxruntime_mlx_ep.dylib",
+            "--warmup",
+            "10",
+            "--samples",
+            "100",
+            "--output",
+            "/Users/justinc/Documents/GitHub/onnax/examples/huggingface/reports/qwen35-block-runtime-m1max/runtime-64-decoder_0_1-unfused.json",
+            "--unfused"
+          ],
+          "cwd": "/Users/justinc/Documents/GitHub/onnax",
+          "status": "complete",
+          "physical_memory_budget_bytes": 25769803776,
+          "minimum_free_disk_bytes": 31035564032,
+          "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+          "observation_errors": 0,
+          "temporary_directory": "/tmp/onnax-block-matrix-64-decoder_0_1-unfused-guard/worker-tmp-ewdx_02p",
+          "pid": 1685,
+          "started": "2026-11-02T19:06:39.172848+00:00",
+          "returncode": 0,
+          "finished": "2026-11-02T19:06:47.226898+00:00",
+          "temporary_files_removed": true,
+          "peak_physical_bytes": 563889352
+        }
+      },
+      "median_runtime_ratio_unfused_over_fused": 1.3607811191283405,
+      "allocator_peak_reduction_fraction": 0.10051309708011591,
+      "gradients_aligned_to_capture": true,
+      "rtol": 0.0001,
+      "atol": 1e-06
+    },
+    {
+      "sequence": 64,
+      "block": "decoder_3_4",
+      "reports": {
+        "fused": "runtime-64-decoder_3_4-fused.json",
+        "unfused": "runtime-64-decoder_3_4-unfused.json"
+      },
+      "logical_report": "logical-64-decoder_3_4.json",
+      "guards": {
+        "fused": {
+          "command": [
+            "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+            "-m",
+            "examples.huggingface.block_runtime",
+            "measure",
+            "--bundle",
+            "/tmp/onnax-qwen35-real-sft/export/execution",
+            "--captures",
+            "/tmp/onnax-block-runtime-capture64",
+            "--block",
+            "decoder_3_4",
+            "--provider",
+            "mlx",
+            "--library",
+            "/tmp/onnax-gated-test-runtime/libonnxruntime_mlx_ep.dylib",
+            "--warmup",
+            "10",
+            "--samples",
+            "100",
+            "--output",
+            "/Users/justinc/Documents/GitHub/onnax/examples/huggingface/reports/qwen35-block-runtime-m1max/runtime-64-decoder_3_4-fused.json"
+          ],
+          "cwd": "/Users/justinc/Documents/GitHub/onnax",
+          "status": "complete",
+          "physical_memory_budget_bytes": 25769803776,
+          "minimum_free_disk_bytes": 31035461632,
+          "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+          "observation_errors": 0,
+          "temporary_directory": "/tmp/onnax-block-matrix-64-decoder_3_4-fused-guard/worker-tmp-588l8ub8",
+          "pid": 1715,
+          "started": "2026-11-02T19:06:47.273527+00:00",
+          "returncode": 0,
+          "finished": "2026-11-02T19:06:53.319129+00:00",
+          "temporary_files_removed": true,
+          "peak_physical_bytes": 289801320
+        },
+        "unfused": {
+          "command": [
+            "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+            "-m",
+            "examples.huggingface.block_runtime",
+            "measure",
+            "--bundle",
+            "/tmp/onnax-qwen35-real-sft/export/execution",
+            "--captures",
+            "/tmp/onnax-block-runtime-capture64",
+            "--block",
+            "decoder_3_4",
+            "--provider",
+            "mlx",
+            "--library",
+            "/tmp/onnax-gated-test-runtime/libonnxruntime_mlx_ep.dylib",
+            "--warmup",
+            "10",
+            "--samples",
+            "100",
+            "--output",
+            "/Users/justinc/Documents/GitHub/onnax/examples/huggingface/reports/qwen35-block-runtime-m1max/runtime-64-decoder_3_4-unfused.json",
+            "--unfused"
+          ],
+          "cwd": "/Users/justinc/Documents/GitHub/onnax",
+          "status": "complete",
+          "physical_memory_budget_bytes": 25769803776,
+          "minimum_free_disk_bytes": 31035133952,
+          "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+          "observation_errors": 0,
+          "temporary_directory": "/tmp/onnax-block-matrix-64-decoder_3_4-unfused-guard/worker-tmp-jq_w22i6",
+          "pid": 1741,
+          "started": "2026-11-02T19:06:53.390210+00:00",
+          "returncode": 0,
+          "finished": "2026-11-02T19:06:59.433115+00:00",
+          "temporary_files_removed": true,
+          "peak_physical_bytes": 287310928
+        }
+      },
+      "median_runtime_ratio_unfused_over_fused": 0.9929719991610217,
+      "allocator_peak_reduction_fraction": 0.0,
+      "gradients_aligned_to_capture": true,
+      "rtol": 0.0001,
+      "atol": 1e-06
+    },
+    {
+      "sequence": 512,
+      "block": "decoder_0_1",
+      "reports": {
+        "fused": "runtime-512-decoder_0_1-fused.json",
+        "unfused": "runtime-512-decoder_0_1-unfused.json"
+      },
+      "logical_report": "logical-512-decoder_0_1.json",
+      "guards": {
+        "fused": {
+          "command": [
+            "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+            "-m",
+            "examples.huggingface.block_runtime",
+            "measure",
+            "--bundle",
+            "/tmp/onnax-qwen35-real-sft/export/execution",
+            "--captures",
+            "/tmp/onnax-block-runtime-capture512",
+            "--block",
+            "decoder_0_1",
+            "--provider",
+            "mlx",
+            "--library",
+            "/tmp/onnax-gated-test-runtime/libonnxruntime_mlx_ep.dylib",
+            "--warmup",
+            "10",
+            "--samples",
+            "100",
+            "--output",
+            "/Users/justinc/Documents/GitHub/onnax/examples/huggingface/reports/qwen35-block-runtime-m1max/runtime-512-decoder_0_1-fused.json"
+          ],
+          "cwd": "/Users/justinc/Documents/GitHub/onnax",
+          "status": "complete",
+          "physical_memory_budget_bytes": 25769803776,
+          "minimum_free_disk_bytes": 31033810944,
+          "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+          "observation_errors": 0,
+          "temporary_directory": "/tmp/onnax-block-matrix-512-decoder_0_1-fused-guard/worker-tmp-uj617l48",
+          "pid": 1773,
+          "started": "2026-11-02T19:06:59.478078+00:00",
+          "returncode": 0,
+          "finished": "2026-11-02T19:07:16.638291+00:00",
+          "temporary_files_removed": true,
+          "peak_physical_bytes": 1323746600
+        },
+        "unfused": {
+          "command": [
+            "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+            "-m",
+            "examples.huggingface.block_runtime",
+            "measure",
+            "--bundle",
+            "/tmp/onnax-qwen35-real-sft/export/execution",
+            "--captures",
+            "/tmp/onnax-block-runtime-capture512",
+            "--block",
+            "decoder_0_1",
+            "--provider",
+            "mlx",
+            "--library",
+            "/tmp/onnax-gated-test-runtime/libonnxruntime_mlx_ep.dylib",
+            "--warmup",
+            "10",
+            "--samples",
+            "100",
+            "--output",
+            "/Users/justinc/Documents/GitHub/onnax/examples/huggingface/reports/qwen35-block-runtime-m1max/runtime-512-decoder_0_1-unfused.json",
+            "--unfused"
+          ],
+          "cwd": "/Users/justinc/Documents/GitHub/onnax",
+          "status": "complete",
+          "physical_memory_budget_bytes": 25769803776,
+          "minimum_free_disk_bytes": 31032918016,
+          "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+          "observation_errors": 0,
+          "temporary_directory": "/tmp/onnax-block-matrix-512-decoder_0_1-unfused-guard/worker-tmp-qrka97rx",
+          "pid": 1807,
+          "started": "2026-11-02T19:07:16.709234+00:00",
+          "returncode": 0,
+          "finished": "2026-11-02T19:07:42.957869+00:00",
+          "temporary_files_removed": true,
+          "peak_physical_bytes": 1643496648
+        }
+      },
+      "median_runtime_ratio_unfused_over_fused": 1.7596954858265306,
+      "allocator_peak_reduction_fraction": 0.189956750264894,
+      "gradients_aligned_to_capture": true,
+      "rtol": 0.0001,
+      "atol": 1e-06
+    },
+    {
+      "sequence": 512,
+      "block": "decoder_3_4",
+      "reports": {
+        "fused": "runtime-512-decoder_3_4-fused.json",
+        "unfused": "runtime-512-decoder_3_4-unfused.json"
+      },
+      "logical_report": "logical-512-decoder_3_4.json",
+      "guards": {
+        "fused": {
+          "command": [
+            "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+            "-m",
+            "examples.huggingface.block_runtime",
+            "measure",
+            "--bundle",
+            "/tmp/onnax-qwen35-real-sft/export/execution",
+            "--captures",
+            "/tmp/onnax-block-runtime-capture512",
+            "--block",
+            "decoder_3_4",
+            "--provider",
+            "mlx",
+            "--library",
+            "/tmp/onnax-gated-test-runtime/libonnxruntime_mlx_ep.dylib",
+            "--warmup",
+            "10",
+            "--samples",
+            "100",
+            "--output",
+            "/Users/justinc/Documents/GitHub/onnax/examples/huggingface/reports/qwen35-block-runtime-m1max/runtime-512-decoder_3_4-fused.json"
+          ],
+          "cwd": "/Users/justinc/Documents/GitHub/onnax",
+          "status": "complete",
+          "physical_memory_budget_bytes": 25769803776,
+          "minimum_free_disk_bytes": 31035211776,
+          "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+          "observation_errors": 0,
+          "temporary_directory": "/tmp/onnax-block-matrix-512-decoder_3_4-fused-guard/worker-tmp-ok9_d4no",
+          "pid": 1848,
+          "started": "2026-11-02T19:07:43.028901+00:00",
+          "returncode": 0,
+          "finished": "2026-11-02T19:07:50.099384+00:00",
+          "temporary_files_removed": true,
+          "peak_physical_bytes": 669549840
+        },
+        "unfused": {
+          "command": [
+            "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+            "-m",
+            "examples.huggingface.block_runtime",
+            "measure",
+            "--bundle",
+            "/tmp/onnax-qwen35-real-sft/export/execution",
+            "--captures",
+            "/tmp/onnax-block-runtime-capture512",
+            "--block",
+            "decoder_3_4",
+            "--provider",
+            "mlx",
+            "--library",
+            "/tmp/onnax-gated-test-runtime/libonnxruntime_mlx_ep.dylib",
+            "--warmup",
+            "10",
+            "--samples",
+            "100",
+            "--output",
+            "/Users/justinc/Documents/GitHub/onnax/examples/huggingface/reports/qwen35-block-runtime-m1max/runtime-512-decoder_3_4-unfused.json",
+            "--unfused"
+          ],
+          "cwd": "/Users/justinc/Documents/GitHub/onnax",
+          "status": "complete",
+          "physical_memory_budget_bytes": 25769803776,
+          "minimum_free_disk_bytes": 31035105280,
+          "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+          "observation_errors": 0,
+          "temporary_directory": "/tmp/onnax-block-matrix-512-decoder_3_4-unfused-guard/worker-tmp-a2pgvjtp",
+          "pid": 1874,
+          "started": "2026-11-02T19:07:50.162388+00:00",
+          "returncode": 0,
+          "finished": "2026-11-02T19:07:57.227437+00:00",
+          "temporary_files_removed": true,
+          "peak_physical_bytes": 670123352
+        }
+      },
+      "median_runtime_ratio_unfused_over_fused": 0.9427527193879301,
+      "allocator_peak_reduction_fraction": 0.0,
+      "gradients_aligned_to_capture": true,
+      "rtol": 0.0001,
+      "atol": 1e-06
+    }
+  ],
+  "source_sha256": {
+    "examples/huggingface/block_runtime.py": "315e7fe8e89ec674baa2500bddcd085bbb46ed21518309be271413d3239e79e0",
+    "examples/huggingface/block_liveness.py": "d905d1f9017292d9ee22b75e68be23e814396dd16107ada660737e308f6c9275",
+    "examples/activation_liveness.py": "5dd936b0c1da42f4a36b3354bc77615f2bfb0413c0f9943a07a130d1d0ce3e89"
+  },
+  "capture_manifests": {
+    "64": {
+      "version": 1,
+      "bundle_identity": "229a32d4b255f89d56dd84d09f9a9daf82cfce4129fa57d7a19c3c86b216b693",
+      "interface_sha256": "ef5fcba850fc8000ce8b668440b75217843d5ef300a21dec0149745ac1217110",
+      "batch": {
+        "input_ids": {
+          "shape": [
+            1,
+            64
+          ],
+          "dtype": "int64",
+          "bytes": 512,
+          "sha256": "7e18c0d7578fbf0f702de903bd4182353219dcc6121e12495d0d3b2f7b9fdc2b"
+        },
+        "attention_mask": {
+          "shape": [
+            1,
+            64
+          ],
+          "dtype": "int64",
+          "bytes": 512,
+          "sha256": "ae1fd128caf85aaf5af91075ffc018dc15569e7c71c2c1fe9c4c1f75c5f661ec"
+        },
+        "position_ids": {
+          "shape": [
+            1,
+            64
+          ],
+          "dtype": "int64",
+          "bytes": 512,
+          "sha256": "7a4644928f3a08db905254fd7e5e53ef19a46d932a2ecd372b45462413a82619"
+        },
+        "labels": {
+          "shape": [
+            1,
+            64
+          ],
+          "dtype": "int64",
+          "bytes": 512,
+          "sha256": "7e18c0d7578fbf0f702de903bd4182353219dcc6121e12495d0d3b2f7b9fdc2b"
+        }
+      },
+      "loss": 2.658146619796753,
+      "blocks": {
+        "decoder_3_4": {
+          "index": 4,
+          "model": "block_4_backward.onnx",
+          "feeds": "block_4_feeds.npz",
+          "outputs": "block_4_outputs.npz",
+          "input_arrays": {
+            "position_ids": {
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "int64",
+              "bytes": 512,
+              "sha256": "7a4644928f3a08db905254fd7e5e53ef19a46d932a2ecd372b45462413a82619"
+            },
+            "attention_mask": {
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "int64",
+              "bytes": 512,
+              "sha256": "ae1fd128caf85aaf5af91075ffc018dc15569e7c71c2c1fe9c4c1f75c5f661ec"
+            },
+            "input_ids": {
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "int64",
+              "bytes": 512,
+              "sha256": "7e18c0d7578fbf0f702de903bd4182353219dcc6121e12495d0d3b2f7b9fdc2b"
+            },
+            "v_model.layers.2.Add_365": {
+              "shape": [
+                1,
+                64,
+                1024
+              ],
+              "dtype": "float32",
+              "bytes": 262144,
+              "sha256": "6883a3d738fdcd4ae1676261f1a4f3704bd66d29646a72fe9cb6a178259044f0"
+            },
+            "model.layers.3.self_attn.q_proj.lora.A": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "d6758cdb9b7713fae621dd5159e907b1a48eb5d004e09bc58dde0df3041905c6"
+            },
+            "model.layers.3.self_attn.q_proj.lora.B": {
+              "shape": [
+                4,
+                4096
+              ],
+              "dtype": "float32",
+              "bytes": 65536,
+              "sha256": "4d609316d9ff6a7b052041b29b48dd990a20dfce9aca22d9e4775f5c3402e380"
+            },
+            "model.layers.3.self_attn.v_proj.lora.A": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "8a3c0c778df50e43a31597ff1ace99e9479767d6beb3ed874a261749b862a380"
+            },
+            "model.layers.3.self_attn.v_proj.lora.B": {
+              "shape": [
+                4,
+                512
+              ],
+              "dtype": "float32",
+              "bytes": 8192,
+              "sha256": "6a1938f4440f44b1efc097293f4a174da754cfa097e9eb130c8bedeb05c2e95e"
+            },
+            "v_model.layers.3.Add_402_cotangent": {
+              "shape": [
+                1,
+                64,
+                1024
+              ],
+              "dtype": "float32",
+              "bytes": 262144,
+              "sha256": "d03f4802b3b6f263d6e07c86facfc9a932da0031cf0e77d9f6937ae9f70c1610"
+            }
+          },
+          "output_arrays": {
+            "v_model.layers.2.Add_365_cotangent": {
+              "shape": [
+                1,
+                64,
+                1024
+              ],
+              "dtype": "float32",
+              "bytes": 262144,
+              "sha256": "1654324e0da15d3ab7df2f0e1bf049c123407af6fb5b506e6977b009137b1c00"
+            },
+            "model.layers.3.self_attn.q_proj.lora.A_cotangent": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "5b28666d261bbdca300123370114b2c2cdfdb644e085e89ada0c86b902434679"
+            },
+            "model.layers.3.self_attn.q_proj.lora.B_cotangent": {
+              "shape": [
+                4,
+                4096
+              ],
+              "dtype": "float32",
+              "bytes": 65536,
+              "sha256": "95ac7ad9850ad9ebf2a50d9bf2cd2edb9957a9da3aaa09d7d1f16783ced00cbb"
+            },
+            "model.layers.3.self_attn.v_proj.lora.A_cotangent": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "604f49b39c01727a69034bafbc410000a5e7f305a934ec3672b31309e74b98d5"
+            },
+            "model.layers.3.self_attn.v_proj.lora.B_cotangent": {
+              "shape": [
+                4,
+                512
+              ],
+              "dtype": "float32",
+              "bytes": 8192,
+              "sha256": "a4dfe3e269d512cbed566d635d163f6c7c84f7ada32d971a942617f29ced85a4"
+            }
+          },
+          "output_names": [
+            "v_model.layers.2.Add_365_cotangent",
+            "model.layers.3.self_attn.q_proj.lora.A_cotangent",
+            "model.layers.3.self_attn.q_proj.lora.B_cotangent",
+            "model.layers.3.self_attn.v_proj.lora.A_cotangent",
+            "model.layers.3.self_attn.v_proj.lora.B_cotangent"
+          ]
+        },
+        "decoder_0_1": {
+          "index": 1,
+          "model": "block_1_backward.onnx",
+          "feeds": "block_1_feeds.npz",
+          "outputs": "block_1_outputs.npz",
+          "input_arrays": {
+            "input_ids": {
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "int64",
+              "bytes": 512,
+              "sha256": "7e18c0d7578fbf0f702de903bd4182353219dcc6121e12495d0d3b2f7b9fdc2b"
+            },
+            "v_model.embed_tokens.Gather_109": {
+              "shape": [
+                1,
+                64,
+                1024
+              ],
+              "dtype": "float32",
+              "bytes": 262144,
+              "sha256": "41545c3876facdd4956dc72c1afe2c934825314fc1c83e1d7e71429876dcb5a6"
+            },
+            "model.layers.0.linear_attn.in_proj_qkv.lora.A": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "b9452843f4544185633eb11c07437ab2600f794e6f8df8bfe2810298ab925d6d"
+            },
+            "model.layers.0.linear_attn.in_proj_qkv.lora.B": {
+              "shape": [
+                4,
+                6144
+              ],
+              "dtype": "float32",
+              "bytes": 98304,
+              "sha256": "bc4cd9651794a863649e4c9e318379cd3212fd8af03451da135085d96a1e2e31"
+            },
+            "v_model.layers.0.Add_219_cotangent": {
+              "shape": [
+                1,
+                64,
+                1024
+              ],
+              "dtype": "float32",
+              "bytes": 262144,
+              "sha256": "4d5edd1d27f924099832cdb26b04a1540cdd61896c2d3593d3df4aa2f7e4af13"
+            }
+          },
+          "output_arrays": {
+            "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "489c25098348fe3a3af9a073b8eef3f1106d96c86ae000f2ba2fcae18a146851"
+            },
+            "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent": {
+              "shape": [
+                4,
+                6144
+              ],
+              "dtype": "float32",
+              "bytes": 98304,
+              "sha256": "05b363f7d0cf0a0b15a6b19c1a3c1b3a9338d2ec15048ebb4c94e3ee7c1f19cf"
+            }
+          },
+          "output_names": [
+            "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent",
+            "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent"
+          ]
+        }
+      },
+      "pretrained_source": {
+        "checkpoint_to_reference_prefix": {
+          "model.language_model.": "model."
+        },
+        "dtype": "float32",
+        "loading": {
+          "error_msgs": [],
+          "mismatched_keys": [],
+          "missing_keys": [],
+          "unexpected_keys": []
+        },
+        "model_id": "Qwen/Qwen3.5-0.8B",
+        "parameter_count": 752393024,
+        "reference_class": "Qwen3_5ForCausalLM",
+        "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+        "version": 1
+      }
+    },
+    "512": {
+      "version": 1,
+      "bundle_identity": "229a32d4b255f89d56dd84d09f9a9daf82cfce4129fa57d7a19c3c86b216b693",
+      "interface_sha256": "ef5fcba850fc8000ce8b668440b75217843d5ef300a21dec0149745ac1217110",
+      "batch": {
+        "input_ids": {
+          "shape": [
+            1,
+            512
+          ],
+          "dtype": "int64",
+          "bytes": 4096,
+          "sha256": "db494ebd52fae8866c0878d610ace3fb6af006fd2df5b9a91977de00d1b238b5"
+        },
+        "attention_mask": {
+          "shape": [
+            1,
+            512
+          ],
+          "dtype": "int64",
+          "bytes": 4096,
+          "sha256": "8a472efbc41a4502e6da085422880bc742625c1187f2d36ed39e669d736ac113"
+        },
+        "position_ids": {
+          "shape": [
+            1,
+            512
+          ],
+          "dtype": "int64",
+          "bytes": 4096,
+          "sha256": "5738153ec97595b1c1e4dc027f7b7fb4534f19ed2ce9f9ee712e6d34a384cde7"
+        },
+        "labels": {
+          "shape": [
+            1,
+            512
+          ],
+          "dtype": "int64",
+          "bytes": 4096,
+          "sha256": "db494ebd52fae8866c0878d610ace3fb6af006fd2df5b9a91977de00d1b238b5"
+        }
+      },
+      "loss": 0.43246200680732727,
+      "blocks": {
+        "decoder_3_4": {
+          "index": 4,
+          "model": "block_4_backward.onnx",
+          "feeds": "block_4_feeds.npz",
+          "outputs": "block_4_outputs.npz",
+          "input_arrays": {
+            "position_ids": {
+              "shape": [
+                1,
+                512
+              ],
+              "dtype": "int64",
+              "bytes": 4096,
+              "sha256": "5738153ec97595b1c1e4dc027f7b7fb4534f19ed2ce9f9ee712e6d34a384cde7"
+            },
+            "attention_mask": {
+              "shape": [
+                1,
+                512
+              ],
+              "dtype": "int64",
+              "bytes": 4096,
+              "sha256": "8a472efbc41a4502e6da085422880bc742625c1187f2d36ed39e669d736ac113"
+            },
+            "input_ids": {
+              "shape": [
+                1,
+                512
+              ],
+              "dtype": "int64",
+              "bytes": 4096,
+              "sha256": "db494ebd52fae8866c0878d610ace3fb6af006fd2df5b9a91977de00d1b238b5"
+            },
+            "v_model.layers.2.Add_365": {
+              "shape": [
+                1,
+                512,
+                1024
+              ],
+              "dtype": "float32",
+              "bytes": 2097152,
+              "sha256": "7fa5c5f8bcd6fadd02de0a241b8d49f18074b3e9ae534f903304148ca42a13dc"
+            },
+            "model.layers.3.self_attn.q_proj.lora.A": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "d6758cdb9b7713fae621dd5159e907b1a48eb5d004e09bc58dde0df3041905c6"
+            },
+            "model.layers.3.self_attn.q_proj.lora.B": {
+              "shape": [
+                4,
+                4096
+              ],
+              "dtype": "float32",
+              "bytes": 65536,
+              "sha256": "4d609316d9ff6a7b052041b29b48dd990a20dfce9aca22d9e4775f5c3402e380"
+            },
+            "model.layers.3.self_attn.v_proj.lora.A": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "8a3c0c778df50e43a31597ff1ace99e9479767d6beb3ed874a261749b862a380"
+            },
+            "model.layers.3.self_attn.v_proj.lora.B": {
+              "shape": [
+                4,
+                512
+              ],
+              "dtype": "float32",
+              "bytes": 8192,
+              "sha256": "6a1938f4440f44b1efc097293f4a174da754cfa097e9eb130c8bedeb05c2e95e"
+            },
+            "v_model.layers.3.Add_402_cotangent": {
+              "shape": [
+                1,
+                512,
+                1024
+              ],
+              "dtype": "float32",
+              "bytes": 2097152,
+              "sha256": "3f68d078891fc429e8ac66cd7d6428d7a4aeee8d8d17372f184581aa91ea5327"
+            }
+          },
+          "output_arrays": {
+            "v_model.layers.2.Add_365_cotangent": {
+              "shape": [
+                1,
+                512,
+                1024
+              ],
+              "dtype": "float32",
+              "bytes": 2097152,
+              "sha256": "ac3260ead69405ef255b2916b329c811480c5480d613ac7769f082551f1f3fb7"
+            },
+            "model.layers.3.self_attn.q_proj.lora.A_cotangent": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "4003e704b3d73128513c2c319cfd51cb57fa47beebad612bc25ad6c8427bf964"
+            },
+            "model.layers.3.self_attn.q_proj.lora.B_cotangent": {
+              "shape": [
+                4,
+                4096
+              ],
+              "dtype": "float32",
+              "bytes": 65536,
+              "sha256": "d61fe47e75acd0d2f74261e4ed94bd8fbb9b4d4f001a3d53b06c8d0d8bedf565"
+            },
+            "model.layers.3.self_attn.v_proj.lora.A_cotangent": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "5f42cd32843a1fc10824d2a0023c4ad08760053b1e3e1292d70ff443766fdfd9"
+            },
+            "model.layers.3.self_attn.v_proj.lora.B_cotangent": {
+              "shape": [
+                4,
+                512
+              ],
+              "dtype": "float32",
+              "bytes": 8192,
+              "sha256": "926688d3b51cd16adf1b9aec8bfc54e4b2ef82c27ea300539b8907e0ac777ac3"
+            }
+          },
+          "output_names": [
+            "v_model.layers.2.Add_365_cotangent",
+            "model.layers.3.self_attn.q_proj.lora.A_cotangent",
+            "model.layers.3.self_attn.q_proj.lora.B_cotangent",
+            "model.layers.3.self_attn.v_proj.lora.A_cotangent",
+            "model.layers.3.self_attn.v_proj.lora.B_cotangent"
+          ]
+        },
+        "decoder_0_1": {
+          "index": 1,
+          "model": "block_1_backward.onnx",
+          "feeds": "block_1_feeds.npz",
+          "outputs": "block_1_outputs.npz",
+          "input_arrays": {
+            "input_ids": {
+              "shape": [
+                1,
+                512
+              ],
+              "dtype": "int64",
+              "bytes": 4096,
+              "sha256": "db494ebd52fae8866c0878d610ace3fb6af006fd2df5b9a91977de00d1b238b5"
+            },
+            "v_model.embed_tokens.Gather_109": {
+              "shape": [
+                1,
+                512,
+                1024
+              ],
+              "dtype": "float32",
+              "bytes": 2097152,
+              "sha256": "bd72c29aed39fcb86470c5c3127d388d0a0e7868b8b881a20ff845f467b047cb"
+            },
+            "model.layers.0.linear_attn.in_proj_qkv.lora.A": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "b9452843f4544185633eb11c07437ab2600f794e6f8df8bfe2810298ab925d6d"
+            },
+            "model.layers.0.linear_attn.in_proj_qkv.lora.B": {
+              "shape": [
+                4,
+                6144
+              ],
+              "dtype": "float32",
+              "bytes": 98304,
+              "sha256": "bc4cd9651794a863649e4c9e318379cd3212fd8af03451da135085d96a1e2e31"
+            },
+            "v_model.layers.0.Add_219_cotangent": {
+              "shape": [
+                1,
+                512,
+                1024
+              ],
+              "dtype": "float32",
+              "bytes": 2097152,
+              "sha256": "4411e1ea7dea89d751e7df9382dbe3ae1cb917666598ad3248fea92359232d50"
+            }
+          },
+          "output_arrays": {
+            "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent": {
+              "shape": [
+                1024,
+                4
+              ],
+              "dtype": "float32",
+              "bytes": 16384,
+              "sha256": "e203c3d8a199a25e9212d64405eaf68a03cdebf71fa0484e3ecbad4771a87941"
+            },
+            "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent": {
+              "shape": [
+                4,
+                6144
+              ],
+              "dtype": "float32",
+              "bytes": 98304,
+              "sha256": "10841c79794f9857cac18afee0d9893c813bd11f77d2b8056828bd64fe9dec05"
+            }
+          },
+          "output_names": [
+            "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent",
+            "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent"
+          ]
+        }
+      },
+      "pretrained_source": {
+        "checkpoint_to_reference_prefix": {
+          "model.language_model.": "model."
+        },
+        "dtype": "float32",
+        "loading": {
+          "error_msgs": [],
+          "mismatched_keys": [],
+          "missing_keys": [],
+          "unexpected_keys": []
+        },
+        "model_id": "Qwen/Qwen3.5-0.8B",
+        "parameter_count": 752393024,
+        "reference_class": "Qwen3_5ForCausalLM",
+        "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+        "version": 1
+      }
+    }
+  },
+  "scope": "Actual exported checkpoint recomputation/VJP with real task activations and loss cotangents; independent guarded worker per case; fixed parameters; 10 warmups and 100 samples; one block only",
+  "driver_source": "import json,os,subprocess,sys\nfrom pathlib import Path\nroot=Path('/Users/justinc/Documents/GitHub/onnax')\noutput=root/'examples/huggingface/reports/qwen35-block-runtime-m1max'\ncompleted=[]\nfor length in (64,512):\n for block in ('decoder_0_1','decoder_3_4'):\n  for policy in ('fused','unfused'):\n   name=f'{length}-{block}-{policy}'\n   guard=Path('/tmp')/f'onnax-block-matrix-{name}-guard'\n   command=[sys.executable,'-m','examples.huggingface.block_runtime','measure','--bundle','/tmp/onnax-qwen35-real-sft/export/execution','--captures',f'/tmp/onnax-block-runtime-capture{length}','--block',block,'--provider','mlx','--library','/tmp/onnax-gated-test-runtime/libonnxruntime_mlx_ep.dylib','--warmup','10','--samples','100','--output',str(output/f'runtime-{name}.json')]\n   if policy=='unfused':command+=['--unfused']\n   wrapped=[sys.executable,'-m','examples.huggingface.guard','--output-dir',str(guard),'--',*command]\n   with (Path('/tmp')/f'onnax-block-matrix-{name}.log').open('w') as log:\n    subprocess.run(wrapped,cwd=root,env={**os.environ,'HF_HUB_OFFLINE':'1'},stdout=log,stderr=subprocess.STDOUT,check=True)\n   completed.append(name)\n   Path('/tmp/onnax-block-runtime-matrix-progress.json').write_text(json.dumps({'completed':completed}))\n   print(name,flush=True)\n"
+}
