@@ -234,8 +234,11 @@ adapters while the shared interface develops.
    fresh-process recovery are covered by CI.
 
 The shared decoder task now includes Qwen3.5 alongside Qwen3 and Phi-3, using
-the same Trainer/TRL/PEFT path and public checkpoint module. The next model
-milestones are a pinned Qwen3.5-0.8B run and a small pretrained Diffusers denoiser
+the same Trainer/TRL/PEFT path and public checkpoint module. The pinned
+Qwen3.5-0.8B FP32 run now completes 30 updates, exact checkpoint recovery and
+PEFT weight exchange. The [shared-activation VJP audit](shared-activation-vjp)
+checks local decoder gradients at common activations and loss cotangents.
+Next are longer-sequence MLX training and a small pretrained Diffusers denoiser
 with its declared prediction target. Diffusers supplies the noise schedule and sampling loop;
 text encoders, VAE execution and datasets remain external. MLX measurements will
 separate execution, host exchange and updates, then guide recurrent backward
