@@ -129,6 +129,7 @@ def _load_builtin_rules() -> _RuleSet:
                 "_normalization",
                 "_attention",
                 "_rotary",
+                "_causal_conv",
             ),
         ),
         (
