@@ -99,8 +99,44 @@ incremental peak exactly reproduces the observed full-task allocator peak of
 <../examples/huggingface/reports/qwen35-block-runtime-m1max/full-model-initializers.json>`
 includes each call, the probe source and successful process guard record.
 
-The next runtime change is shared ownership of immutable GPU initializers across
-sessions. Its tests will cover overridable inputs, different contents/shapes/dtypes,
-concurrent sessions and release after the final owner closes. Measured training
-and recovery will establish the resulting memory savings. Selective block
-recomputation then targets the remaining transient peak.
+## Shared weights: measured result
+
+[MLX EP #105](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/105)
+implements weak sharing of immutable host buffers and MLX arrays. Overridable
+inputs remain live, and each cache entry retains its host-buffer identity through
+copied buffers and cross-thread session teardown. Use a native build containing
+that change and select it through `--library`.
+
+The full Qwen3.5-0.8B task was measured at 512 tokens, batch one and FP32, with
+ten warmups and 100 timed calls in each fresh process. Both variants use fixed
+trained parameters, ORT graph optimization and CPU fallback disabled, MLX compile
+disabled, and a 512 MiB allocator cache limit.
+
+| Metric | Per-session weights | Shared weights |
+|---|---:|---:|
+| Forward/loss/backward median | 3.198 s | 3.104 s |
+| P95 | 3.240 s | 3.130 s |
+| Whole-process peak physical footprint | 11.10 GiB | 8.16 GiB |
+| Bundle load and sessions, one call | 10.911 s | 13.724 s |
+
+The timed call includes external token loss and runtime host/device exchange.
+Parameters stay fixed during timing. All 100 losses and all 60 adapter gradients
+match byte for byte. Whole-process footprint includes imports, verification,
+construction, runtime storage and CPU arrays. ARM SHA-256 dispatch reduces
+session creation within bundle loading from 22.712 seconds in the earlier
+software-hash build to 6.037 seconds in the final build.
+
+The same build completes 30 TRL SFT updates at 64 tokens, microbatch one and
+accumulation four. Fixed training loss falls from 5.223939 to 0.302991;
+validation loss falls from 6.019480 to 5.621203. A fresh process restores
+checkpoint 15 and reproduces checkpoint 30 parameters, AdamW/scheduler state
+and PEFT adapters byte for byte. Both independent exports pass 53 full ONNX
+checker validations and reproduce loaded logits, loss and all 60 gradients.
+Freeze checks compare 3,084 named tensors by dtype, shape and bytes across
+exported graphs and functions, independently of external-file packing order.
+
+The [native qualification report](https://github.com/onnxruntime/onnxruntime-ep-mlx/blob/f81840f/docs/SHARED_INITIALIZERS.md)
+links the raw timing samples, tensor manifest, source/library hashes and guarded
+training/recovery runs. The next [memory priority](roadmap.md) connects the bounded
+supervised-token head to the shared decoder-family task, then selects recomputation
+boundaries from the remaining transient peaks.

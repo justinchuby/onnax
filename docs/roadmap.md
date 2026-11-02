@@ -262,16 +262,24 @@ training and checkpoint qualification alongside this work.
    gradients and measures isolated exported recomputation modules. At 512 tokens,
    gated-delta reverse fusion reduces linear-block median execution from 194.92
    to 110.77 ms and active allocator peak from 1183.10 to 958.36 MiB.
-3. **Share immutable MLX initializers across sessions.** A full-model probe finds
-   6.68 GiB of live allocations alongside 6.68 GiB of session initializer payload;
-   distinct initializer regions occupy 3.81 GiB. Implement shared ownership for
-   immutable weights, exclude overridable inputs, and release storage after the
-   last session closes. Validate independent sessions, overrides, concurrent use,
-   complete training, recovery and measured memory before adopting the cache.
-4. **Reuse the bounded head across decoder families.** Connect shared
+3. **Qualified: shared immutable MLX weights.**
+   [MLX EP #105](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/105)
+   interns host buffers and reuses MLX leaves through weak indexes. FP32
+   Qwen3.5-0.8B full-task peak footprint falls from 11.10 to 8.16 GiB at 512
+   tokens; 100 measured losses and all 60 adapter gradients match byte for byte.
+   Thirty SFT updates, fresh-process recovery, PEFT export and loaded execution
+   reproduce the per-session control. The [runtime study](block-runtime.md)
+   records timing scopes, initialization costs and frozen-tensor verification.
+4. **Next: reuse the bounded head across decoder families.** Connect shared
    Qwen3/Qwen3.5/Phi-3 tasks to hidden-state export and supervised-position
-   scheduling. Validate gradients through context positions, export/reload and
-   Trainer checkpoint recovery, then measure longer sequences.
+   scheduling. Store the frozen projection in its source `[vocab, hidden]` layout
+   and use `Gemm(transB=1)` so tied embeddings can share the same initializer.
+   Keep full logits as the reference/inference route and export reloadable body
+   and head modules. Validate loss sums, hidden/adapter gradients, unequal-token
+   accumulation, all-ignored labels, chunk tails, multiple updates and Trainer
+   recovery. Checkpoint identity must cover the frozen head and its loss/precision
+   convention. Measure head execution, exchange, full-task time and process memory
+   before extending context length.
 5. **Choose selective recomputation from measured peaks.** Record retained
    values, replay subgraphs, invocation counts and release points. Start with one
    decoder block, then extend to multi-layer Qwen and diffusion. Preserve shared
@@ -291,8 +299,9 @@ analyzer on exported Qwen3.5 blocks. It reports complete local tensor peaks for
 the full-attention block. The recurrent study also models nested Scan carry,
 retained sequence outputs and per-iteration live sets, including padded chunks.
 The runtime measurements now pair these estimates with native allocation peaks.
-The initializer-sharing milestone addresses persistent storage first; block-local
-recomputation follows the measured transient peak set.
+Initializer sharing now addresses persistent storage. The shared bounded head is
+the next integration milestone; block-local recomputation follows the remaining
+measured transient peak set.
 
 ```{toctree}
 :hidden:
