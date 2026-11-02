@@ -1,0 +1,1007 @@
+{
+  "version": 1,
+  "family": "qwen35",
+  "source_identity": "229a32d4b255f89d56dd84d09f9a9daf82cfce4129fa57d7a19c3c86b216b693",
+  "rtol": 0.0001,
+  "atol": 1e-06,
+  "input_shape": [
+    2,
+    11
+  ],
+  "valid_tokens": 19,
+  "shifted_targets": 17,
+  "decoder_gradients_passed": true,
+  "layers": [
+    {
+      "layer": 0,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.7177068591117859,
+        "relative_l2": 0.498159259557724,
+        "pointwise_violations": 3072
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 1.043081283569336e-06,
+        "relative_l2": 1.2723797908620327e-06,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "model.layers.0.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 6.332993507385254e-08,
+          "relative_l2": 1.808648562473536e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.0.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 4.3213367462158203e-07,
+          "relative_l2": 1.3669857708009658e-06,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 1,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.3564195930957794,
+        "relative_l2": 0.16389842331409454,
+        "pointwise_violations": 3071
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 5.364418029785156e-07,
+        "relative_l2": 8.068270744843176e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.0.Add_219": {
+          "elements": 22528,
+          "max_abs": 1.1920928955078125e-06,
+          "relative_l2": 1.1828188917206717e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.1.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 7.078051567077637e-08,
+          "relative_l2": 7.553886121058895e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.1.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 4.023313522338867e-07,
+          "relative_l2": 1.3097373994241934e-06,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 2,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.49720498919487,
+        "relative_l2": 0.16613055765628815,
+        "pointwise_violations": 3071
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 1.9669532775878906e-06,
+        "relative_l2": 8.817482921585906e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.1.Add_292": {
+          "elements": 22528,
+          "max_abs": 9.387731552124023e-07,
+          "relative_l2": 1.1253063121330342e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.2.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 3.3527612686157227e-08,
+          "relative_l2": 1.055312282005616e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.2.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 4.76837158203125e-07,
+          "relative_l2": 1.2324054523560335e-06,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 3,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 1.8477439880371094e-06,
+        "relative_l2": 9.97155893855961e-07,
+        "pointwise_violations": 0
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 1.8477439880371094e-06,
+        "relative_l2": 9.833773901846143e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.2.Add_365": {
+          "elements": 22528,
+          "max_abs": 1.4007091522216797e-06,
+          "relative_l2": 1.214830945173162e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.3.self_attn.q_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 1.341104507446289e-07,
+          "relative_l2": 5.495585924109037e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.3.self_attn.q_proj.lora.B": {
+          "elements": 16384,
+          "max_abs": 3.2782554626464844e-07,
+          "relative_l2": 1.3356640238271211e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.3.self_attn.v_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 8.940696716308594e-08,
+          "relative_l2": 6.787892061765888e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.3.self_attn.v_proj.lora.B": {
+          "elements": 2048,
+          "max_abs": 4.172325134277344e-07,
+          "relative_l2": 1.1713194680851302e-06,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 4,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.1887211799621582,
+        "relative_l2": 0.09428269416093826,
+        "pointwise_violations": 3070
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 4.76837158203125e-07,
+        "relative_l2": 7.098116725501313e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.3.Add_402": {
+          "elements": 22528,
+          "max_abs": 8.046627044677734e-07,
+          "relative_l2": 1.0400231076346245e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.4.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 2.2910535335540771e-07,
+          "relative_l2": 1.643741256884823e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.4.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 4.023313522338867e-07,
+          "relative_l2": 1.282114681089297e-06,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 5,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.07302122563123703,
+        "relative_l2": 0.09929036349058151,
+        "pointwise_violations": 3072
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 5.960464477539062e-07,
+        "relative_l2": 7.006074156379327e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.4.Add_475": {
+          "elements": 22528,
+          "max_abs": 7.450580596923828e-07,
+          "relative_l2": 1.0544532642597915e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.5.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 1.4156103134155273e-07,
+          "relative_l2": 1.882236006167659e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.5.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 1.30385160446167e-07,
+          "relative_l2": 1.105970341086504e-06,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 6,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.09234610944986343,
+        "relative_l2": 0.04516495019197464,
+        "pointwise_violations": 3070
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 2.86102294921875e-06,
+        "relative_l2": 6.350476269290084e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.5.Add_548": {
+          "elements": 22528,
+          "max_abs": 8.270144462585449e-07,
+          "relative_l2": 9.912863561112317e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.6.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 1.1920928955078125e-07,
+          "relative_l2": 8.877879054125515e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.6.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 1.862645149230957e-07,
+          "relative_l2": 8.984149530988361e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 7,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 1.3113021850585938e-06,
+        "relative_l2": 8.58721534768847e-07,
+        "pointwise_violations": 0
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 1.3113021850585938e-06,
+        "relative_l2": 8.456424893665826e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.6.Add_621": {
+          "elements": 22528,
+          "max_abs": 6.780028343200684e-07,
+          "relative_l2": 1.1534727946127532e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.7.self_attn.q_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 3.166496753692627e-07,
+          "relative_l2": 1.746601128616021e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.7.self_attn.q_proj.lora.B": {
+          "elements": 16384,
+          "max_abs": 2.7567148208618164e-07,
+          "relative_l2": 1.586266080266796e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.7.self_attn.v_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 1.1734664440155029e-07,
+          "relative_l2": 1.8522687241784297e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.7.self_attn.v_proj.lora.B": {
+          "elements": 2048,
+          "max_abs": 5.140900611877441e-07,
+          "relative_l2": 1.5388283145512105e-06,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 8,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.15980851650238037,
+        "relative_l2": 0.0746489092707634,
+        "pointwise_violations": 3072
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 3.8743019104003906e-07,
+        "relative_l2": 4.5006336790720525e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.7.Add_658": {
+          "elements": 22528,
+          "max_abs": 3.948807716369629e-07,
+          "relative_l2": 7.828222692296549e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.8.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 1.2014061212539673e-07,
+          "relative_l2": 1.936555690917885e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.8.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 2.086162567138672e-07,
+          "relative_l2": 8.15598923509242e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 9,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.07686029374599457,
+        "relative_l2": 0.04356062784790993,
+        "pointwise_violations": 3071
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 1.043081283569336e-06,
+        "relative_l2": 4.2500602148720645e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.8.Add_731": {
+          "elements": 22528,
+          "max_abs": 4.470348358154297e-07,
+          "relative_l2": 6.849523401797342e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.9.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 7.078051567077637e-08,
+          "relative_l2": 8.099577257780766e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.9.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 2.682209014892578e-07,
+          "relative_l2": 6.931327334314119e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 10,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.08243482559919357,
+        "relative_l2": 0.07315824925899506,
+        "pointwise_violations": 3071
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 4.76837158203125e-07,
+        "relative_l2": 3.952249869598745e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.9.Add_804": {
+          "elements": 22528,
+          "max_abs": 4.731118679046631e-07,
+          "relative_l2": 7.068034619805985e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.10.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 1.4901161193847656e-07,
+          "relative_l2": 1.0237910146315699e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.10.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 2.384185791015625e-07,
+          "relative_l2": 7.731347295703017e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 11,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 1.0132789611816406e-06,
+        "relative_l2": 7.707960207881115e-07,
+        "pointwise_violations": 0
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 1.0132789611816406e-06,
+        "relative_l2": 7.595676834171172e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.10.Add_877": {
+          "elements": 22528,
+          "max_abs": 4.6193599700927734e-07,
+          "relative_l2": 8.438056511295144e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.11.self_attn.q_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 6.332993507385254e-08,
+          "relative_l2": 9.469746373724774e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.11.self_attn.q_proj.lora.B": {
+          "elements": 16384,
+          "max_abs": 4.6938657760620117e-07,
+          "relative_l2": 1.2542033118734253e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.11.self_attn.v_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 5.029141902923584e-08,
+          "relative_l2": 6.008629611642391e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.11.self_attn.v_proj.lora.B": {
+          "elements": 2048,
+          "max_abs": 3.427267074584961e-07,
+          "relative_l2": 8.96282017492922e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 12,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.08430498093366623,
+        "relative_l2": 0.05580485239624977,
+        "pointwise_violations": 3072
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 4.76837158203125e-07,
+        "relative_l2": 5.376147100832895e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.11.Add_914": {
+          "elements": 22528,
+          "max_abs": 3.296881914138794e-07,
+          "relative_l2": 7.057442417135462e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.12.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 5.587935447692871e-08,
+          "relative_l2": 1.1646659459074726e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.12.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 4.470348358154297e-07,
+          "relative_l2": 6.654200888078776e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 13,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.03161157667636871,
+        "relative_l2": 0.023553095757961273,
+        "pointwise_violations": 3069
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 5.364418029785156e-07,
+        "relative_l2": 5.42504494660534e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.12.Add_987": {
+          "elements": 22528,
+          "max_abs": 3.0919909477233887e-07,
+          "relative_l2": 7.718660981481662e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.13.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 1.4901161193847656e-07,
+          "relative_l2": 8.000790217010945e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.13.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 3.5762786865234375e-07,
+          "relative_l2": 5.49333037724864e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 14,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.07217396795749664,
+        "relative_l2": 0.0340321846306324,
+        "pointwise_violations": 3071
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 1.1205673217773438e-05,
+        "relative_l2": 1.103012891690014e-06,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.13.Add_1060": {
+          "elements": 22528,
+          "max_abs": 3.5669654607772827e-07,
+          "relative_l2": 7.969908892846433e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.14.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 7.450580596923828e-08,
+          "relative_l2": 5.445692181638151e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.14.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 2.682209014892578e-07,
+          "relative_l2": 7.091498446243349e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 15,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 2.9355287551879883e-06,
+        "relative_l2": 1.0491201010154327e-06,
+        "pointwise_violations": 1
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 2.9355287551879883e-06,
+        "relative_l2": 1.0511956816117163e-06,
+        "pointwise_violations": 1
+      },
+      "gradients": {
+        "v_model.layers.14.Add_1133": {
+          "elements": 22528,
+          "max_abs": 3.5762786865234375e-07,
+          "relative_l2": 9.604558499631821e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.15.self_attn.q_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 1.6670674085617065e-07,
+          "relative_l2": 2.343954520256375e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.15.self_attn.q_proj.lora.B": {
+          "elements": 16384,
+          "max_abs": 9.98377799987793e-07,
+          "relative_l2": 3.5378348002268467e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.15.self_attn.v_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 5.587935447692871e-08,
+          "relative_l2": 1.5303387499443488e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.15.self_attn.v_proj.lora.B": {
+          "elements": 2048,
+          "max_abs": 7.748603820800781e-07,
+          "relative_l2": 1.146179556599236e-06,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 16,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.4258997440338135,
+        "relative_l2": 0.09599924087524414,
+        "pointwise_violations": 3072
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 9.238719940185547e-07,
+        "relative_l2": 5.69391886529047e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.15.Add_1170": {
+          "elements": 22528,
+          "max_abs": 2.682209014892578e-07,
+          "relative_l2": 7.594226190121844e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.16.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 6.705522537231445e-08,
+          "relative_l2": 4.6987142354737443e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.16.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 2.682209014892578e-07,
+          "relative_l2": 1.002059320853732e-06,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 17,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.30818215012550354,
+        "relative_l2": 0.07549899071455002,
+        "pointwise_violations": 3070
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 6.556510925292969e-07,
+        "relative_l2": 5.196377514948836e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.16.Add_1243": {
+          "elements": 22528,
+          "max_abs": 2.0675361156463623e-07,
+          "relative_l2": 6.366647085087607e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.17.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 2.60770320892334e-08,
+          "relative_l2": 8.717638593225274e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.17.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 3.5762786865234375e-07,
+          "relative_l2": 7.405773772006796e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 18,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.6627274751663208,
+        "relative_l2": 0.09388425201177597,
+        "pointwise_violations": 3072
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 2.86102294921875e-06,
+        "relative_l2": 5.47160027508653e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.17.Add_1316": {
+          "elements": 22528,
+          "max_abs": 1.601874828338623e-07,
+          "relative_l2": 6.618708994210465e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.18.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 2.9802322387695312e-08,
+          "relative_l2": 4.5126103032089304e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.18.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 2.086162567138672e-07,
+          "relative_l2": 6.462247483796091e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 19,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 2.6226043701171875e-06,
+        "relative_l2": 7.485497235393268e-07,
+        "pointwise_violations": 0
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 2.6226043701171875e-06,
+        "relative_l2": 7.501220125050168e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.18.Add_1389": {
+          "elements": 22528,
+          "max_abs": 2.123415470123291e-07,
+          "relative_l2": 9.024223004416854e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.19.self_attn.q_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 3.166496753692627e-08,
+          "relative_l2": 1.5740810113129555e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.19.self_attn.q_proj.lora.B": {
+          "elements": 16384,
+          "max_abs": 4.917383193969727e-07,
+          "relative_l2": 1.6229927268796018e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.19.self_attn.v_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 4.936009645462036e-08,
+          "relative_l2": 1.6057566654126276e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.19.self_attn.v_proj.lora.B": {
+          "elements": 2048,
+          "max_abs": 1.9371509552001953e-07,
+          "relative_l2": 8.976217600320524e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 20,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.4806789755821228,
+        "relative_l2": 0.07038658112287521,
+        "pointwise_violations": 3072
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 1.7881393432617188e-06,
+        "relative_l2": 4.900589374301489e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.19.Add_1426": {
+          "elements": 22528,
+          "max_abs": 1.2665987014770508e-07,
+          "relative_l2": 6.611288654312375e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.20.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 2.0489096641540527e-08,
+          "relative_l2": 5.327170242708235e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.20.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 5.364418029785156e-07,
+          "relative_l2": 7.052764203763218e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 21,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 0.5578579902648926,
+        "relative_l2": 0.09989044070243835,
+        "pointwise_violations": 3071
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 9.238719940185547e-07,
+        "relative_l2": 4.168805958215671e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.20.Add_1499": {
+          "elements": 22528,
+          "max_abs": 1.1920928955078125e-07,
+          "relative_l2": 5.544703753912472e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.21.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 1.3184035196900368e-08,
+          "relative_l2": 8.457645890302956e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.21.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 1.4901161193847656e-07,
+          "relative_l2": 7.726247872597014e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 22,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 1.000566005706787,
+        "relative_l2": 0.120972640812397,
+        "pointwise_violations": 3072
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 3.039836883544922e-06,
+        "relative_l2": 5.14165662934829e-07,
+        "pointwise_violations": 0
+      },
+      "gradients": {
+        "v_model.layers.21.Add_1572": {
+          "elements": 22528,
+          "max_abs": 1.862645149230957e-07,
+          "relative_l2": 7.502608809772937e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.22.linear_attn.in_proj_qkv.lora.A": {
+          "elements": 4096,
+          "max_abs": 3.073364496231079e-08,
+          "relative_l2": 5.538645382330287e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.22.linear_attn.in_proj_qkv.lora.B": {
+          "elements": 24576,
+          "max_abs": 4.917383193969727e-07,
+          "relative_l2": 8.422096584581595e-07,
+          "pointwise_violations": 0
+        }
+      }
+    },
+    {
+      "layer": 23,
+      "reference_class": "Qwen3_5DecoderLayer",
+      "forward_all_tokens": {
+        "elements": 22528,
+        "max_abs": 8.106231689453125e-06,
+        "relative_l2": 9.272227430301427e-07,
+        "pointwise_violations": 3
+      },
+      "forward_valid_tokens": {
+        "elements": 19456,
+        "max_abs": 8.106231689453125e-06,
+        "relative_l2": 9.155888278655766e-07,
+        "pointwise_violations": 3
+      },
+      "gradients": {
+        "v_model.layers.22.Add_1645": {
+          "elements": 22528,
+          "max_abs": 1.30385160446167e-07,
+          "relative_l2": 9.163495064967719e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.23.self_attn.q_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 1.4901161193847656e-08,
+          "relative_l2": 7.985316301528655e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.23.self_attn.q_proj.lora.B": {
+          "elements": 16384,
+          "max_abs": 2.980232238769531e-07,
+          "relative_l2": 1.0530706049394212e-06,
+          "pointwise_violations": 0
+        },
+        "model.layers.23.self_attn.v_proj.lora.A": {
+          "elements": 4096,
+          "max_abs": 1.862645149230957e-08,
+          "relative_l2": 6.059068482500152e-07,
+          "pointwise_violations": 0
+        },
+        "model.layers.23.self_attn.v_proj.lora.B": {
+          "elements": 2048,
+          "max_abs": 1.862645149230957e-07,
+          "relative_l2": 8.939838380683796e-07,
+          "pointwise_violations": 0
+        }
+      }
+    }
+  ],
+  "frozen_suffix": {
+    "stock": {
+      "elements": 22528,
+      "max_abs": 4.437938332557678e-05,
+      "relative_l2": 0.00016564494580961764,
+      "pointwise_violations": 2835
+    },
+    "pairwise": {
+      "elements": 22528,
+      "max_abs": 1.0498333722352982e-06,
+      "relative_l2": 3.6312590054876637e-06,
+      "pointwise_violations": 0
+    }
+  },
+  "provider": "mlx",
+  "pretrained_source": {
+    "checkpoint_to_reference_prefix": {
+      "model.language_model.": "model."
+    },
+    "dtype": "float32",
+    "loading": {
+      "error_msgs": [],
+      "mismatched_keys": [],
+      "missing_keys": [],
+      "unexpected_keys": []
+    },
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "parameter_count": 752393024,
+    "reference_class": "Qwen3_5ForCausalLM",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "version": 1
+  },
+  "audit_source_sha256": "ce74512edfe773805c31d484e75c9a8357f5e73474d8e63dcaa90b5daeab775d",
+  "library_sha256": "6630fc37242d3ea15c406570cbb384e47263cebc2f4ed5996a91b78c0e9623b1",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "versions": {
+    "onnax": "0.1.0",
+    "onnxruntime": "1.31.1",
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "mobius-onnx": "0.1.0"
+  },
+  "training_evidence": "qwen35-pretrained-fp32-m1max.json",
+  "threads": {
+    "torch": 1,
+    "ort_intra": 1,
+    "ort_inter": 1
+  },
+  "environment": {
+    "ONNXRUNTIME_EP_MLX_NO_COMPILE": "1",
+    "ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES": "536870912",
+    "HF_HUB_OFFLINE": "1"
+  },
+  "command": "python -m examples.huggingface.shared_vjp --export RUN/export --cache-dir CACHE --provider mlx --library LIBRARY --output REPORT",
+  "measurement": {
+    "scope": "diagnostic replay with copied activations, native reference and pairwise-head control",
+    "started": "2026-11-02T07:31:07.071683+00:00",
+    "finished": "2026-11-02T07:31:30.239134+00:00",
+    "peak_physical_footprint_bytes": 11531758272,
+    "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4"
+  }
+}

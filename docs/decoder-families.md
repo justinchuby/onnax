@@ -163,8 +163,48 @@ all 60 adapter tensors without changing their values.
 At the trained adapter state, the native PyTorch reference has a maximum gradient
 difference of `1.09e-4`; a fresh AdamW update differs by up to `1.58e-3` with epsilon
 `1e-5`. The additional stable-loss/pairwise-head reference also retains differences.
-The next numerical audit compares layer VJPs at shared activations to separate
-local derivatives from differences accumulated through the forward computation.
+The shared-activation audit below separates local derivatives from differences
+accumulated through the forward computation.
+
+(shared-activation-vjp)=
+### Compare local VJPs at shared activations
+
+For a decoder layer $h_{i+1}=F_i(h_i,\theta_i)$, the local reverse product is
+$D F_i(h_i,\theta_i)^T\bar h_{i+1}$. This control supplies the same activation
+$h_i$, adapter parameters $\theta_i$ and incoming cotangent
+$\bar h_{i+1}$ to ONNX and native Transformers. Earlier forward differences
+therefore stay outside the local comparison.
+
+```sh
+python -m examples.huggingface.shared_vjp \
+  --export /tmp/qwen35-pretrained/export --cache-dir /tmp/onnax-model-cache \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --output /tmp/qwen35-shared-vjp.json
+```
+
+For an offline Qwen3, Phi-3 or Qwen3.5 export, omit `--cache-dir`. Select
+`--provider cpu` to use the CPU reference runtime. Pretrained exports select
+the model and tokenizer revision saved in their provenance record.
+
+The JSON records each layer's valid-token and all-token forward comparisons,
+adapter gradients, hidden-state gradients and the frozen normalization/head
+pullback. Right-padded positions can differ in the recurrent forward computation;
+the valid-token comparison and explicit incoming cotangent show which values
+participate in the loss. The tool preserves existing ONNX parameter gradients
+and restores execution sessions after the audit. Its recording copies belong
+to diagnostic memory usage; run performance timing separately.
+
+The suffix has two independent FP32 controls: the native CPU PyTorch head
+backward and a head backward that sums 128-element partial products with a
+binary tree. Both use the same activation and loss cotangent. These controls
+isolate accumulation over the wide vocabulary dimension.
+
+The [pretrained Qwen3.5 shared-activation report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen35-shared-activation-vjp-m1max.json)
+uses the adapter state from the 30-update run. All 83 decoder gradient tensors
+pass `rtol=1e-4, atol=1e-6`, with maximum relative L2 difference `3.54e-6`.
+For the suffix, ordinary CPU head accumulation gives relative gradient L2
+`1.66e-4`; FP32 pairwise accumulation gives `3.63e-6` and passes the elementwise
+gate. The report includes every layer's forward and gradient comparisons.
 
 Resume into another output directory:
 
