@@ -284,6 +284,12 @@ costs in these workloads. Graph generation continues to prune inactive derivativ
 branches while propagating activation gradients through frozen weights. A small
 pretrained Diffusers denoiser remains the next model-family milestone.
 
+The [first saved-value study](vjp-memory.md) connects split VJPs with the liveness
+analyzer on exported Qwen3.5 blocks. It reports complete local tensor peaks for
+the full-attention block and saved-value sets for the recurrent block. The next
+memory step models Scan carry, retained sequence outputs and per-iteration live
+sets, then pairs those estimates with runtime allocation measurements.
+
 ```{toctree}
 :hidden:
 

@@ -87,6 +87,9 @@ factory chooses backend execution and transfers.
 forward pass, excluding original data and parameters. It is a logical tensor
 size, separate from process and runtime memory measurements.
 
+Use the [VJP saved-value report](vjp-memory.md) to inspect block-local forward
+values and the pullback's peak tensor set before choosing finer recomputation.
+
 ## Run two decoder architectures
 
 ```sh
