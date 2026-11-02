@@ -37,8 +37,11 @@ def _prepare(query, key, value, state, decay, beta, q_num_heads, kv_num_heads, s
         raise ValueError(
             "Recurrent state shape must be [batch,value_heads,key_width,value_width]"
         )
-    if decay.shape != (batch, length, kv_num_heads) or beta.shape != decay.shape:
-        raise ValueError("Decay and beta must have one scalar per batch/token/value head")
+    if decay.shape not in (
+        (batch, length, kv_num_heads),
+        (batch, length, kv_num_heads * key_width),
+    ) or beta.shape != (batch, length, kv_num_heads):
+        raise ValueError("Decay must be per-head or per-key; beta must be per-head")
     if not math.isfinite(scale):
         raise ValueError("Scale must be finite")
     repeats = kv_num_heads // q_num_heads
@@ -49,7 +52,12 @@ def _prepare(query, key, value, state, decay, beta, q_num_heads, kv_num_heads, s
 
 
 def _step(q, k, v, state, decay, beta, scale):
-    faded = np.exp(decay)[..., None, None] * state
+    factor = np.exp(decay)
+    if decay.shape[-1] == state.shape[1]:
+        factor = factor[..., None]
+    else:
+        factor = factor.reshape(*state.shape[:3])
+    faded = factor[..., None] * state
     residual = v - np.einsum("bhij,bhi->bhj", faded, k)
     present = faded + beta[..., None, None] * k[..., :, None] * residual[..., None, :]
     output = np.einsum("bhi,bhij->bhj", q * scale, present)
@@ -157,7 +165,10 @@ def pullback(
                 beta[:, index],
                 go[:, index],
             )
-            faded = np.exp(gt)[..., None, None] * previous
+            per_head = gt.shape[-1] == previous.shape[1]
+            factor = np.exp(gt)
+            factor = factor[..., None] if per_head else factor.reshape(*previous.shape[:3])
+            faded = factor[..., None] * previous
             residual = vt - np.einsum("bhij,bhi->bhj", faded, kt)
             total = carry + (qt * scale)[..., :, None] * cotangent[..., None, :]
             dq[:, index] = np.einsum("bhij,bhj->bhi", present, cotangent) * scale
@@ -169,8 +180,11 @@ def pullback(
                 "bhij,bhj->bhi", total, residual
             ) - np.einsum("bhij,bhj->bhi", faded, dr)
             dfaded = total - kt[..., :, None] * dr[..., None, :]
-            dg[:, index] = np.sum(dfaded * faded, axis=(-2, -1))
-            carry = np.exp(gt)[..., None, None] * dfaded
+            decay_gradient = np.sum(dfaded * faded, axis=-1)
+            dg[:, index] = (
+                decay_gradient.sum(axis=-1) if per_head else decay_gradient.reshape(gt.shape)
+            )
+            carry = factor[..., None] * dfaded
         del local, previous, present
     batch, _, _, width = q.shape
     target = (batch, length, q_num_heads, repeats, width)

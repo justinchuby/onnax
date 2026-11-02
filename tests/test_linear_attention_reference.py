@@ -8,12 +8,12 @@ import pytest
 from examples.huggingface.linear_attention_reference import gated_delta, pullback
 
 
-def inputs(*, batch=2, length=17, query_heads=2, value_heads=4):
+def inputs(*, batch=2, length=17, query_heads=2, value_heads=4, keywise_decay=False):
     rng = np.random.default_rng(20261102)
     shapes = [(batch, length, query_heads * 3)] * 2 + [
         (batch, length, value_heads * 5),
         (batch, value_heads, 3, 5),
-        (batch, length, value_heads),
+        (batch, length, value_heads * (3 if keywise_decay else 1)),
         (batch, length, value_heads),
     ]
     values = [rng.normal(0, 0.2, shape).astype(np.float32) for shape in shapes]
@@ -33,7 +33,13 @@ def reference(values, output_cotangent, state_cotangent, *, query_heads, value_h
     v = v.reshape(batch, length, value_heads, 5)
     outputs = []
     for index in range(length):
-        faded = torch.exp(decay[:, index])[..., None, None] * state
+        factor = torch.exp(decay[:, index])
+        factor = (
+            factor[..., None]
+            if factor.shape[-1] == value_heads
+            else factor.reshape(batch, value_heads, 3)
+        )
+        faded = factor[..., None] * state
         key = k[:, index]
         residual = v[:, index] - (faded.transpose(-1, -2) @ key[..., None]).squeeze(-1)
         state = (
@@ -51,10 +57,16 @@ def reference(values, output_cotangent, state_cotangent, *, query_heads, value_h
 @pytest.mark.parametrize("query_heads,value_heads", [(1, 1), (1, 3), (1, 4), (2, 4)])
 @pytest.mark.parametrize("length,chunk_size", [(1, 1), (3, 2), (17, 4), (17, 32)])
 @pytest.mark.parametrize("cotangent_mode", ["both", "output", "state"])
+@pytest.mark.parametrize("keywise_decay", [False, True])
 def test_all_six_gradients_match_autograd(
-    query_heads, value_heads, length, chunk_size, cotangent_mode
+    query_heads, value_heads, length, chunk_size, cotangent_mode, keywise_decay
 ):
-    values = inputs(length=length, query_heads=query_heads, value_heads=value_heads)
+    values = inputs(
+        length=length,
+        query_heads=query_heads,
+        value_heads=value_heads,
+        keywise_decay=keywise_decay,
+    )
     original = [x.tobytes() for x in values]
     rng = np.random.default_rng(71)
     gy = rng.normal(size=values[2].shape).astype(np.float32)
