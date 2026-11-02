@@ -20,16 +20,24 @@ from examples.huggingface.stable_losses import hard_cross_entropy, install
 from examples.lora.train import session
 
 
-def head_graph(weight, *, projection_precision="fp32"):
+def head_graph(weight, *, projection_precision="fp32", weight_layout="hidden_vocab"):
     if projection_precision not in ("fp32", "bf16", "fp16"):
         raise ValueError("Expected fp32, bf16 or fp16 head projection precision")
-    width, vocab = weight.shape
+    if weight_layout not in ("hidden_vocab", "vocab_hidden"):
+        raise ValueError("Expected hidden_vocab or vocab_hidden weight layout")
+    if weight_layout == "vocab_hidden" and projection_precision != "fp32":
+        raise ValueError("The source-layout head currently uses FP32 projection compute")
+    width, vocab = weight.shape if weight_layout == "hidden_vocab" else weight.shape[::-1]
     hidden = ir.val("hidden", dtype=ir.DataType.FLOAT, shape=["tokens", width])
     labels = ir.val("labels", dtype=ir.DataType.INT64, shape=["tokens"])
     tape = ir.tape.Tape()
 
     w = tape.initializer(ir.tensor(weight, name="head.weight"))
-    logits = tape.op("MatMul", [hidden, w])
+    logits = (
+        tape.op("Gemm", [hidden, w], {"transB": 1})
+        if weight_layout == "vocab_hidden"
+        else tape.op("MatMul", [hidden, w])
+    )
     logits.name = "logits"
     logits.dtype, logits.shape = hidden.dtype, ir.Shape(["tokens", vocab])
     graph = ir.Graph(
@@ -46,6 +54,8 @@ def head_graph(weight, *, projection_precision="fp32"):
     total.name, total.dtype, total.shape = "loss_sum", ir.DataType.FLOAT, ir.Shape([])
     graph.outputs.append(total)
     model = ir.Model(graph, ir_version=12)
+    if weight_layout != "hidden_vocab":
+        model.metadata_props["onnax.example.head.weight_layout"] = weight_layout
     install(model)
     ShapeInferencePass()(model)
     if projection_precision != "fp32":
@@ -112,14 +122,23 @@ class _ChunkLoss(torch.autograd.Function):
 
 class ChunkedHead:
     def __init__(
-        self, weight, *, chunk_size=128, projection_precision="fp32", session_factory=session
+        self,
+        weight,
+        *,
+        chunk_size=128,
+        projection_precision="fp32",
+        weight_layout="hidden_vocab",
+        session_factory=session,
     ):
         if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size < 1:
             raise ValueError("chunk_size must be a positive integer")
         self.chunk_size = chunk_size
         self.projection_precision = projection_precision
-        self.vocab_size = weight.shape[1]
-        self.model = head_graph(weight, projection_precision=projection_precision)
+        self.weight_layout = weight_layout
+        self.model = head_graph(
+            weight, projection_precision=projection_precision, weight_layout=weight_layout
+        )
+        self.vocab_size = weight.shape[0 if weight_layout == "vocab_hidden" else 1]
         self.gradient = optimize_training_graph(
             onnax.grad(self.model, inputs=["hidden"], output="loss_sum")
         )
@@ -149,7 +168,12 @@ class ChunkedHead:
         self.gradient = ir.load(sources["gradient"])
         self.forward_model = ir.load(sources["forward"])
         weight = self.model.graph.initializers["head.weight"]
-        if list(weight.shape)[1] != self.vocab_size:
+        layout = self.model.metadata_props.get(
+            "onnax.example.head.weight_layout", "hidden_vocab"
+        )
+        if layout != self.weight_layout:
+            raise ValueError("Exported head weight layout differs from its interface")
+        if list(weight.shape)[0 if layout == "vocab_hidden" else 1] != self.vocab_size:
             raise ValueError("Exported head vocabulary differs from its interface")
         policy = json.loads(self.model.metadata_props.get("onnax.example.precision", "{}"))
         actual_precision = {"bfloat16": "bf16", "float16": "fp16"}.get(
@@ -175,6 +199,11 @@ class ChunkedHead:
             "projection_precision": self.projection_precision,
             "vocab_size": self.vocab_size,
             "reduction": "valid_shifted_token_mean",
+            **(
+                {"weight_layout": self.weight_layout}
+                if self.weight_layout != "hidden_vocab"
+                else {}
+            ),
             **{name: os.path.basename(path) for name, path in sources.items()},
         }
 
@@ -185,7 +214,11 @@ class ChunkedHead:
             plan = json.load(stream)
         if plan.get("version") != 1 or "head" not in plan:
             raise ValueError("Expected a checkpoint execution plan with an output head")
-        record = plan["head"]
+        return cls.from_record(directory, plan["head"], session_factory=session_factory)
+
+    @classmethod
+    def from_record(cls, directory, record, *, session_factory=session):
+        """Restore reusable head modules from their serialized task record."""
         if record.get("version") != 1 or record.get("reduction") != "valid_shifted_token_mean":
             raise ValueError("Unsupported output-head interface")
         if (
@@ -196,6 +229,12 @@ class ChunkedHead:
         ):
             raise ValueError("Invalid output-head execution options")
         result = cls.__new__(cls)
+        result.weight_layout = record.get("weight_layout", "hidden_vocab")
+        if result.weight_layout not in ("hidden_vocab", "vocab_hidden"):
+            raise ValueError("Invalid output-head weight layout")
+        for name in ("loss", "gradient", "forward"):
+            if os.path.basename(record[name]) != record[name]:
+                raise ValueError("Output-head files must be inside the task directory")
         result.chunk_size = record["chunk_size"]
         result.vocab_size = record["vocab_size"]
         result.projection_precision = record["projection_precision"]
