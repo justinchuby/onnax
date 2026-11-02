@@ -44,7 +44,7 @@
   },
   "scope": "One decoder_3_4 forward/backward pair, fixed parameters, original checkpoint input/cotangent; runtime host/device exchange included; no optimizer or full-decoder step",
   "decision": "Keep whole-block checkpoint replay as the decoder default; inspect shape-only saved tensors before adopting a partial-saving strategy",
-  "paired_split_source_commit": "ed04d26",
+  "paired_split_source_commit": "2f7606bf7091348ad12f463e63daac173fdaa229",
   "shape_only_residual_count": 15,
   "pretrained_source": {
     "checkpoint_to_reference_prefix": {
