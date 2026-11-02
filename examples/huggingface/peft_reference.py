@@ -40,10 +40,15 @@ def stable_control(model, peft, batch, actual_loss):
             loss.backward()
         actual, expected = {}, {}
         actual_gradients, expected_gradients = {}, {}
+        onnx_parameters = (
+            model.onnx.parameters_by_name()
+            if hasattr(model.onnx, "parameters_by_name")
+            else dict(zip(model.onnx.names, model.onnx.adapters, strict=True))
+        )
         for row in model.mapping:
             for key in ("A", "B"):
                 name = row[key]
-                p = model.onnx.adapters[model.onnx.names.index(name)]
+                p = onnx_parameters[name]
                 q = parameters[f"base_model.model.{row['module']}.lora_{key}.default.weight"]
                 actual_gradients[name] = p.grad
                 expected_gradients[name] = q.grad.T

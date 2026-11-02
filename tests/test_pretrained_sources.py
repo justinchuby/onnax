@@ -165,3 +165,25 @@ def test_checkpoint_source_checked_before_model_construction(checkpoint, tmp_pat
     with pytest.raises(ValueError, match="pretrained"):
         run(str(tmp_path / "unused"), family="qwen35", real=real, resume=str(path))
     assert not (tmp_path / "unused").exists()
+
+
+def test_stable_peft_control_accepts_checkpointed_parameter_interface(checkpoint, tmp_path):
+    from examples.huggingface.decoder_sft import batch, prepare
+    from examples.huggingface.peft_adapter import roundtrip
+
+    model, reference = prepare("qwen35", real=True)
+    try:
+        report = roundtrip(
+            model,
+            reference,
+            batch(),
+            str(tmp_path / "adapter"),
+            diagnose_rounding=True,
+            stable_reference=True,
+        )
+        control = report["stable_reference_audit"]
+        assert control["adapter_tensors"] == 10
+        assert control["loss_check_passed"]
+        assert control["gradient_check_passed"]
+    finally:
+        model.close()
