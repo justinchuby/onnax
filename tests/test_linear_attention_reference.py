@@ -6,8 +6,6 @@
 import numpy as np
 import pytest
 
-torch = pytest.importorskip("torch")
-
 from examples.huggingface.linear_attention_reference import gated_delta, pullback
 
 
@@ -26,6 +24,7 @@ def inputs(*, batch=2, length=17, query_heads=2, value_heads=4):
 
 
 def reference(values, output_cotangent, state_cotangent, *, query_heads, value_heads, scale):
+    torch = pytest.importorskip("torch")
     leaves = [torch.tensor(x, requires_grad=True) for x in values]
     q, k, v, state, decay, beta = leaves
     batch, length, _ = q.shape
