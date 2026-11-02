@@ -1,5 +1,5 @@
 {
-  "source_commit": "ac4a47d88496114dd8856b3557177b9a2c390b90",
+  "source_commit": "ad7adf58ba16586372f0bf482881a8c909a0477d",
   "working_tree_dirty": false,
   "versions": {
     "onnax": "0.1.0",
@@ -899,6 +899,7 @@
   },
   "frozen_weights_unchanged": true,
   "export_load_bitwise_equal": true,
+  "bound_forward_loaded_and_executed": true,
   "adapter_gradients_aligned": true,
   "independent_updates_norm_aligned": true,
   "parameter_trajectory_policy": "L2 error <= 1e-6 + 1e-4 * reference parameter L2 norm; original pointwise failures retained",
@@ -12108,7 +12109,7 @@
   "max_parameter_absolute_error": 7.271766662597656e-06,
   "ort_graph_optimization": "disabled",
   "graph_optimizer": "ONNXScript",
-  "elapsed_seconds": 5.69368545798352,
+  "elapsed_seconds": 5.848866207990795,
   "measurement_scope": "Whole CPU qualification including independent references, update comparisons, ONNX export and reload",
-  "peak_rss_bytes": 483115008
+  "peak_rss_bytes": 484327424
 }
