@@ -49,14 +49,14 @@ def identity(head):
     return digest.hexdigest()
 
 
-def _inference(directory, head):
+def _inference(directory, head_model):
     model = ir.load(os.path.join(directory, "forward.onnx"))
     hidden = model.graph.outputs[0]
     if hidden.shape is None or len(hidden.shape) != 3:
         raise ValueError("Expected a rank-three decoder hidden-state output")
     context = onnax.AutodiffContext(model.graph)
-    source = head.model.graph.initializers["head.weight"].const_value
-    if head.weight_layout != "vocab_hidden":
+    source = head_model.graph.initializers["head.weight"].const_value
+    if head_model.metadata_props.get("onnax.example.head.weight_layout") != "vocab_hidden":
         raise ValueError("Decoder tasks store head weights in source layout")
     vocab, width = source.shape
     weight = ir.val(context.name("head.weight"), const_value=source)
@@ -94,9 +94,7 @@ def export(head, directory):
     record["files"] = {name: file_digest(os.path.join(directory, name)) for name in files}
     record["identity"] = identity(head)
     # Load the exported head so all inference tensor references are relative to this directory.
-    projected = ChunkedHead.__new__(ChunkedHead)
-    projected.model = ir.load(os.path.join(directory, record["loss"]))
-    projected.weight_layout = head.weight_layout
+    projected = ir.load(os.path.join(directory, record["loss"]))
     inference = _inference(directory, projected)
     return record, inference
 

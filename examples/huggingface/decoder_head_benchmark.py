@@ -20,6 +20,21 @@ from examples.huggingface.benchmark import hardware
 from examples.huggingface.decoder_sft import prepare
 
 
+def source_digests():
+    result = {}
+    for name in (
+        "decoder_head_benchmark.py",
+        "decoder_sft.py",
+        "chunked_loss.py",
+        "decoder_families.py",
+        "qwen35.py",
+        "decoder_head.py",
+    ):
+        with open(os.path.join(os.path.dirname(__file__), name), "rb") as stream:
+            result[name] = hashlib.file_digest(stream, "sha256").hexdigest()
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--family", choices=["phi3", "qwen3", "qwen35"], default="qwen35")
@@ -52,6 +67,7 @@ def main():
         if args.library:
             register_library(args.library)
         factory = session
+    sources = source_digests()
     torch.set_num_threads(1)
     start = time.perf_counter()
     model, reference = prepare(
@@ -90,6 +106,13 @@ def main():
             loss = model(input_ids=ids, labels=labels).loss
             loss.backward()
             elapsed = time.perf_counter() - before
+            if not torch.isfinite(loss.detach()):
+                raise FloatingPointError(f"Nonfinite loss at iteration {index}")
+            if (index + 1) % 10 == 0:
+                print(
+                    json.dumps({"iteration": index + 1, "loss": float(loss.detach())}),
+                    flush=True,
+                )
             if index >= args.warmup:
                 records.append(
                     {
@@ -143,7 +166,7 @@ def main():
                     "mobius-onnx",
                 )
             },
-            "source_sha256": {},
+            "source_sha256": sources,
             "dtype": "float32",
             "platform": platform.platform(),
             "runtime_environment": {
@@ -154,11 +177,8 @@ def main():
                 )
             },
         }
-        for name in ("decoder_head_benchmark.py", "decoder_sft.py", "chunked_loss.py"):
-            with open(os.path.join(os.path.dirname(__file__), name), "rb") as stream:
-                report["source_sha256"][name] = hashlib.file_digest(
-                    stream, "sha256"
-                ).hexdigest()
+        if source_digests() != sources:
+            raise RuntimeError("Benchmark source files changed during measurement")
         if args.library:
             with open(args.library, "rb") as stream:
                 report["library_sha256"] = hashlib.file_digest(stream, "sha256").hexdigest()
