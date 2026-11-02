@@ -423,6 +423,10 @@ unified memory. The [training report](https://github.com/justinchuby/onnax/blob/
 records all batch shapes, effective token counts, update memory snapshots,
 evaluation results and artifact identities.
 
+A fresh process resumed from update 15 and reproduced update 30's 113 checkpoint
+tensors, AdamW moments and scheduler state byte for byte. Its final fixed-training
+and validation losses matched the uninterrupted run.
+
 ### Inspect capacity phases
 
 The capacity command validates one cold update and can record memory before and
