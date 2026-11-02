@@ -122,6 +122,14 @@ padded tokens are excluded from causal loss with `-100` labels. The CLI's
 fixed token patterns exercise training and validation independently of
 tokenizer downloads.
 
+On an M1 Max, the [100-step FP32 report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-qwen35-fp32-cpu-m1max.json)
+records training loss `5.61375 → 4.42861` and validation loss
+`5.61941 → 4.95735`. The largest same-parameter gradient error was `1.42e-7`.
+Independent AdamW trajectories ended with maximum parameter error `2.03e-5`;
+their final training/validation losses agreed within `3e-6`. The full CLI took
+8.98 seconds and peaked at 665 MiB RSS, including graph construction, three
+tiny model copies, reference autograd, checker and export/load checks.
+
 Next, connect this task to the shared Trainer/TRL and PEFT examples, pin the
 real model/tokenizer revision, and qualify 0.8B. Native MLX work will use measured
 state lifetimes to select recurrent kernel and recomputation boundaries.
