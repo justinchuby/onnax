@@ -238,7 +238,7 @@ and chunk size 128 produced these head-call median / P95 times:
 |---|---:|---:|---:|---:|
 | 511 | 89.91 / 93.09 ms | 90.33 / 93.03 ms | 7.70 / 8.43 ms | 7.56 / 7.97 ms |
 | 128 | 90.28 / 93.97 ms | 22.66 / 22.77 ms | 7.63 / 8.06 ms | 2.00 / 2.09 ms |
-| 0 | 89.09 / 91.63 ms | 0.07 / 0.08 ms | 7.55 / 7.74 ms | 0.07 / 0.07 ms |
+| 0 | 89.09 / 91.62 ms | 0.07 / 0.07 ms | 7.55 / 7.73 ms | 0.07 / 0.07 ms |
 
 The 128-row case executes one head chunk instead of four. All twelve workers
 passed loss and hidden-gradient comparisons. Whole-process RSS includes imports,

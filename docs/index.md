@@ -16,6 +16,7 @@ nf4-lora
 huggingface
 torch
 checkpointing
+vjp-memory
 decoder-families
 diffusion
 qwen35-training
