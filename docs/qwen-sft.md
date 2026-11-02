@@ -186,6 +186,51 @@ computes token loss outside the ONNX forward; gradients enter the ONNX VJP
 through the logits cotangent. Separate token-loss ONNX modules support the
 training-specific chunked execution path.
 
+### Supervised rows in the chunked head
+
+In `--mode chunked`, hidden row $H_{b,i}$ predicts label $t_{b,i+1}$.
+The scheduler gathers rows with $t_{b,i+1}\ne -100$, then runs the frozen
+projection and cross entropy in chunks of at most `--chunk-size` rows:
+
+$$
+L_{\mathrm{sum}}=\sum_{(b,i):t_{b,i+1}\ne-100}
+  -\log\operatorname{softmax}(H_{b,i}W)_{t_{b,i+1}}.
+$$
+
+It scatters each hidden gradient back to its sequence position. Prompt masking
+and right padding therefore reduce head work. The decoder still processes the
+complete context: an ignored prompt token can receive a gradient through a
+later token's attention. A batch with no valid shifted labels returns zero loss
+and hidden gradient without executing the head session.
+
+The head returns a loss sum. The wrapper divides by the effective token count,
+including the count supplied by Trainer across unequal accumulation batches.
+Exported heads use the same scheduling when loaded, and reuse their sessions
+across steps.
+
+`ChunkedHead.last_profile` records causal and valid row counts, executed chunks,
+gather/scatter time, session execution time, boundary conversion time, and
+dynamic feed/result bytes for the latest call. Session execution includes
+runtime data transfers; feed/result bytes exclude frozen weights. These fields
+help attribute head costs alongside complete training-step measurements.
+
+Measure a fixed 512-token context with 128 supervised positions:
+
+```bash
+uv run python -m examples.huggingface.supervision_benchmark \
+  --sequence 512 --valid-rows 128 --policy gather --output head-gather.json
+uv run python -m examples.huggingface.supervision_benchmark \
+  --sequence 512 --valid-rows 128 --policy dense --output head-dense.json
+```
+
+Run each command in its own process. Change `--valid-rows` to compare supervision
+densities; add `--provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib`
+for the native provider. Each report includes 10 warmups, 100 measured calls,
+median/P95, input and weight hashes, and whole-worker peak RSS. The timed region
+contains the frozen head, loss and hidden gradient; decoder and optimizer costs
+belong in the complete training-step measurement. Each worker first checks both
+schedulers' loss and hidden gradients on the same inputs.
+
 ## BF16 projection experiment
 
 Run the joint loss/gradient graph with BF16 matrix projections:
