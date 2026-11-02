@@ -101,7 +101,10 @@ def test_checkpoint_recovery_in_new_process(tmp_path):
         assert type(left) is type(right)
         if isinstance(left, torch.Tensor):
             assert left.dtype == right.dtype and left.shape == right.shape
-            assert torch.equal(left, right)
+            assert torch.equal(
+                left.contiguous().reshape(-1).view(torch.uint8),
+                right.contiguous().reshape(-1).view(torch.uint8),
+            )
         elif isinstance(left, dict):
             assert left.keys() == right.keys()
             for key in left:
