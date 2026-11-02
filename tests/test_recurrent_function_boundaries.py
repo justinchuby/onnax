@@ -41,6 +41,10 @@ def model(*, nested=False, random=False):
         opset_imports={"": 18},
         name="scan_step",
     )
+    for index, node in enumerate(scan_body):
+        node.name = f"step_node_{index}"
+        for slot, output in enumerate(node.outputs):
+            output.name = f"step_value_{index}_{slot}"
     argument = ir.val("sequence", dtype=ir.DataType.FLOAT, shape=[7, 2, 3])
     tape = ir.tape.Tape()
     shape = tape.op("Shape", [argument], {"start": 1})
@@ -124,6 +128,7 @@ def register(*, reverse_only=False):
 def test_registered_scan_function_products(nested, mode):
     register()
     source = model(nested=nested)
+    CheckerPass(full_check=True)(source)
     before = ir.to_proto(source).SerializeToString()
     product = mode(source)
     CheckerPass(full_check=True)(product)
