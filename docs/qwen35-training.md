@@ -1,10 +1,10 @@
-# Qwen3.5 recurrent training design
+# Fine-tune Qwen3.5 recurrent graphs
 
 Qwen3.5 uses three Gated DeltaNet layers followed by one full-attention layer.
 The first real target is the text backbone of
 [Qwen3.5-0.8B](https://huggingface.co/Qwen/Qwen3.5-0.8B): 24 layers, hidden width
-1024 and a tied 248,320-token embedding/head. An offline four-layer model will
-exercise the same 3:1 layout with hidden width 64 and a local tokenizer.
+1024 and a tied 248,320-token embedding/head. An offline four-layer model
+exercises the same 3:1 layout with hidden width 64 and a local tokenizer.
 
 Mobius already expresses the recurrent blocks as `com.microsoft::LinearAttention`
 and `CausalConvWithState`, with portable function bodies. The
@@ -148,9 +148,11 @@ qualification took 19.90 seconds including reference checks and export/loading,
 with 706 MiB peak process RSS. Steady-state GPU timing will separate those costs
 from forward, backward, host exchange and external updates.
 
-Next, connect this task to the shared Trainer/TRL and PEFT examples, pin the
-real model/tokenizer revision, and qualify 0.8B. Native MLX work will use measured
-state lifetimes to select recurrent kernel and recomputation boundaries.
+The [shared decoder adapter](decoder-families.md) now connects this task to
+TRL SFTTrainer, datasets and PEFT, with decoder-block checkpointing and fresh-process
+trainer recovery. Select `--family qwen35` in `examples.huggingface.decoder_sft`.
+The next model milestone pins the real model/tokenizer revision and qualifies 0.8B.
+Native MLX work will use measured state lifetimes to select recurrent kernel and recomputation boundaries.
 Portable derivative functions will use the `pkg.onnax` domain.
 
 Trainer and TRL continue to own training loops and checkpoints. ONNXScript

@@ -198,3 +198,51 @@ def test_graph_attribute_references_require_binding():
     )
     with pytest.raises(NotImplementedError, match="graph-valued"):
         onnax.vjp(source)
+
+
+def unused_definitions(*, random=False, version=1):
+    definitions = model(nested=True, random=random)
+    x = ir.val("data", dtype=ir.DataType.FLOAT, shape=[2, 3])
+    tape = ir.tape.Tape()
+    y = tape.op("Identity", [x])
+    y.name, y.dtype, y.shape = "result", x.dtype, ir.Shape(x.shape)
+    return ir.Model(
+        ir.Graph(
+            [x],
+            [y],
+            nodes=tape.nodes,
+            opset_imports={"": 18, DOMAIN: version},
+            name="unused_implementations",
+        ),
+        ir_version=10,
+        functions=list(definitions.functions.values()),
+    )
+
+
+@pytest.mark.parametrize("mode", [onnax.jvp, onnax.vjp])
+def test_unused_registered_implementations_remain_boundaries(mode):
+    register()
+    source = unused_definitions()
+    before = ir.to_proto(source).SerializeToString()
+    result = mode(source)
+    CheckerPass(full_check=True)(result)
+    values = np.arange(6, dtype=np.float32).reshape(2, 3)
+    products = runtime_session(result).run(
+        None, {"data": values, result.graph.inputs[-1].name: np.ones_like(values)}
+    )
+    np.testing.assert_array_equal(products[1], np.ones_like(values))
+    assert ir.to_proto(source).SerializeToString() == before
+
+
+def test_unused_implementation_dispatch_remains_mode_and_version_specific():
+    register(reverse_only=True)
+    with pytest.raises(NotImplementedError, match="control flow"):
+        onnax.jvp(unused_definitions())
+    with pytest.raises(NotImplementedError, match="control flow"):
+        onnax.vjp(unused_definitions(version=2))
+
+
+def test_unused_registered_implementation_still_checks_nested_randomness():
+    register()
+    with pytest.raises(NotImplementedError, match="randomness"):
+        onnax.vjp(unused_definitions(random=True))

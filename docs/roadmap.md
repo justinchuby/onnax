@@ -233,9 +233,10 @@ adapters while the shared interface develops.
    adapter gradients; dynamic spatial shapes, export/load, frozen weights and
    fresh-process recovery are covered by CI.
 
-The next milestones are shared Trainer/TRL/PEFT task adapters, a pinned
-Qwen3.5-0.8B run and a small pretrained Diffusers denoiser with its declared
-prediction target. Diffusers supplies the noise schedule and sampling loop;
+The shared decoder task now includes Qwen3.5 alongside Qwen3 and Phi-3, using
+the same Trainer/TRL/PEFT path and public checkpoint module. The next model
+milestones are a pinned Qwen3.5-0.8B run and a small pretrained Diffusers denoiser
+with its declared prediction target. Diffusers supplies the noise schedule and sampling loop;
 text encoders, VAE execution and datasets remain external. MLX measurements will
 separate execution, host exchange and updates, then guide recurrent backward
 fusion and state recomputation. Portable derivative functions use `pkg.onnax`

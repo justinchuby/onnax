@@ -86,7 +86,7 @@ class OnnxDecoder(PreTrainedModel):
         if record.get("version") != 1 or record.get("family") not in FAMILIES:
             raise ValueError("Unsupported decoder task interface")
         config = AutoConfig.from_pretrained(directory, local_files_only=True)
-        if config.model_type != record["family"]:
+        if config.model_type != FAMILIES[record["family"]].config_type.model_type:
             raise ValueError("Decoder family differs from the saved configuration")
         config._name_or_path = record["base_model"]
         execution = CheckpointedModule.load(
@@ -294,7 +294,7 @@ def run(
     if resume is not None:
         with open(os.path.join(resume, "config.json"), encoding="utf-8") as stream:
             previous_config = json.load(stream)
-        if previous_config["model_type"] != family:
+        if previous_config["model_type"] != FAMILIES[family].config_type.model_type:
             raise ValueError("Checkpoint decoder family mismatch")
     os.makedirs(directory, exist_ok=True)
     model, reference = prepare(family, session_factory=session_factory, fused_ops=fused_ops)

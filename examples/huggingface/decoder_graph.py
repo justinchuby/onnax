@@ -33,9 +33,16 @@ def protect_decoder_boundaries(model):
                 break
     if not layers or sorted(layers) != list(range(len(layers))):
         raise ValueError("Expected consecutive Mobius decoder layer scopes")
-    first = layers[0][0]
-    if first.op_type not in ("RMSNormalization", "LayerNormalization"):
-        raise ValueError("Expected a normalized decoder input")
+    normalizers = [
+        node
+        for node in layers[0]
+        if node.op_type in ("RMSNormalization", "LayerNormalization")
+        and "input_layernorm"
+        in ast.literal_eval(node.metadata_props.get("pkg.onnxscript.name_scopes", "[]"))
+    ]
+    if len(normalizers) != 1:
+        raise ValueError("Expected one decoder input normalization boundary")
+    first = normalizers[0]
     names = [first.inputs[0].name]
     for index, nodes in sorted(layers.items()):
         members = set(nodes)
