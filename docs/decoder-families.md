@@ -169,3 +169,28 @@ The [evidence report](https://github.com/justinchuby/onnax/blob/main/examples/hu
 contains source and binary identities, all audit results, raw losses, RSS and
 footprint counters, and the software versions. Its single-run elapsed times
 cover initial/final evaluation, training and export after construction.
+
+### Qwen3.5 text training
+
+The same wrapper completed 100 SFT updates on the version-controlled text corpus
+with CPU and MLX execution:
+
+| Backend | Training loss, initial → final | Validation loss, initial → final |
+| --- | --- | --- |
+| CPU | 5.582322 → 5.136364 | 5.621585 → 5.467013 |
+| MLX | 5.582322 → 5.136365 | 5.621585 → 5.467014 |
+
+Both used the same source graph, local tokenizer, FP32 parameters and AdamW
+epsilon `1e-5`. Six-update independent Transformer and PEFT audits passed on
+each backend; the maximum gradient absolute error was `9.32e-9`.
+
+A fresh MLX process resumed `checkpoint-50` and reproduced step 100's adapter
+parameters, AdamW tensors and scheduler state exactly. Loaded logits, loss and
+all ten adapter gradients also matched the continuous run byte for byte.
+All thirteen exported ONNX graphs passed the full checker, and the bound
+`forward.onnx` executed with CPU ORT.
+
+The [Qwen3.5 evidence report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen35-shared-sft-m1max.json)
+contains commands, source/library hashes, corpus identity, dependency versions,
+per-process RSS and physical-footprint peaks, audit results and export checks.
+Recorded elapsed times cover evaluation, training and export after construction.
