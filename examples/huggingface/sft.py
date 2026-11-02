@@ -143,6 +143,7 @@ class OnnxQwen3(PreTrainedModel):
         session_factory=session,
     ):
         super().__init__(config)
+        self.loss_type = "ForCausalLM"
         _validate_checkpoints(mode, checkpoint_layers, save_activations)
         self.loss_type = "ForCausalLM"
         if mode not in ("full", "chunked", "joint"):
@@ -351,7 +352,7 @@ class OnnxSFTTrainer(SFTTrainer):
     """Use the ONNX chunked loss without recomputing logits for TRL metrics."""
 
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
-        if model.mode == "full":
+        if getattr(model, "mode", "full") == "full":
             return super().compute_loss(model, inputs, return_outputs, num_items_in_batch)
         from transformers import Trainer
 
@@ -427,6 +428,7 @@ def make_trainer(
     train_texts=None,
     eval_texts=None,
     max_length=64,
+    adam_epsilon=1e-8,
 ):
     _validate_max_length(max_length, limit=model.config.max_position_embeddings)
     if (train_texts is None) != (eval_texts is None):
@@ -444,6 +446,7 @@ def make_trainer(
         per_device_eval_batch_size=1,
         learning_rate=0.003 if real else 0.01,
         optim="adamw_torch",
+        adam_epsilon=adam_epsilon,
         weight_decay=0,
         max_grad_norm=0,
         lr_scheduler_type="constant",

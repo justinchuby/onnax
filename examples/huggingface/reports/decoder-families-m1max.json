@@ -1,0 +1,554 @@
+{
+  "source_commit": "c6f56aa4a06f7f656b6931a70b16f4825fc45fc4",
+  "working_tree_dirty": false,
+  "machine": "arm64",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "python": "3.11.17",
+  "threads": 1,
+  "precision": "float32",
+  "native_library_sha256": "6630fc37242d3ea15c406570cbb384e47263cebc2f4ed5996a91b78c0e9623b1",
+  "versions": {
+    "torch": "2.15.0",
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnxruntime": "1.31.1",
+    "transformers": "5.22.1",
+    "trl": "0.24.0",
+    "peft": "0.21.2",
+    "datasets": "5.1.0",
+    "mobius-onnx": "0.1.0"
+  },
+  "training_steps": 30,
+  "adam_epsilon": 1e-05,
+  "cases": [
+    {
+      "family": "phi3",
+      "provider": "cpu",
+      "fused_ops": true,
+      "audit": {
+        "family": "phi3",
+        "independent_steps": 6,
+        "adam_epsilon": 1e-05,
+        "losses": [
+          5.507173538208008,
+          5.459804058074951,
+          5.502471923828125,
+          5.449718952178955,
+          5.489842891693115,
+          5.429225921630859
+        ],
+        "max_gradient_abs_error": 1.1175870895385742e-08,
+        "frozen_source_weights_unchanged": true,
+        "reload": true,
+        "peft": {
+          "adapter_tensors": 4,
+          "format_roundtrip_bitwise": true,
+          "loss_check_passed": true,
+          "loss": 5.468705654144287,
+          "reference_loss": 5.468705654144287,
+          "loss_abs_difference": 0.0,
+          "gradient_check_passed": true,
+          "gradient_failures": {},
+          "update_check_passed": true,
+          "update_failures": {},
+          "logit_violations": 0,
+          "logits_max_abs": 1.7881393432617188e-07
+        },
+        "adapter_tensors": 4
+      },
+      "audit_memory": {
+        "peak_rss_bytes": 601391104,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 479413640,
+          "lifetime_peak_bytes": 481625480,
+          "current_resident_bytes": 599228416,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "scope": "whole subprocess including imports, construction, training/evaluation and export"
+      },
+      "training": {
+        "family": "phi3",
+        "steps": 30,
+        "adam_epsilon": 1e-05,
+        "validation_loss": [
+          5.575892448425293,
+          5.4505696296691895
+        ],
+        "training_loss": [
+          5.555212020874023,
+          5.419975280761719
+        ],
+        "source_identity": "0f795fdf3cf785b59877b4ec8c494df8b061298d14a99278137a60bebc43025c",
+        "timing_scope": "initial/final evaluation, training and export; excludes construction",
+        "elapsed_seconds": 0.4546919999993406,
+        "source_mapping": [
+          {
+            "module": "model.layers.0.self_attn.qkv_proj",
+            "source_weight": "model.layers.0.self_attn.qkv_proj.weight",
+            "A": "model.layers.0.self_attn.qkv_proj.lora.A",
+            "B": "model.layers.0.self_attn.qkv_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.0.self_attn.q_proj",
+                "start": 0,
+                "stop": 64
+              },
+              {
+                "module": "model.layers.0.self_attn.k_proj",
+                "start": 64,
+                "stop": 96
+              },
+              {
+                "module": "model.layers.0.self_attn.v_proj",
+                "start": 96,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.1.self_attn.qkv_proj",
+            "source_weight": "model.layers.1.self_attn.qkv_proj.weight",
+            "A": "model.layers.1.self_attn.qkv_proj.lora.A",
+            "B": "model.layers.1.self_attn.qkv_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.1.self_attn.q_proj",
+                "start": 0,
+                "stop": 64
+              },
+              {
+                "module": "model.layers.1.self_attn.k_proj",
+                "start": 64,
+                "stop": 96
+              },
+              {
+                "module": "model.layers.1.self_attn.v_proj",
+                "start": 96,
+                "stop": 128
+              }
+            ]
+          }
+        ],
+        "export": "/tmp/onnax-decoder-family-evidence/phi3-cpu-training/export"
+      },
+      "training_memory": {
+        "peak_rss_bytes": 600702976,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 472483232,
+          "lifetime_peak_bytes": 474875296,
+          "current_resident_bytes": 598360064,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "scope": "whole subprocess including imports, construction, training/evaluation and export"
+      }
+    },
+    {
+      "family": "phi3",
+      "provider": "mlx",
+      "fused_ops": true,
+      "audit": {
+        "family": "phi3",
+        "independent_steps": 6,
+        "adam_epsilon": 1e-05,
+        "losses": [
+          5.507173538208008,
+          5.459804058074951,
+          5.502471923828125,
+          5.449718952178955,
+          5.489842891693115,
+          5.429225921630859
+        ],
+        "max_gradient_abs_error": 1.6763806343078613e-08,
+        "frozen_source_weights_unchanged": true,
+        "reload": true,
+        "peft": {
+          "adapter_tensors": 4,
+          "format_roundtrip_bitwise": true,
+          "loss_check_passed": true,
+          "loss": 5.468705654144287,
+          "reference_loss": 5.468705654144287,
+          "loss_abs_difference": 0.0,
+          "gradient_check_passed": true,
+          "gradient_failures": {},
+          "update_check_passed": true,
+          "update_failures": {},
+          "logit_violations": 0,
+          "logits_max_abs": 1.7881393432617188e-07
+        },
+        "adapter_tensors": 4
+      },
+      "audit_memory": {
+        "peak_rss_bytes": 615743488,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 487835160,
+          "lifetime_peak_bytes": 490079768,
+          "current_resident_bytes": 613548032,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "scope": "whole subprocess including imports, construction, training/evaluation and export"
+      },
+      "training": {
+        "family": "phi3",
+        "steps": 30,
+        "adam_epsilon": 1e-05,
+        "validation_loss": [
+          5.575892925262451,
+          5.450569152832031
+        ],
+        "training_loss": [
+          5.555212020874023,
+          5.419975280761719
+        ],
+        "source_identity": "0f795fdf3cf785b59877b4ec8c494df8b061298d14a99278137a60bebc43025c",
+        "timing_scope": "initial/final evaluation, training and export; excludes construction",
+        "elapsed_seconds": 2.9366532919812016,
+        "source_mapping": [
+          {
+            "module": "model.layers.0.self_attn.qkv_proj",
+            "source_weight": "model.layers.0.self_attn.qkv_proj.weight",
+            "A": "model.layers.0.self_attn.qkv_proj.lora.A",
+            "B": "model.layers.0.self_attn.qkv_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.0.self_attn.q_proj",
+                "start": 0,
+                "stop": 64
+              },
+              {
+                "module": "model.layers.0.self_attn.k_proj",
+                "start": 64,
+                "stop": 96
+              },
+              {
+                "module": "model.layers.0.self_attn.v_proj",
+                "start": 96,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.1.self_attn.qkv_proj",
+            "source_weight": "model.layers.1.self_attn.qkv_proj.weight",
+            "A": "model.layers.1.self_attn.qkv_proj.lora.A",
+            "B": "model.layers.1.self_attn.qkv_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.1.self_attn.q_proj",
+                "start": 0,
+                "stop": 64
+              },
+              {
+                "module": "model.layers.1.self_attn.k_proj",
+                "start": 64,
+                "stop": 96
+              },
+              {
+                "module": "model.layers.1.self_attn.v_proj",
+                "start": 96,
+                "stop": 128
+              }
+            ]
+          }
+        ],
+        "export": "/tmp/onnax-decoder-family-evidence/phi3-mlx-training/export"
+      },
+      "training_memory": {
+        "peak_rss_bytes": 620331008,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 487130672,
+          "lifetime_peak_bytes": 489571888,
+          "current_resident_bytes": 617938944,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "scope": "whole subprocess including imports, construction, training/evaluation and export"
+      }
+    },
+    {
+      "family": "qwen3",
+      "provider": "cpu",
+      "fused_ops": true,
+      "audit": {
+        "family": "qwen3",
+        "independent_steps": 6,
+        "adam_epsilon": 1e-05,
+        "losses": [
+          5.552736759185791,
+          5.650038242340088,
+          5.549131870269775,
+          5.640411376953125,
+          5.540123462677002,
+          5.620919704437256
+        ],
+        "max_gradient_abs_error": 1.682201400399208e-08,
+        "frozen_source_weights_unchanged": true,
+        "reload": true,
+        "peft": {
+          "adapter_tensors": 8,
+          "format_roundtrip_bitwise": true,
+          "loss_check_passed": true,
+          "loss": 5.524927139282227,
+          "reference_loss": 5.524927616119385,
+          "loss_abs_difference": 4.76837158203125e-07,
+          "gradient_check_passed": true,
+          "gradient_failures": {},
+          "update_check_passed": true,
+          "update_failures": {},
+          "logit_violations": 0,
+          "logits_max_abs": 2.384185791015625e-07
+        },
+        "adapter_tensors": 8
+      },
+      "audit_memory": {
+        "peak_rss_bytes": 607240192,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 485541304,
+          "lifetime_peak_bytes": 487835064,
+          "current_resident_bytes": 604995584,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "scope": "whole subprocess including imports, construction, training/evaluation and export"
+      },
+      "training": {
+        "family": "qwen3",
+        "steps": 30,
+        "adam_epsilon": 1e-05,
+        "validation_loss": [
+          5.550551414489746,
+          5.430950164794922
+        ],
+        "training_loss": [
+          5.543499946594238,
+          5.377006530761719
+        ],
+        "source_identity": "ab1c36f4a63099d0582702d47dcaa80b7655a5df7e978ebf9207c3e32b8b0944",
+        "timing_scope": "initial/final evaluation, training and export; excludes construction",
+        "elapsed_seconds": 0.46532720897812396,
+        "source_mapping": [
+          {
+            "module": "model.layers.0.self_attn.q_proj",
+            "source_weight": "model.layers.0.self_attn.q_proj.weight",
+            "A": "model.layers.0.self_attn.q_proj.lora.A",
+            "B": "model.layers.0.self_attn.q_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.0.self_attn.q_proj",
+                "start": 0,
+                "stop": 64
+              }
+            ]
+          },
+          {
+            "module": "model.layers.0.self_attn.v_proj",
+            "source_weight": "model.layers.0.self_attn.v_proj.weight",
+            "A": "model.layers.0.self_attn.v_proj.lora.A",
+            "B": "model.layers.0.self_attn.v_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.0.self_attn.v_proj",
+                "start": 0,
+                "stop": 32
+              }
+            ]
+          },
+          {
+            "module": "model.layers.1.self_attn.q_proj",
+            "source_weight": "model.layers.1.self_attn.q_proj.weight",
+            "A": "model.layers.1.self_attn.q_proj.lora.A",
+            "B": "model.layers.1.self_attn.q_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.1.self_attn.q_proj",
+                "start": 0,
+                "stop": 64
+              }
+            ]
+          },
+          {
+            "module": "model.layers.1.self_attn.v_proj",
+            "source_weight": "model.layers.1.self_attn.v_proj.weight",
+            "A": "model.layers.1.self_attn.v_proj.lora.A",
+            "B": "model.layers.1.self_attn.v_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.1.self_attn.v_proj",
+                "start": 0,
+                "stop": 32
+              }
+            ]
+          }
+        ],
+        "export": "/tmp/onnax-decoder-family-evidence/qwen3-cpu-training/export"
+      },
+      "training_memory": {
+        "peak_rss_bytes": 605192192,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 477152696,
+          "lifetime_peak_bytes": 479577528,
+          "current_resident_bytes": 602816512,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "scope": "whole subprocess including imports, construction, training/evaluation and export"
+      }
+    },
+    {
+      "family": "qwen3",
+      "provider": "mlx",
+      "fused_ops": true,
+      "audit": {
+        "family": "qwen3",
+        "independent_steps": 6,
+        "adam_epsilon": 1e-05,
+        "losses": [
+          5.552736282348633,
+          5.650038242340088,
+          5.549131870269775,
+          5.640410900115967,
+          5.540123462677002,
+          5.620919704437256
+        ],
+        "max_gradient_abs_error": 2.3283064365386963e-08,
+        "frozen_source_weights_unchanged": true,
+        "reload": true,
+        "peft": {
+          "adapter_tensors": 8,
+          "format_roundtrip_bitwise": true,
+          "loss_check_passed": true,
+          "loss": 5.524927616119385,
+          "reference_loss": 5.524927616119385,
+          "loss_abs_difference": 0.0,
+          "gradient_check_passed": true,
+          "gradient_failures": {},
+          "update_check_passed": true,
+          "update_failures": {},
+          "logit_violations": 0,
+          "logits_max_abs": 2.682209014892578e-07
+        },
+        "adapter_tensors": 8
+      },
+      "audit_memory": {
+        "peak_rss_bytes": 621756416,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 494372328,
+          "lifetime_peak_bytes": 496682472,
+          "current_resident_bytes": 619495424,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "scope": "whole subprocess including imports, construction, training/evaluation and export"
+      },
+      "training": {
+        "family": "qwen3",
+        "steps": 30,
+        "adam_epsilon": 1e-05,
+        "validation_loss": [
+          5.550551414489746,
+          5.430950164794922
+        ],
+        "training_loss": [
+          5.543499946594238,
+          5.377005577087402
+        ],
+        "source_identity": "ab1c36f4a63099d0582702d47dcaa80b7655a5df7e978ebf9207c3e32b8b0944",
+        "timing_scope": "initial/final evaluation, training and export; excludes construction",
+        "elapsed_seconds": 2.765435040986631,
+        "source_mapping": [
+          {
+            "module": "model.layers.0.self_attn.q_proj",
+            "source_weight": "model.layers.0.self_attn.q_proj.weight",
+            "A": "model.layers.0.self_attn.q_proj.lora.A",
+            "B": "model.layers.0.self_attn.q_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.0.self_attn.q_proj",
+                "start": 0,
+                "stop": 64
+              }
+            ]
+          },
+          {
+            "module": "model.layers.0.self_attn.v_proj",
+            "source_weight": "model.layers.0.self_attn.v_proj.weight",
+            "A": "model.layers.0.self_attn.v_proj.lora.A",
+            "B": "model.layers.0.self_attn.v_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.0.self_attn.v_proj",
+                "start": 0,
+                "stop": 32
+              }
+            ]
+          },
+          {
+            "module": "model.layers.1.self_attn.q_proj",
+            "source_weight": "model.layers.1.self_attn.q_proj.weight",
+            "A": "model.layers.1.self_attn.q_proj.lora.A",
+            "B": "model.layers.1.self_attn.q_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.1.self_attn.q_proj",
+                "start": 0,
+                "stop": 64
+              }
+            ]
+          },
+          {
+            "module": "model.layers.1.self_attn.v_proj",
+            "source_weight": "model.layers.1.self_attn.v_proj.weight",
+            "A": "model.layers.1.self_attn.v_proj.lora.A",
+            "B": "model.layers.1.self_attn.v_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.1.self_attn.v_proj",
+                "start": 0,
+                "stop": 32
+              }
+            ]
+          }
+        ],
+        "export": "/tmp/onnax-decoder-family-evidence/qwen3-mlx-training/export"
+      },
+      "training_memory": {
+        "peak_rss_bytes": 624852992,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 491980288,
+          "lifetime_peak_bytes": 494405120,
+          "current_resident_bytes": 622477312,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "scope": "whole subprocess including imports, construction, training/evaluation and export"
+      }
+    }
+  ],
+  "source_identity_matched_across_backends": true
+}

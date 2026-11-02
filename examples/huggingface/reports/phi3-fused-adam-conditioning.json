@@ -1,0 +1,102 @@
+{
+  "family": "phi3",
+  "fused": true,
+  "adam_epsilon": 1e-08,
+  "learning_rate": 0.003,
+  "tolerance": {
+    "rtol": 0.0001,
+    "atol": 1e-06
+  },
+  "parameter_failures": [
+    {
+      "step": 1,
+      "name": "model.layers.1.self_attn.qkv_proj.lora.B",
+      "index": [
+        3,
+        122
+      ],
+      "onnx_parameter": 0.0027311157900840044,
+      "reference_parameter": 0.0027325840201228857,
+      "onnx_gradient": -1.0157236829400063e-07,
+      "reference_gradient": -1.0218480639423433e-07,
+      "onnx_first_moment": -1.0157236829400063e-08,
+      "reference_first_moment": -1.0218481172330485e-08,
+      "onnx_second_moment": 1.0316946497160471e-17,
+      "reference_second_moment": 1.0441734964370221e-17
+    },
+    {
+      "step": 2,
+      "name": "model.layers.1.self_attn.qkv_proj.lora.B",
+      "index": [
+        3,
+        122
+      ],
+      "onnx_parameter": 0.000499002868309617,
+      "reference_parameter": 0.0005004724953323603,
+      "onnx_gradient": 0.000792467559222132,
+      "reference_gradient": 0.0007924687233753502,
+      "onnx_first_moment": 7.923761586425826e-05,
+      "reference_first_moment": 7.923768134787679e-05,
+      "onnx_second_moment": 6.280048703288799e-10,
+      "reference_second_moment": 6.280067021968705e-10
+    },
+    {
+      "step": 3,
+      "name": "model.layers.1.self_attn.qkv_proj.lora.B",
+      "index": [
+        3,
+        122
+      ],
+      "onnx_parameter": -0.0015542169567197561,
+      "reference_parameter": -0.0015527450013905764,
+      "onnx_gradient": 0.00015070656081661582,
+      "reference_gradient": 0.00015070622612256557,
+      "onnx_first_moment": 8.63845125422813e-05,
+      "reference_first_moment": 8.638453437015414e-05,
+      "onnx_second_moment": 6.50089315712421e-10,
+      "reference_second_moment": 6.500910920692604e-10
+    },
+    {
+      "step": 4,
+      "name": "model.layers.1.self_attn.qkv_proj.lora.B",
+      "index": [
+        3,
+        122
+      ],
+      "onnx_parameter": -0.0037517324090003967,
+      "reference_parameter": -0.003750260453671217,
+      "onnx_gradient": 0.002328915987163782,
+      "reference_gradient": 0.002328914823010564,
+      "onnx_first_moment": 0.00031063766800798476,
+      "reference_first_moment": 0.00031063755159266293,
+      "onnx_second_moment": 6.073288982832992e-09,
+      "reference_second_moment": 6.073285430119313e-09
+    }
+  ],
+  "first_step_replay": {
+    "1e-08": {
+      "onnx": 0.0027311162211691342,
+      "reference": 0.002732584108630758,
+      "absolute_difference": 1.4678874616239415e-06
+    },
+    "1e-05": {
+      "onnx": 3.016531424735651e-05,
+      "reference": 3.0345358460346877e-05,
+      "absolute_difference": 1.8004421299036685e-07
+    }
+  },
+  "training_epsilon": 1e-05,
+  "gradient_abs_difference": 6.124381002337032e-10,
+  "environment": {
+    "machine": "arm64",
+    "python": "3.11.17",
+    "versions": {
+      "torch": "2.15.0",
+      "onnx": "1.23.2",
+      "onnxruntime": "1.31.1",
+      "numpy": "2.4.6",
+      "transformers": "5.22.1",
+      "mobius-onnx": "0.1.0"
+    }
+  }
+}

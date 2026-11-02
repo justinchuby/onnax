@@ -10,6 +10,16 @@ from peft import LoraConfig
 from safetensors.torch import load_file, save_file
 
 
+def _parameters(model):
+    if hasattr(model.onnx, "parameters_by_name"):
+        return model.onnx.parameters_by_name()
+    return dict(zip(model.onnx.names, model.onnx.adapters, strict=True))
+
+
+def _targets(model):
+    return {row["module"].rsplit(".", 1)[-1] for row in model.mapping}
+
+
 def export_adapter(model, directory):
     os.makedirs(directory, exist_ok=True)
     rows = model.mapping
@@ -21,7 +31,7 @@ def export_adapter(model, directory):
         r=next(iter(ranks)),
         lora_alpha=next(iter(alphas)),
         lora_dropout=0,
-        target_modules=["q_proj", "v_proj"],
+        target_modules=sorted(_targets(model)),
         bias="none",
         task_type="CAUSAL_LM",
         base_model_name_or_path=model.config._name_or_path or "tiny-qwen3",
@@ -71,10 +81,9 @@ def import_adapter(model, directory):
             "Expected standard Linear LoRA without bias, dropout or rank/alpha overrides"
         )
     expected_base = model.config._name_or_path or "tiny-qwen3"
-    if config.base_model_name_or_path != expected_base or set(config.target_modules or ()) != {
-        "q_proj",
-        "v_proj",
-    }:
+    if config.base_model_name_or_path != expected_base or set(
+        config.target_modules or ()
+    ) != _targets(model):
         raise ValueError("PEFT base model or target configuration mismatch")
     revision = getattr(model.config, "_commit_hash", None)
     if revision is not None and config.revision is not None and revision != config.revision:
@@ -94,7 +103,7 @@ def import_adapter(model, directory):
         for key in ("A", "B"):
             name = f"base_model.model.{row['module']}.lora_{key}.weight"
             tensor = tensors[name].T.contiguous()
-            parameter = model.onnx.adapters[model.onnx.names.index(row[key])]
+            parameter = _parameters(model)[row[key]]
             if tensor.dtype != torch.float32 or tensor.shape != parameter.shape:
                 raise ValueError(f"PEFT shape/dtype mismatch: {name}")
             values.append((parameter, tensor))
@@ -104,7 +113,14 @@ def import_adapter(model, directory):
 
 
 def roundtrip(
-    model, reference, batch, directory, *, diagnose_rounding=False, stable_reference=False
+    model,
+    reference,
+    batch,
+    directory,
+    *,
+    diagnose_rounding=False,
+    stable_reference=False,
+    adam_epsilon=1e-8,
 ):
     """Exchange through PEFT, compare gradients, then exchange one AdamW update."""
     import numpy as np
@@ -153,7 +169,7 @@ def roundtrip(
     gradient_failures = {}
     for row in model.mapping:
         for key in ("A", "B"):
-            p = model.onnx.adapters[model.onnx.names.index(row[key])]
+            p = _parameters(model)[row[key]]
             q = parameters[f"base_model.model.{row['module']}.lora_{key}.default.weight"]
             actual_gradient, expected_gradient = p.grad.numpy(), q.grad.numpy().T
             if (
@@ -177,9 +193,12 @@ def roundtrip(
         from examples.huggingface.peft_reference import stable_control
 
         stable = stable_control(model, peft, batch, actual.loss)
-    torch.optim.AdamW(model.parameters(), lr=0.003, weight_decay=0).step()
+    torch.optim.AdamW(model.parameters(), lr=0.003, weight_decay=0, eps=adam_epsilon).step()
     torch.optim.AdamW(
-        [p for p in peft.parameters() if p.requires_grad], lr=0.003, weight_decay=0
+        [p for p in peft.parameters() if p.requires_grad],
+        lr=0.003,
+        weight_decay=0,
+        eps=adam_epsilon,
     ).step()
     arrays = model.onnx.arrays()
     peft.save_pretrained(directory, save_embedding_layers=False)
