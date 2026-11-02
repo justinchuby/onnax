@@ -328,6 +328,15 @@ contains per-output numerical errors and guard summaries; the
 and [bounded-head](../examples/huggingface/reports/qwen35-bounded-head-512-mlx-chunked.json)
 reports retain all timing samples, versions, source hashes and the native library digest.
 
+### Real-model adapter updates
+
+The same bounded-head task completes 30 SFTTrainer updates on the pinned
+Qwen3.5-0.8B. This training run uses FP32, sequence length 64, microbatch one,
+gradient accumulation four and head chunks of 128 rows. Fixed training loss
+falls from 5.2241 to 0.3029; held-out loss falls from 6.0197 to 5.6222.
+The [training report](../examples/huggingface/reports/qwen35-bounded-head-30step-mlx.json)
+records batches, effective target counts, configuration, source identity and export path.
+
 ## Recorded workload results
 
 On Apple M1 Max, both CPU ORT and MLX completed 30 SFT updates with the same
