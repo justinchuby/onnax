@@ -193,8 +193,50 @@ Transformers updates, TRL training, export/load and fresh-process recovery
 validate the family interface. Shared graph construction and decomposition
 also remain in use by the original Qwen workload.
 
-Next, measure construction/execution peaks for an 8192-token Qwen workload.
-Choose recomputation, attention workspace and output-head chunking from those measurements.
+The [8192-token workload](qwen-context-training.md) has now completed 30 updates
+with fused operators, NF4 decoder weights and BF16 projections. Fixed training
+loss fell from 3.45437 to 2.49825 and validation loss from 3.31262 to 2.52385;
+whole-process physical footprint peaked at 10.24 GiB. Finish fresh-process
+checkpoint recovery, adapter/export validation and matched MLX/MPS measurements.
+
+### Next architecture workloads: hybrid attention and diffusion
+
+After the 8K acceptance, qualify these two workloads through the public execution
+layer. Keep model construction and task conventions in example adapters until
+both workloads establish the shared interfaces.
+
+1. **Qwen3.5 hybrid attention.** Mobius builds Gated DeltaNet layers alongside
+   full attention. Start with a tiny four-layer stack containing three linear
+   attention layers and one full attention layer, then qualify a pinned small
+   pretrained checkpoint. Mobius represents the recurrent path with
+   `com.microsoft::LinearAttention` and `CausalConvWithState`; its reference
+   linear-attention function uses ONNX `Scan`. Implement direct pullbacks for
+   the recurrent update and causal convolution, retaining ordinary ONNX local
+   functions in `pkg.onnax` as the portable derivative representation. Validate
+   all six recurrence inputs, both output cotangents, grouped heads, padding,
+   nonzero initial state and reverse propagation across chunk boundaries.
+   Full-sequence training starts from zero state and differentiates through the
+   entire sequence. Compare forward values, adapter gradients, external updates,
+   held-out loss and recovered checkpoints with Transformers. Measure recurrent
+   state and saved-activation memory as sequence length grows.
+2. **Conditional diffusion fine-tuning.** Start with Mobius's two-layer DiT:
+   hidden size 64, four attention heads, four latent channels, patch size two,
+   8-by-8 latent images and 32-dimensional text conditioning. A local graph
+   construction check confirms `sample`, `timestep`, `encoder_hidden_states`
+   inputs and a `noise_pred` output. Train attention adapters against fixed
+   synthetic clean-latent/noise/timestep triples using the noise-prediction
+   objective. Reuse Attention, LayerNormalization, Swish and Gelu pullbacks;
+   check the frozen patch-embedding Conv boundary before adding convolution
+   derivatives. Compare with an independent PyTorch denoiser, including gradients
+   through frozen output layers, multiple updates, export/load and recovery.
+   Then qualify a small pretrained Diffusers denoiser and its declared prediction
+   target. Diffusers supplies the noise schedule and sampling loop; datasets,
+   text encoders and VAE execution remain outside onnax.
+
+For each workload, publish a runnable CLI, independent reference checks and
+isolated timing/memory measurements before extending the shared package API.
+Qwen3.5 exercises recurrent state and sequence differentiation; DiT exercises
+spatial shapes, timestep conditioning and noncausal cross-attention.
 
 ## Engineering boundaries
 
