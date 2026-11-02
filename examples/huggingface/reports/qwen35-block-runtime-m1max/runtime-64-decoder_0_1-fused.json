@@ -1,0 +1,251 @@
+{
+  "version": 1,
+  "block": "decoder_0_1",
+  "bundle_identity": "229a32d4b255f89d56dd84d09f9a9daf82cfce4129fa57d7a19c3c86b216b693",
+  "executed_model_sha256": "61fcd1b9ed98e663519e07662eaddad7f6a8fdc41179ecc05f735467c07c7eb4",
+  "input_arrays": {
+    "input_ids": {
+      "shape": [
+        1,
+        64
+      ],
+      "dtype": "int64",
+      "bytes": 512,
+      "sha256": "7e18c0d7578fbf0f702de903bd4182353219dcc6121e12495d0d3b2f7b9fdc2b"
+    },
+    "v_model.embed_tokens.Gather_109": {
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 262144,
+      "sha256": "41545c3876facdd4956dc72c1afe2c934825314fc1c83e1d7e71429876dcb5a6"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "b9452843f4544185633eb11c07437ab2600f794e6f8df8bfe2810298ab925d6d"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B": {
+      "shape": [
+        4,
+        6144
+      ],
+      "dtype": "float32",
+      "bytes": 98304,
+      "sha256": "bc4cd9651794a863649e4c9e318379cd3212fd8af03451da135085d96a1e2e31"
+    },
+    "v_model.layers.0.Add_219_cotangent": {
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 262144,
+      "sha256": "4d5edd1d27f924099832cdb26b04a1540cdd61896c2d3593d3df4aa2f7e4af13"
+    }
+  },
+  "output_arrays": {
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "489c25098348fe3a3af9a073b8eef3f1106d96c86ae000f2ba2fcae18a146851"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent": {
+      "shape": [
+        4,
+        6144
+      ],
+      "dtype": "float32",
+      "bytes": 98304,
+      "sha256": "05b363f7d0cf0a0b15a6b19c1a3c1b3a9338d2ec15048ebb4c94e3ee7c1f19cf"
+    }
+  },
+  "dynamic_input_bytes": 639488,
+  "dynamic_output_bytes": 114688,
+  "trainable_input_bytes": 114688,
+  "gradient_mapping": {
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A": "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent",
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B": "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent"
+  },
+  "main_graph_nodes": 453,
+  "onnx_file_bytes": 155066,
+  "declared_initializer_bytes": 86270880,
+  "outputs": {
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "489c25098348fe3a3af9a073b8eef3f1106d96c86ae000f2ba2fcae18a146851"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "05b363f7d0cf0a0b15a6b19c1a3c1b3a9338d2ec15048ebb4c94e3ee7c1f19cf"
+    }
+  },
+  "final_outputs": {
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "489c25098348fe3a3af9a073b8eef3f1106d96c86ae000f2ba2fcae18a146851"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "05b363f7d0cf0a0b15a6b19c1a3c1b3a9338d2ec15048ebb4c94e3ee7c1f19cf"
+    }
+  },
+  "session_creation_seconds": 0.08687450003344566,
+  "first_execution_seconds": 0.0560412909835577,
+  "warmup": 10,
+  "samples": [
+    0.027429584006313235,
+    0.02785345900338143,
+    0.028232500015292317,
+    0.027694832999259233,
+    0.027837499976158142,
+    0.02793895802460611,
+    0.027142542006913573,
+    0.027656417049001902,
+    0.0278856250224635,
+    0.027672957978211343,
+    0.027984292013570666,
+    0.027762750047259033,
+    0.027529457991477102,
+    0.027774791000410914,
+    0.027821750030852854,
+    0.027307124983053654,
+    0.027566874981857836,
+    0.02769220800837502,
+    0.02761516597820446,
+    0.027676541998516768,
+    0.02793520799605176,
+    0.027183457976207137,
+    0.02745608298573643,
+    0.028003750019706786,
+    0.027610458026174456,
+    0.02759199996944517,
+    0.02726312499726191,
+    0.027752458991017193,
+    0.02773241698741913,
+    0.027590417012106627,
+    0.02777329197851941,
+    0.02766791603062302,
+    0.027634791971649975,
+    0.027745375002268702,
+    0.027551917009986937,
+    0.02797570900293067,
+    0.028366916987579316,
+    0.027164625003933907,
+    0.028011165966745466,
+    0.027756791037973017,
+    0.027392083022277802,
+    0.027124624990392476,
+    0.02786766702774912,
+    0.026427375036291778,
+    0.02848695794818923,
+    0.028086833015549928,
+    0.026905458013061434,
+    0.028020999976433814,
+    0.028838958009146154,
+    0.027873417013324797,
+    0.028392833017278463,
+    0.02813616703497246,
+    0.028061166987754405,
+    0.02767437498550862,
+    0.028127500030677766,
+    0.02725104201817885,
+    0.02738383400719613,
+    0.02768562501296401,
+    0.027219499985221773,
+    0.02748037502169609,
+    0.02753979101544246,
+    0.02722083404660225,
+    0.027483292040415108,
+    0.026453291007783264,
+    0.027574500010814518,
+    0.02796504198340699,
+    0.02868941699853167,
+    0.02902362495660782,
+    0.027569708006922156,
+    0.02755879203323275,
+    0.02786433300934732,
+    0.027680750004947186,
+    0.027058249979745597,
+    0.02801008301321417,
+    0.02791608404368162,
+    0.02657516597537324,
+    0.026972416031640023,
+    0.027883292001206428,
+    0.0279940830077976,
+    0.02702416601823643,
+    0.027633249992504716,
+    0.027912374993320554,
+    0.0273530840058811,
+    0.027769875014200807,
+    0.027523875003680587,
+    0.027529540995601565,
+    0.027703374973498285,
+    0.027001500013284385,
+    0.027217082970310003,
+    0.027296666987240314,
+    0.02739795797970146,
+    0.027345583017449826,
+    0.027075249992776662,
+    0.02710449998266995,
+    0.02726237499155104,
+    0.026940667012240738,
+    0.027470208005979657,
+    0.02727725001750514,
+    0.02714591595577076,
+    0.02722320903558284
+  ],
+  "median_seconds": 0.027634020982077345,
+  "p95_seconds": 0.028368212789064273,
+  "allocator_before": {
+    "active_bytes": 86270816,
+    "cache_bytes": 305613483,
+    "peak_bytes": 0
+  },
+  "allocator_after": {
+    "active_bytes": 86270816,
+    "cache_bytes": 305613483,
+    "peak_bytes": 365901644
+  },
+  "window_allocator_peak_bytes": 365901644,
+  "incremental_allocator_peak_bytes": 279630828,
+  "process_peak_rss_bytes": 303251456,
+  "physical_memory": {
+    "available": true,
+    "current_bytes": 503612520,
+    "lifetime_peak_bytes": 503612520,
+    "current_resident_bytes": 238272512,
+    "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+  },
+  "memory_scope": "Whole worker including imports, bundle verification, one derivative session and captured CPU arrays; allocator peak reset after qualification/warmup",
+  "timing_scope": "One exported block recomputation/VJP session, including runtime host/device exchange; fixed parameters; excludes other blocks, task loss and optimizer",
+  "ort_graph_optimization": "disabled",
+  "cpu_threads": 1,
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "tool_source_sha256": "315e7fe8e89ec674baa2500bddcd085bbb46ed21518309be271413d3239e79e0",
+  "versions": {
+    "numpy": "2.4.6",
+    "onnxruntime": "1.31.1",
+    "mlx": "0.32.4"
+  },
+  "provider": "mlx",
+  "cpu_fallback_disabled": true,
+  "library_sha256": "13ab91e531b0346a667bd976d8ce2b70b2b48312df41a4f2b86df771c130f8df",
+  "gated_delta_reverse_fused": true,
+  "runtime_environment": {
+    "ONNXRUNTIME_EP_MLX_NO_COMPILE": "1",
+    "ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES": "536870912"
+  }
+}

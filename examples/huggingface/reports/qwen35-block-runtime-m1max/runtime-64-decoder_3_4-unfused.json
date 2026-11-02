@@ -1,0 +1,342 @@
+{
+  "version": 1,
+  "block": "decoder_3_4",
+  "bundle_identity": "229a32d4b255f89d56dd84d09f9a9daf82cfce4129fa57d7a19c3c86b216b693",
+  "executed_model_sha256": "338801fd656b6a6f8066e10398930acb209095ede35a9e875a2f42799f643a08",
+  "input_arrays": {
+    "position_ids": {
+      "shape": [
+        1,
+        64
+      ],
+      "dtype": "int64",
+      "bytes": 512,
+      "sha256": "7a4644928f3a08db905254fd7e5e53ef19a46d932a2ecd372b45462413a82619"
+    },
+    "attention_mask": {
+      "shape": [
+        1,
+        64
+      ],
+      "dtype": "int64",
+      "bytes": 512,
+      "sha256": "ae1fd128caf85aaf5af91075ffc018dc15569e7c71c2c1fe9c4c1f75c5f661ec"
+    },
+    "input_ids": {
+      "shape": [
+        1,
+        64
+      ],
+      "dtype": "int64",
+      "bytes": 512,
+      "sha256": "7e18c0d7578fbf0f702de903bd4182353219dcc6121e12495d0d3b2f7b9fdc2b"
+    },
+    "v_model.layers.2.Add_365": {
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 262144,
+      "sha256": "6883a3d738fdcd4ae1676261f1a4f3704bd66d29646a72fe9cb6a178259044f0"
+    },
+    "model.layers.3.self_attn.q_proj.lora.A": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "d6758cdb9b7713fae621dd5159e907b1a48eb5d004e09bc58dde0df3041905c6"
+    },
+    "model.layers.3.self_attn.q_proj.lora.B": {
+      "shape": [
+        4,
+        4096
+      ],
+      "dtype": "float32",
+      "bytes": 65536,
+      "sha256": "4d609316d9ff6a7b052041b29b48dd990a20dfce9aca22d9e4775f5c3402e380"
+    },
+    "model.layers.3.self_attn.v_proj.lora.A": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "8a3c0c778df50e43a31597ff1ace99e9479767d6beb3ed874a261749b862a380"
+    },
+    "model.layers.3.self_attn.v_proj.lora.B": {
+      "shape": [
+        4,
+        512
+      ],
+      "dtype": "float32",
+      "bytes": 8192,
+      "sha256": "6a1938f4440f44b1efc097293f4a174da754cfa097e9eb130c8bedeb05c2e95e"
+    },
+    "v_model.layers.3.Add_402_cotangent": {
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 262144,
+      "sha256": "d03f4802b3b6f263d6e07c86facfc9a932da0031cf0e77d9f6937ae9f70c1610"
+    }
+  },
+  "output_arrays": {
+    "v_model.layers.2.Add_365_cotangent": {
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 262144,
+      "sha256": "1654324e0da15d3ab7df2f0e1bf049c123407af6fb5b506e6977b009137b1c00"
+    },
+    "model.layers.3.self_attn.q_proj.lora.A_cotangent": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "5b28666d261bbdca300123370114b2c2cdfdb644e085e89ada0c86b902434679"
+    },
+    "model.layers.3.self_attn.q_proj.lora.B_cotangent": {
+      "shape": [
+        4,
+        4096
+      ],
+      "dtype": "float32",
+      "bytes": 65536,
+      "sha256": "95ac7ad9850ad9ebf2a50d9bf2cd2edb9957a9da3aaa09d7d1f16783ced00cbb"
+    },
+    "model.layers.3.self_attn.v_proj.lora.A_cotangent": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "604f49b39c01727a69034bafbc410000a5e7f305a934ec3672b31309e74b98d5"
+    },
+    "model.layers.3.self_attn.v_proj.lora.B_cotangent": {
+      "shape": [
+        4,
+        512
+      ],
+      "dtype": "float32",
+      "bytes": 8192,
+      "sha256": "a4dfe3e269d512cbed566d635d163f6c7c84f7ada32d971a942617f29ced85a4"
+    }
+  },
+  "dynamic_input_bytes": 632320,
+  "dynamic_output_bytes": 368640,
+  "trainable_input_bytes": 106496,
+  "gradient_mapping": {
+    "v_model.layers.2.Add_365": "v_model.layers.2.Add_365_cotangent",
+    "model.layers.3.self_attn.q_proj.lora.A": "model.layers.3.self_attn.q_proj.lora.A_cotangent",
+    "model.layers.3.self_attn.q_proj.lora.B": "model.layers.3.self_attn.q_proj.lora.B_cotangent",
+    "model.layers.3.self_attn.v_proj.lora.A": "model.layers.3.self_attn.v_proj.lora.A_cotangent",
+    "model.layers.3.self_attn.v_proj.lora.B": "model.layers.3.self_attn.v_proj.lora.B_cotangent"
+  },
+  "main_graph_nodes": 521,
+  "onnx_file_bytes": 100999,
+  "declared_initializer_bytes": 140519820,
+  "outputs": {
+    "v_model.layers.2.Add_365_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "1654324e0da15d3ab7df2f0e1bf049c123407af6fb5b506e6977b009137b1c00"
+    },
+    "model.layers.3.self_attn.q_proj.lora.A_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "5b28666d261bbdca300123370114b2c2cdfdb644e085e89ada0c86b902434679"
+    },
+    "model.layers.3.self_attn.q_proj.lora.B_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "95ac7ad9850ad9ebf2a50d9bf2cd2edb9957a9da3aaa09d7d1f16783ced00cbb"
+    },
+    "model.layers.3.self_attn.v_proj.lora.A_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "604f49b39c01727a69034bafbc410000a5e7f305a934ec3672b31309e74b98d5"
+    },
+    "model.layers.3.self_attn.v_proj.lora.B_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "a4dfe3e269d512cbed566d635d163f6c7c84f7ada32d971a942617f29ced85a4"
+    }
+  },
+  "final_outputs": {
+    "v_model.layers.2.Add_365_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "1654324e0da15d3ab7df2f0e1bf049c123407af6fb5b506e6977b009137b1c00"
+    },
+    "model.layers.3.self_attn.q_proj.lora.A_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "5b28666d261bbdca300123370114b2c2cdfdb644e085e89ada0c86b902434679"
+    },
+    "model.layers.3.self_attn.q_proj.lora.B_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "95ac7ad9850ad9ebf2a50d9bf2cd2edb9957a9da3aaa09d7d1f16783ced00cbb"
+    },
+    "model.layers.3.self_attn.v_proj.lora.A_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "604f49b39c01727a69034bafbc410000a5e7f305a934ec3672b31309e74b98d5"
+    },
+    "model.layers.3.self_attn.v_proj.lora.B_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "a4dfe3e269d512cbed566d635d163f6c7c84f7ada32d971a942617f29ced85a4"
+    }
+  },
+  "session_creation_seconds": 0.10511037497781217,
+  "first_execution_seconds": 0.04610924998996779,
+  "warmup": 10,
+  "samples": [
+    0.016348875011317432,
+    0.01636524999048561,
+    0.01685191597789526,
+    0.016601375013124198,
+    0.016444584005512297,
+    0.016098916996270418,
+    0.015876209014095366,
+    0.015964124992024153,
+    0.0169685420114547,
+    0.016969792020972818,
+    0.016740500053856522,
+    0.01606720796553418,
+    0.015820667031221092,
+    0.01662662497255951,
+    0.016451167000923306,
+    0.01701645803404972,
+    0.017269583011511713,
+    0.01687012502225116,
+    0.016111082979477942,
+    0.01709287497214973,
+    0.016917500004637986,
+    0.01721916696988046,
+    0.016832625027745962,
+    0.016118375002406538,
+    0.016389207972679287,
+    0.01685441698646173,
+    0.016904041985981166,
+    0.01611249998677522,
+    0.016562499979045242,
+    0.016588500002399087,
+    0.016392124991398305,
+    0.016840833006426692,
+    0.01639487501233816,
+    0.016762166982516646,
+    0.01701129204593599,
+    0.01665229198988527,
+    0.016746583045460284,
+    0.016072249971330166,
+    0.01638441701652482,
+    0.01691095798742026,
+    0.016103416972327977,
+    0.016048707999289036,
+    0.01672766701085493,
+    0.016617166984360665,
+    0.01664225000422448,
+    0.016734667005948722,
+    0.016531000030227005,
+    0.01671912503661588,
+    0.01676708395825699,
+    0.016748542024288327,
+    0.017842667002696544,
+    0.01710191700840369,
+    0.016357958025764674,
+    0.016732709016650915,
+    0.01674695801921189,
+    0.016093999962322414,
+    0.01635391596937552,
+    0.016992249991744757,
+    0.016463041945826262,
+    0.016514791001100093,
+    0.016117250022944063,
+    0.01667283399729058,
+    0.016766333021223545,
+    0.01658095803577453,
+    0.016534792026504874,
+    0.01628895802423358,
+    0.016338624991476536,
+    0.016014665947295725,
+    0.016359124972950667,
+    0.016880624985788018,
+    0.016704624984413385,
+    0.01658125000540167,
+    0.01710950001142919,
+    0.01633683399995789,
+    0.016109417018014938,
+    0.016206207976210862,
+    0.0167450419976376,
+    0.016456374956760556,
+    0.01672308298293501,
+    0.016724749992135912,
+    0.016789833025541157,
+    0.016226666048169136,
+    0.016560458985622972,
+    0.0161517079686746,
+    0.016678999993018806,
+    0.01668837497709319,
+    0.016692042001523077,
+    0.016768333967775106,
+    0.016177707992028445,
+    0.016223832964897156,
+    0.015844957961235195,
+    0.01640779199078679,
+    0.01671629201155156,
+    0.01626279199263081,
+    0.016635042033158243,
+    0.016918167006224394,
+    0.016577708011027426,
+    0.016978457977529615,
+    0.01665008399868384,
+    0.016717249993234873
+  ],
+  "median_seconds": 0.01662189597846009,
+  "p95_seconds": 0.01709332707396243,
+  "allocator_before": {
+    "active_bytes": 146987752,
+    "cache_bytes": 36201229,
+    "peak_bytes": 0
+  },
+  "allocator_after": {
+    "active_bytes": 140519644,
+    "cache_bytes": 42259733,
+    "peak_bytes": 183108784
+  },
+  "window_allocator_peak_bytes": 183108784,
+  "incremental_allocator_peak_bytes": 36121032,
+  "process_peak_rss_bytes": 411500544,
+  "physical_memory": {
+    "available": true,
+    "current_bytes": 288441424,
+    "lifetime_peak_bytes": 288441424,
+    "current_resident_bytes": 288866304,
+    "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+  },
+  "memory_scope": "Whole worker including imports, bundle verification, one derivative session and captured CPU arrays; allocator peak reset after qualification/warmup",
+  "timing_scope": "One exported block recomputation/VJP session, including runtime host/device exchange; fixed parameters; excludes other blocks, task loss and optimizer",
+  "ort_graph_optimization": "disabled",
+  "cpu_threads": 1,
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "tool_source_sha256": "315e7fe8e89ec674baa2500bddcd085bbb46ed21518309be271413d3239e79e0",
+  "versions": {
+    "numpy": "2.4.6",
+    "onnxruntime": "1.31.1",
+    "mlx": "0.32.4"
+  },
+  "provider": "mlx",
+  "cpu_fallback_disabled": true,
+  "library_sha256": "13ab91e531b0346a667bd976d8ce2b70b2b48312df41a4f2b86df771c130f8df",
+  "gated_delta_reverse_fused": false,
+  "runtime_environment": {
+    "ONNXRUNTIME_EP_MLX_NO_COMPILE": "1",
+    "ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES": "536870912"
+  }
+}
