@@ -337,6 +337,29 @@ falls from 5.2241 to 0.3029; held-out loss falls from 6.0197 to 5.6222.
 The [training report](../examples/huggingface/reports/qwen35-bounded-head-30step-mlx.json)
 records batches, effective target counts, configuration, source identity and export path.
 
+A fresh process restores step 15 and reaches the same step-30 parameters, Adam
+state and scheduler byte for byte. PEFT adapter files match byte for byte.
+Loaded task logits, loss and all 60 adapter gradients match byte for byte
+between the independently constructed exports, as do the standalone inference
+outputs. All 114 exported ONNX modules pass full checker validation; 3736 named
+tensor records agree. The [recovery report](../examples/huggingface/reports/qwen35-bounded-head-recovery-mlx.json)
+records these checks and source-weight hashes. The resumed export was rebuilt
+from its completed checkpoint after the disk guard interrupted its first export.
+
+### FP32 inference across execution boundaries
+
+At the recovered adapter state, a fixed eight-token probe compares checkpointed
+body execution, whole-body execution and standalone inference. Appending the
+head preserves the whole-body result byte for byte. Whole and checkpointed body
+execution differ by `1.85e-6` relative hidden-state L2 error, producing `1.79e-6`
+relative logit L2 error.
+
+Against independent Transformers FP32 execution, both ONNX routes have about
+`3.9e-6` relative logit L2 error, identical argmax tokens and loss differences below
+`6e-6`. The original `rtol=1e-4, atol=1e-6` elementwise check exceeds its threshold
+for some logits near zero. The [inference report](../examples/huggingface/reports/qwen35-bounded-head-inference-fp32.json)
+retains those counts, absolute errors and reference losses.
+
 ## Recorded workload results
 
 On Apple M1 Max, both CPU ORT and MLX completed 30 SFT updates with the same
