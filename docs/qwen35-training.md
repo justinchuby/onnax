@@ -83,6 +83,8 @@ external chunk composition and the state-storage ledger.
    Use one source adapter for each linear layer's fused `in_proj_qkv`, and q/v
    adapters for full-attention layers. The fused adapter updates Q/K/V together;
    its source names and layout must agree with the PyTorch PEFT target.
+   Full-attention `q_proj` also contains the output-gate projection, so retain
+   that fused source layout when mapping the adapter.
 4. Qualify the four-layer task against Transformers through loss, all adapter
    gradients, external updates, held-out loss, checkpoint recovery and exported
    execution. Then pin the real model/tokenizer revision and repeat on 0.8B.
