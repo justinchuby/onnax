@@ -83,7 +83,9 @@ every update and its parameter L2 error must stay below
 `1e-6 + 1e-4 * reference_parameter_L2_norm`. The report also retains the original
 coordinate-wise parameter checks and independent prediction differences.
 
-The initial 100-update run reduced training loss from 1.208 to 0.498 and validation
+The [100-update report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/dit-fp32-cpu-m1max.json)
+records source and dependency versions, loss curves and numerical diagnostics.
+The run reduced training loss from 1.208 to 0.498 and validation
 loss from 1.222 to 0.855. Adapter gradient error peaked at `4.65e-8`. Independent
 AdamW trajectories had a maximum relative parameter L2 difference of `3.68e-6`;
 small coordinates account for the retained pointwise failures. At the captured
