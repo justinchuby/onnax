@@ -61,6 +61,7 @@ def test_external_updates_frozen_base_and_loaded_denoiser(tmp_path):
     assert report["adapter_gradients_aligned"] and report["independent_updates_norm_aligned"]
     assert report["frozen_weights_unchanged"] and report["export_load_bitwise_equal"]
     assert len(report["adapter_mapping"]) == 8
+    assert report["bound_forward_loaded_and_executed"]
 
 
 def test_adapter_names_cannot_be_registered_twice():
@@ -119,3 +120,14 @@ def test_fresh_process_optimizer_recovery(tmp_path):
             assert left == right
 
     equal(expected, actual)
+
+
+def test_resume_rejects_changed_denoising_data(tmp_path):
+    source = tmp_path / "source"
+    run(source, steps=2)
+    state = torch.load(source / "checkpoint.pt", weights_only=True)
+    state["data"]["noise"] = "changed"
+    altered = tmp_path / "changed.pt"
+    torch.save(state, altered)
+    with pytest.raises(ValueError, match="denoising data changed"):
+        run(tmp_path / "resumed", steps=2, resume=altered)

@@ -16,6 +16,7 @@ import time
 from importlib.metadata import version
 
 import onnx
+import onnxruntime as ort
 import torch
 from onnxscript import optimizer
 
@@ -227,6 +228,18 @@ def run(directory, *, steps=100, resume=None):
                 raise AssertionError("Loaded denoiser output bytes differ")
         for name in ("model.onnx", "execution.onnx", "derivative.onnx", "forward.onnx"):
             onnx.checker.check_model(os.path.join(bundle, name), full_check=True)
+        options = ort.SessionOptions()
+        options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
+        options.intra_op_num_threads = options.inter_op_num_threads = 1
+        bound_session = ort.InferenceSession(
+            os.path.join(bundle, "forward.onnx"), options, providers=["CPUExecutionProvider"]
+        )
+        bound_prediction = torch.from_numpy(
+            bound_session.run(
+                None, {name: value.numpy() for name, value in validation.items()}
+            )[0]
+        )
+        torch.testing.assert_close(bound_prediction, prediction, rtol=1e-4, atol=1e-6)
     if not train_after < losses[0]:
         raise AssertionError("Fixed training loss did not decrease")
     report = {
@@ -277,6 +290,7 @@ def run(directory, *, steps=100, resume=None):
         "frozen_sha256": frozen,
         "frozen_weights_unchanged": True,
         "export_load_bitwise_equal": True,
+        "bound_forward_loaded_and_executed": True,
         "adapter_gradients_aligned": True,
         "independent_updates_norm_aligned": True,
         "parameter_trajectory_policy": "L2 error <= 1e-6 + 1e-4 * reference parameter L2 norm; original pointwise failures retained",
