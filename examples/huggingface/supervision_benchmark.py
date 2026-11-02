@@ -5,6 +5,7 @@
 import argparse
 import hashlib
 import json
+import os
 import platform
 import resource
 import sys
@@ -155,6 +156,13 @@ def main():
         "weight_sha256": hashlib.sha256(weight.tobytes()).hexdigest(),
         "ort_graph_optimization": "disabled",
         "cpu_threads": 1,
+        "runtime_environment": {
+            name: os.environ.get(name)
+            for name in (
+                "ONNXRUNTIME_EP_MLX_NO_COMPILE",
+                "ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES",
+            )
+        },
         "platform": platform.platform(),
         "hardware": hardware(),
         "source_sha256": {

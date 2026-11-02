@@ -231,6 +231,23 @@ contains the frozen head, loss and hidden gradient; decoder and optimizer costs
 belong in the complete training-step measurement. Each worker first checks both
 schedulers' loss and hidden gradients on the same inputs.
 
+On M1 Max, the FP32 `[1, 512, 256]` hidden-state workload with vocabulary 8192
+and chunk size 128 produced these head-call median / P95 times:
+
+| Valid shifted rows | CPU dense | CPU gather | MLX dense | MLX gather |
+|---|---:|---:|---:|---:|
+| 511 | 89.91 / 93.09 ms | 90.33 / 93.03 ms | 7.70 / 8.43 ms | 7.56 / 7.97 ms |
+| 128 | 90.28 / 93.97 ms | 22.66 / 22.77 ms | 7.63 / 8.06 ms | 2.00 / 2.09 ms |
+| 0 | 89.09 / 91.63 ms | 0.07 / 0.08 ms | 7.55 / 7.74 ms | 0.07 / 0.07 ms |
+
+The 128-row case executes one head chunk instead of four. All twelve workers
+passed loss and hidden-gradient comparisons. Whole-process RSS includes imports,
+construction and both scheduler checks; the
+{download}`CPU gather report <../examples/huggingface/reports/supervised-head-m1max/cpu-128-gather.json>`
+and {download}`MLX gather report <../examples/huggingface/reports/supervised-head-m1max/mlx-128-gather.json>`
+include the memory scope and component timings. The paired reports live beside
+them in `examples/huggingface/reports/supervised-head-m1max/`.
+
 ## BF16 projection experiment
 
 Run the joint loss/gradient graph with BF16 matrix projections:

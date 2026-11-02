@@ -1,0 +1,357 @@
+{
+  "version": 1,
+  "options": {
+    "output": "/Users/justinc/Documents/GitHub/onnax/examples/huggingface/reports/supervised-head-m1max/cpu-128-dense.json",
+    "provider": "cpu",
+    "library": null,
+    "policy": "dense",
+    "sequence": 512,
+    "width": 256,
+    "vocab": 8192,
+    "valid_rows": 128,
+    "chunk_size": 128,
+    "warmup": 10,
+    "samples": 100
+  },
+  "timings": {
+    "step_seconds": {
+      "median": 0.09027516649803147,
+      "p95": 0.0939679395640269
+    }
+  },
+  "samples": [
+    {
+      "step_seconds": 0.09294595802202821
+    },
+    {
+      "step_seconds": 0.09102999995229766
+    },
+    {
+      "step_seconds": 0.09438754199072719
+    },
+    {
+      "step_seconds": 0.09086120798019692
+    },
+    {
+      "step_seconds": 0.09359712497098371
+    },
+    {
+      "step_seconds": 0.09148558299057186
+    },
+    {
+      "step_seconds": 0.09389274998102337
+    },
+    {
+      "step_seconds": 0.12332762498408556
+    },
+    {
+      "step_seconds": 0.09357441600877792
+    },
+    {
+      "step_seconds": 0.09239666699431837
+    },
+    {
+      "step_seconds": 0.09460275003220886
+    },
+    {
+      "step_seconds": 0.09060179197695106
+    },
+    {
+      "step_seconds": 0.09422566602006555
+    },
+    {
+      "step_seconds": 0.09323604195378721
+    },
+    {
+      "step_seconds": 0.09395437501370907
+    },
+    {
+      "step_seconds": 0.09112037502927706
+    },
+    {
+      "step_seconds": 0.09041862498270348
+    },
+    {
+      "step_seconds": 0.09135729202535003
+    },
+    {
+      "step_seconds": 0.09074179094750434
+    },
+    {
+      "step_seconds": 0.09000237501459196
+    },
+    {
+      "step_seconds": 0.08988629200030118
+    },
+    {
+      "step_seconds": 0.089855375001207
+    },
+    {
+      "step_seconds": 0.08993408299284056
+    },
+    {
+      "step_seconds": 0.09147275000577793
+    },
+    {
+      "step_seconds": 0.08971120801288635
+    },
+    {
+      "step_seconds": 0.09060979197965935
+    },
+    {
+      "step_seconds": 0.09045154100749642
+    },
+    {
+      "step_seconds": 0.090417500003241
+    },
+    {
+      "step_seconds": 0.09051387500949204
+    },
+    {
+      "step_seconds": 0.09062400000402704
+    },
+    {
+      "step_seconds": 0.09196216601412743
+    },
+    {
+      "step_seconds": 0.09112624998670071
+    },
+    {
+      "step_seconds": 0.09077458397950977
+    },
+    {
+      "step_seconds": 0.08948641701135784
+    },
+    {
+      "step_seconds": 0.08920291700633243
+    },
+    {
+      "step_seconds": 0.08932762499898672
+    },
+    {
+      "step_seconds": 0.08928675000788644
+    },
+    {
+      "step_seconds": 0.08911208400968462
+    },
+    {
+      "step_seconds": 0.08919779100688174
+    },
+    {
+      "step_seconds": 0.08910241699777544
+    },
+    {
+      "step_seconds": 0.08943204203387722
+    },
+    {
+      "step_seconds": 0.08889466599794105
+    },
+    {
+      "step_seconds": 0.08918304200051352
+    },
+    {
+      "step_seconds": 0.08930904202861711
+    },
+    {
+      "step_seconds": 0.08923658303683624
+    },
+    {
+      "step_seconds": 0.08904691698262468
+    },
+    {
+      "step_seconds": 0.08929958404041827
+    },
+    {
+      "step_seconds": 0.08914458303479478
+    },
+    {
+      "step_seconds": 0.08920400001807138
+    },
+    {
+      "step_seconds": 0.08910362498136237
+    },
+    {
+      "step_seconds": 0.08915845799492672
+    },
+    {
+      "step_seconds": 0.09735208301572129
+    },
+    {
+      "step_seconds": 0.09138191596139222
+    },
+    {
+      "step_seconds": 0.09142662497470155
+    },
+    {
+      "step_seconds": 0.09048987500136718
+    },
+    {
+      "step_seconds": 0.09036258398555219
+    },
+    {
+      "step_seconds": 0.09059470798820257
+    },
+    {
+      "step_seconds": 0.09056508401408792
+    },
+    {
+      "step_seconds": 0.09047362499404699
+    },
+    {
+      "step_seconds": 0.09054366702912375
+    },
+    {
+      "step_seconds": 0.090507541957777
+    },
+    {
+      "step_seconds": 0.09083699999609962
+    },
+    {
+      "step_seconds": 0.09018854104215279
+    },
+    {
+      "step_seconds": 0.09145545802311972
+    },
+    {
+      "step_seconds": 0.09062608401291072
+    },
+    {
+      "step_seconds": 0.08933158300351351
+    },
+    {
+      "step_seconds": 0.08926224999595433
+    },
+    {
+      "step_seconds": 0.08920491597382352
+    },
+    {
+      "step_seconds": 0.08922933303983882
+    },
+    {
+      "step_seconds": 0.08895008295075968
+    },
+    {
+      "step_seconds": 0.08901525003602728
+    },
+    {
+      "step_seconds": 0.09016766701824963
+    },
+    {
+      "step_seconds": 0.0907687500002794
+    },
+    {
+      "step_seconds": 0.09060658299131319
+    },
+    {
+      "step_seconds": 0.09049025003332645
+    },
+    {
+      "step_seconds": 0.09058162500150502
+    },
+    {
+      "step_seconds": 0.09065066697075963
+    },
+    {
+      "step_seconds": 0.09033000003546476
+    },
+    {
+      "step_seconds": 0.09026825003093109
+    },
+    {
+      "step_seconds": 0.08995799999684095
+    },
+    {
+      "step_seconds": 0.08993279101559892
+    },
+    {
+      "step_seconds": 0.09028599999146536
+    },
+    {
+      "step_seconds": 0.08997595898108557
+    },
+    {
+      "step_seconds": 0.08971320901764557
+    },
+    {
+      "step_seconds": 0.0899180420092307
+    },
+    {
+      "step_seconds": 0.09028208296513185
+    },
+    {
+      "step_seconds": 0.09019625000655651
+    },
+    {
+      "step_seconds": 0.09006966702872887
+    },
+    {
+      "step_seconds": 0.08996229199692607
+    },
+    {
+      "step_seconds": 0.08980287500889972
+    },
+    {
+      "step_seconds": 0.09017408400541171
+    },
+    {
+      "step_seconds": 0.09009320801123977
+    },
+    {
+      "step_seconds": 0.09005450003314763
+    },
+    {
+      "step_seconds": 0.08975787501549348
+    },
+    {
+      "step_seconds": 0.08986716700019315
+    },
+    {
+      "step_seconds": 0.09007224999368191
+    },
+    {
+      "step_seconds": 0.09286616701865569
+    },
+    {
+      "step_seconds": 0.08943770901532844
+    },
+    {
+      "step_seconds": 0.08900766703300178
+    },
+    {
+      "step_seconds": 0.08912575000431389
+    }
+  ],
+  "construction_seconds": 0.18097137502627447,
+  "peak_rss_bytes": 670924800,
+  "memory_scope": "Whole worker including graph construction and both scheduler checks",
+  "timing_scope": "Frozen head loss/hidden gradient, host scheduling and boundary exchange",
+  "correctness": "Loss and full hidden gradient match dense scheduler at rtol=1e-4, atol=1e-6",
+  "weight_bytes": 8388608,
+  "causal_rows": 511,
+  "valid_rows": 128,
+  "executed_rows": 511,
+  "input_sha256": "80ed80a5c1b1f9bcebe4892995f15329b27a07dbdcef30350556537b254c3d69",
+  "weight_sha256": "bc40df062569eefe5de4d776d026d4c94c014253c040e7cbea1ee010d84f67d2",
+  "ort_graph_optimization": "disabled",
+  "cpu_threads": 1,
+  "runtime_environment": {
+    "ONNXRUNTIME_EP_MLX_NO_COMPILE": "1",
+    "ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES": null
+  },
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "hardware": {
+    "cpu": "Apple M1 Max",
+    "logical_cores": 10,
+    "physical_memory_bytes": 34359738368
+  },
+  "source_sha256": {
+    "chunked_loss.py": "8795125870ac8b135c4769466772c705e480171ad131685bbcc2041eb0c92e32",
+    "supervision_benchmark.py": "d7d0d3a5a3b62e3acbfbcdbd81c2abe662e07406c1ae658ebf87186c0800d419"
+  },
+  "versions": {
+    "numpy": "2.4.6",
+    "torch": "2.15.0",
+    "onnxruntime": "1.31.1",
+    "onnxscript": "0.7.2"
+  }
+}
