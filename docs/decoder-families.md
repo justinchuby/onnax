@@ -120,3 +120,25 @@ checks and PEFT exchange for both families. The existing
 [Qwen long-context workload](qwen-context-training.md) supplies NF4, mixed-precision
 projections and chunked output-head execution. This new family workload uses FP32
 weights and a full-logit loss path.
+
+## Recorded workload results
+
+On Apple M1 Max, both CPU ORT and MLX completed 30 SFT updates with the same
+source-graph identity for each family. Fixed training and held-out losses fell:
+
+| Family/backend | Training loss, initial → final | Validation loss, initial → final | Peak process footprint (MiB) |
+| --- | --- | --- | ---: |
+| Phi-3 / CPU | 5.555212 → 5.419975 | 5.575892 → 5.450570 | 452.9 |
+| Phi-3 / MLX | 5.555212 → 5.419975 | 5.575893 → 5.450569 | 466.9 |
+| Qwen3 / CPU | 5.543500 → 5.377007 | 5.550551 → 5.430950 | 457.4 |
+| Qwen3 / MLX | 5.543500 → 5.377006 | 5.550551 → 5.430950 | 471.5 |
+
+Each run used a separate process, two layers, FP32 computation and one host
+thread. The kernel footprint peak includes imports, construction, runtime,
+training and export. Independent six-update audits passed on both backends,
+with maximum adapter-gradient absolute differences at most `2.33e-8`.
+
+The [evidence report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/decoder-families-m1max.json)
+contains source and binary identities, all audit results, raw losses, RSS and
+footprint counters, and the software versions. Its single-run elapsed times
+cover initial/final evaluation, training and export after construction.
