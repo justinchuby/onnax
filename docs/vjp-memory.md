@@ -19,13 +19,16 @@ cotangents and parameter names. To analyze an ordinary ONNX model directly:
 ```bash
 uv run --group training python -m examples.huggingface.saved_values model.onnx \
   --inputs adapter.A adapter.B --outputs hidden \
-  --parameters adapter.A adapter.B --dimension batch=1 \
+  --parameters adapter.A adapter.B --dimension batch=1 --optimize \
   --output model-memory.json
 ```
 
 ## Read the report
 
-The tool clones the source, specializes named dimensions and generates its VJP.
+The tool clones the source and generates its VJP, then specializes named dimensions.
+This order preserves derivative choices made for the original graph. An
+inference-only copy expands local functions to recover missing boundary shapes.
+The generated VJP uses those shapes for accounting.
 It splits the graph at the forward/backward boundary and lists values actually
 read by the pullback. `--optimize` applies the existing ONNXScript training
 pipeline before counting those reads.
@@ -44,6 +47,10 @@ consumers. Shared reads count the value once. Declared inputs with no backward
 use are removed from the accounting copy. A parameter can require a gradient
 without backward needing to read its current value: for $u=x\,a$, computing
 $\bar a=\bar u\,x$ reads $x$, while the forward pass reads $a$.
+
+Saved boundaries include forward values captured by nested pullback bodies,
+even when those values are implicit inputs of a Scan. Forward-produced captures
+become explicit saved-value inputs.
 
 `extra_forward_outputs` counts saved values beyond the original forward outputs.
 An output already returned across a checkpoint boundary can also serve backward.
@@ -64,6 +71,9 @@ measurements. Unknown sizes appear in `unknown_values`; nested control flow or
 opaque functions produce an `unresolved` liveness result with the required next
 analysis step.
 
+Add `--scan-bodies` to apply the {ref}`nested Scan storage schedule <scan-memory>`
+to generated recurrences.
+
 ## Qwen3.5 block study
 
 The pinned `Qwen/Qwen3.5-0.8B` export supplies a linear-attention block
@@ -74,15 +84,36 @@ For the optimized full-attention pullback:
 
 | Sequence | Saved activations | Backward temporary peak | Total local tensor peak |
 |---|---:|---:|---:|
-| 64 | 6.03 MiB | 5.72 MiB | 82.38 MiB |
-| 256 | 24.32 MiB | 22.88 MiB | 119.37 MiB |
-| 512 | 49.14 MiB | 45.75 MiB | 169.25 MiB |
+| 64 | 6.03 MiB | 5.97 MiB | 82.63 MiB |
+| 256 | 24.32 MiB | 23.88 MiB | 120.37 MiB |
+| 512 | 49.14 MiB | 47.75 MiB | 171.25 MiB |
 
 The total includes backward inputs and frozen/constant storage. The linear block
-has 22 saved forward values; its Scan body requires a control-flow memory model
-before reporting a local peak. This identifies the next extension for recurrent
-blocks: separate retained sequence outputs, per-iteration temporaries and carry
-storage.
+has 22 saved forward values. Analyze its nested recurrences with:
+
+```bash
+uv run --group huggingface --group training python -m examples.huggingface.saved_values \
+  --bundle qwen_run/export/execution --block decoder_0_1 \
+  --dimension batch=1 --dimension sequence=512 --optimize --scan-bodies \
+  --output recurrent-memory.json
+```
+
+Its existing VJP uses 32-token chunks. An FP32 state with shape `[1,16,128,128]`
+occupies 1 MiB. It retains one state per chunk, then reconstructs a 32-state
+history window inside the backward loop:
+
+| Sequence | Chunks | Retained boundary states | Local replay history | Local tensor peak |
+|---|---:|---:|---:|---:|
+| 64 | 2 | 2 MiB | 32 MiB | 105.97 MiB |
+| 65 | 3 | 3 MiB | 32 MiB | 108.88 MiB |
+| 256 | 8 | 8 MiB | 32 MiB | 150.69 MiB |
+| 512 | 16 | 16 MiB | 32 MiB | 210.32 MiB |
+
+The 65-token case includes a padded tail chunk. The replay window stays bounded
+as sequence length grows; parameter, activation and gradient storage also
+contribute to the block total. The {download}`Scan memory reports
+<../examples/huggingface/reports/qwen35-scan-memory.json>` contain both outer
+loops, their inner Scans, capture lifetimes and the tensors present at peak.
 
 The {download}`complete block reports
 <../examples/huggingface/reports/qwen35-block-saved-values.json>` contain source

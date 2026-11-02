@@ -35,11 +35,37 @@ These scenarios describe tensor storage in node order. The native allocator
 measurement captures the runtime's execution plan. Kernel workspaces, fusion and
 allocation reuse are accounted for by the runtime measurement.
 
-The analyzer requires a flat, topologically ordered graph with known sizes.
-Inline local functions first. Unknown dimensions/dtypes and nested control flow
-produce errors, so every reported tensor has an explicit byte count. Packed
+The analyzer requires a topologically ordered graph with known sizes.
+Inline local functions first. Unknown dimensions and dtypes produce errors, so
+every reported tensor has an explicit byte count. Packed
 four-bit types use rounded-up packed storage sizes; zero-element tensors use zero
 bytes. Analysis leaves the input graph unchanged.
+
+(scan-memory)=
+## Follow Scan bodies
+
+Add `--scan-bodies` to account for modern [ONNX Scan](https://onnx.ai/onnx/operators/onnx__Scan.html)
+nodes and nested Scans. The default analyzes flat graphs. Scan analysis uses a
+preallocated sequence-output schedule:
+
+- The full input sequences remain live; their per-step slices borrow storage.
+- Output sequence buffers are allocated before iteration.
+- A previous carry coexists with the current body's outputs and temporaries.
+- The final carry and corresponding final body result are counted once.
+- Body initializers are allocated once for a nonempty loop.
+
+The report follows captured outer values through their body uses. With
+`--alias-views`, it also follows carry aliases across iterations, including one
+state forwarding another state's older buffer. Nested loops apply the same
+schedule recursively. Zero-step loops allocate their declared outputs and skip
+body workspace. `If`, `Loop` and Scan before opset 9 require separate models.
+
+Each Scan entry records its step count, carry, retained sequence outputs,
+borrowed slices, previous-iteration buffers, body initializer bytes and recursive
+body peak. `peak_scan_workspace_bytes` supplements the outer `peak_groups`;
+together they sum to `peak_activation_bytes`. These tensor totals describe the
+chosen schedule; allocator measurements capture the backend's execution and
+workspaces.
 
 ## Recompute the hidden preactivation
 
