@@ -437,7 +437,11 @@ The trained adapter was restored exactly after that audit.
 
 The matched four-layer PyTorch MPS capacity probe reached its 20 GiB allocator
 limit during backward recomputation: 16.63 GiB was allocated when attention
-requested another 4 GiB. Smaller checkpoint groups are the next capacity cases.
+requested another 4 GiB. Two-layer groups hit the same limit. One-layer groups
+completed a cold update and seven warmup updates, then exhausted the allocator
+on the next backward pass. Peak whole-process physical footprint was 23.76 GiB
+for that attempt. MPS therefore produced no steady-state timing samples at 8K
+under the 20 GiB allocator and 24 GiB process limits.
 
 ### Steady-state 8K execution
 

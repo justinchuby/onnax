@@ -4053,5 +4053,293 @@
     "failure": "MPS allocated 16.63 GiB under a 20 GiB allocator limit; backward checkpoint recomputation requested another 4.00 GiB",
     "classification": "allocator_out_of_memory",
     "physical_footprint_peak_bytes": 22021048216
+  },
+  "mps_followup_capacity": {
+    "source_commit": "a7cc694d7dc01d6795e1ae1814a1e48277549079",
+    "allocator_limit_bytes": 21474836480,
+    "physical_footprint_limit_bytes": 25769803776,
+    "jobs": [
+      {
+        "name": "mps-group2-capacity",
+        "status": "failed",
+        "started": "2026-11-02T04:51:35.161562+00:00",
+        "command": [
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.guard",
+          "--output-dir",
+          "/tmp/onnax-qwen8k-fallbacks-v1/mps-group2-capacity-guard",
+          "--",
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.context_capacity",
+          "--provider",
+          "mps",
+          "--projection-precision",
+          "bf16",
+          "--sequence-length",
+          "8192",
+          "--checkpoint-layers",
+          "2",
+          "--chunk-size",
+          "128",
+          "--trace-phases",
+          "--train-file",
+          "/tmp/onnax-qwen-longalpaca-8k/benchmark.jsonl",
+          "--output-dir",
+          "/tmp/onnax-qwen8k-fallbacks-v1/mps-group2-capacity"
+        ],
+        "source_commit": "a7cc694d7dc01d6795e1ae1814a1e48277549079",
+        "working_tree_dirty": false,
+        "returncode": 1,
+        "finished": "2026-11-02T04:52:11.687507+00:00",
+        "physical_footprint_peak_bytes": 22286649216
+      },
+      {
+        "name": "mps-group1-capacity",
+        "status": "complete",
+        "started": "2026-11-02T04:52:11.721195+00:00",
+        "command": [
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.guard",
+          "--output-dir",
+          "/tmp/onnax-qwen8k-fallbacks-v1/mps-group1-capacity-guard",
+          "--",
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.context_capacity",
+          "--provider",
+          "mps",
+          "--projection-precision",
+          "bf16",
+          "--sequence-length",
+          "8192",
+          "--checkpoint-layers",
+          "1",
+          "--chunk-size",
+          "128",
+          "--trace-phases",
+          "--train-file",
+          "/tmp/onnax-qwen-longalpaca-8k/benchmark.jsonl",
+          "--output-dir",
+          "/tmp/onnax-qwen8k-fallbacks-v1/mps-group1-capacity"
+        ],
+        "source_commit": "a7cc694d7dc01d6795e1ae1814a1e48277549079",
+        "working_tree_dirty": false,
+        "returncode": 0,
+        "finished": "2026-11-02T04:53:18.480054+00:00",
+        "physical_footprint_peak_bytes": 25504745800
+      },
+      {
+        "name": "mps-group1-steady",
+        "status": "failed",
+        "started": "2026-11-02T04:53:18.517635+00:00",
+        "command": [
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.guard",
+          "--output-dir",
+          "/tmp/onnax-qwen8k-fallbacks-v1/mps-group1-steady-guard",
+          "--",
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.benchmark",
+          "--mode",
+          "pytorch",
+          "--torch-device",
+          "mps",
+          "--torch-attention",
+          "sdpa",
+          "--torch-chunked",
+          "--torch-mps-memory-limit-gib",
+          "20",
+          "--real",
+          "--nf4",
+          "--projection-precision",
+          "bf16",
+          "--batch-size",
+          "1",
+          "--sequence-length",
+          "8192",
+          "--checkpoint-layers",
+          "1",
+          "--chunk-size",
+          "128",
+          "--train-file",
+          "/tmp/onnax-qwen-longalpaca-8k/benchmark.jsonl",
+          "--warmup",
+          "10",
+          "--samples",
+          "100",
+          "--progress-every",
+          "1"
+        ],
+        "source_commit": "a7cc694d7dc01d6795e1ae1814a1e48277549079",
+        "working_tree_dirty": false,
+        "returncode": 1,
+        "finished": "2026-11-02T04:59:36.154705+00:00",
+        "physical_footprint_peak_bytes": 25516034328
+      }
+    ],
+    "group1_cold_update": {
+      "mode": "pytorch",
+      "phase_instrumentation": true,
+      "validated_updates": 1,
+      "parameter_tensors": 112,
+      "checkpoint_layers": 1,
+      "save_activations": false,
+      "mlx_memory_limit_bytes": null,
+      "torch_mps_memory_limit_bytes": 21474836480,
+      "mps_memory_fraction": 0.8012818357492058,
+      "provider": "pytorch_mps",
+      "torch_chunked_head": true,
+      "mps_fallback_enabled": false,
+      "attention_implementation": "sdpa",
+      "fused_ops": false,
+      "synchronization": "MPS at each phase boundary",
+      "segment_target_nodes": null,
+      "lut4_fusion_disabled": false,
+      "mlx_compile_disabled": true,
+      "real": true,
+      "weight_values": "nf4_reconstructed_fp32",
+      "projection_precision": "bf16",
+      "gradient_and_optimizer_dtype": "float32",
+      "base_storage": "fp32",
+      "warmup": 0,
+      "samples": 1,
+      "losses": [
+        4.591896057128906
+      ],
+      "batch": 1,
+      "sequence": 8192,
+      "valid_shifted_tokens": 8191,
+      "input_ids_sha256": "06c5419049d167d2213094c92afe26e0235aea3f7f44b0ee14c17b66c7009933",
+      "input_pattern": "Prefix of the first naturally long corpus example",
+      "head_chunk_size": 128,
+      "full_logits_bytes": 4978638848,
+      "chunk_logits_bytes": 77791232,
+      "initialization_seconds": 12.762105249974411,
+      "timings_ms": {
+        "forward_and_loss": {
+          "median": 10054.71741699148,
+          "p95": 10054.71741699148
+        },
+        "backward": {
+          "median": 36943.26562498463,
+          "p95": 36943.26562498463
+        },
+        "process_cpu": {
+          "median": 18418.245,
+          "p95": 18418.245
+        },
+        "adamw": {
+          "median": 270.82224999321625,
+          "p95": 270.82224999321625
+        },
+        "step": {
+          "median": 47268.80529196933,
+          "p95": 47268.80529196933
+        }
+      },
+      "timing_samples_ms": [
+        {
+          "forward_and_loss": 10054.71741699148,
+          "backward": 36943.26562498463,
+          "process_cpu": 18418.245,
+          "adamw": 270.82224999321625,
+          "step": 47268.80529196933
+        }
+      ],
+      "effective_tokens_per_second": 173.28553047630334,
+      "peak_rss_bytes": 5067390976,
+      "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+      "initialization_scope": "PyTorch model construction and FP32 base reconstruction",
+      "parameter_bytes": 2293760,
+      "threads": {
+        "torch": 1,
+        "ort_intra": 1,
+        "ort_inter": 1
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      },
+      "ort_optimizer": "disabled",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 19552667568,
+        "lifetime_peak_bytes": 25504745800,
+        "current_resident_bytes": 128335872,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "mps_allocator": {
+        "active_bytes": 2408776448,
+        "driver_bytes": 18946883584,
+        "recommended_max_bytes": 26800603136,
+        "scope": "Allocator snapshot after synchronized final update; process peak is reported separately"
+      },
+      "source_commit": "a7cc694d7dc01d6795e1ae1814a1e48277549079",
+      "working_tree_dirty": false,
+      "qualification_scope": "Cold one-update capacity, with FP32 parameter/gradient/AdamW validation",
+      "phase_journal": "phases.jsonl",
+      "input_file_sha256": "b43f8b73b2879a42e1335eba65db41ab69a70073e200106a209265baf4b9145e"
+    },
+    "group1_warmup_updates": [
+      {
+        "update": 1,
+        "loss": 4.5919,
+        "step_seconds": 46.609
+      },
+      {
+        "update": 2,
+        "loss": 4.40275,
+        "step_seconds": 47.337
+      },
+      {
+        "update": 3,
+        "loss": 4.08074,
+        "step_seconds": 46.726
+      },
+      {
+        "update": 4,
+        "loss": 3.85359,
+        "step_seconds": 48.816
+      },
+      {
+        "update": 5,
+        "loss": 3.75807,
+        "step_seconds": 50.278
+      },
+      {
+        "update": 6,
+        "loss": 3.75794,
+        "step_seconds": 50.573
+      },
+      {
+        "update": 7,
+        "loss": 3.69378,
+        "step_seconds": 50.142
+      }
+    ],
+    "measured_samples": 0,
+    "failure": "Group two failed during its cold backward; group one completed seven warmup updates then hit the 20 GiB allocator limit requesting a 4 GiB attention allocation.",
+    "conclusion": "MPS SDPA did not complete the 8K steady-state workload within these memory limits.",
+    "worker_log_sha256": "dc2c0f800002dcc0bc1b78b095af889a4f4349c45c79fb00123299c66098f4ff"
   }
 }
