@@ -266,6 +266,21 @@ checks and PEFT exchange for all three families. The existing
 projections and chunked output-head execution. This new family workload uses FP32
 weights, with full-logit and bounded-head loss paths.
 
+To measure both routes, run `examples.huggingface.decoder_head_benchmark` once
+without `--head-chunk-size` and once with it, using separate output files and the
+same sequence, valid-token count and runtime settings. Each invocation owns its
+runtime sessions. Add `--real --cache-dir ... --sequence 512 --valid-tokens 128`
+for the pinned pretrained model. Compare the resulting loss/gradient archives:
+
+```sh
+python -m examples.huggingface.decoder_head_comparison \
+  --full /tmp/full.json --bounded /tmp/bounded.json \
+  --output /tmp/head-comparison.json
+```
+
+The comparison checks workload settings, runtime versions, source hashes and
+finite numerical outputs before summarizing timing and process RSS.
+
 ### Bounded-head measurement
 
 The 64-token tiny Qwen3.5 comparison uses 32 supervised targets, FP32, batch one,
