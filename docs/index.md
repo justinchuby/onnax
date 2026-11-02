@@ -17,6 +17,7 @@ huggingface
 torch
 checkpointing
 vjp-memory
+block-runtime
 decoder-families
 diffusion
 qwen35-training

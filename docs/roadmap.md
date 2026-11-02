@@ -252,32 +252,34 @@ steps around supervised positions, saved values and execution lifetimes.
 The current gated-delta reverse kernel completes its paired runtime measurement,
 training and checkpoint qualification alongside this work.
 
-1. **Gather supervised positions before the frozen head.** Apply the causal
-   shift, gather rows whose target differs from `-100`, run the existing bounded
-   head/loss VJP, and scatter its hidden gradients back to the full sequence.
-   Keep the loss sum and the caller's effective-token normalization. All-ignored
-   labels produce zero loss/hidden gradients and skip the head session. Compare
-   loss, hidden gradients, all adapters and multi-step updates with the full head,
-   including prompt masking, right padding, one target, chunk tails and unequal
-   accumulation groups. Measure CPU FP32 and MLX at fixed input lengths and
-   supervision densities, with head, gather/scatter and full-step timings.
-2. **Reuse the head scheduler across decoder families.** Connect the shared
-   Qwen3/Qwen3.5/Phi-3 task to the hidden-state export and bounded loss path.
-   Verify gradients through unsupervised context positions, export/reload and
-   Trainer checkpoint recovery. Grow sequence lengths using measured capacity.
-3. **Report actual VJP saved values and peak contributors.** Separate parameters,
-   data inputs and saved activations. Connect named checkpoints with existing
-   activation-liveness analysis, and compare logical live sets, runtime allocation
-   and process footprint on one block and multiple layers.
-4. **Choose selective recomputation from those measurements.** Record retained
-   values, recomputed subgraphs, invocation counts and release points. Validate a
-   decoder block first, then multi-layer Qwen and diffusion. Preserve shared edges,
-   skip connections, dynamic shapes and the state needed for deterministic replay.
-5. **Pair fusion contracts with saved values and prompt release.** Extend the
-   existing normalization, attention and recurrence boundaries with explicit dtype
-   and saved-value conventions. Test VJP/JVP and supported higher-order composition.
-   Inspect block cotangent and activation holders before changing release policy;
-   keep shared-parameter accumulation in external autograd.
+1. **Delivered: supervised-position head scheduling.** The existing chunked head
+   gathers valid shifted labels before projection, scatters hidden gradients back
+   into the full context, and skips execution for all-ignored labels. CPU and MLX
+   checks cover gradients, updates and supervision-density measurements.
+2. **Delivered: saved-value and runtime peak reports.** Named checkpoint VJPs
+   now report parameters, inputs, saved activations and nested Scan peaks. The
+   [runtime study](block-runtime.md) captures actual Qwen3.5 block feeds, compares
+   gradients and measures isolated exported recomputation modules. At 512 tokens,
+   gated-delta reverse fusion reduces linear-block median execution from 194.92
+   to 110.77 ms and active allocator peak from 1183.10 to 958.36 MiB.
+3. **Share immutable MLX initializers across sessions.** A full-model probe finds
+   6.68 GiB of live allocations alongside 6.68 GiB of session initializer payload;
+   distinct initializer regions occupy 3.81 GiB. Implement shared ownership for
+   immutable weights, exclude overridable inputs, and release storage after the
+   last session closes. Validate independent sessions, overrides, concurrent use,
+   complete training, recovery and measured memory before adopting the cache.
+4. **Reuse the bounded head across decoder families.** Connect shared
+   Qwen3/Qwen3.5/Phi-3 tasks to hidden-state export and supervised-position
+   scheduling. Validate gradients through context positions, export/reload and
+   Trainer checkpoint recovery, then measure longer sequences.
+5. **Choose selective recomputation from measured peaks.** Record retained
+   values, replay subgraphs, invocation counts and release points. Start with one
+   decoder block, then extend to multi-layer Qwen and diffusion. Preserve shared
+   edges, skip connections, dynamic shapes and deterministic replay state.
+6. **Pair fusion contracts with saved values and prompt release.** Establish
+   saved-value/dtype conventions for normalization, attention and recurrence.
+   Check VJP/JVP and supported higher-order composition; use allocator traces to
+   identify large activation holders and retain external shared-gradient accumulation.
 
 Shape-specific MatMul/Gemm forms and shared low-rank products follow measured
 costs in these workloads. Graph generation continues to prune inactive derivative
@@ -288,8 +290,9 @@ The [first saved-value study](vjp-memory.md) connects split VJPs with the livene
 analyzer on exported Qwen3.5 blocks. It reports complete local tensor peaks for
 the full-attention block. The recurrent study also models nested Scan carry,
 retained sequence outputs and per-iteration live sets, including padded chunks.
-The next memory step pairs these estimates with runtime allocation measurements
-and chooses a block-local recomputation candidate from the measured peak set.
+The runtime measurements now pair these estimates with native allocation peaks.
+The initializer-sharing milestone addresses persistent storage first; block-local
+recomputation follows the measured transient peak set.
 
 ```{toctree}
 :hidden:
