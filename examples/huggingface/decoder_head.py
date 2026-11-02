@@ -6,7 +6,6 @@ import contextlib
 import hashlib
 import json
 import os
-import shutil
 import tempfile
 
 import numpy as np
@@ -16,6 +15,7 @@ import onnx_ir as ir
 import onnax
 from examples.huggingface.chunked_loss import ChunkedHead
 from examples.huggingface.serialization import SharedWeights
+from onnax._file_snapshot import copy_file
 
 
 def file_digest(path):
@@ -117,7 +117,7 @@ def load(directory, record, *, session_factory):
                 raise ValueError(
                     "Head artifacts must use filenames within the execution directory"
                 )
-            shutil.copyfile(os.path.join(directory, name), os.path.join(snapshots, name))
+            copy_file(os.path.join(directory, name), os.path.join(snapshots, name))
             validate_file(snapshots, name, expected)
         head = ChunkedHead.from_record(snapshots, record, session_factory=session_factory)
         resources.callback(head.close)

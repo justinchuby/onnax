@@ -30,7 +30,16 @@ from examples.huggingface.decoder_graph import DECODER_BOUNDARIES
 from examples.huggingface.optimization import optimize_training_graph
 from examples.huggingface.peft_adapter import export_adapter, roundtrip
 from examples.huggingface.pretrained import load_tokenizer
-from examples.huggingface.sft import make_trainer, token_loss, tokenizer
+from examples.huggingface.sft import (
+    _data_identity,
+    _training_texts,
+    _validate_max_length,
+    _validate_padding,
+    _validate_resume_data,
+    make_trainer,
+    token_loss,
+    tokenizer,
+)
 from examples.huggingface.validation import add_reference_parameters
 from onnax.torch import CheckpointedModule
 
@@ -210,6 +219,15 @@ def _validate_mapping(mapping, execution, config):
             raise ValueError("Source adapter projection ranges differ from B")
 
 
+def _validate_head_chunk_size(head_chunk_size):
+    if head_chunk_size is not None and (
+        isinstance(head_chunk_size, bool)
+        or not isinstance(head_chunk_size, int)
+        or head_chunk_size < 1
+    ):
+        raise ValueError("head_chunk_size must be a positive integer")
+
+
 def prepare(
     family,
     *,
@@ -226,12 +244,7 @@ def prepare(
         or checkpoint_layers < 1
     ):
         raise ValueError("checkpoint_layers must be a positive integer")
-    if head_chunk_size is not None and (
-        isinstance(head_chunk_size, bool)
-        or not isinstance(head_chunk_size, int)
-        or head_chunk_size < 1
-    ):
-        raise ValueError("head_chunk_size must be a positive integer")
+    _validate_head_chunk_size(head_chunk_size)
     graph, parameters, mapping, reference = prepare_graph(
         family, preserve_fused=fused_ops, real=real, cache_dir=cache_dir
     )
@@ -289,9 +302,9 @@ def batch():
     }
 
 
-def task_tokenizer(family, *, real=False, cache_dir=None):
+def task_tokenizer(family, *, real=False, cache_dir=None, training_texts=None):
     if not real:
-        return tokenizer()
+        return tokenizer(training_texts=training_texts)
     source = FAMILIES[family].pretrained
     if source is None:
         raise ValueError(f"No pinned pretrained source for {family}")
@@ -448,6 +461,24 @@ def audit(
         model.close()
 
 
+def _validate_task_source(config, family, real, head_chunk_size):
+    if config["model_type"] != FAMILIES[family].config_type.model_type:
+        raise ValueError("Checkpoint decoder family mismatch")
+    if (config.get("onnax_head") is not None) != (head_chunk_size is not None):
+        raise ValueError("Checkpoint head execution mode mismatch")
+    previous_source = config.get("onnax_pretrained")
+    source = FAMILIES[family].pretrained
+    if real and (
+        source is None
+        or previous_source is None
+        or previous_source["model_id"] != source.model_id
+        or previous_source["revision"] != source.revision
+    ):
+        raise ValueError("Checkpoint pretrained source mismatch")
+    if not real and previous_source is not None:
+        raise ValueError("A pretrained checkpoint requires real-model execution")
+
+
 def run(
     directory,
     *,
@@ -461,8 +492,18 @@ def run(
     real=False,
     cache_dir=None,
     head_chunk_size=None,
+    max_length=64,
+    pad_to_multiple_of=None,
+    train_file=None,
+    validation_file=None,
+    load_export=None,
 ):
     """Let TRL own training, accumulation, optimizer and checkpoint policy."""
+    _validate_head_chunk_size(head_chunk_size)
+    _validate_max_length(max_length, limit=None if real else 64)
+    if pad_to_multiple_of is None and real:
+        pad_to_multiple_of = 64
+    _validate_padding(max_length, pad_to_multiple_of)
     if isinstance(steps, bool) or not isinstance(steps, int) or steps < 1:
         raise ValueError("steps must be a positive integer")
     if stop is not None and (
@@ -474,32 +515,38 @@ def run(
     if resume is not None:
         with open(os.path.join(resume, "config.json"), encoding="utf-8") as stream:
             previous_config = json.load(stream)
-        if previous_config["model_type"] != FAMILIES[family].config_type.model_type:
-            raise ValueError("Checkpoint decoder family mismatch")
-        if (previous_config.get("onnax_head") is not None) != (head_chunk_size is not None):
-            raise ValueError("Checkpoint head execution mode mismatch")
-        previous_source = previous_config.get("onnax_pretrained")
-        source = FAMILIES[family].pretrained
-        if real and (
-            source is None
-            or previous_source is None
-            or previous_source["model_id"] != source.model_id
-            or previous_source["revision"] != source.revision
-        ):
-            raise ValueError("Checkpoint pretrained source mismatch")
-        if not real and previous_source is not None:
-            raise ValueError("A pretrained checkpoint requires real-model execution")
+        _validate_task_source(previous_config, family, real, head_chunk_size)
+    if load_export is not None:
+        with open(os.path.join(load_export, "config.json"), encoding="utf-8") as stream:
+            _validate_task_source(json.load(stream), family, real, head_chunk_size)
     os.makedirs(directory, exist_ok=True)
-    tok = task_tokenizer(family, real=real, cache_dir=cache_dir)
-    model, reference = prepare(
+    train_texts, eval_texts = _training_texts(train_file, validation_file)
+    tok = task_tokenizer(
         family,
-        session_factory=session_factory,
-        fused_ops=fused_ops,
         real=real,
         cache_dir=cache_dir,
-        head_chunk_size=head_chunk_size,
+        training_texts=train_texts if train_file is not None else None,
     )
-    del reference
+    data_identity = _data_identity(
+        train_texts,
+        eval_texts,
+        tok,
+        max_length=max_length,
+        pad_to_multiple_of=pad_to_multiple_of,
+    )
+    _validate_resume_data(resume, data_identity, required=True)
+    if load_export is None:
+        model, reference = prepare(
+            family,
+            session_factory=session_factory,
+            fused_ops=fused_ops,
+            real=real,
+            cache_dir=cache_dir,
+            head_chunk_size=head_chunk_size,
+        )
+        del reference
+    else:
+        model = OnnxDecoder.load(load_export, session_factory=session_factory)
     batch_records = []
 
     def record_batch(module, args, kwargs):
@@ -517,6 +564,23 @@ def run(
 
     handle = model.register_forward_pre_hook(record_batch, with_kwargs=True)
     try:
+        if model.head is not None:
+            model.head.chunk_size = head_chunk_size
+            model.config.onnax_head["chunk_size"] = head_chunk_size
+        if resume is not None:
+            from safetensors.torch import load_file
+
+            weights = os.path.join(resume, "model.safetensors")
+            state = (
+                load_file(weights)
+                if os.path.exists(weights)
+                else torch.load(
+                    os.path.join(resume, "pytorch_model.bin"),
+                    map_location="cpu",
+                    weights_only=True,
+                )
+            )
+            model.load_state_dict(state)
         if len(tok) > model.config.vocab_size:
             raise ValueError("Tokenizer vocabulary exceeds the frozen ONNX embedding")
         trainer = make_trainer(
@@ -526,7 +590,10 @@ def run(
             real=real,
             steps=steps,
             adam_epsilon=adam_epsilon,
-            pad_to_multiple_of=64 if real else None,
+            pad_to_multiple_of=pad_to_multiple_of,
+            max_length=max_length,
+            train_texts=train_texts,
+            eval_texts=eval_texts,
         )
         trainer.args.save_steps = max(1, steps // 2)
         if stop is not None:
@@ -539,8 +606,10 @@ def run(
         trainer.train(resume_from_checkpoint=resume)
         final = trainer.evaluate()["eval_loss"]
         final_train = trainer.evaluate(trainer.train_dataset)["eval_loss"]
-        if trainer.state.global_step == steps and (
-            not final_train < initial_train or not final < initial
+        if (
+            resume is None
+            and trainer.state.global_step == steps
+            and (not final_train < initial_train or not final < initial)
         ):
             raise AssertionError("Fixed training and validation losses must decrease")
         output = os.path.join(directory, "export")
@@ -552,13 +621,16 @@ def run(
             "steps": trainer.state.global_step,
             "microbatch_size": trainer.args.per_device_train_batch_size,
             "gradient_accumulation_steps": trainer.args.gradient_accumulation_steps,
-            "max_length": 64,
-            "pad_to_multiple_of": 64 if real else None,
+            "max_length": max_length,
+            "pad_to_multiple_of": pad_to_multiple_of,
+            "data": data_identity,
             "batches": batch_records,
             "adam_epsilon": adam_epsilon,
             "validation_loss": [initial, final],
             "training_loss": [initial_train, final_train],
             "source_identity": model.onnx._identity,
+            "loaded_export": os.fspath(load_export) if load_export is not None else None,
+            "initial_evaluation": "checkpoint" if resume is not None else "initial_parameters",
             "timing_scope": "initial/final evaluation, training and export; excludes construction",
             "elapsed_seconds": time.perf_counter() - start,
             "source_mapping": copy.deepcopy(model.mapping),
@@ -580,9 +652,14 @@ def main():
     parser.add_argument("--audit-steps", type=int, default=6)
     parser.add_argument("--fused-ops", action="store_true")
     parser.add_argument("--head-chunk-size", type=int)
+    parser.add_argument("--max-length", type=int, default=64)
+    parser.add_argument("--pad-to-multiple-of", type=int)
+    parser.add_argument("--train-file")
+    parser.add_argument("--validation-file")
     parser.add_argument("--provider", choices=("cpu", "mlx"), default="cpu")
     parser.add_argument("--library")
     parser.add_argument("--resume")
+    parser.add_argument("--load-export")
     parser.add_argument("--adam-epsilon", type=float, default=1e-5)
     args = parser.parse_args()
     if (
@@ -592,6 +669,14 @@ def main():
         or args.adam_epsilon <= 0
     ):
         parser.error("Require positive steps/epsilon and at least two audit steps")
+    if args.audit_only and (
+        args.max_length != 64
+        or args.pad_to_multiple_of is not None
+        or args.train_file
+        or args.validation_file
+        or args.load_export
+    ):
+        parser.error("Context and data options apply to training")
     torch.set_num_threads(1)
     factory = None
     library_sha256 = None
@@ -621,6 +706,11 @@ def main():
             family=args.family,
             steps=args.steps,
             resume=args.resume,
+            load_export=args.load_export,
+            max_length=args.max_length,
+            pad_to_multiple_of=args.pad_to_multiple_of,
+            train_file=args.train_file,
+            validation_file=args.validation_file,
             **options,
         )
     source_directory = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))

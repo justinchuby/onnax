@@ -249,6 +249,72 @@ The frozen projection retains its source `[vocab, hidden]` layout and uses
 the frozen head, loss convention and projection precision. Resume with the same
 head mode; chunk size can change without changing the loss definition.
 
+## Choose training text and context length
+
+Provide separate training and validation files to train on your own text. Files
+can contain one example per line or JSONL objects with a `text` field. The tiny
+models train a local tokenizer from the training split; pretrained models use
+their pinned tokenizer.
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family qwen35 --real --cache-dir /path/to/model-cache \
+  --train-file /path/to/train.jsonl --validation-file /path/to/validation.jsonl \
+  --max-length 512 --pad-to-multiple-of 64 --head-chunk-size 128 \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --output-dir /tmp/qwen35-context-training
+```
+
+`max_length` truncates examples to the requested context. Padding rounds each
+batch to the chosen multiple. Reports record the actual sequence length and
+supervised target count for each batch. Longer examples supply longer training
+contexts; increasing the padding multiple alone adds padding positions.
+
+Checkpoints record text hashes, tokenizer encoding semantics, context length and
+padding settings. Resume with the same settings and files to reproduce the
+training trajectory. The CLI validates this identity before building the ONNX
+model. Offline tiny models accept context lengths up to 64; pretrained models use
+their source configuration's limit.
+
+### Reuse exported graphs for training
+
+`--load-export` loads an exported task's forward and derivative modules directly.
+Use it to continue training the saved adapters or combine it with `--resume` to
+restore a Trainer checkpoint:
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family qwen35 --real --cache-dir /path/to/model-cache \
+  --load-export /tmp/qwen35-context-training/export \
+  --resume /tmp/qwen35-context-training/checkpoint-2 --steps 4 \
+  --train-file /path/to/train.jsonl --validation-file /path/to/validation.jsonl \
+  --max-length 4096 --pad-to-multiple-of 64 --head-chunk-size 128 \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --output-dir /tmp/qwen35-context-resumed
+```
+
+The loader validates the saved family, source revision and head mode. The saved
+graph retains its operator requirements. Initial evaluation uses the restored
+checkpoint parameters; Trainer restores optimizer, scheduler and RNG state.
+The replay CLI compares the final state with continuous training.
+
+### Complete long-context QA qualification
+
+The pinned Qwen3.5-0.8B trains four optimizer updates on four complete LongAlpaca
+QA examples, with two document-group-held-out validation examples. The Qwen3.5
+tokenizer produces 3,642–4,027 tokens per training example. All 16 training
+microbatches preserve the complete text, using a 4,096-token limit and padding
+to multiples of 64. Full-text causal loss covers every shifted nonpadding token.
+
+Training loss falls from 2.3527 to 2.1173; validation loss falls from 2.6614 to
+2.4325. The guarded run reaches 9.24 GiB peak physical footprint and retains at
+least 7.54 GiB free disk through training and export. The
+[corpus manifest](../examples/huggingface/reports/qwen35-context4k-corpus.json)
+records the dataset revision, license, sample hashes and document holdout. The
+[training report](../examples/huggingface/reports/qwen35-context4k-sft-mlx.json)
+retains actual sequence/target counts and runtime provenance. Fresh-process
+recovery is the next qualification gate.
+
 ## Execute on MLX
 
 ```sh
@@ -423,3 +489,11 @@ The [Qwen3.5 evidence report](https://github.com/justinchuby/onnax/blob/main/exa
 contains commands, source/library hashes, corpus identity, dependency versions,
 per-process RSS and physical-footprint peaks, audit results and export checks.
 Recorded elapsed times cover evaluation, training and export after construction.
+
+The complete-context run also resumes from update two in a fresh process using
+`--load-export`. At update four, all 62 checkpoint tensors, Adam state, scheduler
+and PEFT adapter weights match continuous training byte for byte. The
+[replay report](../examples/huggingface/reports/qwen35-context4k-replay.json)
+checks 114 ONNX models and 3,736 named tensor records; loaded loss, all 60 adapter
+gradients and inference outputs match on the recorded eight-token replay input.
+The optimizer updates themselves use the complete 3.6k–4k-token QA sequences.

@@ -28,6 +28,20 @@
 
 以上是本次定向阅读的观察，主 session 实施前应按当前代码再次确认。
 
+## 主 session 对照结果与当前排期
+
+已按当前实现核对：`chunked_loss.py` 在 causal shift 后收集有效标签位置，
+反向散回完整 hidden 梯度，全忽略标签跳过 head。该路径已接入
+Qwen3、Qwen3.5 和 Phi-3。保存值分析、嵌套 Scan live-set 报告以及
+MLX block 运行时测量也已具备；共享冻结权重和通用 bounded head 已交付。
+
+接下来以完整 4k Qwen3.5 训练为基线，完成导出图恢复核验，再从一个
+linear-attention block 和一个 full-attention block 的实测峰值选择重算区域。
+交付显式保存/重算/释放计划、可执行候选及梯度、更新、恢复和内存对照。
+具体步骤见{ref}`当前路线 <block-local-recomputation>`。
+
+下文保留最初的设计建议，实施状态以上述对照和路线图为准。
+
 ## 1. 有效 token 的分块 head
 
 ORT Training 提供 label sparsity 优化开关，体现了利用监督位置稀疏性减少计算的方向。

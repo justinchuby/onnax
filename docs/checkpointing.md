@@ -113,3 +113,9 @@ The [Qwen workload](qwen-context-training.md) uses the same partitioner and
 block autograd executor. Its adapter supplies preserved decoder boundaries and
 keeps its existing task-specific export format, chunked output head and PEFT
 mapping. Output-head chunking remains in that task adapter for this milestone.
+
+
+On macOS, owned model snapshots use filesystem copy-on-write clones when
+available. Each snapshot has its own file identity; modifying or removing the
+source leaves the loaded model intact. Other filesystems use ordinary copies.
+This applies to both external tensor payloads and their exported graph files.

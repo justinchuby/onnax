@@ -302,9 +302,35 @@ analyzer on exported Qwen3.5 blocks. It reports complete local tensor peaks for
 the full-attention block. The recurrent study also models nested Scan carry,
 retained sequence outputs and per-iteration live sets, including padded chunks.
 The runtime measurements now pair these estimates with native allocation peaks.
-Initializer sharing now addresses persistent storage. The shared bounded head is
-the next integration milestone; block-local recomputation follows the remaining
-measured transient peak set.
+Initializer sharing addresses persistent storage, and shared bounded heads are
+integrated across the decoder families. The current Qwen3.5 qualification extends
+that path to complete 3.6k–4k-token QA examples with exported-graph training and
+fresh-process recovery.
+
+(block-local-recomputation)=
+### Next delivery: measured block-local recomputation
+
+Use the [ORT Training handoff](ort-training-handoff.md) to connect the existing
+saved-value analysis, checkpoint executor and native memory counters:
+
+1. Capture one linear-attention block and one full-attention block from the
+   qualified 4k workload. Record forward values read by backward, their producers,
+   last consumers and the allocator peak during the same invocation.
+2. Select one deterministic replay region from the measured peak set. Specify its
+   retained inputs, regenerated values, replay count and release points. Preserve
+   cross-region edges and shared adapter contributions.
+3. Execute the candidate through the existing checkpoint/autograd boundary.
+   Compare every adapter gradient, multi-step updates and fresh-process recovery
+   against the unchanged execution route.
+4. Measure baseline and candidate in isolated processes: ten warmups, one hundred
+   timed invocations, median/P95, exchange time, active allocator peak and process
+   physical footprint. Use equal context, supervision, precision and thread settings.
+5. Extend the selected policy to the full decoder after local qualification.
+   Apply the same reporting and execution contracts to the Diffusers workload.
+
+Keep this planner in the example layer while the saved-value and execution
+contracts develop. The first delivery is an explicit, inspectable replay plan and
+one executed candidate; automatic budget selection follows those measurements.
 
 ```{toctree}
 :hidden:
