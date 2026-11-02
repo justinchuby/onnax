@@ -46,11 +46,15 @@ class _LinearAttention:
         if not isinstance(dk, int) or not isinstance(dv, int) or dk < 1 or dv < 1:
             raise ValueError("LinearAttention requires static positive state head widths")
         self.dk, self.dv = dk, dv
+        assert decay.shape is not None
+        if decay.shape[2] not in (self.vh, self.vh * self.dk):
+            raise ValueError("LinearAttention decay must be per-head or per-key")
+        self.gd = 1 if decay.shape[2] == self.vh else self.dk
         for value, width in (
             (q, self.qh * self.dk),
             (k, self.qh * self.dk),
             (v, self.vh * self.dv),
-            (decay, self.vh * self.dk),
+            (decay, self.vh * self.gd),
             (beta, self.vh),
         ):
             assert value.shape is not None
@@ -73,7 +77,7 @@ class _LinearAttention:
         if index == 5:
             return ctx.op("Transpose", value, perm=[1, 0, 2])
         heads = self.qh if index < 2 else self.vh
-        width = self.dv if index == 2 else self.dk
+        width = self.dv if index == 2 else self.gd if index == 4 else self.dk
         shape = ctx.op(
             "Concat",
             ctx.op("Shape", value, start=0, end=2),
@@ -157,6 +161,7 @@ def vjp(
     state_shape: list[int | None] = [None, a.vh, a.dk, a.dv]
     key_shape: list[int | None] = [None, a.vh, a.dk]
     value_shape: list[int | None] = [None, a.vh, a.dv]
+    decay_shape: list[int | None] = [None, a.vh, a.gd]
     beta_shape: list[int | None] = [None, a.vh]
     # Forward chunks retain only their starting state. Replay reconstructs a
     # single chunk's previous states for its reverse recurrence.
@@ -164,7 +169,7 @@ def vjp(
         ctx,
         a,
         "linear_attention_forward_step",
-        [state_shape, key_shape, value_shape, key_shape, beta_shape],
+        [state_shape, key_shape, value_shape, decay_shape, beta_shape],
     )
     state, key, value, decay, beta = forward_step.inputs
     present, _, _, _ = _advance(forward, state, key, value, decay, beta)
@@ -181,7 +186,7 @@ def vjp(
             output.name = f"{replay_step.name}_value_{index}_{slot}"
 
     chunk_shapes = [
-        [chunk_size, *shape] for shape in (key_shape, value_shape, key_shape, beta_shape)
+        [chunk_size, *shape] for shape in (key_shape, value_shape, decay_shape, beta_shape)
     ]
     forward_chunk, forward = _body(
         ctx, a, "linear_attention_forward_chunk", [state_shape, *chunk_shapes]
@@ -204,7 +209,7 @@ def vjp(
             key_shape,
             key_shape,
             value_shape,
-            key_shape,
+            decay_shape,
             beta_shape,
             value_shape,
         ],
@@ -243,6 +248,8 @@ def vjp(
         "ReduceSum", reverse.op("Mul", dfaded, faded), reverse.constant([-1]), keepdims=0
     )
     dprevious = reverse.op("Mul", factor, dfaded)
+    if a.gd == 1:
+        dg = reverse.op("ReduceSum", dg, reverse.constant([-1]), keepdims=1)
     _finish(reverse_step, [dprevious, dq, dk, dr, dg, db])
 
     reverse_chunk, reverse = _body(
@@ -258,7 +265,7 @@ def vjp(
                     key_shape,
                     key_shape,
                     value_shape,
-                    key_shape,
+                    decay_shape,
                     beta_shape,
                     value_shape,
                 )
@@ -330,7 +337,7 @@ def vjp(
     )
     results = {3: dstate}
     for index, gradient in zip((0, 1, 2, 4, 5), gradients, strict=True):
-        width = a.dv if index == 2 else a.dk
+        width = a.dv if index == 2 else a.gd if index == 4 else a.dk
         tail = [a.vh] if index == 5 else [a.vh, width]
         batch = ctx.op("Shape", a.values[0], start=0, end=1)
         shape = ctx.op("Concat", ctx.constant([-1]), batch, ctx.constant(tail), axis=0)
@@ -362,11 +369,11 @@ def jvp(ctx: _Context, node: ir.Node, tangents: Mapping[int, ir.Value]) -> Seque
         [None, a.vh, a.dk, a.dv],
         *([[None, a.vh, a.dk]] * 2),
         [None, a.vh, a.dv],
-        [None, a.vh, a.dk],
+        [None, a.vh, a.gd],
         [None, a.vh],
         *([[None, a.vh, a.dk]] * 2),
         [None, a.vh, a.dv],
-        [None, a.vh, a.dk],
+        [None, a.vh, a.gd],
         [None, a.vh],
     ]
     inputs = [

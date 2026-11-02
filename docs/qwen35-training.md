@@ -29,9 +29,10 @@ y_t=s S_t^T q_t.
 `linear_attention_reference.py` implements this recurrence in FP32 NumPy.
 Its pullback takes cotangents for both the sequence output and final state,
 and returns gradients for all six inputs: query, key, value, initial state,
-log-decay and update rate. Mobius packs decay as `[batch,time,value_heads*d_k]`
-and beta as `[batch,time,value_heads]`. The reference also accepts scalar decay
-per head; repeating that scalar across key channels gives the Mobius layout.
+log-decay and update rate. Mobius accepts decay as `[batch,time,value_heads*d_k]`
+or `[batch,time,value_heads]`, broadcasting the latter across key channels.
+Qwen3.5 uses the per-head scalar form. Beta has shape `[batch,time,value_heads]`.
+The generated derivatives and reference support both decay layouts.
 
 Write $G_t$ for the sequence-output cotangent and $H_t$ for the state cotangent
 arriving from later tokens. The reverse update is
@@ -81,22 +82,50 @@ PyTorch, and reuse a session across batch and sequence sizes.
 
 ## Implement the training graph
 
-The operator rules and deterministic function boundaries are implemented.
+The offline four-layer text task and operator rules are implemented.
 Call-level rules own nested functions and `Scan` bodies; registration is
-mode-specific and randomness checks traverse the complete function tree.
-The remaining model milestones are:
+mode-specific and randomness checks traverse the complete function tree. Each
+training call starts with zero convolution and recurrent states and returns
+full-sequence logits and hidden states. The task sets the Q/K L2-normalization
+epsilon to `1e-6` to match Transformers.
 
-1. Build the full-sequence Mobius text task with explicit masks and positions.
-   Use one source adapter for each linear layer's fused `in_proj_qkv`, and q/v
-   adapters for full-attention layers. The fused adapter updates Q/K/V together;
-   its source names and layout must agree with the PyTorch PEFT target.
-   Full-attention `q_proj` also contains the output-gate projection, so retain
-   that fused source layout when mapping the adapter.
-2. Qualify the four-layer task against Transformers through loss, all adapter
-   gradients, external updates, held-out loss, checkpoint recovery and exported
-   execution. Then pin the real model/tokenizer revision and repeat on 0.8B.
-3. Retain portable derivative functions under `pkg.onnax`; use measured state
-   lifetimes to select native MLX recomputation and kernel boundaries.
+Each linear layer receives one rank-four adapter on fused `in_proj_qkv`.
+It updates Q/K/V together. The full-attention layer receives adapters on
+`q_proj` and `v_proj`; `q_proj` retains the source's query/output-gate layout.
+This gives ten trainable A/B tensors across all four layers.
+
+Run the FP32 CPU qualification with external AdamW:
+
+```bash
+uv sync --group huggingface --group training --group dev
+uv run python -m examples.huggingface.qwen35_train --output-dir /tmp/qwen35 --steps 100
+```
+
+The CLI compares logits, causal token loss and every adapter gradient against
+Transformers at the same parameters (`rtol=1e-4, atol=1e-6`). A second reference
+trajectory performs independent AdamW updates. Its parameters use the tensor
+norm criterion `L2(error) <= 1e-6 + 1e-4 * L2(reference)`; the report also records
+coordinate errors and pointwise tolerance violations. Frozen weights are
+hashed, and exported modules pass the full ONNX checker and execute after
+loading. The plain `forward.onnx` includes the trained adapter weights.
+
+Resume the external optimizer in a new process:
+
+```bash
+uv run python -m examples.huggingface.qwen35_train \
+  --resume /tmp/qwen35/checkpoint.pt --output-dir /tmp/qwen35-continued --steps 120
+```
+
+Tests compare continuous training with fresh-process recovery byte for byte.
+Dynamic right-padding tests compare valid-token logits and adapter gradients;
+padded tokens are excluded from causal loss with `-100` labels. The CLI's
+fixed token patterns exercise training and validation independently of
+tokenizer downloads.
+
+Next, connect this task to the shared Trainer/TRL and PEFT examples, pin the
+real model/tokenizer revision, and qualify 0.8B. Native MLX work will use measured
+state lifetimes to select recurrent kernel and recomputation boundaries.
+Portable derivative functions will use the `pkg.onnax` domain.
 
 Trainer and TRL continue to own training loops and checkpoints. ONNXScript
 optimizes the generated graph; the model adapter owns architecture conventions.

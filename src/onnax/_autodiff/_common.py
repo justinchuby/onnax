@@ -54,6 +54,8 @@ def _data_indices(node: ir.Node) -> Sequence[int]:
         return range(min(3, len(node.inputs)))
     if node.op_type == "Where":
         return (1, 2)
+    if node.op_type == "CastLike":
+        return (0,)
     if node.op_type == "Pad":
         return (0, 2) if len(node.inputs) > 2 and node.inputs[2] is not None else (0,)
     if node.op_type == "ScatterND":

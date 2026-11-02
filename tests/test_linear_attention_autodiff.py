@@ -16,12 +16,12 @@ pytest.importorskip("mobius")
 from mobius.functions.linear_attention import linear_attention
 
 
-def model_and_arrays(query_heads=1, value_heads=2, length=7):
+def model_and_arrays(query_heads=1, value_heads=2, length=7, *, keywise_decay=True):
     rng = np.random.default_rng(71)
     shapes = [(2, length, query_heads * 3)] * 2 + [
         (2, length, value_heads * 5),
         (2, value_heads, 3, 5),
-        (2, length, value_heads * 3),
+        (2, length, value_heads * (3 if keywise_decay else 1)),
         (2, length, value_heads),
     ]
     arrays = {
@@ -80,7 +80,7 @@ def reference(tensors, query_heads, value_heads):
         value_heads // query_heads, 2
     )
     v = v.reshape(batch, length, value_heads, 5)
-    decay = decay.reshape(batch, length, value_heads, 3)
+    decay = decay.reshape(batch, length, value_heads, -1)
     outputs = []
     for index in range(length):
         faded = torch.exp(decay[:, index])[..., None] * state
@@ -135,8 +135,11 @@ def test_directional_recurrence(query_heads, value_heads, length, names):
 @pytest.mark.parametrize("query_heads,value_heads", [(1, 1), (1, 3), (2, 4)])
 @pytest.mark.parametrize("length", [1, 7, 33, 65])
 @pytest.mark.parametrize("names", [None, ["state"], ["decay", "beta"], ["q"]])
-def test_chunk_recomputed_pullback(query_heads, value_heads, length, names):
-    source, arrays = model_and_arrays(query_heads, value_heads, length)
+@pytest.mark.parametrize("keywise_decay", [False, True])
+def test_chunk_recomputed_pullback(query_heads, value_heads, length, names, keywise_decay):
+    source, arrays = model_and_arrays(
+        query_heads, value_heads, length, keywise_decay=keywise_decay
+    )
     _check(
         source,
         arrays,

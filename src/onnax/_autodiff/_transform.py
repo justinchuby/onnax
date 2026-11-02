@@ -348,7 +348,7 @@ class JvpPass(ir.passes.FunctionalPass):
           keepdims, absent/empty axes, and noop_with_empty_axes.
         * Layout/indexing: Reshape, Flatten, Squeeze, Unsqueeze, Transpose,
           Expand, Concat, Split, Gather (including repeated/negative indices).
-          Also floating-point Cast, Where, Softmax, and LogSoftmax.
+          Also floating-point Cast/CastLike, Where, Softmax, and LogSoftmax.
           Forward mode additionally supports Slice, constant/reflect/edge/wrap Pad,
           and ScatterND with reduction="add";
           its data/updates are differentiable and its indices are structural.

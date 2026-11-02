@@ -16,6 +16,7 @@ from onnax._rules import _builtin
 OPS = frozenset(
     (
         "Cast",
+        "CastLike",
         "Concat",
         "Expand",
         "Flatten",
@@ -60,6 +61,7 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
     op = node.op_type
     if op in (
         "Cast",
+        "CastLike",
         "Expand",
         "Flatten",
         "Gather",
@@ -141,7 +143,7 @@ def vjp(
             attr.as_ints() if attr is not None else tuple(reversed(range(_rank(_input(node)))))
         )
         return {0: ctx.op("Transpose", g, perm=np.argsort(perm).tolist())}
-    elif op in ("Cast",):
+    elif op in ("Cast", "CastLike"):
         dtype = _input(node).dtype
         assert dtype in _FLOATS
         return {0: ctx.op("Cast", g, to=dtype)}
