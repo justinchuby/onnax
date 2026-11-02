@@ -100,6 +100,8 @@ class OnnxDecoder(PreTrainedModel):
         if config.model_type != FAMILIES[record["family"]].config_type.model_type:
             raise ValueError("Decoder family differs from the saved configuration")
         config._name_or_path = record["base_model"]
+        if source := getattr(config, "onnax_pretrained", None):
+            config._commit_hash = source["revision"]
         execution = CheckpointedModule.load(
             os.path.join(directory, "execution"), session_factory=session_factory
         )

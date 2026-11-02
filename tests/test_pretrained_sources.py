@@ -94,6 +94,7 @@ def test_pretrained_sft_uses_pinned_tokenizer_and_training_boundary(checkpoint, 
     import sys
 
     from examples.huggingface.decoder_sft import OnnxDecoder, run, text_batch
+    from examples.huggingface.peft_adapter import export_adapter
 
     _, source = checkpoint
     result = run(str(tmp_path / "training"), family="qwen35", real=True, steps=2)
@@ -130,6 +131,12 @@ def test_pretrained_sft_uses_pinned_tokenizer_and_training_boundary(checkpoint, 
     ]
     try:
         assert models[0].config.onnax_pretrained == models[1].config.onnax_pretrained
+        assert models[0].config._commit_hash == source.revision
+        export_adapter(models[0], str(tmp_path / "reexported-adapter"))
+        adapter_config = json.loads(
+            (tmp_path / "reexported-adapter" / "adapter_config.json").read_text()
+        )
+        assert adapter_config["revision"] == source.revision
         for name, value in models[0].onnx.arrays().items():
             assert value.tobytes() == models[1].onnx.arrays()[name].tobytes()
         data = text_batch(load_tokenizer(source))
