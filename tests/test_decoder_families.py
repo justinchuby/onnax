@@ -62,8 +62,9 @@ def test_phi3_source_mapping_and_shared_low_rank_product():
 
 
 @pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
-def test_dynamic_padding_positions_ignore_labels_and_accumulation(family):
-    model, _ = prepare(family)
+@pytest.mark.parametrize("head_chunk_size", [None, 3])
+def test_dynamic_padding_positions_ignore_labels_and_accumulation(family, head_chunk_size):
+    model, _ = prepare(family, head_chunk_size=head_chunk_size)
     try:
         data = batch()
         target = {name: value[:1, :4] for name, value in data.items()}
@@ -132,12 +133,13 @@ def test_load_reuses_derivatives(tmp_path, monkeypatch, family):
 
 
 @pytest.mark.parametrize("family", ["phi3", "qwen35"])
-def test_trl_training_and_fresh_process_resume(tmp_path, family):
+@pytest.mark.parametrize("head_chunk_size", [None, 3])
+def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size):
     torch.set_num_threads(1)
     full, partial, resumed = (str(tmp_path / name) for name in ("full", "partial", "resumed"))
-    report = run(full, family=family, steps=4)
+    report = run(full, family=family, steps=4, head_chunk_size=head_chunk_size)
     assert report["validation_loss"][1] < report["validation_loss"][0]
-    run(partial, family=family, steps=4, stop=2)
+    run(partial, family=family, steps=4, stop=2, head_chunk_size=head_chunk_size)
     subprocess.run(
         [
             sys.executable,
@@ -151,6 +153,7 @@ def test_trl_training_and_fresh_process_resume(tmp_path, family):
             os.path.join(partial, "checkpoint-2"),
             "--output-dir",
             resumed,
+            *(["--head-chunk-size", str(head_chunk_size)] if head_chunk_size else []),
         ],
         check=True,
         env={**os.environ, "HF_HUB_OFFLINE": "1", "HF_DATASETS_OFFLINE": "1"},
@@ -184,6 +187,22 @@ def test_trl_training_and_fresh_process_resume(tmp_path, family):
     assert torch.load(
         os.path.join(full, "checkpoint-4/scheduler.pt"), weights_only=True
     ) == torch.load(os.path.join(resumed, "checkpoint-4/scheduler.pt"), weights_only=True)
+
+    from examples.huggingface.replay import verify
+
+    report = verify(full, resumed, step=4)
+    assert report["checkpoint_bitwise_equal"] and report["optimizer_bitwise_equal"]
+    assert report["standalone_outputs_bitwise_equal"]
+    assert report["exported_gradient_tensors"] == {"phi3": 4, "qwen35": 10}[family]
+    assert report["adapter_metadata_equal"]
+    config_path = os.path.join(resumed, "adapter/adapter_config.json")
+    with open(config_path, encoding="utf-8") as stream:
+        config = json.load(stream)
+    config["lora_alpha"] += 1
+    with open(config_path, "w", encoding="utf-8") as stream:
+        json.dump(config, stream)
+    with pytest.raises(AssertionError):
+        verify(full, resumed, step=4)
 
 
 @pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])

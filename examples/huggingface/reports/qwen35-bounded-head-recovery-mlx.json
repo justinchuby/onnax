@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "completed_step": 30,
+  "restored_from_step": 15,
+  "checkpoint_state_tensors": 62,
+  "parameters_adamw_scheduler_byte_identical": true,
+  "peft_adapters_byte_identical": true,
+  "loaded_logits_loss_all_adapter_gradients_byte_identical": true,
+  "standalone_inference_continuous_resumed_byte_identical": true,
+  "cross_partition_inference": [
+    {
+      "max_abs": 4.00543212890625e-05,
+      "relative_l2": 1.7871336694952333e-06,
+      "elementwise_violations": 15083,
+      "elementwise_rtol": 0.0001,
+      "elementwise_atol": 1e-06
+    },
+    {
+      "max_abs": 4.00543212890625e-05,
+      "relative_l2": 1.7871336694952333e-06,
+      "elementwise_violations": 15083,
+      "elementwise_rtol": 0.0001,
+      "elementwise_atol": 1e-06
+    }
+  ],
+  "onnx_models_checked": [
+    57,
+    57
+  ],
+  "frozen_named_tensor_count": 3736,
+  "frozen_named_tensor_sha256": "8f39e635b869cf0e262d376a25fd82cbc5db4989a374c48f9a7b7444f88b811e",
+  "head_identity": "38a6326db2136cb9f9535525f70dfccf5d6644caf44003119c3b53050877d652",
+  "training_loss": [
+    5.224112033843994,
+    0.3029175400733948
+  ],
+  "validation_loss": [
+    6.01969051361084,
+    5.6221513748168945
+  ],
+  "scope": "Independent continuous/resumed checkpoints and separately constructed ONNX exports; same-route outputs compared byte for byte",
+  "reexport_from_completed_checkpoint": true,
+  "reexport_reason": "Disk reserve stopped the original export after checkpoint-30 was written",
+  "cross_partition_elementwise_close": false,
+  "workers_sha256": {
+    "onnax-bounded-real-verify-training-v2.py": "1483b6a8f48bac2f5228d274a817fd0cb84d0b1e4b5ab47a127f3a830b866a7d",
+    "onnax-bounded-real-reexport.py": "1a9eed385cc06a187901653c8f8486db2e11fb653069dd03ac9059e7e4ef671e",
+    "onnax-bounded-inference-reference.py": "e93b5ebf5b3c14d799b205cf67ce968af50d117a82b32a3af2aefe907263a6ad"
+  },
+  "pretrained_source": {
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17"
+  },
+  "guard": {
+    "reexport": {
+      "status": "complete",
+      "returncode": 0,
+      "started": "2026-11-02T21:58:56.446825+00:00",
+      "finished": "2026-11-02T21:59:57.588407+00:00",
+      "observation_errors": 0,
+      "peak_physical_footprint_bytes": 6831177520
+    },
+    "verification": {
+      "status": "complete",
+      "returncode": 0,
+      "started": "2026-11-02T22:10:01.487650+00:00",
+      "finished": "2026-11-02T22:11:00.031775+00:00",
+      "observation_errors": 0,
+      "peak_physical_footprint_bytes": 4167783440
+    }
+  },
+  "frozen_source_model_payload_sha256": "3c6f53742ff70c6b0e1fadbf007bfc23205513b8133a9847592489b2878c547c"
+}

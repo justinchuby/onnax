@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "scope": "Recovered real Qwen3.5 FP32 inference at eight fixed input tokens",
+  "elementwise_test": {
+    "rtol": 0.0001,
+    "atol": 1e-06
+  },
+  "cross_partition": {
+    "whole_vs_split_hidden": {
+      "max_abs": 3.910064697265625e-05,
+      "relative_l2": 1.849225327532622e-06,
+      "violations": 72,
+      "size": 8192
+    },
+    "whole_vs_split_head": {
+      "max_abs": 4.00543212890625e-05,
+      "relative_l2": 1.7871336694952333e-06,
+      "violations": 15083,
+      "size": 1986560
+    },
+    "inference_vs_whole_hidden_projection": {
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "violations": 0,
+      "size": 1986560
+    },
+    "inference_vs_split": {
+      "max_abs": 4.00543212890625e-05,
+      "relative_l2": 1.7871336694952333e-06,
+      "violations": 15083,
+      "size": 1986560
+    }
+  },
+  "transformers_reference": {
+    "reference_loss": 9.825167655944824,
+    "split_hidden": {
+      "max_abs": 0.00011247396469116211,
+      "relative_l2": 4.326793259679107e-06,
+      "violations": 211,
+      "size": 8192
+    },
+    "whole_hidden": {
+      "max_abs": 0.00010877847671508789,
+      "relative_l2": 4.359401373221772e-06,
+      "violations": 215,
+      "size": 8192
+    },
+    "split_logits": {
+      "max_abs": 7.295608520507812e-05,
+      "relative_l2": 3.9430419747077394e-06,
+      "violations": 40166,
+      "size": 1986560,
+      "loss": 9.825161933898926,
+      "top1_matches": true
+    },
+    "whole_logits": {
+      "max_abs": 7.295608520507812e-05,
+      "relative_l2": 3.900748197338544e-06,
+      "violations": 40005,
+      "size": 1986560,
+      "loss": 9.825169563293457,
+      "top1_matches": true
+    },
+    "inference_logits": {
+      "max_abs": 7.295608520507812e-05,
+      "relative_l2": 3.900748197338544e-06,
+      "violations": 40005,
+      "size": 1986560,
+      "loss": 9.825169563293457,
+      "top1_matches": true
+    }
+  },
+  "pretrained_source": {
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17"
+  }
+}

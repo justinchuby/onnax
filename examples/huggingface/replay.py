@@ -45,6 +45,7 @@ def _equal_tree(a, b):
 
 
 def _output_digest(value):
+    shape = np.shape(value)
     array = np.ascontiguousarray(value)
     flat = array.reshape(-1)
     for start in range(0, flat.size, 1024**2):
@@ -52,7 +53,7 @@ def _output_digest(value):
             raise FloatingPointError("Nonfinite reloaded forward output")
     return {
         "dtype": str(array.dtype),
-        "shape": list(array.shape),
+        "shape": list(shape),
         "sha256": hashlib.sha256(memoryview(array).cast("B")).hexdigest(),
     }
 
@@ -96,6 +97,24 @@ def _training_outputs(directory, interface, feeds, session_factory):
     return values
 
 
+def replay_feeds(feeds):
+    if feeds is None:
+        ids = np.array([[1, 4, 5, 6, 7, 8, 9, 2]], np.int64)
+        feeds = {
+            "input_ids": ids,
+            "attention_mask": np.ones_like(ids),
+            "position_ids": np.arange(8, dtype=np.int64)[None],
+        }
+    if set(feeds) != {"input_ids", "attention_mask", "position_ids"}:
+        raise ValueError("Provide input_ids, attention_mask and position_ids")
+    if any(
+        value.dtype != np.int64 or value.shape != feeds["input_ids"].shape or value.ndim != 2
+        for value in feeds.values()
+    ):
+        raise ValueError("Replay inputs must be matching rank-2 int64 arrays")
+    return feeds
+
+
 def verify(first, replay, *, step=30, provider="cpu", library=None, feeds=None):
     if provider not in ("cpu", "mlx", "reference"):
         raise ValueError("Expected cpu, mlx or reference provider")
@@ -114,6 +133,17 @@ def verify(first, replay, *, step=30, provider="cpu", library=None, feeds=None):
         if library:
             register_library(library)
         factory = mlx_session
+    feeds = replay_feeds(feeds)
+    if any(os.path.exists(os.path.join(root, "export/task.json")) for root in (first, replay)):
+        from examples.huggingface.decoder_replay import verify as verify_decoder
+
+        result = verify_decoder(
+            first, replay, step=step, session_factory=factory, feeds=feeds, provider=provider
+        )
+        if library:
+            with open(library, "rb") as stream:
+                result["library_sha256"] = hashlib.file_digest(stream, "sha256").hexdigest()
+        return result
     with (
         np.load(os.path.join(first, "export/adapter.npz")) as a,
         np.load(os.path.join(replay, "export/adapter.npz")) as b,
@@ -147,20 +177,6 @@ def verify(first, replay, *, step=30, provider="cpu", library=None, feeds=None):
         with open(os.path.join(directory, "export/interface.json")) as stream:
             interface.append(json.load(stream))
     _equal_tree(interface[0], interface[1])
-    if feeds is None:
-        ids = np.array([[1, 4, 5, 6, 7, 8, 9, 2]], np.int64)
-        feeds = {
-            "input_ids": ids,
-            "attention_mask": np.ones_like(ids),
-            "position_ids": np.arange(8, dtype=np.int64)[None],
-        }
-    if set(feeds) != {"input_ids", "attention_mask", "position_ids"}:
-        raise ValueError("Provide input_ids, attention_mask and position_ids")
-    if any(
-        value.dtype != np.int64 or value.shape != feeds["input_ids"].shape or value.ndim != 2
-        for value in feeds.values()
-    ):
-        raise ValueError("Replay inputs must be matching rank-2 int64 arrays")
     outputs = []
     for directory in (first, replay):
         executor = factory(os.path.join(directory, "export/forward.onnx"))

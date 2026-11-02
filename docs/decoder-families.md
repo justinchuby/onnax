@@ -225,6 +225,30 @@ source graph, bound inference graph, parameter arrays and block forward/VJP grap
 `OnnxDecoder.load(export_directory)` executes the saved derivatives. The separate
 `adapter/` directory contains standard PEFT configuration and safetensors.
 
+## Train with a bounded output head
+
+Use `--head-chunk-size 128` with any decoder family to train through hidden-state
+VJPs and a frozen, chunked vocabulary projection:
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family qwen35 --head-chunk-size 128 \
+  --output-dir /tmp/qwen35-bounded-training
+```
+
+After the causal shift, the head gathers positions whose labels differ from
+`-100`. Each chunk computes cross-entropy and its hidden-state gradient; the
+scheduler scatters those gradients into the complete sequence before the body
+VJP. Attention therefore carries supervision through prompt and context tokens.
+Trainer divides loss sums by the effective target count across accumulation
+microbatches. All-ignored labels produce zero loss and skip projection execution.
+
+The frozen projection retains its source `[vocab, hidden]` layout and uses
+`Gemm(transB=1)`. Task exports include reusable body/head derivative modules and
+`execution/inference.onnx`, which returns full logits. Checkpoint identity covers
+the frozen head, loss convention and projection precision. Resume with the same
+head mode; chunk size can change without changing the loss definition.
+
 ## Execute on MLX
 
 ```sh
@@ -240,7 +264,118 @@ gradients and optimizer state at the NumPy boundary. Native tests cover referenc
 checks and PEFT exchange for all three families. The existing
 [Qwen long-context workload](qwen-context-training.md) supplies NF4, mixed-precision
 projections and chunked output-head execution. This new family workload uses FP32
-weights and a full-logit loss path.
+weights, with full-logit and bounded-head loss paths.
+
+To measure both routes, run `examples.huggingface.decoder_head_benchmark` once
+without `--head-chunk-size` and once with it, using separate output files and the
+same sequence, valid-token count and runtime settings. Each invocation owns its
+runtime sessions. Add `--real --cache-dir ... --sequence 512 --valid-tokens 128`
+for the pinned pretrained model. Compare the resulting loss/gradient archives:
+
+```sh
+python -m examples.huggingface.decoder_head_comparison \
+  --full /tmp/full.json --bounded /tmp/bounded.json \
+  --output /tmp/head-comparison.json
+```
+
+The comparison checks workload settings, runtime versions, source hashes and
+finite numerical outputs before summarizing timing and process RSS.
+
+### Bounded-head measurement
+
+The 64-token tiny Qwen3.5 comparison uses 32 supervised targets, FP32, batch one,
+10 warmups and 100 samples per independent MLX worker. Loss and all ten adapter
+gradients match between routes at `rtol=1e-4, atol=1e-6`.
+
+| Route | Step median / P95 | Process peak RSS |
+|---|---:|---:|
+| Full head | 99.86 / 114.39 ms | 620.95 MiB |
+| Bounded head, 16 rows | 102.63 / 118.64 ms | 622.73 MiB |
+
+At this model size, the routes take similar time and memory. Timing covers
+forward, loss, VJP and runtime exchange at fixed nonzero adapter parameters.
+Peak RSS includes imports, source construction and runtime sessions. The reports
+retain [full-head samples](../examples/huggingface/reports/bounded-head-tiny-qwen35-mlx-full.json)
+and [bounded-head samples](../examples/huggingface/reports/bounded-head-tiny-qwen35-mlx-chunked.json),
+source hashes, library digest and environment versions.
+
+### Pretrained Qwen3.5 at 512 tokens
+
+On the same M1 Max, the pinned Qwen3.5-0.8B uses batch one, FP32 and 128
+supervised targets in a 512-token context. Each route runs in an independent
+process with 10 warmups and 100 measured samples. The bounded head uses chunks
+of 128 rows. Loss and all 60 adapter gradients match at `rtol=1e-4, atol=1e-6`.
+
+| Route | Step median / P95 | Peak physical footprint | Peak RSS |
+|---|---:|---:|---:|
+| Full head | 3.132 / 3.184 s | 8.57 GiB | 9.67 GiB |
+| Bounded head | 2.578 / 2.645 s | 7.04 GiB | 11.68 GiB |
+
+The bounded route reduces median step time by 17.7% (1.21 times the throughput).
+The full route returns complete logits for CPU cross-entropy. The bounded route
+executes projection, cross-entropy and hidden derivatives in ONNX on MLX, returning
+chunk loss sums and hidden gradients across the runtime boundary.
+These steps compute forward, loss and all adapter gradients at fixed nonzero
+adapter parameters. Process peaks include source loading, session construction
+and execution. The macOS process guard records physical footprint; `getrusage`
+records peak RSS.
+
+The bounded head's median runtime call takes 82.31 ms, including execution and
+runtime transfers. Python gathering takes 0.070 ms and scattering takes 0.111 ms.
+The [comparison report](../examples/huggingface/reports/qwen35-bounded-head-512-mlx-comparison.json)
+contains per-output numerical errors and guard summaries; the
+[full-head](../examples/huggingface/reports/qwen35-bounded-head-512-mlx-full.json)
+and [bounded-head](../examples/huggingface/reports/qwen35-bounded-head-512-mlx-chunked.json)
+reports retain all timing samples, versions, source hashes and the native library digest.
+
+### Real-model adapter updates
+
+The same bounded-head task completes 30 SFTTrainer updates on the pinned
+Qwen3.5-0.8B. This training run uses FP32, sequence length 64, microbatch one,
+gradient accumulation four and head chunks of 128 rows. Fixed training loss
+falls from 5.2241 to 0.3029; held-out loss falls from 6.0197 to 5.6222.
+The [training report](../examples/huggingface/reports/qwen35-bounded-head-30step-mlx.json)
+records batches, effective target counts, configuration, source identity and export path.
+
+A fresh process restores step 15 and reaches the same step-30 parameters, Adam
+state and scheduler byte for byte. PEFT adapter files match byte for byte.
+Loaded task logits, loss and all 60 adapter gradients match byte for byte
+between the independently constructed exports, as do the standalone inference
+outputs. All 114 exported ONNX modules pass full checker validation; 3736 named
+tensor records agree. The [recovery report](../examples/huggingface/reports/qwen35-bounded-head-recovery-mlx.json)
+records these checks and source-weight hashes. The resumed export was rebuilt
+from its completed checkpoint after the disk guard interrupted its first export.
+
+Use the shared replay CLI to check your own continuous and resumed runs:
+
+```sh
+python -m examples.huggingface.replay \
+  --uninterrupted /tmp/qwen35-bounded-training \
+  --resumed /tmp/qwen35-bounded-resumed --step 30 \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --output /tmp/qwen35-recovery.json
+```
+
+The same command supports every decoder family and the full-head route.
+It checks checkpoint tensors, Adam/scheduler state, PEFT files, named tensor
+contents and full ONNX checker validation. It compares loaded loss/gradient
+outputs and standalone inference outputs between the two runs independently.
+The [real-model CLI report](../examples/huggingface/reports/qwen35-bounded-head-replay-mlx.json)
+retains the output digests and named-tensor manifest digest.
+
+### FP32 inference across execution boundaries
+
+At the recovered adapter state, a fixed eight-token probe compares checkpointed
+body execution, whole-body execution and standalone inference. Appending the
+head preserves the whole-body result byte for byte. Whole and checkpointed body
+execution differ by `1.85e-6` relative hidden-state L2 error, producing `1.79e-6`
+relative logit L2 error.
+
+Against independent Transformers FP32 execution, both ONNX routes have about
+`3.9e-6` relative logit L2 error, identical argmax tokens and loss differences below
+`6e-6`. The original `rtol=1e-4, atol=1e-6` elementwise check exceeds its threshold
+for some logits near zero. The [inference report](../examples/huggingface/reports/qwen35-bounded-head-inference-fp32.json)
+retains those counts, absolute errors and reference losses.
 
 ## Recorded workload results
 

@@ -249,8 +249,8 @@ when extracted from the generated tensor graph.
 
 The [ORT Training design handoff](ort-training-handoff.md) identifies the next
 steps around supervised positions, saved values and execution lifetimes.
-The current gated-delta reverse kernel completes its paired runtime measurement,
-training and checkpoint qualification alongside this work.
+The gated-delta reverse kernel and shared initializer cache have completed
+runtime measurement, training and checkpoint qualification.
 
 1. **Delivered: supervised-position head scheduling.** The existing chunked head
    gathers valid shifted labels before projection, scatters hidden gradients back
@@ -262,7 +262,7 @@ training and checkpoint qualification alongside this work.
    gradients and measures isolated exported recomputation modules. At 512 tokens,
    gated-delta reverse fusion reduces linear-block median execution from 194.92
    to 110.77 ms and active allocator peak from 1183.10 to 958.36 MiB.
-3. **Qualified: shared immutable MLX weights.**
+3. **Delivered: shared immutable MLX weights.**
    [MLX EP #105](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/105)
    interns host buffers and reuses MLX leaves through weak indexes. FP32
    Qwen3.5-0.8B full-task peak footprint falls from 11.10 to 8.16 GiB at 512
@@ -270,16 +270,19 @@ training and checkpoint qualification alongside this work.
    Thirty SFT updates, fresh-process recovery, PEFT export and loaded execution
    reproduce the per-session control. The [runtime study](block-runtime.md)
    records timing scopes, initialization costs and frozen-tensor verification.
-4. **Next: reuse the bounded head across decoder families.** Connect shared
-   Qwen3/Qwen3.5/Phi-3 tasks to hidden-state export and supervised-position
-   scheduling. Store the frozen projection in its source `[vocab, hidden]` layout
-   and use `Gemm(transB=1)` so tied embeddings can share the same initializer.
-   Keep full logits as the reference/inference route and export reloadable body
-   and head modules. Validate loss sums, hidden/adapter gradients, unequal-token
-   accumulation, all-ignored labels, chunk tails, multiple updates and Trainer
-   recovery. Checkpoint identity must cover the frozen head and its loss/precision
-   convention. Measure head execution, exchange, full-task time and process memory
-   before extending context length.
+4. **Delivered: bounded heads across decoder families.** The shared
+   Qwen3/Qwen3.5/Phi-3 task exports hidden states, source-layout frozen head
+   modules and standalone inference ONNX. `Gemm(transB=1)` preserves the
+   `[vocab, hidden]` layout for tied-weight sharing. Tests align gradients and
+   updates with Transformers and cover unequal-token accumulation and ignored
+   labels. Real Qwen3.5 completes 30 SFT updates and exact fresh-process recovery.
+   At 512 context tokens and 128 supervised targets, median step time falls
+   from 3.132 to 2.578 seconds; peak physical footprint falls from 8.57 to
+   7.04 GiB, while peak RSS rises from 9.67 to 11.68 GiB. The
+   [decoder tutorial](decoder-families.md) records measurement scopes and FP32
+   execution-boundary comparisons. The shared replay CLI checks exports,
+   optimizer state and same-route loss/gradient/inference results. Extend
+   context length alongside measured block-local recomputation.
 5. **Choose selective recomputation from measured peaks.** Record retained
    values, replay subgraphs, invocation counts and release points. Start with one
    decoder block, then extend to multi-layer Qwen and diffusion. Preserve shared
