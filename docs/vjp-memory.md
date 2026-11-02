@@ -123,3 +123,49 @@ checkpoint-recovery and runtime-memory comparisons.
 
 The [block runtime study](block-runtime.md) measures these exported recomputation
 modules with captured task inputs and native allocator counters.
+
+## Execute a selective replay region
+
+The example layer can now choose saved values by their ONNX names. Given a split
+VJP boundary, `split_vjp(..., recompute=names)` moves the required producer slice
+into backward. Traversal stops at other saved values, original inputs and frozen
+weights. Shared producers execute once. The source and joint derivative remain
+unchanged.
+
+The replay contract currently covers deterministic arithmetic, layouts and
+standard normalization. Random operators, control flow and custom functions need
+an explicit state contract before entering a replay region. Saved tensors retain
+PyTorch's parameter version checks across the autograd boundary.
+
+Inspect a candidate with the existing report command:
+
+```bash
+uv run --group huggingface --group training python -m examples.huggingface.saved_values \
+  --bundle qwen_run/export/execution --block decoder_3_4 \
+  --dimension batch=1 --dimension sequence=4032 --optimize \
+  --recompute v_model.layers.3.mlp.gate_proj.MatMul_395 \
+              v_model.layers.3.mlp.Swish_396 \
+              v_model.layers.3.mlp.up_proj.MatMul_398 \
+  --output replay-plan.json
+```
+
+Names come from the saved-value report for that exact export. The JSON includes
+retained values, replay inputs and topologically ordered producer nodes. The
+liveness report accounts for the resulting backward graph. Dynamic broadcast
+paths can leave value-dependent temporary sizes unresolved; concrete-shape
+reports list those unknowns.
+
+`examples.huggingface.block_recompute` executes paired forward/backward sessions
+against recorded checkpoint arguments. Use the same bundle, captures and block
+as `block_runtime`; omit `--recompute` for the save-all control, then supply the
+selected names for the candidate. Both routes check every captured gradient,
+verify immutable feeds, run the full ONNX checker and measure ten warmups plus
+one hundred calls. Reports separate forward/backward/paired times, retained CPU
+arrays, MLX allocator peak and whole-process physical footprint.
+
+For small training experiments, the example `bridge.OnnxModule` accepts
+`save_activations=True, recompute=names`. Tests cover dynamic batches, shared
+producer slices, non-unit upstream gradients, unequal microbatch accumulation,
+multi-step updates and Adam checkpoint restoration. The decoder checkpoint
+executor continues to use its qualified whole-block replay policy while these
+block-local alternatives are measured.

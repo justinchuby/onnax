@@ -296,13 +296,43 @@ def measure(directory, captures, name, *, factory, memory=None, warmup=10, sampl
     }
 
 
+def load_batch(path, *, vocab_size, max_sequence):
+    """Load a recorded training microbatch without tokenization or truncation."""
+    import torch
+
+    with np.load(path, allow_pickle=False) as archive:
+        arrays = {name: archive[name] for name in archive.files}
+    required = {"input_ids", "attention_mask", "position_ids", "labels"}
+    if arrays.keys() != required:
+        raise ValueError("Batch requires input_ids, attention_mask, position_ids and labels")
+    ids = arrays["input_ids"]
+    if ids.ndim != 2 or ids.shape[0] < 1 or not 2 <= ids.shape[1] <= max_sequence:
+        raise ValueError("Expected a nonempty rank-2 batch within the model context limit")
+    if any(value.dtype != np.int64 or value.shape != ids.shape for value in arrays.values()):
+        raise ValueError("Batch arrays must have matching shapes and int64 dtype")
+    labels, mask, positions = (
+        arrays[key] for key in ("labels", "attention_mask", "position_ids")
+    )
+    if np.any((ids < 0) | (ids >= vocab_size)) or np.any(
+        (labels != -100) & ((labels < 0) | (labels >= vocab_size))
+    ):
+        raise ValueError("Token IDs and valid labels must be within the vocabulary")
+    if np.any((mask != 0) & (mask != 1)) or np.any((mask == 0) & (labels != -100)):
+        raise ValueError("Padding requires a binary mask and ignored labels")
+    if np.any((positions < 0) | (positions >= max_sequence)):
+        raise ValueError("Position IDs must be within the model position limit")
+    return {name: torch.from_numpy(value) for name, value in arrays.items()}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     get = commands.add_parser("capture")
     get.add_argument("--export", required=True)
     get.add_argument("--block", action="append", required=True)
-    get.add_argument("--sequence", type=int, default=64)
+    batch_options = get.add_mutually_exclusive_group()
+    batch_options.add_argument("--sequence", type=int)
+    batch_options.add_argument("--batch-file")
     get.add_argument("--cache-dir")
     get.add_argument("--output", required=True)
     run = commands.add_parser("measure")
@@ -342,34 +372,42 @@ def main():
         from examples.huggingface.pretrained import PretrainedSource, load_tokenizer
         from examples.huggingface.sft import tokenizer
 
-        if args.sequence < 2:
-            parser.error("Expected sequence >= 2")
         torch.set_num_threads(1)
         config = AutoConfig.from_pretrained(args.export, local_files_only=True)
-        if args.sequence > config.max_position_embeddings:
-            parser.error("Sequence exceeds the model position limit")
-        source = getattr(config, "onnax_pretrained", None)
-        tok = (
-            tokenizer()
-            if source is None
-            else load_tokenizer(
-                PretrainedSource(source["model_id"], source["revision"]),
-                cache_dir=args.cache_dir,
+        if args.batch_file:
+            batch = load_batch(
+                args.batch_file,
+                vocab_size=config.vocab_size,
+                max_sequence=config.max_position_embeddings,
             )
-        )
-        text = "ONNX models learn from examples. Low-rank adapters update a small set of parameters. "
-        repetitions = 1
-        ids = []
-        while len(ids) < args.sequence:
-            ids = tok.encode(text * repetitions, add_special_tokens=False)
-            repetitions *= 2
-        ids = torch.tensor([ids[: args.sequence]], dtype=torch.int64)
-        batch = {
-            "input_ids": ids,
-            "attention_mask": torch.ones_like(ids),
-            "position_ids": torch.arange(args.sequence)[None],
-            "labels": ids.clone(),
-        }
+        else:
+            args.sequence = 64 if args.sequence is None else args.sequence
+            if args.sequence < 2:
+                parser.error("Expected sequence >= 2")
+            if args.sequence > config.max_position_embeddings:
+                parser.error("Sequence exceeds the model position limit")
+            source = getattr(config, "onnax_pretrained", None)
+            tok = (
+                tokenizer()
+                if source is None
+                else load_tokenizer(
+                    PretrainedSource(source["model_id"], source["revision"]),
+                    cache_dir=args.cache_dir,
+                )
+            )
+            text = "ONNX models learn from examples. Low-rank adapters update a small set of parameters. "
+            repetitions = 1
+            ids = []
+            while len(ids) < args.sequence:
+                ids = tok.encode(text * repetitions, add_special_tokens=False)
+                repetitions *= 2
+            ids = torch.tensor([ids[: args.sequence]], dtype=torch.int64)
+            batch = {
+                "input_ids": ids,
+                "attention_mask": torch.ones_like(ids),
+                "position_ids": torch.arange(args.sequence)[None],
+                "labels": ids.clone(),
+            }
         result = capture(
             args.export, names=args.block, batch=batch, output=args.output, factory=session
         )

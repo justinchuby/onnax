@@ -352,3 +352,15 @@ ort-training-handoff
 
 The [MLX precision workflow](mlx-precision.md) covers BF16/FP16 projections,
 FP32 adjoints and precision-preserving lookup-4 deployment.
+
+### Block-local replay implementation
+
+The example VJP splitter now accepts explicit saved-value names to regenerate.
+Its deterministic producer-slice planner preserves retained cut values and shared
+producers. Saved-value reports expose the replay plan, and an isolated paired
+forward/backward command validates candidates against actual checkpoint feeds.
+Dynamic batches, accumulation, multi-step updates and Adam state restoration are
+covered. The first real-model study uses the complete 4032-token Qwen3.5 QA
+capture and the full-attention MLP producer slice. Compare this candidate with
+both saved activations and the existing whole-block checkpoint policy before
+changing decoder execution defaults.

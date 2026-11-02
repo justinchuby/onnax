@@ -73,7 +73,7 @@ class _ComposeDerivativeTransposes(RewriteRuleClassBase):
         return op.Transpose(parent.inputs[0], perm=composed)
 
 
-def split_vjp(model, joint, *, optimize_layout=False):
+def split_vjp(model, joint, *, optimize_layout=False, recompute=()):
     """Split top-level nodes and nested captures, retaining local functions."""
     primal_count = len(model.graph)
     original = list(model.graph)
@@ -109,7 +109,12 @@ def split_vjp(model, joint, *, optimize_layout=False):
         for v in n.outputs
         if any(use.node in derivative for use in v.uses())
     ]
-    names = tuple(v.name for v in boundary)
+    from examples.huggingface.recomputation import replay_region
+
+    recompute = tuple(recompute)
+    replay = replay_region(nodes[:primal_count], boundary, recompute)
+    replay_indices = {nodes.index(node) for node in replay}
+    names = tuple(v.name for v in boundary if v.name not in recompute)
     forward = model.clone()
     values = {v.name: v for n in forward.graph for v in n.outputs}
     for name in names:
@@ -127,7 +132,9 @@ def split_vjp(model, joint, *, optimize_layout=False):
         residual = ir.val(name, dtype=value.dtype, shape=value.shape)
         value.replace_all_uses_with(residual)
         backward.graph.inputs.append(residual)
-    backward.graph.remove(primal, safe=True)
+    backward.graph.remove(
+        [node for index, node in enumerate(primal) if index not in replay_indices], safe=True
+    )
     if optimize_layout:
         IdentityEliminationPass()(backward)
     return forward, backward, names

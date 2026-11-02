@@ -87,6 +87,7 @@ def report(
     dimensions=None,
     optimize=False,
     scan_bodies=False,
+    recompute=(),
 ):
     """Analyze the generated pullback on a copy of a source ONNX IR model.
 
@@ -137,6 +138,18 @@ def report(
             seed.shape = ir.Shape(value.shape)
     ShapeInferencePass()(joint)
     _, backward, residuals = split_vjp(source, joint, optimize_layout=True)
+    replay = None
+    recompute = tuple(recompute)
+    if recompute:
+        from examples.huggingface.recomputation import describe_replay
+
+        values = ir.convenience.create_value_mapping(source.graph)
+        replay = describe_replay(
+            list(source.graph), [values[name] for name in residuals], recompute
+        )
+        _, backward, residuals = split_vjp(
+            source, joint, optimize_layout=True, recompute=recompute
+        )
     RemoveUnusedFunctionsPass()(backward)
     ShapeInferencePass()(backward)
     optimizer.remove_unused_nodes(backward)
@@ -218,6 +231,7 @@ def report(
             "unknown_values": [row["name"] for row in extra if row["bytes"] is None],
         },
         "backward_liveness": liveness,
+        "recomputation": replay,
         "scope": "One generated block VJP; logical tensor bytes, separate storage per value; other blocks and runtime workspaces are outside this live set",
     }
 
@@ -234,6 +248,7 @@ def main():
     parser.add_argument("--output", required=True)
     parser.add_argument("--optimize", action="store_true")
     parser.add_argument("--scan-bodies", action="store_true")
+    parser.add_argument("--recompute", nargs="+", default=[])
     args = parser.parse_args()
     provenance = {}
     if args.bundle:
@@ -281,6 +296,7 @@ def main():
         dimensions=dimensions,
         optimize=args.optimize,
         scan_bodies=args.scan_bodies,
+        recompute=args.recompute,
     )
     result["provenance"] = provenance
     with open(args.output, "w", encoding="utf-8") as stream:
