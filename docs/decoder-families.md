@@ -276,6 +276,28 @@ training trajectory. The CLI validates this identity before building the ONNX
 model. Offline tiny models accept context lengths up to 64; pretrained models use
 their source configuration's limit.
 
+### Reuse exported graphs for training
+
+`--load-export` loads an exported task's forward and derivative modules directly.
+Use it to continue training the saved adapters or combine it with `--resume` to
+restore a Trainer checkpoint:
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family qwen35 --real --cache-dir /path/to/model-cache \
+  --load-export /tmp/qwen35-context-training/export \
+  --resume /tmp/qwen35-context-training/checkpoint-2 --steps 4 \
+  --train-file /path/to/train.jsonl --validation-file /path/to/validation.jsonl \
+  --max-length 4096 --pad-to-multiple-of 64 --head-chunk-size 128 \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --output-dir /tmp/qwen35-context-resumed
+```
+
+The loader validates the saved family, source revision and head mode. The saved
+graph retains its operator requirements. Initial evaluation uses the restored
+checkpoint parameters; Trainer restores optimizer, scheduler and RNG state.
+The replay CLI compares the final state with continuous training.
+
 ### Complete long-context QA qualification
 
 The pinned Qwen3.5-0.8B trains four optimizer updates on four complete LongAlpaca

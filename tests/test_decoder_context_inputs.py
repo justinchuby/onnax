@@ -76,6 +76,8 @@ def test_custom_context_training_and_checkpoint_recovery(tmp_path, corpus, famil
             str(paths[1]),
             "--resume",
             str(partial / "checkpoint-2"),
+            "--load-export",
+            str(full / "export"),
             "--output-dir",
             str(resumed),
         ],
@@ -147,3 +149,59 @@ def test_invalid_context_rejected_before_graph_build(tmp_path, monkeypatch, opti
     monkeypatch.setattr("examples.huggingface.decoder_sft.prepare", unexpected_build)
     with pytest.raises(ValueError):
         run(tmp_path / "output", **options)
+
+
+@pytest.mark.parametrize("change", ["family", "head", "pretrained"])
+def test_export_source_rejected_before_loading(tmp_path, monkeypatch, change):
+    from examples.huggingface.decoder_sft import OnnxDecoder
+
+    directory = tmp_path / "model"
+    directory.mkdir()
+    config = {"model_type": "phi3", "onnax_head": {"identity": "unused"}}
+    if change == "family":
+        config["model_type"] = "qwen3"
+    elif change == "head":
+        del config["onnax_head"]
+    else:
+        config["onnax_pretrained"] = {"model_id": "different"}
+    (directory / "config.json").write_text(json.dumps(config))
+
+    def unexpected(*args, **kwargs):
+        pytest.fail("Incompatible export reached model or tokenizer loading")
+
+    monkeypatch.setattr(OnnxDecoder, "load", unexpected)
+    monkeypatch.setattr("examples.huggingface.decoder_sft.task_tokenizer", unexpected)
+    with pytest.raises(ValueError):
+        run(tmp_path / "out", load_export=directory, head_chunk_size=3)
+
+
+def test_train_exported_task_without_graph_generation(tmp_path, corpus, monkeypatch):
+    import onnax
+    from examples.huggingface import decoder_sft
+
+    paths, _, _ = corpus
+    model, _ = decoder_sft.prepare("phi3", head_chunk_size=3)
+    try:
+        model.export(tmp_path / "model")
+    finally:
+        model.close()
+
+    def unexpected(*args, **kwargs):
+        pytest.fail("Exported training regenerated a model or derivative")
+
+    monkeypatch.setattr(decoder_sft, "prepare", unexpected)
+    monkeypatch.setattr(onnax, "grad", unexpected)
+    monkeypatch.setattr(onnax, "vjp", unexpected)
+    report = run(
+        tmp_path / "trained",
+        steps=2,
+        load_export=tmp_path / "model",
+        head_chunk_size=3,
+        max_length=32,
+        pad_to_multiple_of=8,
+        train_file=paths[0],
+        validation_file=paths[1],
+    )
+    assert report["steps"] == 2
+    assert report["loaded_export"] == str(tmp_path / "model")
+    assert report["initial_evaluation"] == "initial_parameters"
