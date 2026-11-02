@@ -130,6 +130,24 @@ their final training/validation losses agreed within `3e-6`. The full CLI took
 8.98 seconds and peaked at 665 MiB RSS, including graph construction, three
 tiny model copies, reference autograd, checker and export/load checks.
 
+The same [100-step MLX run](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/tiny-qwen35-fp32-mlx-m1max.json)
+produced training/validation losses `4.42860 / 4.95735`, with maximum
+same-parameter gradient error `1.34e-7`. Its forward and VJP sessions require
+complete MLX assignment. PyTorch holds FP32 adapter parameters and AdamW state;
+the bridge exchanges NumPy arrays at the runtime boundary. Exported execution
+reloaded exactly and the bound forward also executed on CPU.
+
+```bash
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 uv run --group native-mlx \
+  python -m examples.huggingface.qwen35_train --provider mlx \
+  --library "$MLX_EP_LIBRARY" --output-dir /tmp/qwen35-mlx --steps 100
+```
+
+`--library` selects a development build; the report records its SHA256. This
+qualification took 19.90 seconds including reference checks and export/loading,
+with 706 MiB peak process RSS. Steady-state GPU timing will separate those costs
+from forward, backward, host exchange and external updates.
+
 Next, connect this task to the shared Trainer/TRL and PEFT examples, pin the
 real model/tokenizer revision, and qualify 0.8B. Native MLX work will use measured
 state lifetimes to select recurrent kernel and recomputation boundaries.
