@@ -19,7 +19,7 @@ from examples.huggingface.decoder_families import prepare_graph
 from examples.huggingface.decoder_sft import OnnxDecoder, audit, batch, prepare, run
 
 
-@pytest.mark.parametrize("family", ["phi3", "qwen3"])
+@pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
 @pytest.mark.parametrize("fused", [False, True])
 def test_source_architecture_gradients_updates_and_peft(tmp_path, family, fused):
     torch.set_num_threads(1)
@@ -28,7 +28,7 @@ def test_source_architecture_gradients_updates_and_peft(tmp_path, family, fused)
     assert report["peft"]["format_roundtrip_bitwise"]
     assert report["peft"]["gradient_check_passed"] and report["peft"]["update_check_passed"]
     assert report["peft"]["logit_violations"] == 0
-    assert report["adapter_tensors"] == (4 if family == "phi3" else 8)
+    assert report["adapter_tensors"] == {"phi3": 4, "qwen3": 8, "qwen35": 10}[family]
 
 
 def test_phi3_source_mapping_and_shared_low_rank_product():
@@ -61,7 +61,7 @@ def test_phi3_source_mapping_and_shared_low_rank_product():
         )
 
 
-@pytest.mark.parametrize("family", ["phi3", "qwen3"])
+@pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
 def test_dynamic_padding_positions_ignore_labels_and_accumulation(family):
     model, _ = prepare(family)
     try:
@@ -103,10 +103,11 @@ def test_dynamic_padding_positions_ignore_labels_and_accumulation(family):
         model.close()
 
 
-def test_load_reuses_derivatives(tmp_path, monkeypatch):
+@pytest.mark.parametrize("family", ["phi3", "qwen35"])
+def test_load_reuses_derivatives(tmp_path, monkeypatch, family):
     import onnax
 
-    model, _ = prepare("phi3")
+    model, _ = prepare(family)
     try:
         expected = model(**batch()).loss
         expected.backward()
@@ -130,19 +131,20 @@ def test_load_reuses_derivatives(tmp_path, monkeypatch):
         restored.close()
 
 
-def test_phi3_trl_training_and_fresh_process_resume(tmp_path):
+@pytest.mark.parametrize("family", ["phi3", "qwen35"])
+def test_trl_training_and_fresh_process_resume(tmp_path, family):
     torch.set_num_threads(1)
     full, partial, resumed = (str(tmp_path / name) for name in ("full", "partial", "resumed"))
-    report = run(full, family="phi3", steps=4)
+    report = run(full, family=family, steps=4)
     assert report["validation_loss"][1] < report["validation_loss"][0]
-    run(partial, family="phi3", steps=4, stop=2)
+    run(partial, family=family, steps=4, stop=2)
     subprocess.run(
         [
             sys.executable,
             "-m",
             "examples.huggingface.decoder_sft",
             "--family",
-            "phi3",
+            family,
             "--steps",
             "4",
             "--resume",
@@ -159,7 +161,10 @@ def test_phi3_trl_training_and_fresh_process_resume(tmp_path):
     try:
         left, right = (model.onnx.arrays() for model in models)
         for name in left:
-            np.testing.assert_array_equal(left[name], right[name])
+            assert (
+                left[name].dtype == right[name].dtype and left[name].shape == right[name].shape
+            )
+            assert left[name].tobytes() == right[name].tobytes()
         torch.testing.assert_close(
             models[0](**batch()).loss, models[1](**batch()).loss, rtol=0, atol=0
         )
@@ -170,10 +175,18 @@ def test_phi3_trl_training_and_fresh_process_resume(tmp_path):
     b = torch.load(os.path.join(resumed, "checkpoint-4/optimizer.pt"), weights_only=True)
     for key, state in a["state"].items():
         for name, value in state.items():
-            torch.testing.assert_close(value, b["state"][key][name], rtol=0, atol=0)
+            other = b["state"][key][name]
+            assert value.dtype == other.dtype and value.shape == other.shape
+            assert torch.equal(
+                value.contiguous().reshape(-1).view(torch.uint8),
+                other.contiguous().reshape(-1).view(torch.uint8),
+            )
+    assert torch.load(
+        os.path.join(full, "checkpoint-4/scheduler.pt"), weights_only=True
+    ) == torch.load(os.path.join(resumed, "checkpoint-4/scheduler.pt"), weights_only=True)
 
 
-@pytest.mark.parametrize("family", ["phi3", "qwen3"])
+@pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
 def test_native_family_gradients_and_peft(tmp_path, family):
     if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
         pytest.skip("Native MLX opt-in")
@@ -185,7 +198,7 @@ def test_native_family_gradients_and_peft(tmp_path, family):
     assert report["peft"]["gradient_check_passed"] and report["peft"]["update_check_passed"]
 
 
-@pytest.mark.parametrize("family", ["phi3", "qwen3", "legacy_qwen3"])
+@pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35", "legacy_qwen3"])
 def test_trainer_counts_shifted_tokens_for_unequal_microbatches(tmp_path, family):
     from examples.huggingface.sft import make_trainer, tokenizer
 
@@ -225,3 +238,60 @@ def test_exported_task_rejects_inconsistent_source_mapping(tmp_path, change):
     path.write_text(json.dumps(record))
     with pytest.raises(ValueError):
         OnnxDecoder.load(str(tmp_path))
+
+
+@pytest.mark.parametrize("checkpoint_layers", [1, 2, 4])
+def test_hybrid_decoder_grouping_preserves_source_layout_and_gradients(checkpoint_layers):
+    from examples.huggingface.validation import add_reference_parameters
+
+    torch.set_num_threads(1)
+    model, reference = prepare("qwen35", checkpoint_layers=checkpoint_layers)
+    try:
+        assert len(model.onnx.blocks) == 2 + (4 + checkpoint_layers - 1) // checkpoint_layers
+        assert (
+            sum(row["module"].endswith(".linear_attn.in_proj_qkv") for row in model.mapping)
+            == 3
+        )
+        rng = np.random.default_rng(71)
+        with torch.no_grad():
+            for name, parameter in model.onnx.parameters_by_name().items():
+                if name.endswith(".B"):
+                    parameter.copy_(
+                        torch.from_numpy(
+                            rng.normal(0, 0.02, tuple(parameter.shape)).astype(np.float32)
+                        )
+                    )
+        reference = add_reference_parameters(reference, model.onnx.arrays(), model.mapping)
+        ids = torch.from_numpy(rng.integers(3, 128, (2, 37), dtype=np.int64))
+        mask = torch.ones_like(ids)
+        mask[0, -5:] = 0
+        ids[mask == 0] = 0
+        values = {
+            "input_ids": ids,
+            "attention_mask": mask,
+            "position_ids": (mask.cumsum(-1) - 1).clamp(min=0),
+        }
+        labels = ids.masked_fill(mask == 0, -100)
+        actual = model(**values, labels=labels)
+        expected = reference(**values, labels=labels, use_cache=False)
+        torch.testing.assert_close(
+            actual.logits[mask.bool()], expected.logits[mask.bool()], rtol=1e-4, atol=1e-6
+        )
+        torch.testing.assert_close(actual.loss, expected.loss, rtol=1e-4, atol=1e-6)
+        actual.loss.backward()
+        expected.loss.backward()
+        for row in model.mapping:
+            target = reference.get_submodule(row["module"])
+            assert (
+                model.onnx.parameters_by_name()[row["B"]].shape[1]
+                == target.base.weight.shape[0]
+            )
+            for key in ("A", "B"):
+                torch.testing.assert_close(
+                    model.onnx.parameters_by_name()[row[key]].grad,
+                    getattr(target, key).grad,
+                    rtol=1e-4,
+                    atol=1e-6,
+                )
+    finally:
+        model.close()

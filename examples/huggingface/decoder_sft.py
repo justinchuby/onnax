@@ -3,12 +3,22 @@
 """Fine-tune Mobius decoder families through the public checkpoint execution layer."""
 
 import argparse
+import contextlib
 import copy
 import hashlib
 import json
 import math
 import os
+import platform
+import subprocess
+import sys
 import time
+from importlib.metadata import version
+
+try:
+    import resource
+except ImportError:
+    resource = None
 
 import torch
 from transformers import AutoConfig, PretrainedConfig, PreTrainedModel
@@ -86,7 +96,7 @@ class OnnxDecoder(PreTrainedModel):
         if record.get("version") != 1 or record.get("family") not in FAMILIES:
             raise ValueError("Unsupported decoder task interface")
         config = AutoConfig.from_pretrained(directory, local_files_only=True)
-        if config.model_type != record["family"]:
+        if config.model_type != FAMILIES[record["family"]].config_type.model_type:
             raise ValueError("Decoder family differs from the saved configuration")
         config._name_or_path = record["base_model"]
         execution = CheckpointedModule.load(
@@ -294,7 +304,7 @@ def run(
     if resume is not None:
         with open(os.path.join(resume, "config.json"), encoding="utf-8") as stream:
             previous_config = json.load(stream)
-        if previous_config["model_type"] != family:
+        if previous_config["model_type"] != FAMILIES[family].config_type.model_type:
             raise ValueError("Checkpoint decoder family mismatch")
     os.makedirs(directory, exist_ok=True)
     model, reference = prepare(family, session_factory=session_factory, fused_ops=fused_ops)
@@ -359,10 +369,13 @@ def main():
         parser.error("Require positive steps/epsilon and at least two audit steps")
     torch.set_num_threads(1)
     factory = None
+    library_sha256 = None
     if args.provider == "mlx":
         from examples.lora.mlx_runtime import register_library, session
 
         if args.library:
+            with open(args.library, "rb") as stream:
+                library_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
             register_library(args.library)
         factory = session
     elif args.library:
@@ -382,6 +395,56 @@ def main():
             resume=args.resume,
             **options,
         )
+    source_directory = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    source_commit, working_tree_dirty = None, None
+    with contextlib.suppress(OSError):
+        commit = subprocess.run(
+            ["git", "-C", source_directory, "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        status = subprocess.run(
+            ["git", "-C", source_directory, "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        source_commit = commit.stdout.strip() if commit.returncode == 0 else None
+        working_tree_dirty = bool(status.stdout.strip()) if status.returncode == 0 else None
+    peak_rss = (
+        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        * (1 if sys.platform == "darwin" else 1024)
+        if resource is not None
+        else None
+    )
+    report.update(
+        provider=args.provider,
+        dtype="float32",
+        library_sha256=library_sha256,
+        source_commit=source_commit,
+        working_tree_dirty=working_tree_dirty,
+        platform=platform.platform(),
+        versions={
+            name: version(name)
+            for name in (
+                "onnax",
+                "onnx",
+                "onnx-ir",
+                "onnxscript",
+                "onnxruntime",
+                "torch",
+                "transformers",
+                "trl",
+                "datasets",
+                "peft",
+                "mobius-onnx",
+            )
+        },
+        threads={"torch": torch.get_num_threads(), "ort_intra": 1, "ort_inter": 1},
+        process_peak_rss_bytes=peak_rss,
+        rss_scope="process, imports, construction, runtime, training or audit, and export",
+    )
     with open(os.path.join(args.output_dir, "report.json"), "w", encoding="utf-8") as stream:
         json.dump(report, stream, indent=2)
     print(json.dumps(report, indent=2))

@@ -84,6 +84,19 @@ def _registered_function_bodies(
             ):
                 node.attributes[attr.name] = ir.Attr(attr.name, attr.type, attr.value)
         pending.append(identifier)
+    # Checkpoint blocks retain companion definitions for later derivative rules.
+    # A registered implementation remains a boundary when this particular block
+    # does not call it. Use the block's explicit domain import to check dispatch.
+    for identifier in model.functions:
+        domain, name, overload = identifier
+        if overload or domain not in model.graph.opset_imports:
+            continue
+        definition = ir.Node(domain, name, [], num_outputs=0)
+        try:
+            registry.lookup(definition, model.graph.opset_imports)
+        except NotImplementedError:
+            continue
+        pending.append(identifier)
     opaque: set[tuple[str, str, str]] = set()
     while pending:
         identifier = pending.pop()

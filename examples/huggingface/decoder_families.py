@@ -2,14 +2,24 @@
 # SPDX-License-Identifier: MIT
 """Mobius model adapters and source-parameter mappings for decoder training."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
 import onnx_ir as ir
 import torch
 from mobius.models import Phi3CausalLMModel, Qwen3CausalLMModel
+from mobius.models.qwen35 import Qwen35CausalLMModel
 from onnx_ir.passes.common import ShapeInferencePass
-from transformers import Phi3Config, Phi3ForCausalLM, Qwen3Config, Qwen3ForCausalLM
+from transformers import (
+    Phi3Config,
+    Phi3ForCausalLM,
+    PreTrainedModel,
+    Qwen3_5ForCausalLM,
+    Qwen3_5TextConfig,
+    Qwen3Config,
+    Qwen3ForCausalLM,
+)
 
 from examples.huggingface.decoder_graph import (
     build_base,
@@ -17,6 +27,8 @@ from examples.huggingface.decoder_graph import (
     protect_decoder_boundaries,
     restore_decoder_outputs,
 )
+from examples.huggingface.qwen35 import build_base as build_qwen35_base
+from examples.huggingface.qwen35 import reference_model as qwen35_reference
 
 
 @dataclass(frozen=True)
@@ -28,6 +40,10 @@ class DecoderFamily:
     mobius_type: type
     targets: tuple[str, ...]
     fused_qkv: bool = False
+    reference_factory: Callable[[], PreTrainedModel] | None = None
+    graph_builder: Callable[[PreTrainedModel], ir.Model] | None = None
+    target_suffixes: tuple[str, ...] = ()
+    preserve_fused: bool = False
 
 
 FAMILIES = {
@@ -35,12 +51,26 @@ FAMILIES = {
         Qwen3Config, Qwen3ForCausalLM, Qwen3CausalLMModel, ("q_proj", "v_proj")
     ),
     "phi3": DecoderFamily(Phi3Config, Phi3ForCausalLM, Phi3CausalLMModel, ("qkv_proj",), True),
+    "qwen35": DecoderFamily(
+        Qwen3_5TextConfig,
+        Qwen3_5ForCausalLM,
+        Qwen35CausalLMModel,
+        ("in_proj_qkv", "q_proj", "v_proj"),
+        reference_factory=qwen35_reference,
+        graph_builder=build_qwen35_base,
+        target_suffixes=(".linear_attn.in_proj_qkv", ".self_attn.q_proj", ".self_attn.v_proj"),
+        preserve_fused=True,
+    ),
 }
 
 
 def reference_model(family):
     """Create a deterministic offline model with its native source architecture."""
     entry = FAMILIES[family]
+    if entry.reference_factory is not None:
+        result = entry.reference_factory()
+        result.config._name_or_path = "tiny-" + family
+        return result
     torch.manual_seed(20261102)
     kwargs = dict(
         hidden_size=64,
@@ -119,7 +149,10 @@ def inject(model, family, *, rank=4, alpha=1.0):
         groups = [
             (name, [name])
             for name in projections
-            if name.endswith(tuple(".self_attn." + target for target in entry.targets))
+            if name.endswith(
+                entry.target_suffixes
+                or tuple(".self_attn." + target for target in entry.targets)
+            )
         ]
     if not groups:
         raise ValueError(f"No {family} source projections found")
@@ -201,9 +234,14 @@ def inject(model, family, *, rank=4, alpha=1.0):
 def prepare_graph(family, *, preserve_fused=False):
     """Build, annotate and adapt one Mobius model without PyTorch tracing."""
     reference = reference_model(family)
-    graph = build_base(reference, FAMILIES[family].mobius_type)
+    entry = FAMILIES[family]
+    graph = (
+        entry.graph_builder(reference)
+        if entry.graph_builder is not None
+        else build_base(reference, entry.mobius_type)
+    )
     protect_decoder_boundaries(graph)
-    graph = decompose(graph, preserve_fused=preserve_fused)
+    graph = decompose(graph, preserve_fused=preserve_fused or entry.preserve_fused)
     graph, params, mapping = inject(graph, family)
     restore_decoder_outputs(graph)
     return graph, params, mapping, reference

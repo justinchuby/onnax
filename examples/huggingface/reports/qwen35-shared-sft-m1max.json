@@ -1,0 +1,846 @@
+{
+  "schema_version": 1,
+  "source_commit": "5e3a9974a25dbaafcefb2f9e2b7631cc138bd9d6",
+  "scope": "tiny Qwen3.5 via public checkpoint execution, datasets, TRL SFTTrainer and PEFT",
+  "jobs": [
+    {
+      "name": "cpu-train",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.decoder_sft",
+        "--family",
+        "qwen35",
+        "--provider",
+        "cpu",
+        "--output-dir",
+        "/tmp/onnax-qwen35-shared-qualified-v1/cpu-train",
+        "--steps",
+        "100"
+      ],
+      "result": {
+        "family": "qwen35",
+        "steps": 100,
+        "adam_epsilon": 1e-05,
+        "validation_loss": [
+          5.621585369110107,
+          5.467012882232666
+        ],
+        "training_loss": [
+          5.582322120666504,
+          5.136364459991455
+        ],
+        "source_identity": "a61956c98c07203c6eb7034c8192a0c8a12e162736246038d20d77320cea3ac8",
+        "timing_scope": "initial/final evaluation, training and export; excludes construction",
+        "elapsed_seconds": 2.6050924999872223,
+        "source_mapping": [
+          {
+            "module": "model.layers.0.linear_attn.in_proj_qkv",
+            "source_weight": "model.layers.0.linear_attn.in_proj_qkv.weight",
+            "A": "model.layers.0.linear_attn.in_proj_qkv.lora.A",
+            "B": "model.layers.0.linear_attn.in_proj_qkv.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.0.linear_attn.in_proj_qkv",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.1.linear_attn.in_proj_qkv",
+            "source_weight": "model.layers.1.linear_attn.in_proj_qkv.weight",
+            "A": "model.layers.1.linear_attn.in_proj_qkv.lora.A",
+            "B": "model.layers.1.linear_attn.in_proj_qkv.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.1.linear_attn.in_proj_qkv",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.2.linear_attn.in_proj_qkv",
+            "source_weight": "model.layers.2.linear_attn.in_proj_qkv.weight",
+            "A": "model.layers.2.linear_attn.in_proj_qkv.lora.A",
+            "B": "model.layers.2.linear_attn.in_proj_qkv.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.2.linear_attn.in_proj_qkv",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.3.self_attn.q_proj",
+            "source_weight": "model.layers.3.self_attn.q_proj.weight",
+            "A": "model.layers.3.self_attn.q_proj.lora.A",
+            "B": "model.layers.3.self_attn.q_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.3.self_attn.q_proj",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.3.self_attn.v_proj",
+            "source_weight": "model.layers.3.self_attn.v_proj.weight",
+            "A": "model.layers.3.self_attn.v_proj.lora.A",
+            "B": "model.layers.3.self_attn.v_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.3.self_attn.v_proj",
+                "start": 0,
+                "stop": 32
+              }
+            ]
+          }
+        ],
+        "export": "/tmp/onnax-qwen35-shared-qualified-v1/cpu-train/export",
+        "provider": "cpu",
+        "dtype": "float32",
+        "library_sha256": null,
+        "source_commit": "5e3a9974a25dbaafcefb2f9e2b7631cc138bd9d6",
+        "working_tree_dirty": false,
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "versions": {
+          "onnax": "0.1.0",
+          "onnx": "1.23.2",
+          "onnx-ir": "1.1.0",
+          "onnxscript": "0.7.2",
+          "onnxruntime": "1.31.1",
+          "torch": "2.15.0",
+          "transformers": "5.22.1",
+          "trl": "0.24.0",
+          "datasets": "5.1.0",
+          "peft": "0.21.2",
+          "mobius-onnx": "0.1.0"
+        },
+        "threads": {
+          "torch": 1,
+          "ort_intra": 1,
+          "ort_inter": 1
+        },
+        "process_peak_rss_bytes": 652148736,
+        "rss_scope": "process, imports, construction, runtime, training or audit, and export"
+      },
+      "guard": {
+        "cwd": "/Users/justinc/Documents/GitHub/onnax",
+        "status": "complete",
+        "physical_memory_budget_bytes": 25769803776,
+        "minimum_free_disk_bytes": 5368709120,
+        "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+        "observation_errors": 0,
+        "pid": 53097,
+        "started": "2026-11-02T06:05:21.440897+00:00",
+        "returncode": 0,
+        "finished": "2026-11-02T06:05:29.481534+00:00",
+        "temporary_files_removed": true
+      },
+      "physical_footprint_peak_bytes": 515999232
+    },
+    {
+      "name": "mlx-train",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.decoder_sft",
+        "--family",
+        "qwen35",
+        "--provider",
+        "mlx",
+        "--output-dir",
+        "/tmp/onnax-qwen35-shared-qualified-v1/mlx-train",
+        "--steps",
+        "100",
+        "--library",
+        "/tmp/onnax-half-runtime/libonnxruntime_mlx_ep.dylib"
+      ],
+      "result": {
+        "family": "qwen35",
+        "steps": 100,
+        "adam_epsilon": 1e-05,
+        "validation_loss": [
+          5.621585369110107,
+          5.467014312744141
+        ],
+        "training_loss": [
+          5.582322120666504,
+          5.1363654136657715
+        ],
+        "source_identity": "a61956c98c07203c6eb7034c8192a0c8a12e162736246038d20d77320cea3ac8",
+        "timing_scope": "initial/final evaluation, training and export; excludes construction",
+        "elapsed_seconds": 27.743614916980732,
+        "source_mapping": [
+          {
+            "module": "model.layers.0.linear_attn.in_proj_qkv",
+            "source_weight": "model.layers.0.linear_attn.in_proj_qkv.weight",
+            "A": "model.layers.0.linear_attn.in_proj_qkv.lora.A",
+            "B": "model.layers.0.linear_attn.in_proj_qkv.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.0.linear_attn.in_proj_qkv",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.1.linear_attn.in_proj_qkv",
+            "source_weight": "model.layers.1.linear_attn.in_proj_qkv.weight",
+            "A": "model.layers.1.linear_attn.in_proj_qkv.lora.A",
+            "B": "model.layers.1.linear_attn.in_proj_qkv.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.1.linear_attn.in_proj_qkv",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.2.linear_attn.in_proj_qkv",
+            "source_weight": "model.layers.2.linear_attn.in_proj_qkv.weight",
+            "A": "model.layers.2.linear_attn.in_proj_qkv.lora.A",
+            "B": "model.layers.2.linear_attn.in_proj_qkv.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.2.linear_attn.in_proj_qkv",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.3.self_attn.q_proj",
+            "source_weight": "model.layers.3.self_attn.q_proj.weight",
+            "A": "model.layers.3.self_attn.q_proj.lora.A",
+            "B": "model.layers.3.self_attn.q_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.3.self_attn.q_proj",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.3.self_attn.v_proj",
+            "source_weight": "model.layers.3.self_attn.v_proj.weight",
+            "A": "model.layers.3.self_attn.v_proj.lora.A",
+            "B": "model.layers.3.self_attn.v_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.3.self_attn.v_proj",
+                "start": 0,
+                "stop": 32
+              }
+            ]
+          }
+        ],
+        "export": "/tmp/onnax-qwen35-shared-qualified-v1/mlx-train/export",
+        "provider": "mlx",
+        "dtype": "float32",
+        "library_sha256": "6630fc37242d3ea15c406570cbb384e47263cebc2f4ed5996a91b78c0e9623b1",
+        "source_commit": "5e3a9974a25dbaafcefb2f9e2b7631cc138bd9d6",
+        "working_tree_dirty": false,
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "versions": {
+          "onnax": "0.1.0",
+          "onnx": "1.23.2",
+          "onnx-ir": "1.1.0",
+          "onnxscript": "0.7.2",
+          "onnxruntime": "1.31.1",
+          "torch": "2.15.0",
+          "transformers": "5.22.1",
+          "trl": "0.24.0",
+          "datasets": "5.1.0",
+          "peft": "0.21.2",
+          "mobius-onnx": "0.1.0"
+        },
+        "threads": {
+          "torch": 1,
+          "ort_intra": 1,
+          "ort_inter": 1
+        },
+        "process_peak_rss_bytes": 678297600,
+        "rss_scope": "process, imports, construction, runtime, training or audit, and export"
+      },
+      "guard": {
+        "cwd": "/Users/justinc/Documents/GitHub/onnax",
+        "status": "complete",
+        "physical_memory_budget_bytes": 25769803776,
+        "minimum_free_disk_bytes": 5368709120,
+        "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+        "observation_errors": 0,
+        "pid": 53112,
+        "started": "2026-11-02T06:05:29.548800+00:00",
+        "returncode": 0,
+        "finished": "2026-11-02T06:06:02.698868+00:00",
+        "temporary_files_removed": true
+      },
+      "physical_footprint_peak_bytes": 539346624
+    },
+    {
+      "name": "cpu-audit",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.decoder_sft",
+        "--family",
+        "qwen35",
+        "--provider",
+        "cpu",
+        "--output-dir",
+        "/tmp/onnax-qwen35-shared-qualified-v1/cpu-audit",
+        "--audit-only",
+        "--audit-steps",
+        "6"
+      ],
+      "result": {
+        "family": "qwen35",
+        "independent_steps": 6,
+        "adam_epsilon": 1e-05,
+        "losses": [
+          5.5585551261901855,
+          5.499752044677734,
+          5.556277751922607,
+          5.493932723999023,
+          5.5505690574646,
+          5.482079982757568
+        ],
+        "max_gradient_abs_error": 9.313225746154785e-09,
+        "frozen_source_weights_unchanged": true,
+        "reload": true,
+        "peft": {
+          "adapter_tensors": 10,
+          "format_roundtrip_bitwise": true,
+          "loss_check_passed": true,
+          "loss": 5.540870666503906,
+          "reference_loss": 5.5408711433410645,
+          "loss_abs_difference": 4.76837158203125e-07,
+          "gradient_check_passed": true,
+          "gradient_failures": {},
+          "update_check_passed": true,
+          "update_failures": {},
+          "logit_violations": 0,
+          "logits_max_abs": 2.384185791015625e-07
+        },
+        "adapter_tensors": 10,
+        "provider": "cpu",
+        "dtype": "float32",
+        "library_sha256": null,
+        "source_commit": "5e3a9974a25dbaafcefb2f9e2b7631cc138bd9d6",
+        "working_tree_dirty": false,
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "versions": {
+          "onnax": "0.1.0",
+          "onnx": "1.23.2",
+          "onnx-ir": "1.1.0",
+          "onnxscript": "0.7.2",
+          "onnxruntime": "1.31.1",
+          "torch": "2.15.0",
+          "transformers": "5.22.1",
+          "trl": "0.24.0",
+          "datasets": "5.1.0",
+          "peft": "0.21.2",
+          "mobius-onnx": "0.1.0"
+        },
+        "threads": {
+          "torch": 1,
+          "ort_intra": 1,
+          "ort_inter": 1
+        },
+        "process_peak_rss_bytes": 667795456,
+        "rss_scope": "process, imports, construction, runtime, training or audit, and export"
+      },
+      "guard": {
+        "cwd": "/Users/justinc/Documents/GitHub/onnax",
+        "status": "complete",
+        "physical_memory_budget_bytes": 25769803776,
+        "minimum_free_disk_bytes": 5368709120,
+        "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+        "observation_errors": 0,
+        "pid": 53146,
+        "started": "2026-11-02T06:06:02.755596+00:00",
+        "returncode": 0,
+        "finished": "2026-11-02T06:06:09.786610+00:00",
+        "temporary_files_removed": true
+      },
+      "physical_footprint_peak_bytes": 549127632
+    },
+    {
+      "name": "mlx-audit",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.decoder_sft",
+        "--family",
+        "qwen35",
+        "--provider",
+        "mlx",
+        "--output-dir",
+        "/tmp/onnax-qwen35-shared-qualified-v1/mlx-audit",
+        "--audit-only",
+        "--audit-steps",
+        "6",
+        "--library",
+        "/tmp/onnax-half-runtime/libonnxruntime_mlx_ep.dylib"
+      ],
+      "result": {
+        "family": "qwen35",
+        "independent_steps": 6,
+        "adam_epsilon": 1e-05,
+        "losses": [
+          5.5585551261901855,
+          5.499752044677734,
+          5.556277751922607,
+          5.493932723999023,
+          5.5505690574646,
+          5.482079982757568
+        ],
+        "max_gradient_abs_error": 8.381903171539307e-09,
+        "frozen_source_weights_unchanged": true,
+        "reload": true,
+        "peft": {
+          "adapter_tensors": 10,
+          "format_roundtrip_bitwise": true,
+          "loss_check_passed": true,
+          "loss": 5.540870666503906,
+          "reference_loss": 5.540870666503906,
+          "loss_abs_difference": 0.0,
+          "gradient_check_passed": true,
+          "gradient_failures": {},
+          "update_check_passed": true,
+          "update_failures": {},
+          "logit_violations": 0,
+          "logits_max_abs": 1.7881393432617188e-07
+        },
+        "adapter_tensors": 10,
+        "provider": "mlx",
+        "dtype": "float32",
+        "library_sha256": "6630fc37242d3ea15c406570cbb384e47263cebc2f4ed5996a91b78c0e9623b1",
+        "source_commit": "5e3a9974a25dbaafcefb2f9e2b7631cc138bd9d6",
+        "working_tree_dirty": false,
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "versions": {
+          "onnax": "0.1.0",
+          "onnx": "1.23.2",
+          "onnx-ir": "1.1.0",
+          "onnxscript": "0.7.2",
+          "onnxruntime": "1.31.1",
+          "torch": "2.15.0",
+          "transformers": "5.22.1",
+          "trl": "0.24.0",
+          "datasets": "5.1.0",
+          "peft": "0.21.2",
+          "mobius-onnx": "0.1.0"
+        },
+        "threads": {
+          "torch": 1,
+          "ort_intra": 1,
+          "ort_inter": 1
+        },
+        "process_peak_rss_bytes": 682377216,
+        "rss_scope": "process, imports, construction, runtime, training or audit, and export"
+      },
+      "guard": {
+        "cwd": "/Users/justinc/Documents/GitHub/onnax",
+        "status": "complete",
+        "physical_memory_budget_bytes": 25769803776,
+        "minimum_free_disk_bytes": 5368709120,
+        "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+        "observation_errors": 0,
+        "pid": 53160,
+        "started": "2026-11-02T06:06:09.863595+00:00",
+        "returncode": 0,
+        "finished": "2026-11-02T06:06:16.891576+00:00",
+        "temporary_files_removed": true
+      },
+      "physical_footprint_peak_bytes": 556385864
+    },
+    {
+      "name": "mlx-resume",
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.decoder_sft",
+        "--family",
+        "qwen35",
+        "--provider",
+        "mlx",
+        "--output-dir",
+        "/tmp/onnax-qwen35-shared-qualified-v1/mlx-resume",
+        "--steps",
+        "100",
+        "--library",
+        "/tmp/onnax-half-runtime/libonnxruntime_mlx_ep.dylib",
+        "--resume",
+        "/tmp/onnax-qwen35-shared-qualified-v1/mlx-train/checkpoint-50"
+      ],
+      "result": {
+        "family": "qwen35",
+        "steps": 100,
+        "adam_epsilon": 1e-05,
+        "validation_loss": [
+          5.621585369110107,
+          5.467014312744141
+        ],
+        "training_loss": [
+          5.582322120666504,
+          5.1363654136657715
+        ],
+        "source_identity": "a61956c98c07203c6eb7034c8192a0c8a12e162736246038d20d77320cea3ac8",
+        "timing_scope": "initial/final evaluation, training and export; excludes construction",
+        "elapsed_seconds": 15.408855708956253,
+        "source_mapping": [
+          {
+            "module": "model.layers.0.linear_attn.in_proj_qkv",
+            "source_weight": "model.layers.0.linear_attn.in_proj_qkv.weight",
+            "A": "model.layers.0.linear_attn.in_proj_qkv.lora.A",
+            "B": "model.layers.0.linear_attn.in_proj_qkv.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.0.linear_attn.in_proj_qkv",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.1.linear_attn.in_proj_qkv",
+            "source_weight": "model.layers.1.linear_attn.in_proj_qkv.weight",
+            "A": "model.layers.1.linear_attn.in_proj_qkv.lora.A",
+            "B": "model.layers.1.linear_attn.in_proj_qkv.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.1.linear_attn.in_proj_qkv",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.2.linear_attn.in_proj_qkv",
+            "source_weight": "model.layers.2.linear_attn.in_proj_qkv.weight",
+            "A": "model.layers.2.linear_attn.in_proj_qkv.lora.A",
+            "B": "model.layers.2.linear_attn.in_proj_qkv.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.2.linear_attn.in_proj_qkv",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.3.self_attn.q_proj",
+            "source_weight": "model.layers.3.self_attn.q_proj.weight",
+            "A": "model.layers.3.self_attn.q_proj.lora.A",
+            "B": "model.layers.3.self_attn.q_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.3.self_attn.q_proj",
+                "start": 0,
+                "stop": 128
+              }
+            ]
+          },
+          {
+            "module": "model.layers.3.self_attn.v_proj",
+            "source_weight": "model.layers.3.self_attn.v_proj.weight",
+            "A": "model.layers.3.self_attn.v_proj.lora.A",
+            "B": "model.layers.3.self_attn.v_proj.lora.B",
+            "rank": 4,
+            "alpha": 1.0,
+            "pieces": [
+              {
+                "module": "model.layers.3.self_attn.v_proj",
+                "start": 0,
+                "stop": 32
+              }
+            ]
+          }
+        ],
+        "export": "/tmp/onnax-qwen35-shared-qualified-v1/mlx-resume/export",
+        "provider": "mlx",
+        "dtype": "float32",
+        "library_sha256": "6630fc37242d3ea15c406570cbb384e47263cebc2f4ed5996a91b78c0e9623b1",
+        "source_commit": "5e3a9974a25dbaafcefb2f9e2b7631cc138bd9d6",
+        "working_tree_dirty": false,
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
+        "versions": {
+          "onnax": "0.1.0",
+          "onnx": "1.23.2",
+          "onnx-ir": "1.1.0",
+          "onnxscript": "0.7.2",
+          "onnxruntime": "1.31.1",
+          "torch": "2.15.0",
+          "transformers": "5.22.1",
+          "trl": "0.24.0",
+          "datasets": "5.1.0",
+          "peft": "0.21.2",
+          "mobius-onnx": "0.1.0"
+        },
+        "threads": {
+          "torch": 1,
+          "ort_intra": 1,
+          "ort_inter": 1
+        },
+        "process_peak_rss_bytes": 678707200,
+        "rss_scope": "process, imports, construction, runtime, training or audit, and export"
+      },
+      "guard": {
+        "cwd": "/Users/justinc/Documents/GitHub/onnax",
+        "status": "complete",
+        "physical_memory_budget_bytes": 25769803776,
+        "minimum_free_disk_bytes": 5368709120,
+        "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+        "observation_errors": 0,
+        "pid": 53173,
+        "started": "2026-11-02T06:06:16.954320+00:00",
+        "returncode": 0,
+        "finished": "2026-11-02T06:06:38.051505+00:00",
+        "temporary_files_removed": true
+      },
+      "physical_footprint_peak_bytes": 541869784
+    }
+  ],
+  "exports": {
+    "cpu-train": {
+      "source_identity": "a61956c98c07203c6eb7034c8192a0c8a12e162736246038d20d77320cea3ac8",
+      "adapter_tensors": 10,
+      "graphs_checked": 13,
+      "loaded_loss": 5.33858060836792,
+      "forward_sha256": "197d9cba153ed90d39a9af1b9a8b0f830f5535b6458f9df39f7936ab6cb8d97a",
+      "bound_forward_executed_on_cpu": true,
+      "derivatives_loaded_and_executed": true
+    },
+    "mlx-train": {
+      "source_identity": "a61956c98c07203c6eb7034c8192a0c8a12e162736246038d20d77320cea3ac8",
+      "adapter_tensors": 10,
+      "graphs_checked": 13,
+      "loaded_loss": 5.338579177856445,
+      "forward_sha256": "a966d299158da9ebbcc8e164d3f47a1a47eb0e89204e6e142c17c9b318035021",
+      "bound_forward_executed_on_cpu": true,
+      "derivatives_loaded_and_executed": true,
+      "checkpoint_adapter_sha256": "2cea0777e755aacbdb2abecc367ac451db524395affe6b473178bad9709c740f"
+    },
+    "mlx-resume": {
+      "source_identity": "a61956c98c07203c6eb7034c8192a0c8a12e162736246038d20d77320cea3ac8",
+      "adapter_tensors": 10,
+      "graphs_checked": 13,
+      "loaded_loss": 5.338579177856445,
+      "forward_sha256": "a966d299158da9ebbcc8e164d3f47a1a47eb0e89204e6e142c17c9b318035021",
+      "bound_forward_executed_on_cpu": true,
+      "derivatives_loaded_and_executed": true,
+      "checkpoint_adapter_sha256": "2cea0777e755aacbdb2abecc367ac451db524395affe6b473178bad9709c740f"
+    }
+  },
+  "recovery": {
+    "resume_step": 50,
+    "final_step": 100,
+    "checkpoint_tensors_compared_as_bytes": 41,
+    "model_optimizer_scheduler_equal": true,
+    "corpus_identity_equal": true,
+    "loaded_logits_loss_all_adapter_gradients_bitwise_equal": true
+  },
+  "code_sha256": {
+    "src/onnax/_rules.py": "3f44d9ae62d584cf5f501d807d6c91775cb2d9e9bf357a19ec8c079c192a3df6",
+    "src/onnax/_checkpoint.py": "19a6fd612861ee043d8b4b6ed9d26fcbbfeae6237c5d264faa87b4c5b7964dc8",
+    "src/onnax/_diagnostics.py": "e6a5eafe6c2533313a421fc7ec086aa6eea31d58b2bfe8296bb9be1264e63103",
+    "src/onnax/__init__.py": "0e1c47246afe4a1ae2a0245f6bfd2bf95b76807dc24e14e749dbe94c796d3a97",
+    "src/onnax/_linear.py": "25d3c29a6f387b356f8141a71f1b2e5508e2fd1f7b89322aad46f28d0c3ca4fe",
+    "src/onnax/_shared_weights.py": "0c000495d9b8055754d88dffc50b10f19040db996b94a6108bee87f035c753fa",
+    "src/onnax/_rule_registry.py": "0f8673aeabd883f14503ee83d43dc3e9c4f4ea2aa93b3c492acfb472d11d96a8",
+    "src/onnax/_inference.py": "d29deda69b20afd4451c2a8678d2c14896f90c1618e3e6c032cad9b91cedec5e",
+    "src/onnax/_functional.py": "968a751ecca324acae9fd029ae7aa2cdbcfbb4818caeac7e1e3feaf6b61502b1",
+    "src/onnax/_autodiff/_interface.py": "05b1810043c60dc2aba4adba46207d6049daba6eda377a3689aedf7dd9b58ddb",
+    "src/onnax/_autodiff/_normalization.py": "c0b6fdebf2cf5b3b32b7e6295d4dae6ffb6f6b5774ca7e8595c4d08703a654df",
+    "src/onnax/_autodiff/_rotary.py": "438eff0676ff1df2a083c319e29fba67ce1f4547a82ac1cc76c200addd681163",
+    "src/onnax/_autodiff/_extrema.py": "a99522ac42513d368eabdb7c17d544efb1621e43f0f523ceec9e0d1927405221",
+    "src/onnax/_autodiff/_causal_conv.py": "3852c169b74324d88180a18bd15838fbb89dca8bc35fab9a327f5a925ab2be10",
+    "src/onnax/_autodiff/_attention.py": "4b96e21f6da329ad1e1e6f2669aaed0d7132cea97544652107921040b18919a5",
+    "src/onnax/_autodiff/_common.py": "bd758ac11e2767424aee4295c6ff229f107948f46b10198129ea9e2261211ff7",
+    "src/onnax/_autodiff/__init__.py": "69355bd8d2b563a0dfc7e8fb0ecff8a6e0a1f07fded6a7ea87bc5188d5523a0d",
+    "src/onnax/_autodiff/_linalg.py": "d2bf046bf007b8e9e81c7c09655fc1153061f00a57a6215ff5495e7d507b7092",
+    "src/onnax/_autodiff/_elementwise.py": "63e2ca8a4c4205a1d80964ff7b503af34c7f9aa3a309fd01acd31d67ac5bd02a",
+    "src/onnax/_autodiff/_registry.py": "80a55f1282cc7e799620823fc0502dc3ade354b0326c58a617abe2b3b74e93bc",
+    "src/onnax/_autodiff/_context.py": "9bff1cdfe2652d7ab3bf8e8213388871f4f5b9f5750153fbb12283109e8da878",
+    "src/onnax/_autodiff/_reductions.py": "32ec3f8a081411f604a0f8eb76da0c1fcf4e8154c9ac68643085bab51dbe3572",
+    "src/onnax/_autodiff/_layout.py": "8423624dab4886e2217671eb8507bc5a33c3191721a299814ea33086bf0cafcb",
+    "src/onnax/_autodiff/_linear_attention.py": "68beba26b7880ed560b579121d687377c6247b26276b66c217353c528932b1e7",
+    "src/onnax/_autodiff/_transform.py": "f098581db366705f3045092837beb00c9975ed652f7985231085f0ff7bdde3e9",
+    "src/onnax/torch/_serialization.py": "feeb4e66c863c70d1e55bfbcc17136dc262e4aa1b4275b8e28adcb60782096ac",
+    "src/onnax/torch/_module.py": "2c94e57fedd52988ce8c2be0bb2006af48a13a38015bfabc971cff9982230af4",
+    "src/onnax/torch/_checkpoint.py": "ba922c69cfaf4fbfecd9ba856ca238ae9b013b3d996df41111bf2d23fba91d1a",
+    "src/onnax/torch/__init__.py": "972debd21a68ab4ddac929789fa9974eadddee7104167297122eafc34498535c",
+    "src/onnax/torch/_checkpoint_execution.py": "1d084d66a4b016f78520081d59e44db45523d7018d897f86007bbc665c9e063e",
+    "src/onnax/_batching/_nn.py": "83d63b34d3f329d9f06c493305eb18040cce6319d42eb1cff6a08e6a3d8a6e1f",
+    "src/onnax/_batching/__init__.py": "f904cf76d4a48c7c359c675a4f60477ddb4ef76e2d2d7a54e6a945ca63b91de6",
+    "src/onnax/_batching/_linalg.py": "c3e35ddeba29be78c233553b8be32c609596ad89e08515c22dca06fc1efb9746",
+    "src/onnax/_batching/_elementwise.py": "c77728f3e56c1b6eb22307949e77b3826bf5718d3a78b22cd0d5f2619e50d26a",
+    "src/onnax/_batching/_registry.py": "e7cc42cab6f983ba97e7536e751294a96e33c4b0671e3703c08fe09df31492f4",
+    "src/onnax/_batching/_context.py": "951de21173c591a9a73c05796d67ab52be85ca29f9b5e91df756037b32d47d1a",
+    "src/onnax/_batching/_reductions.py": "909942ca33d446d1f670d73fa558d54000f316cc5d64a6a8f6191f01829f758f",
+    "src/onnax/_batching/_layout.py": "9f1d9f356c396ca3a65aa7c2d8d562a05176f6a7f4b56575a37b42b17701eff9",
+    "src/onnax/_batching/_indexing.py": "21274a4e4a2afc03d41ce98243d47e68504bb29b8f55e441ddd914df5e276120",
+    "src/onnax/_batching/_transform.py": "1dbe47ddc7f076597789625985b22045df908be7052ba046dd7fd384198ac5f1",
+    "examples/mlp_microbatch.py": "995198cc05d409a6ffeff3ec5edb1e11969a9373803f116811c2507fc01a79f0",
+    "examples/mlp_bf16.py": "74c860954e070a67363dafaddbe2046a8523f7395c51fd0118a8c91e539eae42",
+    "examples/activation_liveness.py": "ec28cb489e8e256582251936ba6e62bd77b994160744e92870baccacaf8fa82d",
+    "examples/mlx_memory_lifecycle.py": "638223537d3aac0f42c7fbfe14cf0a5aefa3081505d4e948c713bb80a03f805f",
+    "examples/torch_mlp.py": "ec96ffb89ce0b0e525c5506e36ead8d46585955a5dc9e97af3532db67b803d6d",
+    "examples/process_memory.py": "721e33dfc07f93c945f8c44dc60d701bc65ab212c0bab85599508d8a420a47b1",
+    "examples/ndonnx_autodiff.py": "479fc498bc4e6eaf74578dcf4b4a4dec336b8799124a170e3535396ebbaef64e",
+    "examples/classifier_inspector.py": "42719aba0e3610913b12023ff39fbcf1a51157e38740951297898077830e7648",
+    "examples/mlp.py": "337570a9444f1ef884ebe99fb27bf9e03c6949ca427f5ad36bd2f82295131509",
+    "examples/per_example_gradients.py": "7d872299697b0d35f474139f9d22904f0a66994d63b8730556e103b1e8afd901",
+    "examples/authoring.py": "ceeaa9155590e67e84f502a619afb3f878ececc0aa3995fe669c7da91807881b",
+    "examples/mlx_provider_memory.py": "65e461ea3fab52fa39802046ec6080d10cfe793ea94289a54e189a55574b93e8",
+    "examples/custom_rules.py": "9004824e473eb3e8b49ac9fb504d9b8a6d32ea25046cd563ef88850ce62f24ce",
+    "examples/mlx_binding.py": "b47e0850fc6bc65e07e60c283b00fb0b908c23699ee5376f33dd5cfba0ef2f6e",
+    "examples/torch_checkpoint.py": "8592f72e7724b0eb330b6b787b4ad05138ef8bb7cc6e0ab5658623bb3047fa87",
+    "examples/fitting.py": "2da62c37e867d235ff5f3d4be0ec77c67637d7991c0f33c43377e0afa33a22b8",
+    "examples/mlp_rematerialize.py": "562c3d70a09a37686dc0e3881df72050c1df7d468030b198eaeee4b8c4777544",
+    "examples/vmap.py": "cafeafe7cb3ba72fc0b78800d8b6ac3fd6b34634c86f82de806359e794eac9e9",
+    "examples/onnxscript_autodiff.py": "17f0506a9203a078b2b465ccd370bb3bc4ffb874acbb80ee45b4cd7d0f772c10",
+    "examples/mlp_device.py": "45bdae3c2ba6c708f36567a34593a81f07cf63db717d239dce2d4b33e5ba6ebd",
+    "examples/autodiff.py": "0b3962276a7fb75cd3f8046b5c8325307e4f2e0e1e62c5343132ee1a89b55ae9",
+    "examples/jelly/export_models.py": "88a623da98b6d6cb3eeddf0acc513e5d2c8621d2409872620f269b200d2bf206",
+    "examples/jelly/tests/test_models.py": "b47d305bdcf28d533c5934f74e528ce51f4ee1d6522de8883332386b6ffd175f",
+    "examples/diffusion/__init__.py": "ed273bfff159c88399d6d43314602b975b1eba5d6b569ac25652b812126443dd",
+    "examples/diffusion/train.py": "91fa2a3d49beff635cc2c854279b82b45d7cc795992f686a5ff7239744100243",
+    "examples/diffusion/reference.py": "621f5561a350e7c9e06881215e0d783b2b37ee4fc81d6b803202e9e63d2cea49",
+    "examples/diffusion/dit.py": "764b796aec16544595ce179b13293ce749d00df1cac5bfde604a83b899fc43d4",
+    "examples/lora/mlx_runtime.py": "a2cd63e4573f73f6325fc4cfef8411ccc5f5dc2c2f152afe8c4696cfd371f690",
+    "examples/lora/mlx_exchange.py": "823240d2ff6ee54249239e516dd7aebf37e4ef3a6732c5870f1a67cb04e0333f",
+    "examples/lora/mlx_adam.py": "3a72ac07434abae7169110d23f2624f4a7b85bd5c0cea1546b24c2f1e2f0db0b",
+    "examples/lora/nf4.py": "00adc589ae708679e18387fe1104115ec192ce2faeab2682b38680d1abf01344",
+    "examples/lora/coreml_benchmark.py": "1bb17fa523e24226c11d0ebe22603f155736671b47821a83f00c712642cb4e0b",
+    "examples/lora/mlx_bf16.py": "1b6c183fc4fa2317c4bdbc8972ef852674d935ea35ff4eee8b63e0dbb07adfb1",
+    "examples/lora/workloads.py": "10e13d5c040e6b3666fdabbc5e49d5fd3e8bb8c1cc3fa0e722043dc69cfc5485",
+    "examples/lora/dlpack.py": "ac4a7bae7bed6e7dbeabb8c663afc4f45e8e531a77f053fa4837058e65c6dcc1",
+    "examples/lora/intervals.py": "960d8d6e128d508892fe32d045426251c0b659696c374891d7a8530d1d89139b",
+    "examples/lora/accumulation.py": "b22ae944245c49fbe364b23770da5ef9a64ca81b26f875f655d6d1a53bf1ca34",
+    "examples/lora/model.py": "dc91a5297b3a0331541f9a8da28047219c90207276f9b04e3111d827549c275a",
+    "examples/lora/bf16.py": "b015dba1146329a8b659d6f03c28fa8262a37652905f81aaef02d4fe6d4fe476",
+    "examples/lora/mlx_training.py": "297562c76aee73fc48e3ef2d14dd43074f484b9fc7a954f9041f7ca85dc5bf44",
+    "examples/lora/adam.py": "c45427a18e5c600b6ca97e7fd2247f3e8e2e8da0bd22735eb1e2cefff18fc2f6",
+    "examples/lora/microbatch.py": "83ff1470a793baa57e6efbeb8727d90f187ff7a2cf76adca021d8f68ef955762",
+    "examples/lora/mlx_benchmark.py": "21a1a5f4c1f337aba1231f80d4d20491f2f66f5f62d06166663594c8345d687f",
+    "examples/lora/train.py": "d3c0a5b7b861bc79a175f327daff76daff817671b0adcf33fbb7559c9b31df86",
+    "examples/lora/bf16_inspector.py": "a4c6eef433b6b71853618a9f58fac8fad1ef608e7aa411fd1fc561f97a0429e0",
+    "examples/lora/iobinding.py": "0c59945e8c915f9aef1e394711b0e67c0997e6b0ba774f163185b7f265fec855",
+    "examples/lora/bf16_rules.py": "04b5784842177af4dac55827bcafa6afffdfb3287e402f7bf35adfced37e6556",
+    "examples/lora/bf16_composed.py": "d947265868ccfd1806f4a606d69c62c49ac79cd559b65fcb106be2d0d3b53a81",
+    "examples/lora/bf16_bounds.py": "e9455fed3abf98b8469816a6b9d376c6aa05471a19a262e8ca219c5483425bec",
+    "examples/lora/jax_training.py": "7184fc9354eb507ffd791b61eb8897992624d7f47ad0a75c7c8e106a0a4db17e",
+    "examples/lora/binding.py": "439fa21d4de0f84836d4e202e21a7cdbacf84e4d075e563ecebf8f1917cf8665",
+    "examples/lora/coreml.py": "e561558dd6a5522a8fb70fc08e08d252039fee52eb5e0ce982a4c24e8f2d9cc0",
+    "examples/lora/fp32_bounds.py": "d1e10f771d5bd53731162270cf2fd8b3aa275ba444ed88bef3d6b6dbf9c33f6e",
+    "examples/lora/nf4_train.py": "df586f5702896bdaffd2a8f6e64d031f329c5d8ea5669cb5b7a0ce71de8affb5",
+    "examples/lora/validation.py": "c5dee4304bc7cc97e69d0bc6a4c4b68d746b0cf3f52eedec9e80888517587551",
+    "examples/huggingface/peft_adapter.py": "dd0d5a061efb54d05d501aa15280f923c84024e034ec364cf9596115198990fa",
+    "examples/huggingface/stable_losses.py": "941997d75d53696d381ccb856b2bba61f0a8156e9192e37e4b8444a0bfab5517",
+    "examples/huggingface/quality_corpus.py": "ee0d5ba059e6d0de76850efca200fc0f0cc746ff3deb24da78738941b37d33c6",
+    "examples/huggingface/decoder_graph.py": "217a06168f693c7fbd9d8c87e507fa531c619df831f164f7e33e846712406351",
+    "examples/huggingface/nf4.py": "ff161ef50034897c78454dc84d8973f07e03f5841d18ca6c4c366ba6fcdd04ee",
+    "examples/huggingface/benchmark.py": "79f87f839d005c56b9b6d62d6660da73c51fee892ab880ac6339f4c7b6c3e1c0",
+    "examples/huggingface/linear_attention_reference.py": "9ff9b5ef5616b58ccc7ad2eba0a743bf2600b0c0901e9d3228a22a563cf7750a",
+    "examples/huggingface/mixed_precision.py": "bf62964922e9af0d723033f6ab8d40de6cf107caf30dcb5be7286ab92db14199",
+    "examples/huggingface/qwen35_train.py": "14a50ef0b3a0a896c466ee8f00cd97791bd1cbd7e54be62cb45889e87eb12888",
+    "examples/huggingface/long_context.py": "3fcdf3b710d4b0cb6d52d399c870253acb83160ae99001ab81164c0154bc8a26",
+    "examples/huggingface/checkpoint_adapter.py": "e896514d7bbbb7867a8b6806e54125a6a5746103821dc80fe5d7aaee97428ec5",
+    "examples/huggingface/paired_audit.py": "826b21105da5282e01ae14a68658a3eec3b69d62270457b68dfba275be87ce69",
+    "examples/huggingface/rms_audit.py": "0b6638fae45af2d20641863b22ab97ce908dbbea8abc7a4010011f31f94a2f11",
+    "examples/huggingface/evaluation_benchmark.py": "1991b9900474b4a208a44e36cb10c4cd3a30f9d8b1aecf77a02ee14f9981d014",
+    "examples/huggingface/reference_trajectory.py": "2812dda2eb75110484c19b78a6da6d895dc6030d479eb530d78a7d0be211cc94",
+    "examples/huggingface/bridge.py": "1fd49edd2306928493bd81777193e197ec1694d3d64d060859b0e89e032391d0",
+    "examples/huggingface/optimization.py": "9011549155b94ccb650f6f88ccaa953c8d58e3fbf7062276ce3b6dd17d838cd2",
+    "examples/huggingface/qwen35.py": "536315c8b47b9990f9eda06716fafaec88d0b616cc7d402b4b086e4d9337e97e",
+    "examples/huggingface/__init__.py": "d0f10fa0374c4dc2f0437b585eb25a993a906f06753759d464657a3069e37fe3",
+    "examples/huggingface/decoder_families.py": "8622905eab10de4c4bab7648202da0c039110341afb915a4db02ca0feb2b1352",
+    "examples/huggingface/residual_audit.py": "8729d31f7a391bace8d74dc88f94bea1b09695f99f0ec234140d7002fff0a24d",
+    "examples/huggingface/context_capacity.py": "0b54a54dae3eff79dec12188b8782c88a58b60d9453bbc8437aabc9bd616e2a9",
+    "examples/huggingface/reference_losses.py": "7f204e8d5b1539e6bf56f93a4874345caa09bbf9e02ddbd67852d39147c03015",
+    "examples/huggingface/training_impact.py": "5783bc30426c7d216200175d37390408521d6508296ba2da1be7fbcd9c68b96a",
+    "examples/huggingface/peft_reference.py": "27af74a2079e65f1fe6c27cdbd922206171d3240b3d6cd31ea129005577b0646",
+    "examples/huggingface/training_quality_replay.py": "ab3eaf9a3a8968af6cdf57cae9193eb58edcac9a6936aeae5d29a99f1adf0eb4",
+    "examples/huggingface/precision.py": "6d57236e79cc541020473898f274800e2ea8e8fee4a515f3c666a723a4ef8016",
+    "examples/huggingface/residuals.py": "585efaf7deab45072a27a28972111d193d539b5df87245d6a63dba5576882747",
+    "examples/huggingface/replay.py": "cc99f6ab2a0262fd4c3e467428752b84c936ed6d1dde5bbbaca568b46b4b109f",
+    "examples/huggingface/decoder_sft.py": "6b85c5fe5b6db2cfc7b8fa21cc268c02c998b4e5ece3b3502d96343aeeead30c",
+    "examples/huggingface/training_quality_compare.py": "24e5d072933ed411700ec9f171f2a0f867985d7d9c9b94fa2d8d9ad51b5eb099",
+    "examples/huggingface/layer_audit.py": "8fe47fc1165aa13b72513fb181f929c8378f19d58f286ce2eb74488414e15b9d",
+    "examples/huggingface/reference_head.py": "43762628cec956b78d538e617cbff00a255aadfd0f4d4242509fe0df12c7dbae",
+    "examples/huggingface/qwen.py": "6601da111ae5b0fc43a403407e10ecfb0c537de1b38d277c186f59070f5bc57a",
+    "examples/huggingface/training_quality_replay_compare.py": "781d1f237cd179e8123341fc271a8fbf08990d1f9e408271586f827137c76213",
+    "examples/huggingface/guard.py": "358ff6237713a2a234cdba2bc2447a41b804bfdc050b47e63f2911da31848243",
+    "examples/huggingface/context_comparison.py": "0d263c00c182cfaaf20ac026940e10fbe9c67761ce1914260bc46fc725479f9b",
+    "examples/huggingface/bf16_accumulation.py": "56e592f1e6ed8d79c7ad4517656ab6ae7e1457437a0c511f268632848a6f56b4",
+    "examples/huggingface/trainer.py": "88726585a2d43c119db6ab6ad9c8cf5f376a57921f8cb3902cbaadc857136792",
+    "examples/huggingface/joint_loss.py": "b6edc93e34df4c3ff70973d87a9cb5dd33721de13a99f66061278b74878acfa2",
+    "examples/huggingface/sft.py": "d09c37d3aebb75c20b72256241f5bea56160ba7aa1a1b48fdd1366743dc8e1bd",
+    "examples/huggingface/long_corpus.py": "75082fab45e54e406c267b4532386e7720859bf5423f73cbeb376ce6e1fff231",
+    "examples/huggingface/long_context_report.py": "64446aa805b71b2256e3b2a56077984974d20dcce0b0c5aba03b5f244e808020",
+    "examples/huggingface/local_vjp_audit.py": "e9b7de4077966a63598a7de6c0e1f4b5ad265a797205d4909db6024584c26999",
+    "examples/huggingface/torch_context.py": "1a5b6bb771f837d1d6db6b885b65bb07edc75b8f2d3b8ecba7e76aa6be933f06",
+    "examples/huggingface/attention_vjp.py": "f31017833557a9565c7c9e592a5725d34db2fa908994a8f2f8ddb44440668746",
+    "examples/huggingface/head_reduction_audit.py": "ffd38db380dea817533f064a385b1ef2f271d339ec3fce67190fcb90e8c7b26a",
+    "examples/huggingface/segmented.py": "6dff62cdf4e8d251e38c8b8ef692de4534e024156ed39334da1dbd1db26a374a",
+    "examples/huggingface/serialization.py": "c7af6ed94f821b15f4bd3201c80413fc1fea6dd1501c16d7436ce2499c0652aa",
+    "examples/huggingface/numerics.py": "3c35803ad5c761283edd37f7641c0a3f0f524ff3b2095caaae28af5973698299",
+    "examples/huggingface/mlx_validation.py": "640ab0f7e10dcd1d62f359de13067662ae280b05093786748058952716cd722e",
+    "examples/huggingface/chunked_loss.py": "22f785f1d4f897782a9158c08a81da41fbaa735b857293447ec58a52d2a92a61",
+    "examples/huggingface/context_suite.py": "5c6ad7174f561367cf5116428fa6c760ac26bb575b2d4950ed18b8ddb2ada225",
+    "examples/huggingface/bf16_audit.py": "7e0403976c93d4f376b33cb31a7b21aff7e75ff1430606cc11a9886d1749db28",
+    "examples/huggingface/checkpointing.py": "59fbb86d5c135f2b15872c32dd20cbb3d7560091f74e71f7e274a0ea9b11fa00",
+    "examples/huggingface/validation.py": "d33a12f738bbecdbebe4df2ed1519487b55156ed445c42175c517377a1b4c582"
+  },
+  "corpus_identity": {
+    "version": 1,
+    "train_lines": 160,
+    "validation_lines": 4,
+    "train_sha256": "8fb20f0b72a487d00f3ff5d695c6b2f38a009a6ffd9a606d2ba98b096ddd2fdf",
+    "validation_sha256": "e70e7809f4049bfcbf40d3c459bd8e100d7c3393a991444624d31376b0939fbe",
+    "tokenizer_sha256": "104cfbcc4d85f522ad6dd6af187c5a478a11d40fe03b094a9e0a8d1eae03a470",
+    "max_length": 64
+  },
+  "hardware": {
+    "machine": "Apple M1 Max",
+    "unified_memory_bytes": 34359738368
+  }
+}
