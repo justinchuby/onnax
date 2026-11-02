@@ -21,6 +21,7 @@ def build():
         cross_attention_dim=32,
         caption_channels=32,
         sample_size=8,
+        act_fn="gelu",
     )
     model = DenoisingTask().build(DiTTransformer2DModel(config), config)["model"]
     rng = np.random.default_rng(20261102)
