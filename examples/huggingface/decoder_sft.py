@@ -3,17 +3,22 @@
 """Fine-tune Mobius decoder families through the public checkpoint execution layer."""
 
 import argparse
+import contextlib
 import copy
 import hashlib
 import json
 import math
 import os
 import platform
-import resource
 import subprocess
 import sys
 import time
 from importlib.metadata import version
+
+try:
+    import resource
+except ImportError:
+    resource = None
 
 import torch
 from transformers import AutoConfig, PretrainedConfig, PreTrainedModel
@@ -364,10 +369,13 @@ def main():
         parser.error("Require positive steps/epsilon and at least two audit steps")
     torch.set_num_threads(1)
     factory = None
+    library_sha256 = None
     if args.provider == "mlx":
         from examples.lora.mlx_runtime import register_library, session
 
         if args.library:
+            with open(args.library, "rb") as stream:
+                library_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
             register_library(args.library)
         factory = session
     elif args.library:
@@ -388,28 +396,34 @@ def main():
             **options,
         )
     source_directory = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    commit = subprocess.run(
-        ["git", "-C", source_directory, "rev-parse", "HEAD"],
-        capture_output=True,
-        text=True,
-        check=False,
+    source_commit, working_tree_dirty = None, None
+    with contextlib.suppress(OSError):
+        commit = subprocess.run(
+            ["git", "-C", source_directory, "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        status = subprocess.run(
+            ["git", "-C", source_directory, "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        source_commit = commit.stdout.strip() if commit.returncode == 0 else None
+        working_tree_dirty = bool(status.stdout.strip()) if status.returncode == 0 else None
+    peak_rss = (
+        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        * (1 if sys.platform == "darwin" else 1024)
+        if resource is not None
+        else None
     )
-    status = subprocess.run(
-        ["git", "-C", source_directory, "status", "--porcelain"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    library_sha256 = None
-    if args.library is not None:
-        with open(args.library, "rb") as stream:
-            library_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
     report.update(
         provider=args.provider,
         dtype="float32",
         library_sha256=library_sha256,
-        source_commit=commit.stdout.strip() if commit.returncode == 0 else None,
-        working_tree_dirty=bool(status.stdout.strip()) if status.returncode == 0 else None,
+        source_commit=source_commit,
+        working_tree_dirty=working_tree_dirty,
         platform=platform.platform(),
         versions={
             name: version(name)
@@ -428,8 +442,7 @@ def main():
             )
         },
         threads={"torch": torch.get_num_threads(), "ort_intra": 1, "ort_inter": 1},
-        process_peak_rss_bytes=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        * (1 if sys.platform == "darwin" else 1024),
+        process_peak_rss_bytes=peak_rss,
         rss_scope="process, imports, construction, runtime, training or audit, and export",
     )
     with open(os.path.join(args.output_dir, "report.json"), "w", encoding="utf-8") as stream:

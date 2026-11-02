@@ -73,14 +73,9 @@ explicit padding positions. Frozen source weights retain their byte hashes.
 It then exports and loads the ONNX task and exchanges adapters in both directions
 through PEFT, including another gradient and update comparison.
 
-The new workload uses Adam epsilon `1e-5` for training and its references. In a
-captured fused Phi-3 coordinate, gradients near `-1.02e-7` differed by `6.12e-10`.
-At epsilon `1e-8`, the first-step formula
-`-lr * g / (abs(g) + epsilon)` produced a parameter gap of `1.47e-6`. At epsilon
-`1e-5`, scalar replay reduces that gap to about `1.8e-7`. The
-[conditioning record](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/phi3-fused-adam-conditioning.json)
-retains the original coordinates and Adam states. Comparisons use
-`rtol=1e-4, atol=1e-6` throughout.
+Training and audits use Adam epsilon `1e-5` and compare values at
+`rtol=1e-4, atol=1e-6`. The [Adam conditioning example](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/phi3-fused-adam-conditioning.json)
+includes a scalar replay of small-gradient updates.
 
 ## Train and restore with TRL
 
