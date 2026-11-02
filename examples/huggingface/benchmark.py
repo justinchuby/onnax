@@ -70,6 +70,7 @@ def measure(
     progress_every=0,
     phase_observer=None,
     validate_updates=False,
+    torch_mps_memory_limit_bytes=None,
     fused_ops=False,
 ):
     for name, value, minimum in (
@@ -110,6 +111,21 @@ def measure(
         raise ValueError("PyTorch device/head options require pytorch mode")
     if torch_device == "mps" and not torch.backends.mps.is_available():
         raise ValueError("The PyTorch MPS device is unavailable")
+    mps_memory_fraction = None
+    if torch_mps_memory_limit_bytes is not None:
+        if mode != "pytorch" or torch_device != "mps":
+            raise ValueError("An MPS memory limit requires PyTorch MPS execution")
+        if (
+            isinstance(torch_mps_memory_limit_bytes, bool)
+            or not isinstance(torch_mps_memory_limit_bytes, int)
+            or torch_mps_memory_limit_bytes < 1
+        ):
+            raise ValueError("MPS memory limit must be a positive integer")
+        mps_memory_fraction = min(
+            1.0, torch_mps_memory_limit_bytes / torch.mps.recommended_max_memory()
+        )
+        torch.mps.set_per_process_memory_fraction(mps_memory_fraction)
+
     if checkpoint_layers and mode not in ("chunked", "pytorch"):
         raise ValueError("Decoder checkpoints require chunked or pytorch mode")
     if projection_precision != "fp32" and (
@@ -346,6 +362,8 @@ def measure(
         "checkpoint_layers": checkpoint_layers,
         "save_activations": mode == "saved" or save_activations,
         "mlx_memory_limit_bytes": mlx_memory_limit_bytes,
+        "torch_mps_memory_limit_bytes": torch_mps_memory_limit_bytes,
+        "mps_memory_fraction": mps_memory_fraction,
         "provider": "pytorch_" + torch_device if mode == "pytorch" else provider,
         "torch_chunked_head": torch_chunked,
         "mps_fallback_enabled": os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK") == "1",
@@ -548,6 +566,7 @@ if __name__ == "__main__":
     parser.add_argument("--train-file")
     parser.add_argument("--save-activations", action="store_true")
     parser.add_argument("--mlx-memory-limit-gib", type=int)
+    parser.add_argument("--torch-mps-memory-limit-gib", type=int)
     parser.add_argument("--nf4", action="store_true")
     parser.add_argument(
         "--projection-precision", choices=["fp32", "bf16", "fp16"], default="fp32"
@@ -584,6 +603,12 @@ if __name__ == "__main__":
         parser.error("Require a positive segment node target")
     if args.provider != "mlx" and (args.library or args.segment_nodes):
         parser.error("--library and --segment-nodes require --provider mlx")
+    if args.torch_mps_memory_limit_gib is not None and (
+        args.torch_mps_memory_limit_gib < 1
+        or args.mode != "pytorch"
+        or args.torch_device != "mps"
+    ):
+        parser.error("A positive MPS memory limit requires --mode pytorch --torch-device mps")
     if args.mode:
         print(
             json.dumps(
@@ -591,6 +616,9 @@ if __name__ == "__main__":
                     args.mode,
                     real=args.real,
                     torch_device=args.torch_device,
+                    torch_mps_memory_limit_bytes=args.torch_mps_memory_limit_gib * 1024**3
+                    if args.torch_mps_memory_limit_gib
+                    else None,
                     torch_chunked=args.torch_chunked,
                     torch_attention=args.torch_attention,
                     progress_every=args.progress_every,

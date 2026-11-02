@@ -60,7 +60,6 @@ def run(
     checkpoint_layers=4,
     chunk_size=128,
     trace_phases=False,
-    mps_memory_fraction=0.8,
 ):
     """Validate a cold update; steady-state timing uses the separate benchmark CLI."""
     if provider not in ("cpu", "mlx", "mps"):
@@ -71,10 +70,6 @@ def run(
         raise ValueError("A native library applies only to the MLX provider")
     if provider == "cpu" and projection_precision != "fp32":
         raise ValueError("CPU capacity qualification uses FP32 projections")
-    if not 0 < mps_memory_fraction <= 1:
-        raise ValueError("MPS memory fraction must be in (0,1]")
-    if provider == "mps":
-        torch.mps.set_per_process_memory_fraction(mps_memory_fraction)
     os.makedirs(directory, exist_ok=False)
     journal = MemoryJournal(
         os.path.join(directory, "phases.jsonl"), provider=provider, library=library
@@ -103,6 +98,7 @@ def run(
         mlx_memory_limit_bytes=20 * 1024**3 if provider == "mlx" else None,
         phase_observer=journal if trace_phases else None,
         validate_updates=True,
+        torch_mps_memory_limit_bytes=20 * 1024**3 if provider == "mps" else None,
     )
     if report["parameter_tensors"] != 112:
         raise AssertionError("Expected all 112 Qwen adapter tensors")
@@ -111,7 +107,6 @@ def run(
         working_tree_dirty=dirty,
         qualification_scope="Cold one-update capacity, with FP32 parameter/gradient/AdamW validation",
         phase_journal="phases.jsonl",
-        mps_memory_fraction=mps_memory_fraction if provider == "mps" else None,
     )
     with open(train_file, "rb") as stream:
         report["input_file_sha256"] = hashlib.file_digest(stream, "sha256").hexdigest()

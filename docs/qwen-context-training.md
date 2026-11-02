@@ -429,6 +429,6 @@ Use the separate benchmark command with ten warmups and 100 measured steps for
 steady-state timing; phase instrumentation is optional there at the Python API.
 
 For a matched PyTorch MPS capacity probe, select `--provider mps` and omit the
-native library. It uses SDPA, chunked loss, four-layer checkpoints and a GPU
-memory fraction of 0.8. CPU capacity probes use `--provider cpu` with
+native library. It uses SDPA, chunked loss, four-layer checkpoints and a 20 GiB GPU
+allocator limit, bounded by the device recommendation. CPU capacity probes use `--provider cpu` with
 `--projection-precision fp32`.
