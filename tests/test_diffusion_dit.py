@@ -56,8 +56,9 @@ def test_conditional_denoiser_dynamic_forward_and_adapter_gradients(shape, text_
 
 
 def test_external_updates_frozen_base_and_loaded_denoiser(tmp_path):
-    report = run(tmp_path / "dit", steps=8)
-    assert report["training_loss"][1] < report["training_loss"][0]
+    report = run(tmp_path / "dit", steps=100)
+    assert report["training_loss"][1] < report["training_loss"][0] * 0.5
+    assert report["validation_loss"][1] < report["validation_loss"][0]
     assert report["adapter_gradients_aligned"] and report["independent_updates_norm_aligned"]
     assert report["frozen_weights_unchanged"] and report["export_load_bitwise_equal"]
     assert len(report["adapter_mapping"]) == 8
