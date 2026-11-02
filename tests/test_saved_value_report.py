@@ -10,13 +10,15 @@ import numpy as np
 import onnx_ir as ir
 import pytest
 
+import onnax
 from examples.huggingface.saved_values import main, report
+from onnax import _rules
 
 
-def polynomial(*, return_saved=False):
-    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=["batch", 4])
+def polynomial(*, return_saved=False, batch="batch"):
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[batch, 4])
     a = ir.val("a", dtype=ir.DataType.FLOAT, shape=[4])
-    unused = ir.val("unused", dtype=ir.DataType.FLOAT, shape=["batch", 4])
+    unused = ir.val("unused", dtype=ir.DataType.FLOAT, shape=[batch, 4])
     tape = ir.tape.Tape()
     w = tape.initializer(ir.tensor(np.ones((4, 2), np.float32), name="w"))
     tape.initializer(ir.tensor(np.ones((7,), np.float32), name="unused_weight"))
@@ -24,9 +26,9 @@ def polynomial(*, return_saved=False):
     square = tape.op("Mul", [u, u])
     y = tape.op("MatMul", [square, w])
     for name, value, shape in (
-        ("u", u, ["batch", 4]),
-        ("square", square, ["batch", 4]),
-        ("y", y, ["batch", 2]),
+        ("u", u, [batch, 4]),
+        ("square", square, [batch, 4]),
+        ("y", y, [batch, 2]),
     ):
         value.name, value.dtype, value.shape = name, ir.DataType.FLOAT, ir.Shape(shape)
     return ir.Model(
@@ -44,7 +46,7 @@ def polynomial(*, return_saved=False):
 
 @pytest.mark.parametrize("return_saved", [False, True])
 def test_actual_reads_unique_storage_and_input_preservation(return_saved):
-    model = polynomial(return_saved=return_saved)
+    model = polynomial(return_saved=return_saved, batch=3)
     before = ir.to_proto(model).SerializeToString()
     result = report(
         model, inputs=["a"], outputs=["y"], parameters=["a"], dimensions={"batch": 3}
@@ -113,7 +115,7 @@ def test_optimized_causal_attention_has_concrete_mask_storage():
 
 
 def test_unused_functions_do_not_block_flat_liveness():
-    model = polynomial()
+    model = polynomial(batch=3)
     value = ir.val("arg", dtype=ir.DataType.FLOAT, shape=[1])
     tape = ir.tape.Tape()
     result = tape.op("Neg", [value])
@@ -166,9 +168,31 @@ def test_generated_scan_reports_its_control_flow_analysis_requirement():
     assert "control flow" in result["backward_liveness"]["reason"]
 
 
+def test_specialization_preserves_the_exported_derivative_selection(monkeypatch):
+    monkeypatch.setattr(_rules, "_EXTENSIONS", _rules._snapshot())
+    observed = []
+
+    @onnax.register_vjp("memory.tests", "Identity", since_version=1, until_version=1)
+    def identity(ctx, node, cotangents, indices):
+        observed.append(str(node.inputs[0].shape[0]))
+        return dict.fromkeys(indices, cotangents[0])
+
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=["batch", 4])
+    tape = ir.tape.Tape()
+    y = tape.op("Identity", [x], domain="memory.tests")
+    y.name, y.dtype, y.shape = "y", ir.DataType.FLOAT, ir.Shape(["batch", 4])
+    model = ir.Model(
+        ir.Graph([x], [y], nodes=tape.nodes, opset_imports={"": 24, "memory.tests": 1}),
+        ir_version=12,
+    )
+    result = report(model, inputs=["x"], outputs=["y"], dimensions={"batch": 3})
+    assert observed == ["batch"]
+    assert result["backward_liveness"]["status"] == "complete"
+
+
 def test_bundle_cli_uses_declared_block_and_parameter_mapping(tmp_path, monkeypatch):
     path = tmp_path / "block_0_forward.onnx"
-    ir.save(polynomial(), path)
+    ir.save(polynomial(batch=3), path)
     interface = {
         "version": 1,
         "kind": "checkpointed_vjp",

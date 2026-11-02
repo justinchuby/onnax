@@ -286,9 +286,10 @@ pretrained Diffusers denoiser remains the next model-family milestone.
 
 The [first saved-value study](vjp-memory.md) connects split VJPs with the liveness
 analyzer on exported Qwen3.5 blocks. It reports complete local tensor peaks for
-the full-attention block and saved-value sets for the recurrent block. The next
-memory step models Scan carry, retained sequence outputs and per-iteration live
-sets, then pairs those estimates with runtime allocation measurements.
+the full-attention block. The recurrent study also models nested Scan carry,
+retained sequence outputs and per-iteration live sets, including padded chunks.
+The next memory step pairs these estimates with runtime allocation measurements
+and chooses a block-local recomputation candidate from the measured peak set.
 
 ```{toctree}
 :hidden:

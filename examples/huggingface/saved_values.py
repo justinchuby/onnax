@@ -8,13 +8,46 @@ import json
 import os
 
 import onnx_ir as ir
-from onnx_ir.passes.common import RemoveUnusedFunctionsPass, ShapeInferencePass
+from onnx_ir.passes.common import InlinePass, RemoveUnusedFunctionsPass, ShapeInferencePass
 from onnxscript import optimizer
 
 import onnax
 from examples.activation_liveness import analyze, tensor_bytes
 from examples.huggingface.optimization import optimize_training_graph
 from examples.huggingface.residuals import split_vjp
+
+
+def _refine_function_shapes(source, joint):
+    unknown = [
+        value.name
+        for value in ir.convenience.create_value_mapping(source.graph).values()
+        if value.shape is None or any(not isinstance(dim, int) for dim in value.shape)
+    ]
+    if not source.functions or not unknown:
+        return
+    inferred = source.clone()
+    values = ir.convenience.create_value_mapping(inferred.graph)
+    for name in unknown:
+        if values[name] not in inferred.graph.outputs:
+            inferred.graph.outputs.append(values[name])
+    # Retain unknown intermediates as outputs of this inference-only copy so
+    # local-function expansion and folding preserve their original value names.
+    InlinePass()(inferred)
+    ShapeInferencePass()(inferred)
+    inferred = optimize_training_graph(inferred)
+    for graph in inferred.graphs():
+        for value in ir.convenience.create_value_mapping(graph).values():
+            if value.const_value is not None:
+                value.shape = ir.Shape(value.const_value.shape)
+    ShapeInferencePass()(inferred)
+    inferred_values = ir.convenience.create_value_mapping(inferred.graph)
+    for model in (source, joint):
+        originals = ir.convenience.create_value_mapping(model.graph)
+        for name in unknown:
+            value = inferred_values.get(name)
+            if value is not None and value.shape is not None:
+                originals[name].shape = ir.Shape(value.shape)
+        ShapeInferencePass()(model)
 
 
 def _record(value, category, returned, origin=None):
@@ -45,7 +78,16 @@ def _record(value, category, returned, origin=None):
     }
 
 
-def report(model, *, inputs, outputs, parameters=(), dimensions=None, optimize=False):
+def report(
+    model,
+    *,
+    inputs,
+    outputs,
+    parameters=(),
+    dimensions=None,
+    optimize=False,
+    scan_bodies=False,
+):
     """Analyze the generated pullback on a copy of a source ONNX IR model.
 
     Parameters are explicit trainable graph inputs. Initializers are reported
@@ -64,15 +106,6 @@ def report(model, *, inputs, outputs, parameters=(), dimensions=None, optimize=F
         for name, size in dimensions.items()
     ):
         raise ValueError("Dimensions must map nonempty names to nonnegative integers")
-    for graph in source.graphs():
-        for value in ir.convenience.create_value_mapping(graph).values():
-            if value.shape is not None:
-                value.shape = ir.Shape(
-                    [
-                        dim if isinstance(dim, int) else dimensions.get(str(dim), dim)
-                        for dim in value.shape
-                    ]
-                )
     parameters = set(parameters)
     initializers = set(source.graph.initializers)
     source_inputs = {value.name for value in source.graph.inputs}
@@ -82,6 +115,27 @@ def report(model, *, inputs, outputs, parameters=(), dimensions=None, optimize=F
         raise ValueError("Trainable parameters must be selected VJP inputs")
     ShapeInferencePass()(source)
     joint = onnax.vjp(source, inputs=list(inputs), outputs=list(outputs))
+    # Preserve shape-dependent derivative choices made for the exported source.
+    # Specialize the resulting graph, rather than selecting a different VJP.
+    for current in (source, joint):
+        for graph in current.graphs():
+            for value in ir.convenience.create_value_mapping(graph).values():
+                if value.shape is not None:
+                    value.shape = ir.Shape(
+                        [
+                            dim if isinstance(dim, int) else dimensions.get(str(dim), dim)
+                            for dim in value.shape
+                        ]
+                    )
+        ShapeInferencePass()(current)
+    _refine_function_shapes(source, joint)
+    source_values = ir.convenience.create_value_mapping(source.graph)
+    seeds = joint.graph.inputs[len(source.graph.inputs) :]
+    for name, seed in zip(outputs, seeds, strict=True):
+        value = source_values[name]
+        if value.shape is not None:
+            seed.shape = ir.Shape(value.shape)
+    ShapeInferencePass()(joint)
     _, backward, residuals = split_vjp(source, joint, optimize_layout=True)
     RemoveUnusedFunctionsPass()(backward)
     ShapeInferencePass()(backward)
@@ -143,7 +197,7 @@ def report(model, *, inputs, outputs, parameters=(), dimensions=None, optimize=F
         if row["category"] == "saved_activation" and not row["forward_output"]
     ]
     try:
-        liveness = {"status": "complete", **analyze(backward)}
+        liveness = {"status": "complete", **analyze(backward, scan_bodies=scan_bodies)}
         liveness["peak_by_category"] = {
             **{name: row["known_bytes"] for name, row in categories.items()},
             "backward_temporaries": liveness["peak_activation_bytes"],
@@ -179,6 +233,7 @@ def main():
     parser.add_argument("--dimension", action="append", default=[], metavar="NAME=SIZE")
     parser.add_argument("--output", required=True)
     parser.add_argument("--optimize", action="store_true")
+    parser.add_argument("--scan-bodies", action="store_true")
     args = parser.parse_args()
     provenance = {}
     if args.bundle:
@@ -225,6 +280,7 @@ def main():
         parameters=args.parameters or (),
         dimensions=dimensions,
         optimize=args.optimize,
+        scan_bodies=args.scan_bodies,
     )
     result["provenance"] = provenance
     with open(args.output, "w", encoding="utf-8") as stream:

@@ -1,10 +1,30 @@
 # Copyright (c) 2026 onnax contributors
 # SPDX-License-Identifier: MIT
-"""Split a flat VJP at its primal/derivative boundary to save activations."""
+"""Split a VJP at its primal/derivative boundary to save activations."""
 
 import onnx_ir as ir
 from onnx_ir.passes.common import IdentityEliminationPass
 from onnxscript.rewriter import RewriteRuleClassBase
+
+
+def _derivative_nodes(nodes):
+    pending, members = list(nodes), set()
+    while pending:
+        node = pending.pop()
+        if node in members:
+            continue
+        members.add(node)
+        for attr in node.attributes.values():
+            graphs = (
+                [attr.as_graph()]
+                if attr.type == ir.AttributeType.GRAPH
+                else attr.as_graphs()
+                if attr.type == ir.AttributeType.GRAPHS
+                else ()
+            )
+            for graph in graphs:
+                pending.extend(graph)
+    return members
 
 
 class _ComposeDerivativeTransposes(RewriteRuleClassBase):
@@ -54,7 +74,7 @@ class _ComposeDerivativeTransposes(RewriteRuleClassBase):
 
 
 def split_vjp(model, joint, *, optimize_layout=False):
-    """Split top-level nodes, retaining opaque local functions in both models."""
+    """Split top-level nodes and nested captures, retaining local functions."""
     primal_count = len(model.graph)
     original = list(model.graph)
     nodes = list(joint.graph)
@@ -64,7 +84,7 @@ def split_vjp(model, joint, *, optimize_layout=False):
         raise ValueError("VJP primal prefix differs from the source graph")
     joint = joint.clone()
     nodes = list(joint.graph)
-    derivative = set(nodes[primal_count:])
+    derivative = _derivative_nodes(nodes[primal_count:])
     if optimize_layout:
         expected_primal = nodes[:primal_count]
         primal = set(nodes[:primal_count])
@@ -82,7 +102,7 @@ def split_vjp(model, joint, *, optimize_layout=False):
         nodes = list(joint.graph)
         if nodes[:primal_count] != expected_primal:
             raise ValueError("Layout rewrite changed the VJP primal prefix")
-        derivative = set(nodes[primal_count:])
+        derivative = _derivative_nodes(nodes[primal_count:])
     boundary = [
         v
         for n in nodes[:primal_count]

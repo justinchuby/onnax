@@ -188,3 +188,92 @@ def test_bridge_frozen_weight_reuse_is_opt_in(optimize, reuse):
     np.testing.assert_allclose(
         model.adapters[0].grad, np.ones((2, 5), np.float32) @ weight, rtol=1e-4, atol=1e-6
     )
+
+
+@pytest.mark.parametrize("optimize_layout", [False, True])
+@pytest.mark.parametrize("nested", [False, True])
+def test_scan_body_capture_is_saved_for_the_pullback(optimize_layout, nested):
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[3, 4])
+    a = ir.val("a", dtype=ir.DataType.FLOAT, shape=[4])
+    tape = ir.tape.Tape()
+    coefficient = tape.op("Mul", [a, a])
+    coefficient.name, coefficient.dtype, coefficient.shape = (
+        "coefficient",
+        ir.DataType.FLOAT,
+        ir.Shape([4]),
+    )
+    y = tape.op("Mul", [x, coefficient])
+    y.name, y.dtype, y.shape = "y", ir.DataType.FLOAT, ir.Shape([3, 4])
+    source = ir.Model(
+        ir.Graph([x, a], [y], nodes=tape.nodes, opset_imports={"": 24}, name="scaled_rows"),
+        ir_version=12,
+    )
+    joint = source.clone()
+    captured = ir.convenience.create_value_mapping(joint.graph)["coefficient"]
+    seed = ir.val("seed", dtype=ir.DataType.FLOAT, shape=[4])
+    body = ir.tape.Tape()
+    if nested:
+        inner_seed = ir.val("inner_seed", dtype=ir.DataType.FLOAT, shape=[4])
+        inner = ir.tape.Tape()
+        inner_product = inner.op("Mul", [inner_seed, captured])
+        inner_product.name, inner_product.dtype, inner_product.shape = (
+            "inner_product",
+            ir.DataType.FLOAT,
+            ir.Shape([4]),
+        )
+        inner_step = ir.Graph(
+            [inner_seed],
+            [inner_product],
+            nodes=inner.nodes,
+            opset_imports={"": 24},
+            name="inner_row",
+        )
+        row_shape = body.initializer(ir.tensor(np.array([1, 4], np.int64), name="row_shape"))
+        axes = body.initializer(ir.tensor(np.array([0], np.int64), name="row_axes"))
+        row = body.op("Reshape", [seed, row_shape])
+        row.dtype, row.shape = ir.DataType.FLOAT, ir.Shape([1, 4])
+        result = body.op("Scan", [row], {"body": inner_step, "num_scan_inputs": 1})
+        result.dtype, result.shape = ir.DataType.FLOAT, ir.Shape([1, 4])
+        product = body.op("Squeeze", [result, axes])
+    else:
+        product = body.op("Mul", [seed, captured])
+    product.name, product.dtype, product.shape = (
+        "row_gradient",
+        ir.DataType.FLOAT,
+        ir.Shape([4]),
+    )
+    step = ir.Graph(
+        [seed],
+        [product],
+        nodes=body.nodes,
+        initializers=body.initializers,
+        opset_imports={"": 24},
+        name="pullback_row",
+    )
+    cotangent = ir.val("y_cotangent", dtype=ir.DataType.FLOAT, shape=[3, 4])
+    derivative = ir.tape.Tape()
+    gradient = derivative.op("Scan", [cotangent], {"body": step, "num_scan_inputs": 1})
+    gradient.name, gradient.dtype, gradient.shape = (
+        "x_cotangent",
+        ir.DataType.FLOAT,
+        ir.Shape([3, 4]),
+    )
+    joint.graph.inputs.append(cotangent)
+    joint.graph.extend(derivative.nodes)
+    joint.graph.outputs.append(gradient)
+    snapshots = [ir.to_proto(model).SerializeToString() for model in (source, joint)]
+    forward, backward, names = split_vjp(source, joint, optimize_layout=optimize_layout)
+    assert names == ("coefficient",)
+    assert [ir.to_proto(model).SerializeToString() for model in (source, joint)] == snapshots
+    feeds = {
+        "x": np.arange(12, dtype=np.float32).reshape(3, 4),
+        "a": np.array([0.5, -1, 2, 0.25], np.float32),
+    }
+    upstream = np.arange(1, 13, dtype=np.float32).reshape(3, 4) / 10
+    primal = execute(forward, feeds)
+    expected = execute(joint, {**feeds, "y_cotangent": upstream})
+    actual = execute(
+        backward, {**feeds, "coefficient": primal["coefficient"], "y_cotangent": upstream}
+    )
+    np.testing.assert_array_equal(actual["x_cotangent"], upstream * feeds["a"] ** 2)
+    np.testing.assert_array_equal(actual["x_cotangent"], expected["x_cotangent"])
