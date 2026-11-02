@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import tempfile
 import time
 from collections import Counter
@@ -21,6 +20,7 @@ from onnx_ir.passes import common
 
 import onnax
 from onnax._checkpoint import partition
+from onnax._file_snapshot import copy_file
 from onnax.torch._checkpoint_execution import _Execution, execute
 from onnax.torch._module import (
     OnnxModule,
@@ -243,9 +243,7 @@ class CheckpointedModule(OnnxModule):
 
     def _restore(self, directory, interface, factory):
         for name in interface["files"]:
-            shutil.copyfile(
-                os.path.join(directory, name), os.path.join(self._directory.name, name)
-            )
+            copy_file(os.path.join(directory, name), os.path.join(self._directory.name, name))
         source = ir.load(os.path.join(self._directory.name, "model.onnx"))
         _validate_bundle_specs(source, interface)
         with np.load(

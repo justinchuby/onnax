@@ -8,7 +8,6 @@ import contextlib
 import functools
 import json
 import os
-import shutil
 import tempfile
 from collections.abc import Callable, Mapping, Sequence
 from typing import Protocol, Self
@@ -22,6 +21,7 @@ from onnx_ir.passes import common
 from torch.autograd.function import once_differentiable
 
 import onnax
+from onnax._file_snapshot import copy_file
 from onnax._inference import _infer_shapes
 from onnax.torch._serialization import file_digest, save_model, source_identity
 
@@ -490,7 +490,7 @@ class OnnxModule(torch.nn.Module):
         files = {}
         for name in os.listdir(self._directory.name):
             if name.endswith((".onnx", ".data")):
-                shutil.copyfile(
+                copy_file(
                     os.path.join(self._directory.name, name), os.path.join(directory, name)
                 )
                 files[name] = file_digest(os.path.join(directory, name))
@@ -558,7 +558,7 @@ class OnnxModule(torch.nn.Module):
         module._directory = tempfile.TemporaryDirectory(prefix="onnax-torch-")
         try:
             for name in interface["files"]:
-                shutil.copyfile(
+                copy_file(
                     os.path.join(directory, name), os.path.join(module._directory.name, name)
                 )
             source = ir.load(os.path.join(module._directory.name, "model.onnx"))
