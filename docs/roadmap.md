@@ -364,3 +364,11 @@ covered. The first real-model study uses the complete 4032-token Qwen3.5 QA
 capture and the full-attention MLP producer slice. Compare this candidate with
 both saved activations and the existing whole-block checkpoint policy before
 changing decoder execution defaults.
+
+The first 4032-token full-attention comparison now measures the whole-block,
+save-all and MLP-replay routes. Whole-block replay uses the least memory and time
+in this case, so it remains the default. The saved-value audit finds 15 retained
+tensors read only through `Shape`. Next, represent those boundaries with shape
+vectors, then repeat the three-route comparison and qualify full-decoder updates
+and recovery for any selected execution policy. See the
+{ref}`block-local measurements <complete-context-block-replay>`.

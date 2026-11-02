@@ -114,18 +114,25 @@ def test_block_selection_requires_unique_differentiable_names(names):
         block_rows({"blocks": [{"name": "layer", "backward": True}]}, names)
 
 
-def test_split_replay_qualifies_captured_gradients(recorded):
+@pytest.mark.parametrize("checkpoint", [False, True])
+def test_split_replay_qualifies_captured_gradients(recorded, checkpoint):
     from examples.huggingface.block_recompute import measure as measure_split
 
     bundle, captures, captured = recorded
     result = measure_split(
-        bundle, captures, "decoder_0_1", factory=session, warmup=0, samples=1
+        bundle,
+        captures,
+        "decoder_0_1",
+        factory=session,
+        warmup=0,
+        samples=1,
+        checkpoint=checkpoint,
     )
     assert set(result["gradient_checks"]) == set(
         captured["blocks"]["decoder_0_1"]["output_names"]
     )
     assert result["gradient_checks"] == result["final_gradient_checks"]
-    assert result["retained_activation_bytes"] > 0
+    assert (result["retained_activation_bytes"] == 0) == checkpoint
     assert result["plan"]["recomputed_values"] == []
     assert result["timing_seconds"]["paired"]["median"] > 0
 

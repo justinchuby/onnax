@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "context": 4032,
+  "valid_targets": 4026,
+  "precision": "FP32",
+  "corpus_manifest": "qwen35-context4k-corpus.json",
+  "capture_loss": 1.3879575729370117,
+  "warmup": 10,
+  "samples": 100,
+  "variants": {
+    "saved": {
+      "retained_activation_bytes": 908457984,
+      "paired_seconds": {
+        "median": 0.37293958352529444,
+        "p95": 0.3848391743376851
+      },
+      "window_allocator_peak_bytes": 4638525736,
+      "physical_lifetime_peak_bytes": 5544496056,
+      "gradients_checked": 5,
+      "report": "qwen35-context4k-saved-qualified.json"
+    },
+    "selective": {
+      "retained_activation_bytes": 735049728,
+      "paired_seconds": {
+        "median": 0.36162537449854426,
+        "p95": 0.3912405892711831
+      },
+      "window_allocator_peak_bytes": 4435757352,
+      "physical_lifetime_peak_bytes": 5260610224,
+      "gradients_checked": 5,
+      "report": "qwen35-context4k-selective-qualified.json"
+    },
+    "checkpoint": {
+      "retained_activation_bytes": 0,
+      "paired_seconds": {
+        "median": 0.3269232084858231,
+        "p95": 0.3468587193841813
+      },
+      "window_allocator_peak_bytes": 4260711788,
+      "physical_lifetime_peak_bytes": 4675438536,
+      "gradients_checked": 5,
+      "report": "qwen35-context4k-checkpoint-paired.json"
+    }
+  },
+  "scope": "One decoder_3_4 forward/backward pair, fixed parameters, original checkpoint input/cotangent; runtime host/device exchange included; no optimizer or full-decoder step",
+  "decision": "Keep whole-block checkpoint replay as the decoder default; inspect shape-only saved tensors before adopting a partial-saving strategy",
+  "paired_split_source_commit": "ed04d26",
+  "shape_only_residual_count": 15,
+  "pretrained_source": {
+    "checkpoint_to_reference_prefix": {
+      "model.language_model.": "model."
+    },
+    "dtype": "float32",
+    "loading": {
+      "error_msgs": [],
+      "mismatched_keys": [],
+      "missing_keys": [],
+      "unexpected_keys": []
+    },
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "parameter_count": 752393024,
+    "reference_class": "Qwen3_5ForCausalLM",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "version": 1
+  },
+  "capture_interface_sha256": "77da90aefd66d7a1d63a841124af178dbcd8c57d0de95f097ff207ec3ffdc51a",
+  "capture_batch": {
+    "input_ids": {
+      "shape": [
+        1,
+        4032
+      ],
+      "dtype": "int64",
+      "bytes": 32256,
+      "sha256": "e7eb188a4c860579198c1e3d31ada13bdaddcfaab5884798ba7f62edad0f996e"
+    },
+    "attention_mask": {
+      "shape": [
+        1,
+        4032
+      ],
+      "dtype": "int64",
+      "bytes": 32256,
+      "sha256": "8c04b075483d668ceda5c5381744cb73cb50ae4f9a1d7dbb3e051baecf0d099b"
+    },
+    "position_ids": {
+      "shape": [
+        1,
+        4032
+      ],
+      "dtype": "int64",
+      "bytes": 32256,
+      "sha256": "42f147e20f9815324ebaabbe868244b6c405c850c23edca03ee04201121928cc"
+    },
+    "labels": {
+      "shape": [
+        1,
+        4032
+      ],
+      "dtype": "int64",
+      "bytes": 32256,
+      "sha256": "7d141b20336f264519d2a27ceceb921b4b12af2cc6df9956e9200da147da5e77"
+    }
+  },
+  "shape_only_payload_bytes": 445906944,
+  "shape_only_matches_specialization_storage_gap": true,
+  "hardware": {
+    "chip": "Apple M1 Max",
+    "memory_bytes": 34359738368
+  },
+  "threads": {
+    "ort_intra_op": 1,
+    "ort_inter_op": 1,
+    "OMP_NUM_THREADS": "1"
+  },
+  "runtime_environment": {
+    "ONNXRUNTIME_EP_MLX_NO_COMPILE": "1",
+    "ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES": "536870912"
+  }
+}

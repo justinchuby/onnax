@@ -30,24 +30,52 @@ from examples.process_memory import physical_footprint
 
 
 def measure(
-    directory, captures, name, *, recompute=(), factory, memory=None, warmup=10, samples=100
+    directory,
+    captures,
+    name,
+    *,
+    recompute=(),
+    checkpoint=False,
+    factory,
+    memory=None,
+    warmup=10,
+    samples=100,
 ):
     """Time paired forward/backward calls, retaining residual arrays between them."""
     if warmup < 0 or samples < 1:
         raise ValueError("Expected warmup >= 0 and samples >= 1")
+    recompute = tuple(recompute)
+    if checkpoint and recompute:
+        raise ValueError("Whole checkpoint replay and selected values are mutually exclusive")
     record, block, feeds, expected = load_case(directory, captures, name)
     row = record["blocks"][block["index"]]
     source = ir.load(os.path.join(directory, f"block_{block['index']}_forward.onnx"))
-    joint = onnax.vjp(source, inputs=row["active_inputs"], outputs=row["active_outputs"])
-    _, _, baseline_names = split_vjp(source, joint, optimize_layout=True)
-    values = ir.convenience.create_value_mapping(source.graph)
-    plan = describe_replay(
-        list(source.graph), [values[key] for key in baseline_names], tuple(recompute)
-    )
-    forward, backward, residuals = split_vjp(
-        source, joint, optimize_layout=True, recompute=recompute
-    )
-    backward = optimize_training_graph(backward)
+    if checkpoint:
+        forward = source.clone()
+        backward = ir.load(os.path.join(directory, block["model"]))
+        residuals = ()
+        plan = {
+            "version": 1,
+            "strategy": "whole_checkpoint",
+            "recomputed_values": [],
+            "retained_values": [],
+            "replay_inputs": list(row["inputs"]),
+            "nodes": [],
+            "invocations_per_backward": 1,
+            "region": "Original exported checkpoint recomputation/VJP",
+        }
+    else:
+        joint = onnax.vjp(source, inputs=row["active_inputs"], outputs=row["active_outputs"])
+        _, _, baseline_names = split_vjp(source, joint, optimize_layout=True)
+        values = ir.convenience.create_value_mapping(source.graph)
+        plan = describe_replay(
+            list(source.graph), [values[key] for key in baseline_names], tuple(recompute)
+        )
+        forward, backward, residuals = split_vjp(
+            source, joint, optimize_layout=True, recompute=recompute
+        )
+        backward = optimize_training_graph(backward)
+        plan["strategy"] = "selective" if recompute else "saved"
     live_inputs = {
         value.name
         for value in backward.graph.inputs
@@ -62,7 +90,8 @@ def measure(
     outputs = [value for value in forward.graph.outputs if value.name in retained_outputs]
     forward.graph.outputs.clear()
     forward.graph.outputs.extend(outputs)
-    forward = optimize_training_graph(forward)
+    if not checkpoint:
+        forward = optimize_training_graph(forward)
     plan["retained_values"] = list(residuals)
     positions = {node: index for index, node in enumerate(backward.graph)}
     backward_values = ir.convenience.create_value_mapping(backward.graph)
@@ -83,7 +112,7 @@ def measure(
                     "managed_by": "ONNX runtime graph execution",
                 }
             )
-    seeds = json.loads(joint.graph.metadata_props["onnax.autodiff.interface"])["seeds"]
+    seeds = row["seeds"]
     # The captured checkpoint VJP supplies the same original inputs and cotangents.
     forward_feeds = {value.name: feeds[value.name] for value in forward.graph.inputs}
     supplied = {
@@ -178,7 +207,9 @@ def main():
     parser.add_argument("--bundle", required=True)
     parser.add_argument("--captures", required=True)
     parser.add_argument("--block", required=True)
-    parser.add_argument("--recompute", nargs="+", default=[])
+    strategies = parser.add_mutually_exclusive_group()
+    strategies.add_argument("--recompute", nargs="+", default=[])
+    strategies.add_argument("--checkpoint", action="store_true")
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
     parser.add_argument("--library")
     parser.add_argument("--warmup", type=int, default=10)
@@ -203,6 +234,7 @@ def main():
         args.captures,
         args.block,
         recompute=args.recompute,
+        checkpoint=args.checkpoint,
         factory=session,
         memory=memory,
         warmup=args.warmup,

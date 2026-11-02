@@ -169,3 +169,46 @@ producer slices, non-unit upstream gradients, unequal microbatch accumulation,
 multi-step updates and Adam checkpoint restoration. The decoder checkpoint
 executor continues to use its qualified whole-block replay policy while these
 block-local alternatives are measured.
+
+Capture the exact training batch with `block_runtime capture --batch-file batch.npz`.
+The archive contains rank-two `int64` arrays named `input_ids`, `attention_mask`,
+`position_ids` and `labels`. This route preserves padding and prompt masks and
+loads no tokenizer. It checks vocabulary, context and ignored padding labels
+before constructing runtime sessions. Save a Trainer microbatch at its input
+boundary with `np.savez(path, **{k: v.cpu().numpy() for k, v in batch.items()})`.
+
+Use `block_recompute --checkpoint` for the original exported whole-block replay
+control. It measures the same paired forward/backward interval as the saved and
+selective paths. The derivative-only timings from `block_runtime` remain useful
+for locating execution costs within that pair.
+
+(complete-context-block-replay)=
+### Complete-context Qwen3.5 measurement
+
+The FP32 study uses the trained Qwen3.5-0.8B full-attention block `decoder_3_4`,
+one complete QA padded to 4032 positions, and 4026 supervised targets. The MLP
+candidate regenerates RMSNormalization, gate/up MatMul and Swish once in backward.
+Every input/adapter gradient agrees with the captured training invocation at
+`rtol=1e-4, atol=1e-6`. Each strategy runs in its own MLX process with compilation
+and CPU fallback disabled, a 512 MiB cache limit, ten warmups and 100 timed pairs.
+
+| Strategy | Saved arrays | Pair median / P95 | MLX window peak | Process peak physical |
+|---|---:|---:|---:|---:|
+| Whole-block checkpoint | 0 MiB | 327 / 347 ms | 3.97 GiB | 4.35 GiB |
+| Save all required values | 866 MiB | 373 / 385 ms | 4.32 GiB | 5.16 GiB |
+| Recompute MLP region | 701 MiB | 362 / 391 ms | 4.13 GiB | 4.90 GiB |
+
+Whole-block checkpointing remains the decoder default. Local MLP replay reduces
+storage relative to saving all values; the whole-block route has the lowest
+measured time and memory for this case. The paired interval includes forward,
+backward and runtime exchange. Process peaks also include construction, loaded
+graphs and captured arrays. These are block measurements with fixed parameters.
+The [summary](../examples/huggingface/reports/qwen35-context4k-recompute-summary.json)
+links the detailed runtime and gradient records.
+
+The exported dynamic pullback has 15 saved tensors whose consumers only read
+`Shape`, accounting for the difference between its saved arrays and the
+concrete-shape report. Shape metadata is the next storage candidate: forward can
+return the required shape vectors, and backward can consume those vectors instead
+of retaining full activations. The existing saved-value consumer records identify
+these edges; dynamic shape and direct gradient outputs must remain intact.
