@@ -112,3 +112,77 @@ def test_no_new_allocation_keeps_the_initial_live_memory_in_the_window(recorded)
 def test_block_selection_requires_unique_differentiable_names(names):
     with pytest.raises(ValueError):
         block_rows({"blocks": [{"name": "layer", "backward": True}]}, names)
+
+
+@pytest.mark.parametrize("checkpoint", [False, True])
+def test_split_replay_qualifies_captured_gradients(recorded, checkpoint):
+    from examples.huggingface.block_recompute import measure as measure_split
+
+    bundle, captures, captured = recorded
+    result = measure_split(
+        bundle,
+        captures,
+        "decoder_0_1",
+        factory=session,
+        warmup=0,
+        samples=1,
+        checkpoint=checkpoint,
+    )
+    assert set(result["gradient_checks"]) == set(
+        captured["blocks"]["decoder_0_1"]["output_names"]
+    )
+    assert result["gradient_checks"] == result["final_gradient_checks"]
+    assert (result["retained_activation_bytes"] == 0) == checkpoint
+    assert result["plan"]["recomputed_values"] == []
+    assert result["timing_seconds"]["paired"]["median"] > 0
+
+
+def test_recorded_training_batch_preserves_padding_and_prompt_mask(tmp_path):
+    from examples.huggingface.block_runtime import load_batch
+
+    arrays = {
+        "input_ids": np.array([[1, 2, 3, 0], [3, 1, 0, 0]], np.int64),
+        "attention_mask": np.array([[1, 1, 1, 0], [1, 1, 0, 0]], np.int64),
+        "position_ids": np.broadcast_to(np.arange(4, dtype=np.int64), (2, 4)),
+        "labels": np.array([[-100, 2, 3, -100], [-100, 1, -100, -100]], np.int64),
+    }
+    path = tmp_path / "batch.npz"
+    np.savez(path, **arrays)
+    actual = load_batch(path, vocab_size=4, max_sequence=8)
+    for key in arrays:
+        np.testing.assert_array_equal(actual[key], arrays[key])
+
+
+@pytest.mark.parametrize(
+    "fault",
+    ["keys", "dtype", "shape", "context", "ids", "labels", "mask", "padding", "positions"],
+)
+def test_invalid_recorded_training_batch_is_rejected(tmp_path, fault):
+    from examples.huggingface.block_runtime import load_batch
+
+    arrays = {
+        key: np.ones((1, 4), np.int64)
+        for key in ("input_ids", "labels", "attention_mask", "position_ids")
+    }
+    if fault == "keys":
+        arrays.pop("labels")
+    elif fault == "dtype":
+        arrays["input_ids"] = arrays["input_ids"].astype(np.int32)
+    elif fault == "shape":
+        arrays["labels"] = arrays["labels"][:, :2]
+    elif fault == "context":
+        arrays = {key: np.ones((1, 9), np.int64) for key in arrays}
+    elif fault == "ids":
+        arrays["input_ids"][0, 0] = 4
+    elif fault == "labels":
+        arrays["labels"][0, 0] = -1
+    elif fault == "mask":
+        arrays["attention_mask"][0, 0] = 2
+    elif fault == "padding":
+        arrays["attention_mask"][0, 0] = 0
+    elif fault == "positions":
+        arrays["position_ids"][0, 0] = 8
+    path = tmp_path / "batch.npz"
+    np.savez(path, **arrays)
+    with pytest.raises(ValueError):
+        load_batch(path, vocab_size=4, max_sequence=8)

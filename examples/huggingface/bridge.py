@@ -88,9 +88,13 @@ class OnnxModule(torch.nn.Module):
         optimize=True,
         save_activations=False,
         reuse_frozen_weights=False,
+        recompute=(),
         session_factory=session,
     ):
         super().__init__()
+        recompute = tuple(recompute)
+        if recompute and not save_activations:
+            raise ValueError("Selective recomputation requires save_activations=True")
         self._init_parameters(model, params, output)
         vjp = onnax.vjp(model, inputs=list(params), outputs=[self.output])
         self.seed = vjp.graph.inputs[-1].name
@@ -102,7 +106,10 @@ class OnnxModule(torch.nn.Module):
             from examples.huggingface.residuals import split_vjp
 
             forward_model, vjp, self.residual_names = split_vjp(
-                model, vjp, optimize_layout=optimize and reuse_frozen_weights
+                model,
+                vjp,
+                optimize_layout=optimize and reuse_frozen_weights,
+                recompute=recompute,
             )
         self.execution_vjp = vjp
         if optimize:

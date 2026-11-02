@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "block": "decoder_3_4",
+  "shape_only_residuals": [
+    {
+      "name": "v_model.layers.3.self_attn.q_proj.MatMul_369",
+      "shape": "[batch,sequence,4096]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        4096
+      ],
+      "dtype": "float32",
+      "bytes": 66060288
+    },
+    {
+      "name": "model.layers.3.self_attn.q_proj.adapter.0.1.0",
+      "shape": "[batch,sequence,4096]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        4096
+      ],
+      "dtype": "float32",
+      "bytes": 66060288
+    },
+    {
+      "name": "model.layers.3.self_attn.q_proj.adapter.0.3.0",
+      "shape": "[batch,sequence,4096]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        4096
+      ],
+      "dtype": "float32",
+      "bytes": 66060288
+    },
+    {
+      "name": "model.layers.3.self_attn.q_proj.adapter.0.4.0",
+      "shape": "[batch,sequence,4096]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        4096
+      ],
+      "dtype": "float32",
+      "bytes": 66060288
+    },
+    {
+      "name": "v_model.layers.3.self_attn.Split_371_1",
+      "shape": "[batch,sequence,8,256]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        8,
+        256
+      ],
+      "dtype": "float32",
+      "bytes": 33030144
+    },
+    {
+      "name": "v_model.layers.3.self_attn.k_proj.MatMul_374",
+      "shape": "[batch,sequence,512]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        512
+      ],
+      "dtype": "float32",
+      "bytes": 8257536
+    },
+    {
+      "name": "v_model.layers.3.self_attn.v_proj.MatMul_376",
+      "shape": "[batch,sequence,512]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        512
+      ],
+      "dtype": "float32",
+      "bytes": 8257536
+    },
+    {
+      "name": "model.layers.3.self_attn.v_proj.adapter.0.1.0",
+      "shape": "[batch,sequence,512]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        512
+      ],
+      "dtype": "float32",
+      "bytes": 8257536
+    },
+    {
+      "name": "model.layers.3.self_attn.v_proj.adapter.0.3.0",
+      "shape": "[batch,sequence,512]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        512
+      ],
+      "dtype": "float32",
+      "bytes": 8257536
+    },
+    {
+      "name": "v_model.layers.3.self_attn.q_norm.RMSNormalization_379",
+      "shape": "[batch,sequence,8,256]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        8,
+        256
+      ],
+      "dtype": "float32",
+      "bytes": 33030144
+    },
+    {
+      "name": "v_model.layers.3.self_attn.k_norm.RMSNormalization_381",
+      "shape": "[batch,sequence,2,256]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        2,
+        256
+      ],
+      "dtype": "float32",
+      "bytes": 8257536
+    },
+    {
+      "name": "v_model.layers.3.self_attn.Reshape_382",
+      "shape": "[batch,sequence,2048]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        2048
+      ],
+      "dtype": "float32",
+      "bytes": 33030144
+    },
+    {
+      "name": "v_model.layers.3.self_attn.Reshape_383",
+      "shape": "[batch,sequence,512]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        512
+      ],
+      "dtype": "float32",
+      "bytes": 8257536
+    },
+    {
+      "name": "v_model.layers.3.self_attn.o_proj.MatMul_390",
+      "shape": "[batch,sequence,1024]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 16515072
+    },
+    {
+      "name": "v_model.layers.3.mlp.down_proj.MatMul_401",
+      "shape": "[batch,sequence,1024]",
+      "consumers": 1,
+      "concrete_shape": [
+        1,
+        4032,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 16515072
+    }
+  ],
+  "batch": 1,
+  "sequence": 4032,
+  "shape_only_payload_bytes": 445906944
+}
