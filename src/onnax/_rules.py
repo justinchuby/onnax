@@ -53,7 +53,9 @@ class _RuleSet:
     Custom outputs must have tensor dtype and rank annotations if the inference
     engine cannot infer them. Rules do not install execution kernels or schemas.
     All custom inputs are treated as data; select intended floating inputs
-    explicitly. Subgraphs, randomness, and overloaded calls remain restricted.
+    explicitly. Deterministic function bodies may contain control flow when a
+    registered rule defines the call's products. Generic subgraph transforms,
+    randomness, and overloaded calls remain restricted.
     """
 
     def __init__(self) -> None:

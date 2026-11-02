@@ -11,7 +11,7 @@ from test_fused_autodiff import _check
 from onnax import jvp, vjp
 
 
-def model_and_arrays(length=3, kernel=4, activation="silu"):
+def model_and_arrays(length=3, kernel=4, activation="silu", *, explicit_activation=True):
     rng = np.random.default_rng(71)
     shapes = {
         "input": (2, 3, length),
@@ -60,7 +60,7 @@ def model_and_arrays(length=3, kernel=4, activation="silu"):
     outputs = tape.op_multi_out(
         "CausalConvWithState",
         inputs,
-        {"activation": activation},
+        {"activation": activation} if explicit_activation else {},
         domain="com.microsoft",
         num_outputs=2,
     )
@@ -120,3 +120,18 @@ def test_state_and_output_products_are_dual_without_torch():
     left = sum(np.sum(a * b) for a, b in zip(tangents, seeds, strict=True))
     right = sum(np.sum(a * b) for a, b in zip(cotangents, directions, strict=True))
     np.testing.assert_allclose(left, right, rtol=1e-4, atol=1e-6)
+
+
+def test_omitted_call_attribute_uses_the_function_default():
+    source, arrays = model_and_arrays(activation="none", explicit_activation=False)
+    before = ir.to_proto(source).SerializeToString()
+    product = jvp(source, inputs=["bias"])
+    direction = np.array([0.2, -0.3, 0.5], np.float32)
+    actual = runtime_session(product).run(
+        None, {**arrays, product.graph.inputs[-1].name: direction}
+    )
+    np.testing.assert_allclose(
+        actual[2], np.broadcast_to(direction[None, :, None], (2, 3, 3)), rtol=1e-4, atol=1e-6
+    )
+    np.testing.assert_array_equal(actual[3], np.zeros((2, 3, 3), np.float32))
+    assert ir.to_proto(source).SerializeToString() == before

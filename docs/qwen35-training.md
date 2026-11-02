@@ -76,9 +76,9 @@ external chunk composition and the state-storage ledger.
    latter combines a depthwise causal convolution, SiLU and a convolution-state
    output; gradients from both outputs contribute to the concatenated history.
 2. Preserve deterministic recurrent function bodies at registered operator
-   boundaries. The current autodiff preflight rejects `Scan` bodies globally;
-   refine that boundary check while retaining explicit validation of randomness
-   and generic control flow.
+   boundaries. Call-level rules own their nested functions and `Scan` bodies;
+   mode-specific registration and recursive randomness checks define that
+   boundary independently of generic control-flow differentiation.
 3. Build the full-sequence Mobius text task with explicit masks and positions.
    Use one source adapter for each linear layer's fused `in_proj_qkv`, and q/v
    adapters for full-attention layers. The fused adapter updates Q/K/V together;
