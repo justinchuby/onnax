@@ -28,6 +28,7 @@ from examples.huggingface.decoder_families import FAMILIES, prepare_graph
 from examples.huggingface.decoder_graph import DECODER_BOUNDARIES
 from examples.huggingface.optimization import optimize_training_graph
 from examples.huggingface.peft_adapter import export_adapter, roundtrip
+from examples.huggingface.pretrained import load_tokenizer
 from examples.huggingface.sft import make_trainer, token_loss, tokenizer
 from examples.huggingface.validation import add_reference_parameters
 from onnax.torch import CheckpointedModule
@@ -141,14 +142,24 @@ def _validate_mapping(mapping, execution, config):
             raise ValueError("Source adapter projection ranges differ from B")
 
 
-def prepare(family, *, checkpoint_layers=1, session_factory=None, fused_ops=False):
+def prepare(
+    family,
+    *,
+    checkpoint_layers=1,
+    session_factory=None,
+    fused_ops=False,
+    real=False,
+    cache_dir=None,
+):
     if (
         isinstance(checkpoint_layers, bool)
         or not isinstance(checkpoint_layers, int)
         or checkpoint_layers < 1
     ):
         raise ValueError("checkpoint_layers must be a positive integer")
-    graph, parameters, mapping, reference = prepare_graph(family, preserve_fused=fused_ops)
+    graph, parameters, mapping, reference = prepare_graph(
+        family, preserve_fused=fused_ops, real=real, cache_dir=cache_dir
+    )
     hidden = json.loads(graph.metadata_props[DECODER_BOUNDARIES])["hidden_states"]
     boundaries = {"prefix": hidden[0]}
     for start in range(0, len(hidden) - 1, checkpoint_layers):
@@ -177,6 +188,35 @@ def batch():
     }
 
 
+def task_tokenizer(family, *, real=False, cache_dir=None):
+    if not real:
+        return tokenizer()
+    source = FAMILIES[family].pretrained
+    if source is None:
+        raise ValueError(f"No pinned pretrained source for {family}")
+    return load_tokenizer(source, cache_dir=cache_dir)
+
+
+def text_batch(tok):
+    """Use valid tokenizer IDs, right padding and shifted loss targets for audits."""
+    values = tok(
+        [
+            "ONNX models can learn from examples.",
+            "Low-rank adapters update a small set of parameters.",
+        ],
+        return_tensors="pt",
+        padding=True,
+        truncation=True,
+        max_length=64,
+    )
+    return {
+        "input_ids": values["input_ids"],
+        "attention_mask": values["attention_mask"],
+        "position_ids": (values["attention_mask"].cumsum(-1) - 1).clamp(min=0),
+        "labels": values["input_ids"].masked_fill(values["attention_mask"] == 0, -100),
+    }
+
+
 def _frozen(parameters):
     return {
         name: hashlib.sha256(value.detach().numpy().tobytes()).hexdigest()
@@ -186,10 +226,27 @@ def _frozen(parameters):
 
 
 def audit(
-    family, directory, *, steps=6, session_factory=None, fused_ops=False, adam_epsilon=1e-5
+    family,
+    directory,
+    *,
+    steps=6,
+    session_factory=None,
+    fused_ops=False,
+    adam_epsilon=1e-5,
+    real=False,
+    cache_dir=None,
 ):
     """Compare native source modules, including nonzero-B derivatives and PEFT exchange."""
-    model, reference = prepare(family, session_factory=session_factory, fused_ops=fused_ops)
+    model, reference = prepare(
+        family,
+        session_factory=session_factory,
+        fused_ops=fused_ops,
+        real=real,
+        cache_dir=cache_dir,
+    )
+    audit_data = (
+        text_batch(task_tokenizer(family, real=True, cache_dir=cache_dir)) if real else batch()
+    )
     reference = add_reference_parameters(reference, model.onnx.arrays(), model.mapping)
     frozen = _frozen(reference.named_parameters())
     optimizers = [
@@ -207,7 +264,7 @@ def audit(
         for step in range(steps):
             for optimizer in optimizers:
                 optimizer.zero_grad()
-            data = batch()
+            data = dict(audit_data)
             if step % 2:
                 data = {name: value[:1, :4] for name, value in data.items()}
             actual = model(**data)
@@ -246,21 +303,21 @@ def audit(
             losses.append(float(actual.loss.detach()))
         assert frozen == _frozen(reference.named_parameters())
         model.export(os.path.join(directory, "export"))
-        expected = model(**batch()).logits.detach()
+        expected = model(**audit_data).logits.detach()
         with_checkpoint = OnnxDecoder.load(
             os.path.join(directory, "export"), session_factory=session_factory
         )
         try:
             torch.testing.assert_close(
-                with_checkpoint(**batch()).logits, expected, rtol=0, atol=0
+                with_checkpoint(**audit_data).logits, expected, rtol=0, atol=0
             )
             # A fresh native source model receives the standard PEFT adapter.
             from examples.huggingface.decoder_families import reference_model
 
             exchange = roundtrip(
                 with_checkpoint,
-                reference_model(family),
-                batch(),
+                reference_model(family, real=real, cache_dir=cache_dir),
+                audit_data,
                 os.path.join(directory, "adapter"),
                 adam_epsilon=adam_epsilon,
             )
@@ -291,6 +348,8 @@ def run(
     session_factory=None,
     fused_ops=False,
     adam_epsilon=1e-5,
+    real=False,
+    cache_dir=None,
 ):
     """Let TRL own training, accumulation, optimizer and checkpoint policy."""
     if isinstance(steps, bool) or not isinstance(steps, int) or steps < 1:
@@ -306,19 +365,61 @@ def run(
             previous_config = json.load(stream)
         if previous_config["model_type"] != FAMILIES[family].config_type.model_type:
             raise ValueError("Checkpoint decoder family mismatch")
+        previous_source = previous_config.get("onnax_pretrained")
+        source = FAMILIES[family].pretrained
+        if real and (
+            source is None
+            or previous_source is None
+            or previous_source["model_id"] != source.model_id
+            or previous_source["revision"] != source.revision
+        ):
+            raise ValueError("Checkpoint pretrained source mismatch")
+        if not real and previous_source is not None:
+            raise ValueError("A pretrained checkpoint requires real-model execution")
     os.makedirs(directory, exist_ok=True)
-    model, reference = prepare(family, session_factory=session_factory, fused_ops=fused_ops)
-    del reference
-    trainer = make_trainer(
-        model, tokenizer(), directory, steps=steps, adam_epsilon=adam_epsilon
+    tok = task_tokenizer(family, real=real, cache_dir=cache_dir)
+    model, reference = prepare(
+        family,
+        session_factory=session_factory,
+        fused_ops=fused_ops,
+        real=real,
+        cache_dir=cache_dir,
     )
-    trainer.args.save_steps = max(1, steps // 2)
-    if stop is not None:
-        from examples.huggingface.trainer import StopAt
+    del reference
+    batch_records = []
 
-        trainer.add_callback(StopAt(stop))
-    start = time.perf_counter()
+    def record_batch(module, args, kwargs):
+        ids, labels = kwargs["input_ids"], kwargs.get("labels")
+        batch_records.append(
+            {
+                "training": module.training,
+                "batch": ids.shape[0],
+                "sequence": ids.shape[1],
+                "valid_shifted_targets": int(labels[:, 1:].ne(-100).sum())
+                if labels is not None
+                else None,
+            }
+        )
+
+    handle = model.register_forward_pre_hook(record_batch, with_kwargs=True)
     try:
+        if len(tok) > model.config.vocab_size:
+            raise ValueError("Tokenizer vocabulary exceeds the frozen ONNX embedding")
+        trainer = make_trainer(
+            model,
+            tok,
+            directory,
+            real=real,
+            steps=steps,
+            adam_epsilon=adam_epsilon,
+            pad_to_multiple_of=64 if real else None,
+        )
+        trainer.args.save_steps = max(1, steps // 2)
+        if stop is not None:
+            from examples.huggingface.trainer import StopAt
+
+            trainer.add_callback(StopAt(stop))
+        start = time.perf_counter()
         initial_train = trainer.evaluate(trainer.train_dataset)["eval_loss"]
         initial = trainer.evaluate()["eval_loss"]
         trainer.train(resume_from_checkpoint=resume)
@@ -333,7 +434,13 @@ def run(
         export_adapter(model, os.path.join(directory, "adapter"))
         return {
             "family": family,
+            "pretrained_source": getattr(model.config, "onnax_pretrained", None),
             "steps": trainer.state.global_step,
+            "microbatch_size": trainer.args.per_device_train_batch_size,
+            "gradient_accumulation_steps": trainer.args.gradient_accumulation_steps,
+            "max_length": 64,
+            "pad_to_multiple_of": 64 if real else None,
+            "batches": batch_records,
             "adam_epsilon": adam_epsilon,
             "validation_loss": [initial, final],
             "training_loss": [initial_train, final_train],
@@ -344,12 +451,15 @@ def run(
             "export": output,
         }
     finally:
+        handle.remove()
         model.close()
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--family", choices=tuple(FAMILIES), default="phi3")
+    parser.add_argument("--real", action="store_true")
+    parser.add_argument("--cache-dir")
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--steps", type=int, default=30)
     parser.add_argument("--audit-only", action="store_true")
@@ -384,6 +494,8 @@ def main():
         "session_factory": factory,
         "fused_ops": args.fused_ops,
         "adam_epsilon": args.adam_epsilon,
+        "real": args.real,
+        "cache_dir": args.cache_dir,
     }
     if args.audit_only:
         report = audit(args.family, args.output_dir, steps=args.audit_steps, **options)

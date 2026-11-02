@@ -107,6 +107,35 @@ This path uses the version-controlled text corpus and local tokenizer. The
 [recurrent tutorial](qwen35-training.md) explains the model update and the
 standalone token-pattern qualification.
 
+### Load a pretrained text backbone
+
+`--real` selects the family's pinned checkpoint and tokenizer. For Qwen3.5:
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family qwen35 --real --steps 30 \
+  --cache-dir /tmp/onnax-model-cache --output-dir /tmp/qwen35-pretrained \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib
+```
+
+The source is `Qwen/Qwen3.5-0.8B` at revision
+`2fc06364715b967f1860aea9cf38778875588b17`. Native Transformers loads its text
+backbone into `Qwen3_5ForCausalLM` in FP32. Mobius builds the ONNX graph from
+that configuration and its loaded weights. The text backbone has 752,393,024
+parameters, 24 decoder layers and 60 trainable LoRA tensors. The checkpoint's
+vision and multi-token prediction modules are outside this text task.
+
+The real-model setup uses sequence length 64, microbatch one and four accumulated
+microbatches per update. Batches are padded to 64 tokens; attention masks and
+ignored labels identify the valid targets. The report records each batch's
+executed shape and target count.
+
+Loading checks every text weight before graph construction. The exported config
+records the source revision, reference class and parameter-prefix mapping;
+adapter mappings also retain each original checkpoint weight name. Resume checks
+the same source identity. PEFT adapters target the native text-only CausalLM's
+module paths, such as `model.layers.0.linear_attn.in_proj_qkv`.
+
 Resume into another output directory:
 
 ```sh
