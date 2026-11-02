@@ -20,6 +20,7 @@ try:
 except ImportError:
     resource = None
 
+import onnx_ir as ir
 import torch
 from transformers import AutoConfig, PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import CausalLMOutput
@@ -41,13 +42,24 @@ class OnnxDecoder(PreTrainedModel):
     base_model_prefix = "onnx"
     accepts_loss_kwargs = True
 
-    def __init__(self, config, execution, mapping, family):
+    def __init__(self, config, execution, mapping, family, *, head=None):
         super().__init__(config)
         # Trainer must count shifted prediction targets across accumulation groups.
         self.loss_type = "ForCausalLM"
         self.onnx = execution
         self.mapping = mapping
         self.family = family
+        self.head = head
+        self.mode = "chunked" if head is not None else "full"
+        if head is not None:
+            from examples.huggingface.decoder_head import identity
+
+            digest = identity(head)
+            self.register_buffer(
+                "_head_identity", torch.tensor(list(bytes.fromhex(digest)), dtype=torch.uint8)
+            )
+            self.register_load_state_dict_pre_hook(_check_head_identity)
+            self.config.onnax_head = {"identity": digest, "chunk_size": head.chunk_size}
         self.config.use_cache = False
 
     def forward(
@@ -69,6 +81,10 @@ class OnnxDecoder(PreTrainedModel):
         logits = self.onnx(
             input_ids=input_ids, attention_mask=attention_mask, position_ids=position_ids
         )
+        if self.head is not None:
+            if labels is not None:
+                return CausalLMOutput(loss=self.head(logits, labels, num_items_in_batch))
+            logits = self.head.forward(logits)
         loss = None if labels is None else token_loss(logits, labels, num_items_in_batch)
         return CausalLMOutput(loss=loss, logits=logits)
 
@@ -76,25 +92,28 @@ class OnnxDecoder(PreTrainedModel):
         if os.path.exists(directory) and os.listdir(directory):
             raise FileExistsError("Export into a new or empty directory")
         os.makedirs(directory, exist_ok=True)
-        self.onnx.export(os.path.join(directory, "execution"))
+        execution = os.path.join(directory, "execution")
+        self.onnx.export(execution)
+        record = {
+            "version": 1,
+            "family": self.family,
+            "mapping": self.mapping,
+            "base_model": self.config._name_or_path,
+        }
+        if self.head is not None:
+            from examples.huggingface.decoder_head import export
+
+            record["head"], record["inference"] = export(self.head, execution)
+            record["version"] = 2
         self.config.save_pretrained(directory)
         with open(os.path.join(directory, "task.json"), "w", encoding="utf-8") as stream:
-            json.dump(
-                {
-                    "version": 1,
-                    "family": self.family,
-                    "mapping": self.mapping,
-                    "base_model": self.config._name_or_path,
-                },
-                stream,
-                indent=2,
-            )
+            json.dump(record, stream, indent=2)
 
     @classmethod
     def load(cls, directory, *, session_factory=None):
         with open(os.path.join(directory, "task.json"), encoding="utf-8") as stream:
             record = json.load(stream)
-        if record.get("version") != 1 or record.get("family") not in FAMILIES:
+        if record.get("version") not in (1, 2) or record.get("family") not in FAMILIES:
             raise ValueError("Unsupported decoder task interface")
         config = AutoConfig.from_pretrained(directory, local_files_only=True)
         if config.model_type != FAMILIES[record["family"]].config_type.model_type:
@@ -105,15 +124,45 @@ class OnnxDecoder(PreTrainedModel):
         execution = CheckpointedModule.load(
             os.path.join(directory, "execution"), session_factory=session_factory
         )
-        try:
+        with contextlib.ExitStack() as resources:
+            resources.callback(execution.close)
             _validate_mapping(record["mapping"], execution, config)
-        except BaseException:
-            execution.close()
-            raise
-        return cls(config, execution, record["mapping"], record["family"])
+            head = None
+            if record["version"] == 2:
+                from examples.huggingface.decoder_head import load, validate_file
+                from examples.lora.train import session
+
+                inference = record["inference"]
+                validate_file(
+                    os.path.join(directory, "execution"),
+                    inference["model"],
+                    inference["sha256"],
+                )
+                head = load(
+                    os.path.join(directory, "execution"),
+                    record["head"],
+                    session_factory=session_factory or session,
+                )
+                resources.callback(head.close)
+            result = cls(config, execution, record["mapping"], record["family"], head=head)
+            resources.pop_all()
+            return result
 
     def close(self):
         self.onnx.close()
+        if self.head is not None:
+            self.head.close()
+
+
+def _check_head_identity(module, state_dict, prefix, *_args):
+    key = prefix + "_head_identity"
+    value = state_dict.get(key)
+    if (
+        value is None
+        or value.dtype != torch.uint8
+        or not torch.equal(value.cpu(), module._head_identity.cpu())
+    ):
+        raise ValueError("Checkpoint frozen-head identity differs from this model")
 
 
 def _validate_mapping(mapping, execution, config):
@@ -152,6 +201,7 @@ def prepare(
     fused_ops=False,
     real=False,
     cache_dir=None,
+    head_chunk_size=None,
 ):
     if (
         isinstance(checkpoint_layers, bool)
@@ -159,9 +209,22 @@ def prepare(
         or checkpoint_layers < 1
     ):
         raise ValueError("checkpoint_layers must be a positive integer")
+    if head_chunk_size is not None and (
+        isinstance(head_chunk_size, bool)
+        or not isinstance(head_chunk_size, int)
+        or head_chunk_size < 1
+    ):
+        raise ValueError("head_chunk_size must be a positive integer")
     graph, parameters, mapping, reference = prepare_graph(
         family, preserve_fused=fused_ops, real=real, cache_dir=cache_dir
     )
+    if head_chunk_size is not None:
+        from onnxscript import optimizer
+
+        values = ir.convenience.create_value_mapping(graph.graph)
+        graph.graph.outputs.clear()
+        graph.graph.outputs.append(values["hidden_states"])
+        optimizer.remove_unused_nodes(graph)
     hidden = json.loads(graph.metadata_props[DECODER_BOUNDARIES])["hidden_states"]
     boundaries = {"prefix": hidden[0]}
     for start in range(0, len(hidden) - 1, checkpoint_layers):
@@ -171,12 +234,31 @@ def prepare(
         graph,
         parameters,
         boundaries=boundaries,
-        outputs=["logits"],
+        outputs=["hidden_states" if head_chunk_size is not None else "logits"],
         input_gradients=(),
         session_factory=session_factory,
         optimize=optimize_training_graph,
     )
-    return OnnxDecoder(reference.config, module, mapping, family), reference
+    with contextlib.ExitStack() as resources:
+        resources.callback(module.close)
+        head = None
+        if head_chunk_size is not None:
+            from examples.huggingface.chunked_loss import ChunkedHead
+            from examples.lora.train import session
+
+            projection = reference.get_output_embeddings()
+            if getattr(projection, "bias", None) is not None:
+                raise ValueError("Decoder head expects a bias-free output projection")
+            head = ChunkedHead(
+                projection.weight.detach().cpu().numpy(),
+                chunk_size=head_chunk_size,
+                weight_layout="vocab_hidden",
+                session_factory=session_factory or session,
+            )
+            resources.callback(head.close)
+        result = OnnxDecoder(reference.config, module, mapping, family, head=head)
+        resources.pop_all()
+        return result, reference
 
 
 def batch():
@@ -237,6 +319,7 @@ def audit(
     adam_epsilon=1e-5,
     real=False,
     cache_dir=None,
+    head_chunk_size=None,
 ):
     """Compare native source modules, including nonzero-B derivatives and PEFT exchange."""
     model, reference = prepare(
@@ -245,6 +328,7 @@ def audit(
         fused_ops=fused_ops,
         real=real,
         cache_dir=cache_dir,
+        head_chunk_size=head_chunk_size,
     )
     audit_data = (
         text_batch(task_tokenizer(family, real=True, cache_dir=cache_dir)) if real else batch()
@@ -275,7 +359,13 @@ def audit(
                 use_cache=False,
             ).logits
             loss = token_loss(logits, data["labels"])
-            torch.testing.assert_close(actual.logits, logits, rtol=1e-4, atol=1e-6)
+            predictions = actual.logits
+            if predictions is None:
+                with torch.no_grad():
+                    predictions = model(
+                        **{k: v for k, v in data.items() if k != "labels"}
+                    ).logits
+            torch.testing.assert_close(predictions, logits, rtol=1e-4, atol=1e-6)
             torch.testing.assert_close(actual.loss, loss, rtol=1e-4, atol=1e-6)
             actual.loss.backward()
             loss.backward()
@@ -305,13 +395,14 @@ def audit(
             losses.append(float(actual.loss.detach()))
         assert frozen == _frozen(reference.named_parameters())
         model.export(os.path.join(directory, "export"))
-        expected = model(**audit_data).logits.detach()
+        inference_data = {k: v for k, v in audit_data.items() if k != "labels"}
+        expected = model(**inference_data).logits.detach()
         with_checkpoint = OnnxDecoder.load(
             os.path.join(directory, "export"), session_factory=session_factory
         )
         try:
             torch.testing.assert_close(
-                with_checkpoint(**audit_data).logits, expected, rtol=0, atol=0
+                with_checkpoint(**inference_data).logits, expected, rtol=0, atol=0
             )
             # A fresh native source model receives the standard PEFT adapter.
             from examples.huggingface.decoder_families import reference_model
@@ -352,6 +443,7 @@ def run(
     adam_epsilon=1e-5,
     real=False,
     cache_dir=None,
+    head_chunk_size=None,
 ):
     """Let TRL own training, accumulation, optimizer and checkpoint policy."""
     if isinstance(steps, bool) or not isinstance(steps, int) or steps < 1:
@@ -367,6 +459,8 @@ def run(
             previous_config = json.load(stream)
         if previous_config["model_type"] != FAMILIES[family].config_type.model_type:
             raise ValueError("Checkpoint decoder family mismatch")
+        if (previous_config.get("onnax_head") is not None) != (head_chunk_size is not None):
+            raise ValueError("Checkpoint head execution mode mismatch")
         previous_source = previous_config.get("onnax_pretrained")
         source = FAMILIES[family].pretrained
         if real and (
@@ -386,6 +480,7 @@ def run(
         fused_ops=fused_ops,
         real=real,
         cache_dir=cache_dir,
+        head_chunk_size=head_chunk_size,
     )
     del reference
     batch_records = []
@@ -467,6 +562,7 @@ def main():
     parser.add_argument("--audit-only", action="store_true")
     parser.add_argument("--audit-steps", type=int, default=6)
     parser.add_argument("--fused-ops", action="store_true")
+    parser.add_argument("--head-chunk-size", type=int)
     parser.add_argument("--provider", choices=("cpu", "mlx"), default="cpu")
     parser.add_argument("--library")
     parser.add_argument("--resume")
@@ -498,6 +594,7 @@ def main():
         "adam_epsilon": args.adam_epsilon,
         "real": args.real,
         "cache_dir": args.cache_dir,
+        "head_chunk_size": args.head_chunk_size,
     }
     if args.audit_only:
         report = audit(args.family, args.output_dir, steps=args.audit_steps, **options)

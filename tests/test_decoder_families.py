@@ -132,12 +132,13 @@ def test_load_reuses_derivatives(tmp_path, monkeypatch, family):
 
 
 @pytest.mark.parametrize("family", ["phi3", "qwen35"])
-def test_trl_training_and_fresh_process_resume(tmp_path, family):
+@pytest.mark.parametrize("head_chunk_size", [None, 3])
+def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size):
     torch.set_num_threads(1)
     full, partial, resumed = (str(tmp_path / name) for name in ("full", "partial", "resumed"))
-    report = run(full, family=family, steps=4)
+    report = run(full, family=family, steps=4, head_chunk_size=head_chunk_size)
     assert report["validation_loss"][1] < report["validation_loss"][0]
-    run(partial, family=family, steps=4, stop=2)
+    run(partial, family=family, steps=4, stop=2, head_chunk_size=head_chunk_size)
     subprocess.run(
         [
             sys.executable,
@@ -151,6 +152,7 @@ def test_trl_training_and_fresh_process_resume(tmp_path, family):
             os.path.join(partial, "checkpoint-2"),
             "--output-dir",
             resumed,
+            *(["--head-chunk-size", str(head_chunk_size)] if head_chunk_size else []),
         ],
         check=True,
         env={**os.environ, "HF_HUB_OFFLINE": "1", "HF_DATASETS_OFFLINE": "1"},

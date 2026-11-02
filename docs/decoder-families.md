@@ -225,6 +225,30 @@ source graph, bound inference graph, parameter arrays and block forward/VJP grap
 `OnnxDecoder.load(export_directory)` executes the saved derivatives. The separate
 `adapter/` directory contains standard PEFT configuration and safetensors.
 
+## Train with a bounded output head
+
+Use `--head-chunk-size 128` with any decoder family to train through hidden-state
+VJPs and a frozen, chunked vocabulary projection:
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family qwen35 --head-chunk-size 128 \
+  --output-dir /tmp/qwen35-bounded-training
+```
+
+After the causal shift, the head gathers positions whose labels differ from
+`-100`. Each chunk computes cross-entropy and its hidden-state gradient; the
+scheduler scatters those gradients into the complete sequence before the body
+VJP. Attention therefore carries supervision through prompt and context tokens.
+Trainer divides loss sums by the effective target count across accumulation
+microbatches. All-ignored labels produce zero loss and skip projection execution.
+
+The frozen projection retains its source `[vocab, hidden]` layout and uses
+`Gemm(transB=1)`. Task exports include reusable body/head derivative modules and
+`execution/inference.onnx`, which returns full logits. Checkpoint identity covers
+the frozen head, loss convention and projection precision. Resume with the same
+head mode; chunk size can change without changing the loss definition.
+
 ## Execute on MLX
 
 ```sh
@@ -240,7 +264,7 @@ gradients and optimizer state at the NumPy boundary. Native tests cover referenc
 checks and PEFT exchange for all three families. The existing
 [Qwen long-context workload](qwen-context-training.md) supplies NF4, mixed-precision
 projections and chunked output-head execution. This new family workload uses FP32
-weights and a full-logit loss path.
+weights, with full-logit and bounded-head loss paths.
 
 ## Recorded workload results
 

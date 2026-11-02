@@ -132,6 +132,7 @@ class ChunkedHead:
     ):
         if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size < 1:
             raise ValueError("chunk_size must be a positive integer")
+        self._closed = False
         self.chunk_size = chunk_size
         self.projection_precision = projection_precision
         self.weight_layout = weight_layout
@@ -188,6 +189,7 @@ class ChunkedHead:
 
     def export_to(self, weights):
         """Store the head modules alongside the checkpointed body's shared weights."""
+        self._ensure_open()
         sources = {
             "loss": weights.save(self.model, "head_loss"),
             "gradient": weights.save(self.gradient, "head_gradient"),
@@ -229,6 +231,7 @@ class ChunkedHead:
         ):
             raise ValueError("Invalid output-head execution options")
         result = cls.__new__(cls)
+        result._closed = False
         result.weight_layout = record.get("weight_layout", "hidden_vocab")
         if result.weight_layout not in ("hidden_vocab", "vocab_hidden"):
             raise ValueError("Invalid output-head weight layout")
@@ -238,6 +241,8 @@ class ChunkedHead:
         result.chunk_size = record["chunk_size"]
         result.vocab_size = record["vocab_size"]
         result.projection_precision = record["projection_precision"]
+        if result.weight_layout == "vocab_hidden" and result.projection_precision != "fp32":
+            raise ValueError("The source-layout head currently uses FP32 projection compute")
         result._load_sources(
             {
                 name: os.path.join(directory, record[name])
@@ -247,7 +252,18 @@ class ChunkedHead:
         )
         return result
 
+    def _ensure_open(self):
+        if self._closed:
+            raise RuntimeError("The output head is closed")
+
+    def close(self):
+        self._closed = True
+        self.executor = self.forward_executor = None
+        if hasattr(self, "directory"):
+            self.directory.cleanup()
+
     def forward(self, hidden):
+        self._ensure_open()
         array = hidden.detach().contiguous().numpy()
         if self.forward_executor is None:
             self.forward_executor = self._session_factory(self._forward_source)
@@ -257,6 +273,7 @@ class ChunkedHead:
         return torch.from_numpy(logits.reshape(*array.shape[:-1], logits.shape[-1]))
 
     def __call__(self, hidden, labels, num_items=None):
+        self._ensure_open()
         if hidden.device.type != "cpu" or hidden.dtype != torch.float32 or hidden.ndim != 3:
             raise ValueError("Expected CPU FP32 hidden states [batch,sequence,width]")
         if (
