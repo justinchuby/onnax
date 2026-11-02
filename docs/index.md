@@ -17,6 +17,7 @@ huggingface
 torch
 checkpointing
 decoder-families
+diffusion
 qwen-sft
 fused-autodiff
 attention-vjp
