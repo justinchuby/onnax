@@ -439,6 +439,29 @@ The matched four-layer PyTorch MPS capacity probe reached its 20 GiB allocator
 limit during backward recomputation: 16.63 GiB was allocated when attention
 requested another 4 GiB. Smaller checkpoint groups are the next capacity cases.
 
+### Steady-state 8K execution
+
+The [four-layer MLX report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-8k-mlx-group4-m1max.json)
+contains ten warmups followed by 100 measured updates. Each update uses one
+8192-token sequence with 8191 valid shifted targets, BF16 projection computation,
+FP32 adapter gradients/AdamW state, NF4 frozen decoder weights and 128-token head
+chunks. This timing workload uses one microbatch per update; quality training
+uses accumulation over four microbatches.
+
+| Phase | Median (s) | P95 (s) |
+|---|---:|---:|
+| Complete update | 39.687 | 41.254 |
+| Forward and loss | 10.068 | 10.587 |
+| Backward | 29.615 | 30.619 |
+| External AdamW | 0.00241 | 0.00300 |
+
+Median throughput was 206.4 valid tokens/s. Session/model preparation took
+136.1 seconds. Whole-process physical footprint peaked at 10.16 GiB, including
+construction and all 110 updates. Host input-view preparation had a 27-microsecond
+median; runtime transfers are included in ONNX execution timing. The report keeps
+all timing samples, losses, graph/parameter sizes, source hashes, runtime binary
+identity and thread settings.
+
 ### Inspect capacity phases
 
 The capacity command validates one cold update and can record memory before and
