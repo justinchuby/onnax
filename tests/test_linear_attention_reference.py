@@ -1,7 +1,6 @@
 # Copyright (c) 2026 onnax contributors
 # SPDX-License-Identifier: MIT
 """Stateful, grouped-head gated-delta derivatives against independent autograd."""
-# ruff: file-ignore[module-import-not-at-top-of-file] - Optional independent oracle.
 
 import numpy as np
 import pytest
