@@ -163,3 +163,34 @@ def test_loaded_head_owns_artifact_snapshot(tmp_path):
     finally:
         restored.close()
     assert not os.path.exists(snapshot)
+
+
+@pytest.mark.parametrize("change", ["downgrade", "missing_config", "unexpected_config"])
+def test_task_head_mode_rejected_before_loading_sessions(tmp_path, monkeypatch, change):
+    from examples.huggingface import decoder_sft
+
+    model, _ = prepare("phi3", head_chunk_size=None if change == "unexpected_config" else 3)
+    try:
+        model.export(tmp_path / "export")
+    finally:
+        model.close()
+    directory = tmp_path / "export"
+    if change == "downgrade":
+        path = directory / "task.json"
+        record = json.loads(path.read_text())
+        record["version"] = 1
+    else:
+        path = directory / "config.json"
+        record = json.loads(path.read_text())
+        if change == "missing_config":
+            del record["onnax_head"]
+        else:
+            record["onnax_head"] = {"identity": "00" * 32}
+    path.write_text(json.dumps(record))
+
+    def unexpected_load(*args, **kwargs):
+        pytest.fail("Invalid head mode reached session loading")
+
+    monkeypatch.setattr(decoder_sft.CheckpointedModule, "load", unexpected_load)
+    with pytest.raises(ValueError, match="head execution mode"):
+        OnnxDecoder.load(directory)

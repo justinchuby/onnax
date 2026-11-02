@@ -127,6 +127,12 @@ class OnnxDecoder(PreTrainedModel):
         if record.get("version") not in (1, 2) or record.get("family") not in FAMILIES:
             raise ValueError("Unsupported decoder task interface")
         config = AutoConfig.from_pretrained(directory, local_files_only=True)
+        configured_head = getattr(config, "onnax_head", None)
+        has_head = record["version"] == 2
+        if has_head != (configured_head is not None):
+            raise ValueError("Decoder task version and configured head execution mode differ")
+        if has_head and configured_head.get("identity") != record["head"].get("identity"):
+            raise ValueError("Frozen-head identity differs from the decoder configuration")
         if config.model_type != FAMILIES[record["family"]].config_type.model_type:
             raise ValueError("Decoder family differs from the saved configuration")
         config._name_or_path = record["base_model"]
