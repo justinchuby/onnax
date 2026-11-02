@@ -5,6 +5,7 @@
 import json
 import os
 import tempfile
+import time
 
 import numpy as np
 import onnx_ir as ir
@@ -57,22 +58,50 @@ def head_graph(weight, *, projection_precision="fp32"):
 class _ChunkLoss(torch.autograd.Function):
     @staticmethod
     def forward(ctx, runtime, hidden, labels):
-        array = hidden.detach().contiguous().numpy()
-        # Only positions predicting a following token participate in the loss.
-        rows = array[:, :-1].reshape(-1, array.shape[-1])
-        targets = labels[:, 1:].contiguous().numpy().reshape(-1)
-        gradient = np.zeros_like(rows)
+        before = time.perf_counter()
+        array = hidden.detach().numpy()
+        # Shift before gathering: hidden[b, i] predicts labels[b, i + 1].
+        targets = labels[:, 1:].numpy()
+        boundary_seconds = time.perf_counter() - before
+        before = time.perf_counter()
+        batches, positions = np.nonzero(targets != -100)
+        rows = array[batches, positions]
+        selected = targets[batches, positions]
+        gather_seconds = time.perf_counter() - before
+        before = time.perf_counter()
+        full = np.zeros_like(array)
         total = np.float32(0)
+        scatter_seconds = time.perf_counter() - before
+        execute_seconds, input_bytes, output_bytes, chunks = 0.0, 0, 0, 0
         for start in range(0, len(rows), runtime.chunk_size):
             stop = min(start + runtime.chunk_size, len(rows))
-            feeds = {"hidden": rows[start:stop], "labels": targets[start:stop]}
+            feeds = {"hidden": rows[start:stop], "labels": selected[start:stop]}
+            before = time.perf_counter()
             value, derivative = runtime.executor.run(None, feeds)
+            execute_seconds += time.perf_counter() - before
+            input_bytes += sum(value.nbytes for value in feeds.values())
+            output_bytes += np.asarray(value).nbytes + derivative.nbytes
+            chunks += 1
+            before = time.perf_counter()
             total += np.float32(value)
-            gradient[start:stop] = derivative
-        full = np.zeros_like(array)
-        full[:, :-1] = gradient.reshape(array.shape[0], array.shape[1] - 1, array.shape[2])
+            full[batches[start:stop], positions[start:stop]] = derivative
+            scatter_seconds += time.perf_counter() - before
+        before = time.perf_counter()
         ctx.save_for_backward(torch.from_numpy(full))
-        return torch.tensor(total, dtype=torch.float32)
+        result = torch.tensor(total, dtype=torch.float32, device=hidden.device)
+        boundary_seconds += time.perf_counter() - before
+        runtime.last_profile = {
+            "causal_rows": targets.size,
+            "valid_rows": len(rows),
+            "chunks": chunks,
+            "boundary_seconds": boundary_seconds,
+            "gather_seconds": gather_seconds,
+            "execute_seconds": execute_seconds,
+            "scatter_seconds": scatter_seconds,
+            "runtime_input_bytes": input_bytes,
+            "runtime_output_bytes": output_bytes,
+        }
+        return result
 
     @staticmethod
     @once_differentiable
@@ -115,6 +144,7 @@ class ChunkedHead:
         self._load_sources(sources, session_factory)
 
     def _load_sources(self, sources, session_factory):
+        self.last_profile = None
         self.model = ir.load(sources["loss"])
         self.gradient = ir.load(sources["gradient"])
         self.forward_model = ir.load(sources["forward"])
@@ -200,6 +230,8 @@ class ChunkedHead:
             raise ValueError("Labels must be vocabulary IDs or -100")
         total = _ChunkLoss.apply(self, hidden, labels)
         count = (
-            labels[:, 1:].ne(-100).sum() if num_items is None else torch.as_tensor(num_items)
+            labels[:, 1:].ne(-100).sum()
+            if num_items is None
+            else torch.as_tensor(num_items, device=hidden.device)
         )
         return total / count.clamp(min=1)

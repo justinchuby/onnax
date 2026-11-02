@@ -1,0 +1,358 @@
+{
+  "version": 1,
+  "options": {
+    "output": "/Users/justinc/Documents/GitHub/onnax/examples/huggingface/reports/supervised-head-m1max/mlx-511-dense.json",
+    "provider": "mlx",
+    "library": "/tmp/onnax-gated-test-runtime/libonnxruntime_mlx_ep.dylib",
+    "policy": "dense",
+    "sequence": 512,
+    "width": 256,
+    "vocab": 8192,
+    "valid_rows": 511,
+    "chunk_size": 128,
+    "warmup": 10,
+    "samples": 100
+  },
+  "timings": {
+    "step_seconds": {
+      "median": 0.007695041975239292,
+      "p95": 0.008431333678890951
+    }
+  },
+  "samples": [
+    {
+      "step_seconds": 0.007635791029315442
+    },
+    {
+      "step_seconds": 0.007844457984901965
+    },
+    {
+      "step_seconds": 0.00790858402615413
+    },
+    {
+      "step_seconds": 0.007731083023827523
+    },
+    {
+      "step_seconds": 0.00773158302763477
+    },
+    {
+      "step_seconds": 0.007819500053301454
+    },
+    {
+      "step_seconds": 0.0074440830503590405
+    },
+    {
+      "step_seconds": 0.007583750004414469
+    },
+    {
+      "step_seconds": 0.007869541994296014
+    },
+    {
+      "step_seconds": 0.008289417019113898
+    },
+    {
+      "step_seconds": 0.007889041968155652
+    },
+    {
+      "step_seconds": 0.007684832962695509
+    },
+    {
+      "step_seconds": 0.008841625007335097
+    },
+    {
+      "step_seconds": 0.008399291953537613
+    },
+    {
+      "step_seconds": 0.008384665998164564
+    },
+    {
+      "step_seconds": 0.008348791976459324
+    },
+    {
+      "step_seconds": 0.01000395801384002
+    },
+    {
+      "step_seconds": 0.009184541995637119
+    },
+    {
+      "step_seconds": 0.0077071660198271275
+    },
+    {
+      "step_seconds": 0.00767904199892655
+    },
+    {
+      "step_seconds": 0.007787249982357025
+    },
+    {
+      "step_seconds": 0.007695083972066641
+    },
+    {
+      "step_seconds": 0.007572416041512042
+    },
+    {
+      "step_seconds": 0.007523790991399437
+    },
+    {
+      "step_seconds": 0.007580667035654187
+    },
+    {
+      "step_seconds": 0.007413665996864438
+    },
+    {
+      "step_seconds": 0.007445458031725138
+    },
+    {
+      "step_seconds": 0.007373708998784423
+    },
+    {
+      "step_seconds": 0.00756724999519065
+    },
+    {
+      "step_seconds": 0.00762612494872883
+    },
+    {
+      "step_seconds": 0.0076243330258876085
+    },
+    {
+      "step_seconds": 0.007682292023673654
+    },
+    {
+      "step_seconds": 0.007496959005948156
+    },
+    {
+      "step_seconds": 0.007537874975241721
+    },
+    {
+      "step_seconds": 0.007693166960962117
+    },
+    {
+      "step_seconds": 0.007977416971698403
+    },
+    {
+      "step_seconds": 0.007617834024131298
+    },
+    {
+      "step_seconds": 0.007748000032734126
+    },
+    {
+      "step_seconds": 0.007766416005324572
+    },
+    {
+      "step_seconds": 0.007647000020369887
+    },
+    {
+      "step_seconds": 0.007622666948009282
+    },
+    {
+      "step_seconds": 0.007760583015624434
+    },
+    {
+      "step_seconds": 0.007656000030692667
+    },
+    {
+      "step_seconds": 0.007826458022464067
+    },
+    {
+      "step_seconds": 0.007694999978411943
+    },
+    {
+      "step_seconds": 0.007782333006616682
+    },
+    {
+      "step_seconds": 0.0074957910110242665
+    },
+    {
+      "step_seconds": 0.007608167012222111
+    },
+    {
+      "step_seconds": 0.0074121669749729335
+    },
+    {
+      "step_seconds": 0.007356332964263856
+    },
+    {
+      "step_seconds": 0.007439957989845425
+    },
+    {
+      "step_seconds": 0.007212833035737276
+    },
+    {
+      "step_seconds": 0.007493124983739108
+    },
+    {
+      "step_seconds": 0.007450708013493568
+    },
+    {
+      "step_seconds": 0.008118582947645336
+    },
+    {
+      "step_seconds": 0.00816429202677682
+    },
+    {
+      "step_seconds": 0.007896583992987871
+    },
+    {
+      "step_seconds": 0.00784350000321865
+    },
+    {
+      "step_seconds": 0.007426749973092228
+    },
+    {
+      "step_seconds": 0.007320250035263598
+    },
+    {
+      "step_seconds": 0.007355957990512252
+    },
+    {
+      "step_seconds": 0.00842841702979058
+    },
+    {
+      "step_seconds": 0.008486750011797994
+    },
+    {
+      "step_seconds": 0.008390709001105279
+    },
+    {
+      "step_seconds": 0.007860042038373649
+    },
+    {
+      "step_seconds": 0.008563457988202572
+    },
+    {
+      "step_seconds": 0.008158417011145502
+    },
+    {
+      "step_seconds": 0.008206875005271286
+    },
+    {
+      "step_seconds": 0.007961000024806708
+    },
+    {
+      "step_seconds": 0.008087000052910298
+    },
+    {
+      "step_seconds": 0.008178708027116954
+    },
+    {
+      "step_seconds": 0.008205958001781255
+    },
+    {
+      "step_seconds": 0.007930417021270841
+    },
+    {
+      "step_seconds": 0.007653709035366774
+    },
+    {
+      "step_seconds": 0.0077672089682891965
+    },
+    {
+      "step_seconds": 0.007632499968167394
+    },
+    {
+      "step_seconds": 0.007698166999034584
+    },
+    {
+      "step_seconds": 0.0076612079865299165
+    },
+    {
+      "step_seconds": 0.007637500006239861
+    },
+    {
+      "step_seconds": 0.007662333024200052
+    },
+    {
+      "step_seconds": 0.007306249986868352
+    },
+    {
+      "step_seconds": 0.007622665958479047
+    },
+    {
+      "step_seconds": 0.007431833015289158
+    },
+    {
+      "step_seconds": 0.0076999159646220505
+    },
+    {
+      "step_seconds": 0.00760949996765703
+    },
+    {
+      "step_seconds": 0.007674042019061744
+    },
+    {
+      "step_seconds": 0.007580375007819384
+    },
+    {
+      "step_seconds": 0.008194499998353422
+    },
+    {
+      "step_seconds": 0.007908249972388148
+    },
+    {
+      "step_seconds": 0.007788041024468839
+    },
+    {
+      "step_seconds": 0.007776124984957278
+    },
+    {
+      "step_seconds": 0.007802707958035171
+    },
+    {
+      "step_seconds": 0.007785499969031662
+    },
+    {
+      "step_seconds": 0.007722083013504744
+    },
+    {
+      "step_seconds": 0.007732124999165535
+    },
+    {
+      "step_seconds": 0.0075279579614289105
+    },
+    {
+      "step_seconds": 0.007577291980851442
+    },
+    {
+      "step_seconds": 0.007326709048356861
+    },
+    {
+      "step_seconds": 0.007642874959856272
+    },
+    {
+      "step_seconds": 0.007638334005605429
+    }
+  ],
+  "construction_seconds": 0.1906056659645401,
+  "peak_rss_bytes": 620773376,
+  "memory_scope": "Whole worker including graph construction and both scheduler checks",
+  "timing_scope": "Frozen head loss/hidden gradient, host scheduling and boundary exchange",
+  "correctness": "Loss and full hidden gradient match dense scheduler at rtol=1e-4, atol=1e-6",
+  "weight_bytes": 8388608,
+  "causal_rows": 511,
+  "valid_rows": 511,
+  "executed_rows": 511,
+  "input_sha256": "224cff04cc2fbe935eb1333437fc26de995a2df8822d4d9a634ee7db03ec11bd",
+  "weight_sha256": "bc40df062569eefe5de4d776d026d4c94c014253c040e7cbea1ee010d84f67d2",
+  "ort_graph_optimization": "disabled",
+  "cpu_threads": 1,
+  "runtime_environment": {
+    "ONNXRUNTIME_EP_MLX_NO_COMPILE": "1",
+    "ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES": null
+  },
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "hardware": {
+    "cpu": "Apple M1 Max",
+    "logical_cores": 10,
+    "physical_memory_bytes": 34359738368
+  },
+  "source_sha256": {
+    "chunked_loss.py": "8795125870ac8b135c4769466772c705e480171ad131685bbcc2041eb0c92e32",
+    "supervision_benchmark.py": "d7d0d3a5a3b62e3acbfbcdbd81c2abe662e07406c1ae658ebf87186c0800d419"
+  },
+  "versions": {
+    "numpy": "2.4.6",
+    "torch": "2.15.0",
+    "onnxruntime": "1.31.1",
+    "onnxscript": "0.7.2"
+  },
+  "library_sha256": "13ab91e531b0346a667bd976d8ce2b70b2b48312df41a4f2b86df771c130f8df"
+}

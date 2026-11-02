@@ -245,6 +245,51 @@ separate execution, host exchange and updates, then guide recurrent backward
 fusion and state recomputation. Portable derivative functions use `pkg.onnax`
 when extracted from the generated tensor graph.
 
+## Training graph and memory priorities
+
+The [ORT Training design handoff](ort-training-handoff.md) identifies the next
+steps around supervised positions, saved values and execution lifetimes.
+The current gated-delta reverse kernel completes its paired runtime measurement,
+training and checkpoint qualification alongside this work.
+
+1. **Gather supervised positions before the frozen head.** Apply the causal
+   shift, gather rows whose target differs from `-100`, run the existing bounded
+   head/loss VJP, and scatter its hidden gradients back to the full sequence.
+   Keep the loss sum and the caller's effective-token normalization. All-ignored
+   labels produce zero loss/hidden gradients and skip the head session. Compare
+   loss, hidden gradients, all adapters and multi-step updates with the full head,
+   including prompt masking, right padding, one target, chunk tails and unequal
+   accumulation groups. Measure CPU FP32 and MLX at fixed input lengths and
+   supervision densities, with head, gather/scatter and full-step timings.
+2. **Reuse the head scheduler across decoder families.** Connect the shared
+   Qwen3/Qwen3.5/Phi-3 task to the hidden-state export and bounded loss path.
+   Verify gradients through unsupervised context positions, export/reload and
+   Trainer checkpoint recovery. Grow sequence lengths using measured capacity.
+3. **Report actual VJP saved values and peak contributors.** Separate parameters,
+   data inputs and saved activations. Connect named checkpoints with existing
+   activation-liveness analysis, and compare logical live sets, runtime allocation
+   and process footprint on one block and multiple layers.
+4. **Choose selective recomputation from those measurements.** Record retained
+   values, recomputed subgraphs, invocation counts and release points. Validate a
+   decoder block first, then multi-layer Qwen and diffusion. Preserve shared edges,
+   skip connections, dynamic shapes and the state needed for deterministic replay.
+5. **Pair fusion contracts with saved values and prompt release.** Extend the
+   existing normalization, attention and recurrence boundaries with explicit dtype
+   and saved-value conventions. Test VJP/JVP and supported higher-order composition.
+   Inspect block cotangent and activation holders before changing release policy;
+   keep shared-parameter accumulation in external autograd.
+
+Shape-specific MatMul/Gemm forms and shared low-rank products follow measured
+costs in these workloads. Graph generation continues to prune inactive derivative
+branches while propagating activation gradients through frozen weights. A small
+pretrained Diffusers denoiser remains the next model-family milestone.
+
+```{toctree}
+:hidden:
+
+ort-training-handoff
+```
+
 ## Engineering boundaries
 
 - Preserve model-first transforms and global decorator registration; later
