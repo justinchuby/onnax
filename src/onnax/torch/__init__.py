@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 """Optional PyTorch autograd integration for ordinary ONNX modules."""
 
+from onnax.torch._checkpoint import CheckpointedModule
 from onnax.torch._module import OnnxModule, Session, SessionFactory
 
-__all__ = ["OnnxModule", "Session", "SessionFactory"]
+__all__ = ["OnnxModule", "CheckpointedModule", "Session", "SessionFactory"]

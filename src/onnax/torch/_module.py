@@ -251,6 +251,53 @@ class OnnxModule(torch.nn.Module):
             raise
 
     def _build(self, model, parameters, outputs, input_gradients, session_factory, optimize):
+        source, initial, specification, identity, gradient_inputs, float_outputs = (
+            self._prepare(model, parameters, outputs, input_gradients)
+        )
+        selected = specification["outputs"]
+        backward = None
+        seeds: dict[str, str] = {}
+        gradients: dict[str, str] = {}
+        if gradient_inputs and float_outputs:
+            backward = onnax.vjp(source, inputs=gradient_inputs, outputs=float_outputs)
+            interface = json.loads(backward.graph.metadata_props["onnax.autodiff.interface"])
+            seeds = dict(zip(float_outputs, interface["seeds"], strict=True))
+            gradients = dict(
+                zip(gradient_inputs, interface["derivative_outputs"], strict=True)
+            )
+            by_name = {v.name: v for v in backward.graph.outputs}
+            backward.graph.outputs.clear()
+            backward.graph.outputs.extend(by_name[n] for n in gradients.values())
+        execution = source.clone()
+        if optimize is not None:
+            execution = optimize(execution)
+            backward = optimize(backward) if backward is not None else None
+        if [v.name for v in execution.graph.outputs] != selected:
+            raise ValueError("Optimization must preserve selected output names and order")
+        common.RemoveUnusedNodesPass()(execution)
+        save_model(execution, self._directory.name, "execution", reuse=self._directory.name)
+        if backward is not None:
+            if [v.name for v in backward.graph.outputs] != list(gradients.values()):
+                raise ValueError("Optimization must preserve gradient output names and order")
+            common.RemoveUnusedNodesPass()(backward)
+            backward.graph.metadata_props["onnax.torch.source_identity"] = identity
+            backward.graph.metadata_props["onnax.torch.interface"] = json.dumps(
+                {"seeds": seeds, "gradients": gradients}
+            )
+            save_model(
+                backward, self._directory.name, "derivative", reuse=self._directory.name
+            )
+        self._configure(
+            source,
+            initial,
+            specification,
+            identity,
+            seeds,
+            gradients,
+            session_factory or _ort_session,
+        )
+
+    def _prepare(self, model, parameters, outputs, input_gradients):
         source = _as_model(model)
         source.graph.name = source.graph.name or "onnax_torch"
         values = ir.convenience.create_value_mapping(source.graph)
@@ -324,49 +371,31 @@ class OnnxModule(torch.nn.Module):
             for v in source.graph.outputs
         ):
             raise TypeError("Differentiable outputs use FLOAT or DOUBLE boundaries")
-        backward = None
-        seeds: dict[str, str] = {}
-        gradients: dict[str, str] = {}
-        if gradient_inputs and float_outputs:
-            backward = onnax.vjp(source, inputs=gradient_inputs, outputs=float_outputs)
-            interface = json.loads(backward.graph.metadata_props["onnax.autodiff.interface"])
-            seeds = dict(zip(float_outputs, interface["seeds"], strict=True))
-            gradients = dict(
-                zip(gradient_inputs, interface["derivative_outputs"], strict=True)
-            )
-            by_name = {v.name: v for v in backward.graph.outputs}
-            backward.graph.outputs.clear()
-            backward.graph.outputs.extend(by_name[n] for n in gradients.values())
-        execution = source.clone()
-        if optimize is not None:
-            execution = optimize(execution)
-            backward = optimize(backward) if backward is not None else None
-        if [v.name for v in execution.graph.outputs] != selected:
-            raise ValueError("Optimization must preserve selected output names and order")
-        common.RemoveUnusedNodesPass()(execution)
-        save_model(execution, self._directory.name, "execution", reuse=self._directory.name)
-        if backward is not None:
-            if [v.name for v in backward.graph.outputs] != list(gradients.values()):
-                raise ValueError("Optimization must preserve gradient output names and order")
-            common.RemoveUnusedNodesPass()(backward)
-            backward.graph.metadata_props["onnax.torch.source_identity"] = identity
-            backward.graph.metadata_props["onnax.torch.interface"] = json.dumps(
-                {"seeds": seeds, "gradients": gradients}
-            )
-            save_model(
-                backward, self._directory.name, "derivative", reuse=self._directory.name
-            )
-        self._configure(
-            source,
-            initial,
-            specification,
-            identity,
-            seeds,
-            gradients,
-            session_factory or _ort_session,
-        )
+        return source, initial, specification, identity, gradient_inputs, float_outputs
 
     def _configure(self, source, initial, specification, identity, seeds, gradients, factory):
+        self._configure_parameters(source, initial, specification, identity, seeds, gradients)
+        expected_inputs = [*self.input_gradient_names, *self.parameter_names]
+        expected_outputs = [v.name for v in source.graph.outputs if v.dtype in _FLOATS]
+        if expected_inputs and expected_outputs:
+            _validate_gradient_interface(
+                self._directory.name, seeds, gradients, expected_inputs, expected_outputs
+            )
+        elif seeds or gradients:
+            raise ValueError("Unexpected derivative interface for a forward-only module")
+        self._session_inputs = []
+        for stem in ("execution", "derivative") if gradients else ("execution",):
+            model = ir.load(os.path.join(self._directory.name, stem + ".onnx"))
+            allowed = set(self._input_specs) | set(seeds.values())
+            names = [v.name for v in model.graph.inputs]
+            if not set(names) <= allowed:
+                raise ValueError("Execution graph introduced unknown inputs")
+            self._session_inputs.append(names)
+            self._sessions.append(factory(os.path.join(self._directory.name, stem + ".onnx")))
+
+    def _configure_parameters(
+        self, source, initial, specification, identity, seeds, gradients
+    ):
         self.parameter_names = tuple(specification["parameters"])
         self.output_names = tuple(specification["outputs"])
         self.input_gradient_names = tuple(specification["input_gradients"])
@@ -388,23 +417,6 @@ class OnnxModule(torch.nn.Module):
         self.register_buffer(
             "_onnax_identity", torch.tensor(list(bytes.fromhex(identity)), dtype=torch.uint8)
         )
-        expected_inputs = [*self.input_gradient_names, *self.parameter_names]
-        expected_outputs = [v.name for v in source.graph.outputs if v.dtype in _FLOATS]
-        if expected_inputs and expected_outputs:
-            _validate_gradient_interface(
-                self._directory.name, seeds, gradients, expected_inputs, expected_outputs
-            )
-        elif seeds or gradients:
-            raise ValueError("Unexpected derivative interface for a forward-only module")
-        self._session_inputs = []
-        for stem in ("execution", "derivative") if gradients else ("execution",):
-            model = ir.load(os.path.join(self._directory.name, stem + ".onnx"))
-            allowed = set(self._input_specs) | set(seeds.values())
-            names = [v.name for v in model.graph.inputs]
-            if not set(names) <= allowed:
-                raise ValueError("Execution graph introduced unknown inputs")
-            self._session_inputs.append(names)
-            self._sessions.append(factory(os.path.join(self._directory.name, stem + ".onnx")))
 
     def _ensure_open(self) -> None:
         if self._closed:
@@ -529,6 +541,8 @@ class OnnxModule(torch.nn.Module):
             interface = json.load(stream)
         if interface.get("version") != 1:
             raise ValueError("Unsupported onnax.torch bundle version")
+        if interface.get("kind") == "checkpointed_vjp":
+            raise ValueError("Use CheckpointedModule.load for a checkpointed ONNX bundle")
         for name, digest in interface["files"].items():
             if (
                 os.path.basename(name) != name

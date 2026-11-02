@@ -86,3 +86,38 @@ def test_public_module_mlp_training(tmp_path):
     report = run(tmp_path)
     assert report["independent_updates"] and report["reload"]
     assert report["validation_accuracy"] >= 0.95
+
+
+@pytest.mark.parametrize("nf4", [False, True])
+def test_public_checkpoint_module_matches_qwen_adapter(nf4):
+    import json
+
+    from examples.huggingface.qwen import DECODER_BOUNDARIES
+    from onnax.torch import CheckpointedModule
+
+    torch.set_num_threads(1)
+    task, _ = prepare(mode="chunked", nf4=nf4, checkpoint_layers=1)
+    source = task.onnx.model
+    hidden = json.loads(source.metadata_props[DECODER_BOUNDARIES])["hidden_states"]
+    boundaries = {
+        "prefix": hidden[0],
+        **{f"decoder_{i}": name for i, name in enumerate(hidden[1:])},
+    }
+    ids = torch.tensor([[1, 4, 5, 6, 2], [1, 7, 2, 0, 0]])
+    mask = ids.ne(0).long()
+    feeds = {
+        "input_ids": ids,
+        "attention_mask": mask,
+        "position_ids": (mask.cumsum(-1) - 1).clamp(min=0),
+    }
+    with CheckpointedModule(source, task.onnx.arrays(), boundaries=boundaries) as model:
+        for _ in range(2):
+            task.onnx.zero_grad()
+            model.zero_grad()
+            actual = model(**feeds)
+            expected = task.onnx(**feeds)
+            torch.testing.assert_close(actual, expected, rtol=1e-4, atol=1e-6)
+            actual.square().mean().backward()
+            expected.square().mean().backward()
+            for a, b in zip(model.parameters(), task.onnx.parameters(), strict=True):
+                torch.testing.assert_close(a.grad, b.grad, rtol=1e-4, atol=1e-6)

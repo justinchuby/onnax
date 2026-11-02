@@ -15,6 +15,7 @@ lora
 nf4-lora
 huggingface
 torch
+checkpointing
 qwen-sft
 fused-autodiff
 attention-vjp

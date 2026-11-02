@@ -10,7 +10,7 @@ import onnx_ir as ir
 import torch
 
 import onnax
-from onnax.torch import OnnxModule
+from onnax.torch import CheckpointedModule, OnnxModule
 
 assert "site-packages" in str(Path(onnax.__file__).resolve())
 x = ir.val("x", dtype=ir.DataType.FLOAT, shape=["batch", 2])
@@ -37,3 +37,18 @@ with tempfile.TemporaryDirectory() as directory:
     with OnnxModule.load(Path(directory) / "bundle") as restored:
         torch.testing.assert_close(restored(x=values), expected, rtol=0, atol=0)
 print("Installed Torch module: training, export and reload passed")
+
+with tempfile.TemporaryDirectory() as directory:
+    with CheckpointedModule(
+        source,
+        {"weight": np.ones((2, 1), np.float32)},
+        boundaries={"projection": "prediction"},
+    ) as model:
+        value = model(x=torch.ones(3, 2))
+        value.square().mean().backward()
+        assert model.trainable[0].grad is not None
+        model.export(Path(directory) / "checkpoints")
+    with CheckpointedModule.load(Path(directory) / "checkpoints") as restored:
+        torch.testing.assert_close(restored(x=torch.ones(3, 2)), value, rtol=0, atol=0)
+        restored(x=torch.ones(3, 2)).sum().backward()
+print("Installed checkpoint module: backward, export and reload passed")
