@@ -36,9 +36,7 @@ from examples.diffusion.dit import build, inject
 
 config, base, weights = build()
 graph, parameters, mapping = inject(base)
-model = OnnxModule(
-    graph, parameters, input_gradients=[], optimize=optimizer.optimize
-)
+model = OnnxModule(graph, parameters, input_gradients=[], optimize=optimizer.optimize)
 ```
 
 `input_gradients=[]` selects adapter-only differentiation. The frozen convolution
