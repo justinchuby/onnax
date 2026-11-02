@@ -1,0 +1,81 @@
+{
+  "dataset": "Yukang/LongAlpaca-12k",
+  "dataset_revision": "46dce924ed8786979556018e191c0f557d8f4aa2",
+  "dataset_url": "https://huggingface.co/datasets/Yukang/LongAlpaca-12k/tree/46dce924ed8786979556018e191c0f557d8f4aa2",
+  "license": "cc-by-nc-4.0",
+  "attribution": "LongAlpaca, Yukang Chen et al., 2023",
+  "tokenizer": "Qwen/Qwen3.5-0.8B",
+  "tokenizer_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "selection": "First complete examples with 3072-4096 tokens under the pinned Qwen3.5 tokenizer; inherited document-group holdout",
+  "max_length": 4096,
+  "packing": false,
+  "files": {
+    "train": {
+      "filename": "train.jsonl",
+      "sha256": "3d27f155464669d2de6c4117098245bcb442c41bae2613dfd94cdfbd59a227a8",
+      "rows": 4,
+      "samples": [
+        {
+          "source_index": 11312,
+          "text_sha256": "02e20d00dab4f095b6d61c206d4d4de52d4248f6aeac248cb6b3d733290c77fc",
+          "bucket": "long",
+          "document_sha256": "faeb3437eae7d9d123cbc8fa9690dd59a264144e99b819cb388a74b37055243f",
+          "qwen35_tokens": 4027,
+          "source_tokenizer_tokens": 4012
+        },
+        {
+          "source_index": 11319,
+          "text_sha256": "eeb9d16fd6532ea0ef7aaea21b96a910266f7c4ae1b688f063b584084a352b36",
+          "bucket": "long",
+          "document_sha256": "0f5cc3faf0223a6e450dddfd8bed604781556184648735daf8dc583e537b9e33",
+          "qwen35_tokens": 3776,
+          "source_tokenizer_tokens": 3774
+        },
+        {
+          "source_index": 10663,
+          "text_sha256": "9d3b2cf0f82dd1b46f7c7c49827a94e594a4523cf61f6033754c650dc6ae9eee",
+          "bucket": "long",
+          "document_sha256": "9b2fcca934bcc29f8b1a1c22219b7c5b6b6e441bab764227fb113b037179e44b",
+          "qwen35_tokens": 3642,
+          "source_tokenizer_tokens": 3635
+        },
+        {
+          "source_index": 11218,
+          "text_sha256": "fb3184f15ecd2eba84fbdc3aef98223e88587c0753c28add277dd36a36798241",
+          "bucket": "long",
+          "document_sha256": "47b3bfa8d835e71ae85724ec691500114abeb65a519cfe9f316f2bd9fe428d9e",
+          "qwen35_tokens": 3729,
+          "source_tokenizer_tokens": 3727
+        }
+      ],
+      "minimum_tokens": 3642,
+      "maximum_tokens": 4027
+    },
+    "validation": {
+      "filename": "validation.jsonl",
+      "sha256": "2b382e3fb5c9960eafa6eb3a4a45b371652c9c950f57a014be6237737d4a4fdd",
+      "rows": 2,
+      "samples": [
+        {
+          "source_index": 10752,
+          "text_sha256": "0be152883ad4d7deb8c131604da703d6f805b85693a1bec32665b76eaeb3fdb7",
+          "bucket": "long",
+          "document_sha256": "af5404bad88c642315c6e7842e9789d16c58008a1d14df41e7b4f9047f192251",
+          "qwen35_tokens": 4013,
+          "source_tokenizer_tokens": 4013
+        },
+        {
+          "source_index": 10929,
+          "text_sha256": "cec199bf4ab9141a950afcaa461273c097b9c756f4236bff4069e8091203e614",
+          "bucket": "long",
+          "document_sha256": "3f8564c0cbf11126f6381a59c3de8bd752d6e38b686b866d5e9ab5ef5559838a",
+          "qwen35_tokens": 4007,
+          "source_tokenizer_tokens": 4001
+        }
+      ],
+      "minimum_tokens": 4007,
+      "maximum_tokens": 4013
+    }
+  },
+  "document_groups_disjoint": true
+}
