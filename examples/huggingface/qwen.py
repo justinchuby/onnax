@@ -67,7 +67,13 @@ def reference_model(real=False):
     return Qwen3ForCausalLM(config).eval()
 
 
-def inject(model, *, rank=4, alpha=1.0):
+def inject(
+    model,
+    *,
+    rank=4,
+    alpha=1.0,
+    target_suffixes=(".self_attn.q_proj", ".self_attn.v_proj"),
+):
     if (
         isinstance(rank, bool)
         or not isinstance(rank, int)
@@ -100,7 +106,7 @@ def inject(model, *, rank=4, alpha=1.0):
             out_width, in_width = weight.shape
         else:
             continue
-        if not module.endswith((".self_attn.q_proj", ".self_attn.v_proj")):
+        if not module.endswith(target_suffixes):
             continue
         if {module + ".lora.A", module + ".lora.B"}.intersection(existing):
             raise ValueError(f"Adapter input name collision: {module}")
@@ -128,6 +134,6 @@ def inject(model, *, rank=4, alpha=1.0):
             {"module": module, "A": a.name, "B": b.name, "rank": rank, "alpha": alpha}
         )
     if not mapping:
-        raise ValueError("No Qwen3 q_proj/v_proj weights found")
+        raise ValueError("No source projection weights match the requested adapter targets")
     ShapeInferencePass()(result)
     return result, params, mapping

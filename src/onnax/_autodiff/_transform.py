@@ -4,10 +4,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 
 import onnx
 import onnx_ir as ir
+from onnx_ir.traversal import RecursiveGraphIterator
 
 from onnax import _rule_registry
 from onnax._autodiff._common import _FLOATS, _data_indices, _input
@@ -44,6 +45,57 @@ def _validate_rule_value(
         raise TypeError(
             f"{context}: rule returned dtype {value.dtype}, expected {reference.dtype} for {_value_context(reference)}. Return a derivative with the primal dtype; use ctx.scalar for typed constants."
         )
+
+
+def _function_nodes(graph: ir.Graph) -> Iterator[ir.Node]:
+    # Graph-valued references have no concrete body to traverse. Validation below
+    # rejects them before inference; ordinary scalar attribute references remain valid.
+    return RecursiveGraphIterator(
+        graph,
+        recursive=lambda node: (
+            not any(
+                attr.is_ref()
+                and attr.type in (ir.AttributeType.GRAPH, ir.AttributeType.GRAPHS)
+                for attr in node.attributes.values()
+            )
+        ),
+    )
+
+
+def _registered_function_bodies(
+    model: ir.Model,
+    registry: _JvpRegistry[_Context] | _VjpRegistry[_Context],
+) -> set[tuple[str, str, str]]:
+    """Bind literal defaults and find implementations owned by explicit rules."""
+    pending = []
+    for node in model.graph:
+        identifier = node.op_identifier()
+        if identifier not in model.functions:
+            continue
+        try:
+            registry.lookup(node, model.graph.opset_imports)
+        except NotImplementedError:
+            continue
+        for attr in model.functions[identifier].attributes.values():
+            if (
+                attr.name not in node.attributes
+                and attr.value is not None
+                and attr.type not in (ir.AttributeType.GRAPH, ir.AttributeType.GRAPHS)
+            ):
+                node.attributes[attr.name] = ir.Attr(attr.name, attr.type, attr.value)
+        pending.append(identifier)
+    opaque: set[tuple[str, str, str]] = set()
+    while pending:
+        identifier = pending.pop()
+        if identifier in opaque:
+            continue
+        opaque.add(identifier)
+        pending.extend(
+            node.op_identifier()
+            for node in _function_nodes(model.functions[identifier].graph)
+            if node.op_identifier() in model.functions
+        )
+    return opaque
 
 
 def _prepare(
@@ -94,9 +146,28 @@ def _prepare(
             "Correct cyclic or unresolved producer references in the source graph."
         )
         raise
-    for graph_like in (graph, *(function.graph for function in result.functions.values())):
-        for node in graph_like:
-            if any(
+    opaque = _registered_function_bodies(result, registry)
+    scopes = [
+        (graph, False),
+        *(
+            (function.graph, identifier in opaque)
+            for identifier, function in result.functions.items()
+        ),
+    ]
+    for graph_like, explicit_boundary in scopes:
+        # An explicit rule differentiates the call, not its implementation body.
+        # Randomness is still checked recursively, including inside nested scans.
+        for node in _function_nodes(graph_like):
+            if explicit_boundary and any(
+                attr.is_ref()
+                and attr.type in (ir.AttributeType.GRAPH, ir.AttributeType.GRAPHS)
+                for attr in node.attributes.values()
+            ):
+                raise NotImplementedError(
+                    f"{_node_context(node, graph_like.opset_imports, mode)}: "
+                    "Bind graph-valued function attributes to concrete bodies before differentiation"
+                )
+            if not explicit_boundary and any(
                 a.type in (ir.AttributeType.GRAPH, ir.AttributeType.GRAPHS)
                 for a in node.attributes.values()
             ):
@@ -107,7 +178,7 @@ def _prepare(
                     "or differentiate the required branch/body separately outside this "
                     "transform; no derivative through branch/loop control is provided."
                 )
-            if node.domain == "" and (
+            if node.domain in ("", "ai.onnx") and (
                 node.op_type.startswith("Random")
                 or node.op_type in ("Dropout", "Multinomial", "Bernoulli")
             ):
@@ -277,7 +348,7 @@ class JvpPass(ir.passes.FunctionalPass):
           keepdims, absent/empty axes, and noop_with_empty_axes.
         * Layout/indexing: Reshape, Flatten, Squeeze, Unsqueeze, Transpose,
           Expand, Concat, Split, Gather (including repeated/negative indices).
-          Also floating-point Cast, Where, Softmax, and LogSoftmax.
+          Also floating-point Cast/CastLike, Where, Softmax, and LogSoftmax.
           Forward mode additionally supports Slice, constant/reflect/edge/wrap Pad,
           and ScatterND with reduction="add";
           its data/updates are differentiable and its indices are structural.
@@ -299,9 +370,11 @@ class JvpPass(ir.passes.FunctionalPass):
         * Every unsupported operator on an active path from selected inputs to
           selected outputs raises NotImplementedError, rather than silently
           returning zero. Inactive paths can contain unsupported/custom operators.
-          Control flow/subgraphs and random operators (including Dropout) are
-          rejected. Custom/local-function calls need a globally registered rule
-          for this mode, or must be inlined with InlinePass first.
+          Generic control flow/subgraphs and random operators (including Dropout)
+          are rejected. A deterministic function implementation may retain control
+          flow when a globally registered rule defines its call-level products.
+          Literal function defaults are bound on the cloned call before rules run.
+          Other custom/local-function calls must be inlined with InlinePass first.
         * One forward-over-reverse composition is supported: apply JvpPass to a
           GradPass or VjpPass model, including after serialization. By default
           differentiate the original non-initializer FLOAT/DOUBLE inputs and

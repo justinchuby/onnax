@@ -18,6 +18,7 @@ torch
 checkpointing
 decoder-families
 diffusion
+qwen35-training
 qwen-sft
 fused-autodiff
 attention-vjp

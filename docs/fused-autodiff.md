@@ -145,3 +145,30 @@ uv run python -m examples.huggingface.guard --output-dir fused_4k.guard -- \
   --sequence-length 4096 --batch-size 1 --chunk-size 128 --mlx-memory-limit-gib 20 \
   --train-file /path/to/benchmark.jsonl --warmup 1 --samples 3
 ```
+
+## Stateful temporal convolution
+
+`com.microsoft::CausalConvWithState` version 1 has direct JVP and VJP rules for
+one-dimensional depthwise convolution. Inputs are the new sequence, kernel,
+bias and initial convolution history. Outputs are the activated convolution and
+updated history. Batch and sequence dimensions are dynamic; channel count and
+kernel width come from the static weight shape.
+
+The rules support SiLU (`silu` or `swish`) and identity (`none`) activation.
+The output-state cotangent contributes to the tail of the concatenated history
+and new sequence. This also covers a new sequence shorter than the history buffer.
+Kernel gradients sum over batch and time; input products use ordinary ONNX
+Conv and ConvTranspose operations. The source fused call remains in the graph.
+
+## Gated-delta linear attention
+
+`com.microsoft::LinearAttention` version 1 supports first-order JVP and VJP for
+the `gated_delta` update rule. Inputs follow Mobius's packed sequence layout,
+with per-head or per-key log-decay, grouped Q/K heads and an explicit recurrent
+state. Both sequence-output and final-state cotangents contribute to all six
+input gradients. The VJP saves chunk boundaries and replays one chunk during
+reverse execution. Its portable derivative uses ordinary ONNX `Scan` graphs.
+Higher-order composition requires products for those generated `Scan` graphs.
+
+The [Qwen3.5 tutorial](qwen35-training.md) connects these rules to an offline
+hybrid decoder and an external LoRA training loop.

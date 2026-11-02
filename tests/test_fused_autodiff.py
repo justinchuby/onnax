@@ -45,8 +45,25 @@ def _check(model, feeds, reference, names=None, rtol=1e-4, atol=1e-6):
     rng = np.random.default_rng(20261101)
     seeds = [rng.normal(size=value.shape).astype(np.float32) for value in outputs]
     directions = [rng.normal(size=feeds[name].shape).astype(np.float32) for name in names]
-    expected = torch.autograd.grad(
-        outputs, [tensors[name] for name in names], [torch.tensor(seed) for seed in seeds]
+    selected = [tensors[name] for name in names]
+    active_outputs = [
+        (output, torch.tensor(seed))
+        for output, seed in zip(outputs, seeds, strict=True)
+        if output.requires_grad
+    ]
+    gradients = (
+        torch.autograd.grad(
+            [value for value, _ in active_outputs],
+            selected,
+            [seed for _, seed in active_outputs],
+            allow_unused=True,
+        )
+        if active_outputs
+        else [None] * len(selected)
+    )
+    expected = tuple(
+        torch.zeros_like(value) if gradient is None else gradient
+        for value, gradient in zip(selected, gradients, strict=True)
     )
 
     def function(*args):
