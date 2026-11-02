@@ -68,6 +68,10 @@ def test_dynamic_right_padding_nonzero_adapters_and_position_ids():
                     )
             model.zero_grad(set_to_none=True)
             reference.zero_grad(set_to_none=True)
+        ignored = token_loss(model(**feeds), torch.full_like(ids, -100))
+        assert ignored.item() == 0
+        ignored.backward()
+        assert all(parameter.grad.count_nonzero() == 0 for parameter in model.parameters())
 
 
 def test_checkpoint_recovery_in_new_process(tmp_path):
