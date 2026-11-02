@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "optimizer_steps": 4,
+  "training_microbatches": 16,
+  "complete_qa_examples": true,
+  "valid_target_counts": [
+    3641,
+    3728,
+    3775,
+    4026
+  ],
+  "training_loss": [
+    2.3527395725250244,
+    2.1172728538513184
+  ],
+  "validation_loss": [
+    2.66143536567688,
+    2.432490348815918
+  ],
+  "checkpoint_tensors_finite": 62,
+  "peak_physical_footprint_bytes": 9917053424,
+  "minimum_free_disk_bytes": 8094740480,
+  "timing_scope": "initial/final evaluation, training and export; excludes construction",
+  "elapsed_seconds": 377.5492859579972,
+  "recovery": "pending"
+}

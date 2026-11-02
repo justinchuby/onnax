@@ -276,6 +276,23 @@ training trajectory. The CLI validates this identity before building the ONNX
 model. Offline tiny models accept context lengths up to 64; pretrained models use
 their source configuration's limit.
 
+### Complete long-context QA qualification
+
+The pinned Qwen3.5-0.8B trains four optimizer updates on four complete LongAlpaca
+QA examples, with two document-group-held-out validation examples. The Qwen3.5
+tokenizer produces 3,642–4,027 tokens per training example. All 16 training
+microbatches preserve the complete text, using a 4,096-token limit and padding
+to multiples of 64. Full-text causal loss covers every shifted nonpadding token.
+
+Training loss falls from 2.3527 to 2.1173; validation loss falls from 2.6614 to
+2.4325. The guarded run reaches 9.24 GiB peak physical footprint and retains at
+least 7.54 GiB free disk through training and export. The
+[corpus manifest](../examples/huggingface/reports/qwen35-context4k-corpus.json)
+records the dataset revision, license, sample hashes and document holdout. The
+[training report](../examples/huggingface/reports/qwen35-context4k-sft-mlx.json)
+retains actual sequence/target counts and runtime provenance. Fresh-process
+recovery is the next qualification gate.
+
 ## Execute on MLX
 
 ```sh
