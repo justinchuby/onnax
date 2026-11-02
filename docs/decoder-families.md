@@ -107,6 +107,65 @@ This path uses the version-controlled text corpus and local tokenizer. The
 [recurrent tutorial](qwen35-training.md) explains the model update and the
 standalone token-pattern qualification.
 
+### Load a pretrained text backbone
+
+`--real` selects the family's pinned checkpoint and tokenizer. For Qwen3.5:
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family qwen35 --real --steps 30 \
+  --cache-dir /tmp/onnax-model-cache --output-dir /tmp/qwen35-pretrained \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib
+```
+
+The source is `Qwen/Qwen3.5-0.8B` at revision
+`2fc06364715b967f1860aea9cf38778875588b17`. Native Transformers loads its text
+backbone into `Qwen3_5ForCausalLM` in FP32. Mobius builds the ONNX graph from
+that configuration and its loaded weights. The text backbone has 752,393,024
+parameters, 24 decoder layers and 60 trainable LoRA tensors. The checkpoint's
+vision and multi-token prediction modules are outside this text task.
+
+The real-model setup uses sequence length 64, microbatch one and four accumulated
+microbatches per update. Batches are padded to 64 tokens; attention masks and
+ignored labels identify the valid targets. The report records each batch's
+executed shape and target count.
+
+Loading checks every text weight before graph construction. The exported config
+records the source revision, reference class and parameter-prefix mapping;
+adapter mappings also retain each original checkpoint weight name. Resume checks
+the same source identity. PEFT adapters target the native text-only CausalLM's
+module paths, such as `model.layers.0.linear_attn.in_proj_qkv`.
+
+On an M1 Max, the pretrained FP32 run completed 30 updates with MLX EP:
+
+| Measure | Initial | After 30 updates |
+| --- | ---: | ---: |
+| Fixed training-set loss | 5.223939 | 0.302991 |
+| Validation loss | 6.019480 | 5.621177 |
+
+The run executed 120 training microbatches and 1,388 shifted targets. Whole-worker
+peak physical footprint was 10.43 GiB, measured with macOS `proc_pid_rusage`.
+Evaluation, training and export took 211 seconds after construction. The
+[evidence report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen35-pretrained-fp32-m1max.json)
+records versions, source hashes, shapes and FP32 diagnostics.
+
+The FP32 controls compare Transformers' chunked and sequential Gated DeltaNet
+implementations with the portable ONNX graph on CPU and MLX. Relative logit L2
+differences are about two to three parts per million. The report retains the
+original `rtol=1e-4, atol=1e-6` elementwise checks and the per-adapter gradient
+differences for zero and nonzero B.
+
+Resuming update 15 in a fresh process reproduces update 30 byte for byte:
+adapter tensors, AdamW state, scheduler, loaded logits, loss and all 60 adapter
+gradients. All 53 exported ONNX graphs pass the full checker. PEFT exchanges
+all 60 adapter tensors without changing their values.
+
+At the trained adapter state, the native PyTorch reference has a maximum gradient
+difference of `1.09e-4`; a fresh AdamW update differs by up to `1.58e-3` with epsilon
+`1e-5`. The additional stable-loss/pairwise-head reference also retains differences.
+The next numerical audit compares layer VJPs at shared activations to separate
+local derivatives from differences accumulated through the forward computation.
+
 Resume into another output directory:
 
 ```sh

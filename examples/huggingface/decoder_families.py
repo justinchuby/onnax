@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 """Mobius model adapters and source-parameter mappings for decoder training."""
 
+import json
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -27,6 +28,7 @@ from examples.huggingface.decoder_graph import (
     protect_decoder_boundaries,
     restore_decoder_outputs,
 )
+from examples.huggingface.pretrained import PretrainedSource, load_reference
 from examples.huggingface.qwen35 import build_base as build_qwen35_base
 from examples.huggingface.qwen35 import reference_model as qwen35_reference
 
@@ -44,11 +46,18 @@ class DecoderFamily:
     graph_builder: Callable[[PreTrainedModel], ir.Model] | None = None
     target_suffixes: tuple[str, ...] = ()
     preserve_fused: bool = False
+    pretrained: PretrainedSource | None = None
 
 
 FAMILIES = {
     "qwen3": DecoderFamily(
-        Qwen3Config, Qwen3ForCausalLM, Qwen3CausalLMModel, ("q_proj", "v_proj")
+        Qwen3Config,
+        Qwen3ForCausalLM,
+        Qwen3CausalLMModel,
+        ("q_proj", "v_proj"),
+        pretrained=PretrainedSource(
+            "Qwen/Qwen3-0.6B", "c1899de289a04d12100db370d81485cdf75e47ca"
+        ),
     ),
     "phi3": DecoderFamily(Phi3Config, Phi3ForCausalLM, Phi3CausalLMModel, ("qkv_proj",), True),
     "qwen35": DecoderFamily(
@@ -60,13 +69,24 @@ FAMILIES = {
         graph_builder=build_qwen35_base,
         target_suffixes=(".linear_attn.in_proj_qkv", ".self_attn.q_proj", ".self_attn.v_proj"),
         preserve_fused=True,
+        pretrained=PretrainedSource(
+            "Qwen/Qwen3.5-0.8B",
+            "2fc06364715b967f1860aea9cf38778875588b17",
+            (("model.language_model.", "model."),),
+        ),
     ),
 }
 
 
-def reference_model(family):
+def reference_model(family, *, real=False, cache_dir=None):
     """Create a deterministic offline model with its native source architecture."""
     entry = FAMILIES[family]
+    if real:
+        if entry.pretrained is None:
+            raise ValueError(f"No pinned pretrained source for {family}")
+        return load_reference(
+            entry.config_type, entry.reference_type, entry.pretrained, cache_dir=cache_dir
+        )
     if entry.reference_factory is not None:
         result = entry.reference_factory()
         result.config._name_or_path = "tiny-" + family
@@ -231,9 +251,9 @@ def inject(model, family, *, rank=4, alpha=1.0):
     return result, params, mapping
 
 
-def prepare_graph(family, *, preserve_fused=False):
+def prepare_graph(family, *, preserve_fused=False, real=False, cache_dir=None):
     """Build, annotate and adapt one Mobius model without PyTorch tracing."""
-    reference = reference_model(family)
+    reference = reference_model(family, real=real, cache_dir=cache_dir)
     entry = FAMILIES[family]
     graph = (
         entry.graph_builder(reference)
@@ -243,5 +263,12 @@ def prepare_graph(family, *, preserve_fused=False):
     protect_decoder_boundaries(graph)
     graph = decompose(graph, preserve_fused=preserve_fused or entry.preserve_fused)
     graph, params, mapping = inject(graph, family)
+    if real:
+        assert entry.pretrained is not None
+        for row in mapping:
+            row["checkpoint_weight"] = entry.pretrained.checkpoint_name(row["source_weight"])
+        graph.metadata_props["onnax.example.pretrained_source"] = json.dumps(
+            reference.config.onnax_pretrained, sort_keys=True
+        )
     restore_decoder_outputs(graph)
     return graph, params, mapping, reference
