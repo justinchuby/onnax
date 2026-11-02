@@ -266,6 +266,24 @@ checks and PEFT exchange for all three families. The existing
 projections and chunked output-head execution. This new family workload uses FP32
 weights, with full-logit and bounded-head loss paths.
 
+### Bounded-head measurement
+
+The 64-token tiny Qwen3.5 comparison uses 32 supervised targets, FP32, batch one,
+10 warmups and 100 samples per independent MLX worker. Loss and all ten adapter
+gradients match between routes at `rtol=1e-4, atol=1e-6`.
+
+| Route | Step median / P95 | Process peak RSS |
+|---|---:|---:|
+| Full head | 99.86 / 114.39 ms | 620.95 MiB |
+| Bounded head, 16 rows | 102.63 / 118.64 ms | 622.73 MiB |
+
+At this model size, the routes take similar time and memory. Timing covers
+forward, loss, VJP and runtime exchange at fixed nonzero adapter parameters.
+Peak RSS includes imports, source construction and runtime sessions. The reports
+retain [full-head samples](../examples/huggingface/reports/bounded-head-tiny-qwen35-mlx-full.json)
+and [bounded-head samples](../examples/huggingface/reports/bounded-head-tiny-qwen35-mlx-chunked.json),
+source hashes, library digest and environment versions.
+
 ## Recorded workload results
 
 On Apple M1 Max, both CPU ORT and MLX completed 30 SFT updates with the same

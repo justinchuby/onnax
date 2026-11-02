@@ -62,8 +62,9 @@ def test_phi3_source_mapping_and_shared_low_rank_product():
 
 
 @pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
-def test_dynamic_padding_positions_ignore_labels_and_accumulation(family):
-    model, _ = prepare(family)
+@pytest.mark.parametrize("head_chunk_size", [None, 3])
+def test_dynamic_padding_positions_ignore_labels_and_accumulation(family, head_chunk_size):
+    model, _ = prepare(family, head_chunk_size=head_chunk_size)
     try:
         data = batch()
         target = {name: value[:1, :4] for name, value in data.items()}

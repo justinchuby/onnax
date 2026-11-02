@@ -5,6 +5,7 @@
 
 import copy
 import json
+import os
 
 import numpy as np
 import pytest
@@ -19,10 +20,26 @@ from examples.huggingface.validation import add_reference_parameters
 from examples.lora.train import session
 
 
+@pytest.fixture(params=["cpu", "mlx"])
+def runtime_factory(request):
+    if request.param == "cpu":
+        return session
+    if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
+        pytest.skip("Native MLX opt-in")
+    from examples.lora.mlx_runtime import register_library
+    from examples.lora.mlx_runtime import session as mlx_session
+
+    if path := os.environ.get("ONNAX_MLX_EP_LIBRARY"):
+        register_library(path)
+    return mlx_session
+
+
 @pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
-def test_bounded_family_gradients_updates_and_portable_export(tmp_path, family):
+def test_bounded_family_gradients_updates_and_portable_export(
+    tmp_path, family, runtime_factory
+):
     torch.set_num_threads(1)
-    model, reference = prepare(family, head_chunk_size=3)
+    model, reference = prepare(family, head_chunk_size=3, session_factory=runtime_factory)
     try:
         add_reference_parameters(reference, model.onnx.arrays(), model.mapping)
         data = batch()
@@ -56,12 +73,14 @@ def test_bounded_family_gradients_updates_and_portable_export(tmp_path, family):
         model.export(tmp_path / "export")
         task = json.loads((tmp_path / "export/task.json").read_text())
         assert task["version"] == 2
-        inference = session(str(tmp_path / "export/execution" / task["inference"]["model"]))
+        inference = runtime_factory(
+            str(tmp_path / "export/execution" / task["inference"]["model"])
+        )
         values = {name: value.numpy() for name, value in data.items() if name != "labels"}
         np.testing.assert_allclose(
             inference.run(None, values)[0], predicted.numpy(), rtol=1e-4, atol=1e-6
         )
-        restored = OnnxDecoder.load(tmp_path / "export")
+        restored = OnnxDecoder.load(tmp_path / "export", session_factory=runtime_factory)
         try:
             torch.testing.assert_close(
                 restored(**data).loss, model(**data).loss, rtol=0, atol=0
