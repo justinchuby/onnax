@@ -1,0 +1,4345 @@
+{
+  "schema_version": 1,
+  "scope": "Qwen3-0.6B 8192-token BF16/NF4 training qualification",
+  "hardware": {
+    "chip": "Apple M1 Max",
+    "unified_memory_bytes": 34359738368
+  },
+  "qualification": {
+    "status": "complete",
+    "precision": "bf16",
+    "max_length": 8192,
+    "fused_ops": true,
+    "pad_to_multiple_of": 128,
+    "checkpoint_layers": 4,
+    "training_batches": [
+      {
+        "update": 0,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 58
+      },
+      {
+        "update": 0,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 43
+      },
+      {
+        "update": 0,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 64
+      },
+      {
+        "update": 0,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 94
+      },
+      {
+        "update": 1,
+        "batch": 1,
+        "sequence": 7168,
+        "valid_shifted_tokens": 7051
+      },
+      {
+        "update": 1,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 67
+      },
+      {
+        "update": 1,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 33
+      },
+      {
+        "update": 1,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 182
+      },
+      {
+        "update": 2,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 35
+      },
+      {
+        "update": 2,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 137
+      },
+      {
+        "update": 2,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 92
+      },
+      {
+        "update": 2,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 197
+      },
+      {
+        "update": 3,
+        "batch": 1,
+        "sequence": 7936,
+        "valid_shifted_tokens": 7829
+      },
+      {
+        "update": 3,
+        "batch": 1,
+        "sequence": 7680,
+        "valid_shifted_tokens": 7669
+      },
+      {
+        "update": 3,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 93
+      },
+      {
+        "update": 3,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 57
+      },
+      {
+        "update": 4,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 176
+      },
+      {
+        "update": 4,
+        "batch": 1,
+        "sequence": 7296,
+        "valid_shifted_tokens": 7265
+      },
+      {
+        "update": 4,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 51
+      },
+      {
+        "update": 4,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 54
+      },
+      {
+        "update": 5,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 65
+      },
+      {
+        "update": 5,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 38
+      },
+      {
+        "update": 5,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 43
+      },
+      {
+        "update": 5,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 127
+      },
+      {
+        "update": 6,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 47
+      },
+      {
+        "update": 6,
+        "batch": 1,
+        "sequence": 8192,
+        "valid_shifted_tokens": 8101
+      },
+      {
+        "update": 6,
+        "batch": 1,
+        "sequence": 384,
+        "valid_shifted_tokens": 327
+      },
+      {
+        "update": 6,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 36
+      },
+      {
+        "update": 7,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 38
+      },
+      {
+        "update": 7,
+        "batch": 1,
+        "sequence": 7552,
+        "valid_shifted_tokens": 7544
+      },
+      {
+        "update": 7,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 83
+      },
+      {
+        "update": 7,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 150
+      },
+      {
+        "update": 8,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 159
+      },
+      {
+        "update": 8,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 40
+      },
+      {
+        "update": 8,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 77
+      },
+      {
+        "update": 8,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 42
+      },
+      {
+        "update": 9,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 96
+      },
+      {
+        "update": 9,
+        "batch": 1,
+        "sequence": 8064,
+        "valid_shifted_tokens": 7951
+      },
+      {
+        "update": 9,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 173
+      },
+      {
+        "update": 9,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 175
+      },
+      {
+        "update": 10,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 152
+      },
+      {
+        "update": 10,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 49
+      },
+      {
+        "update": 10,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 56
+      },
+      {
+        "update": 10,
+        "batch": 1,
+        "sequence": 7296,
+        "valid_shifted_tokens": 7232
+      },
+      {
+        "update": 11,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 43
+      },
+      {
+        "update": 11,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 33
+      },
+      {
+        "update": 11,
+        "batch": 1,
+        "sequence": 7680,
+        "valid_shifted_tokens": 7596
+      },
+      {
+        "update": 11,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 46
+      },
+      {
+        "update": 12,
+        "batch": 1,
+        "sequence": 7808,
+        "valid_shifted_tokens": 7789
+      },
+      {
+        "update": 12,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 109
+      },
+      {
+        "update": 12,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 38
+      },
+      {
+        "update": 12,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 117
+      },
+      {
+        "update": 13,
+        "batch": 1,
+        "sequence": 384,
+        "valid_shifted_tokens": 268
+      },
+      {
+        "update": 13,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 30
+      },
+      {
+        "update": 13,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 43
+      },
+      {
+        "update": 13,
+        "batch": 1,
+        "sequence": 7040,
+        "valid_shifted_tokens": 6916
+      },
+      {
+        "update": 14,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 28
+      },
+      {
+        "update": 14,
+        "batch": 1,
+        "sequence": 8192,
+        "valid_shifted_tokens": 8077
+      },
+      {
+        "update": 14,
+        "batch": 1,
+        "sequence": 7424,
+        "valid_shifted_tokens": 7389
+      },
+      {
+        "update": 14,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 59
+      },
+      {
+        "update": 15,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 103
+      },
+      {
+        "update": 15,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 38
+      },
+      {
+        "update": 15,
+        "batch": 1,
+        "sequence": 384,
+        "valid_shifted_tokens": 302
+      },
+      {
+        "update": 15,
+        "batch": 1,
+        "sequence": 6784,
+        "valid_shifted_tokens": 6660
+      },
+      {
+        "update": 16,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 113
+      },
+      {
+        "update": 16,
+        "batch": 1,
+        "sequence": 384,
+        "valid_shifted_tokens": 378
+      },
+      {
+        "update": 16,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 63
+      },
+      {
+        "update": 16,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 32
+      },
+      {
+        "update": 17,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 37
+      },
+      {
+        "update": 17,
+        "batch": 1,
+        "sequence": 6400,
+        "valid_shifted_tokens": 6286
+      },
+      {
+        "update": 17,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 87
+      },
+      {
+        "update": 17,
+        "batch": 1,
+        "sequence": 8064,
+        "valid_shifted_tokens": 7970
+      },
+      {
+        "update": 18,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 56
+      },
+      {
+        "update": 18,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 59
+      },
+      {
+        "update": 18,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 120
+      },
+      {
+        "update": 18,
+        "batch": 1,
+        "sequence": 7808,
+        "valid_shifted_tokens": 7807
+      },
+      {
+        "update": 19,
+        "batch": 1,
+        "sequence": 7936,
+        "valid_shifted_tokens": 7822
+      },
+      {
+        "update": 19,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 142
+      },
+      {
+        "update": 19,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 44
+      },
+      {
+        "update": 19,
+        "batch": 1,
+        "sequence": 7040,
+        "valid_shifted_tokens": 7001
+      },
+      {
+        "update": 20,
+        "batch": 1,
+        "sequence": 7680,
+        "valid_shifted_tokens": 7617
+      },
+      {
+        "update": 20,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 47
+      },
+      {
+        "update": 20,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 59
+      },
+      {
+        "update": 20,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 75
+      },
+      {
+        "update": 21,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 36
+      },
+      {
+        "update": 21,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 41
+      },
+      {
+        "update": 21,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 100
+      },
+      {
+        "update": 21,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 74
+      },
+      {
+        "update": 22,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 35
+      },
+      {
+        "update": 22,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 44
+      },
+      {
+        "update": 22,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 136
+      },
+      {
+        "update": 22,
+        "batch": 1,
+        "sequence": 7808,
+        "valid_shifted_tokens": 7755
+      },
+      {
+        "update": 23,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 113
+      },
+      {
+        "update": 23,
+        "batch": 1,
+        "sequence": 512,
+        "valid_shifted_tokens": 386
+      },
+      {
+        "update": 23,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 44
+      },
+      {
+        "update": 23,
+        "batch": 1,
+        "sequence": 7296,
+        "valid_shifted_tokens": 7273
+      },
+      {
+        "update": 24,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 47
+      },
+      {
+        "update": 24,
+        "batch": 1,
+        "sequence": 6656,
+        "valid_shifted_tokens": 6582
+      },
+      {
+        "update": 24,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 44
+      },
+      {
+        "update": 24,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 37
+      },
+      {
+        "update": 25,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 27
+      },
+      {
+        "update": 25,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 34
+      },
+      {
+        "update": 25,
+        "batch": 1,
+        "sequence": 7680,
+        "valid_shifted_tokens": 7679
+      },
+      {
+        "update": 25,
+        "batch": 1,
+        "sequence": 7040,
+        "valid_shifted_tokens": 7026
+      },
+      {
+        "update": 26,
+        "batch": 1,
+        "sequence": 7424,
+        "valid_shifted_tokens": 7378
+      },
+      {
+        "update": 26,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 60
+      },
+      {
+        "update": 26,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 95
+      },
+      {
+        "update": 26,
+        "batch": 1,
+        "sequence": 7168,
+        "valid_shifted_tokens": 7129
+      },
+      {
+        "update": 27,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 62
+      },
+      {
+        "update": 27,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 34
+      },
+      {
+        "update": 27,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 26
+      },
+      {
+        "update": 27,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 46
+      },
+      {
+        "update": 28,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 38
+      },
+      {
+        "update": 28,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 97
+      },
+      {
+        "update": 28,
+        "batch": 1,
+        "sequence": 8192,
+        "valid_shifted_tokens": 8072
+      },
+      {
+        "update": 28,
+        "batch": 1,
+        "sequence": 7680,
+        "valid_shifted_tokens": 7575
+      },
+      {
+        "update": 29,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 170
+      },
+      {
+        "update": 29,
+        "batch": 1,
+        "sequence": 8064,
+        "valid_shifted_tokens": 7969
+      },
+      {
+        "update": 29,
+        "batch": 1,
+        "sequence": 7936,
+        "valid_shifted_tokens": 7870
+      },
+      {
+        "update": 29,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 44
+      }
+    ],
+    "evaluations": [
+      {
+        "step": 0,
+        "elapsed_seconds": 438.5229652909911,
+        "metrics": {
+          "fixed_train_loss": 3.4543731212615967,
+          "fixed_train_model_preparation_time": 0.0004,
+          "fixed_train_runtime": 304.1987,
+          "fixed_train_samples_per_second": 0.421,
+          "fixed_train_steps_per_second": 0.421,
+          "epoch": 0
+        }
+      },
+      {
+        "step": 0,
+        "elapsed_seconds": 518.8985234160209,
+        "metrics": {
+          "eval_loss": 3.312619686126709,
+          "eval_model_preparation_time": 0.0004,
+          "eval_runtime": 80.374,
+          "eval_samples_per_second": 0.398,
+          "eval_steps_per_second": 0.398,
+          "epoch": 0
+        }
+      },
+      {
+        "step": 30,
+        "elapsed_seconds": 1804.5881494579953,
+        "metrics": {
+          "eval_loss": 2.5238492488861084,
+          "eval_model_preparation_time": 0.0004,
+          "eval_runtime": 81.4999,
+          "eval_samples_per_second": 0.393,
+          "eval_steps_per_second": 0.393,
+          "epoch": 0.9375
+        }
+      },
+      {
+        "step": 30,
+        "elapsed_seconds": 2125.8641302500037,
+        "metrics": {
+          "fixed_train_loss": 2.4982457160949707,
+          "fixed_train_model_preparation_time": 0.0004,
+          "fixed_train_runtime": 321.2751,
+          "fixed_train_samples_per_second": 0.398,
+          "fixed_train_steps_per_second": 0.398,
+          "epoch": 0.9375
+        }
+      }
+    ],
+    "source_commit": "1008cff9c3eb1d2f39f9a3725bad4f5d7f1704ee",
+    "working_tree_dirty": false,
+    "versions": {
+      "onnx": "1.23.2",
+      "onnx-ir": "1.1.0",
+      "onnxscript": "0.7.2",
+      "onnxruntime": "1.31.1",
+      "numpy": "2.4.6",
+      "torch": "2.15.0",
+      "transformers": "5.22.1",
+      "trl": "0.24.0",
+      "peft": "0.21.2"
+    },
+    "mlx_memory_limit_bytes": 21474836480,
+    "previous_mlx_memory_limit_bytes": 32641751449,
+    "mlx_cache_limit_bytes": 536870912,
+    "updates": [
+      {
+        "step": 1,
+        "elapsed_seconds": 521.550780874968,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6679237480,
+          "lifetime_peak_bytes": 8227115808,
+          "current_resident_bytes": 2860531712,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 547637303,
+        "mlx_peak_bytes": 4969834172
+      },
+      {
+        "step": 2,
+        "elapsed_seconds": 560.4779954999685,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6922277952,
+          "lifetime_peak_bytes": 10471707640,
+          "current_resident_bytes": 1737474048,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 544244340,
+        "mlx_peak_bytes": 7137110664
+      },
+      {
+        "step": 3,
+        "elapsed_seconds": 563.1859646660159,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6914856000,
+          "lifetime_peak_bytes": 10471707640,
+          "current_resident_bytes": 1739390976,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 537250424,
+        "mlx_peak_bytes": 7137110664
+      },
+      {
+        "step": 4,
+        "elapsed_seconds": 648.222804124991,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6948967488,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2143322112,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 545406903,
+        "mlx_peak_bytes": 7465118344
+      },
+      {
+        "step": 5,
+        "elapsed_seconds": 687.5101725829882,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6952064064,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2174582784,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548094007,
+        "mlx_peak_bytes": 7465118344
+      },
+      {
+        "step": 6,
+        "elapsed_seconds": 690.1703186659724,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6952080448,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2174779392,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548093879,
+        "mlx_peak_bytes": 7465118344
+      },
+      {
+        "step": 7,
+        "elapsed_seconds": 734.8500873330049,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6960600152,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1984577536,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 536900952,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 8,
+        "elapsed_seconds": 772.5422819160158,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6964401240,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2153168896,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 544506484,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 9,
+        "elapsed_seconds": 775.1122007910162,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6961910872,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2153906176,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548093879,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 10,
+        "elapsed_seconds": 818.663797999965,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6963876952,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2153250816,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 544248445,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 11,
+        "elapsed_seconds": 854.547844375018,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6984012888,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2212020224,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 542130188,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 12,
+        "elapsed_seconds": 893.9447691660025,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6961321048,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2179252224,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 547047479,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 13,
+        "elapsed_seconds": 934.1555334579898,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6962238552,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2181251072,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548160567,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 14,
+        "elapsed_seconds": 968.916987915989,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6973248600,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1822720000,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 560618372,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 15,
+        "elapsed_seconds": 1047.0977096249699,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6961517680,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 975273984,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 536971300,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 16,
+        "elapsed_seconds": 1079.2324779579649,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7010325640,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1110458368,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 559667852,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 17,
+        "elapsed_seconds": 1081.951700582984,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6968497240,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1084129280,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 544948151,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 18,
+        "elapsed_seconds": 1150.229657666001,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6989927488,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1138262016,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 566165516,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 19,
+        "elapsed_seconds": 1190.120384207985,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7023121520,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1169408000,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 567066636,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 20,
+        "elapsed_seconds": 1262.559623790963,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7004591240,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 1170325504,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 551723024,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 21,
+        "elapsed_seconds": 1301.6349793749978,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6971593816,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 1084768256,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 545996855,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 22,
+        "elapsed_seconds": 1304.1132049160078,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6973625432,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 1084850176,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548161591,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 23,
+        "elapsed_seconds": 1344.6724387499853,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6993974408,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 1033715712,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 537747472,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 24,
+        "elapsed_seconds": 1381.048083874979,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7030035592,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 976355328,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 572014604,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 25,
+        "elapsed_seconds": 1412.3192546250066,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6978229336,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 949682176,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548093879,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 26,
+        "elapsed_seconds": 1482.6771860409644,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7009145968,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 1035599872,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 552198160,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 27,
+        "elapsed_seconds": 1554.9663115409785,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7015158920,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 641417216,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 557842444,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 28,
+        "elapsed_seconds": 1557.8890175410197,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6977967192,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 623788032,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548161591,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 29,
+        "elapsed_seconds": 1640.3428710000007,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6998922376,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 959545344,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 539197448,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 30,
+        "elapsed_seconds": 1723.0043380829738,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6977475672,
+          "lifetime_peak_bytes": 10999829592,
+          "current_resident_bytes": 954499072,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 547571767,
+        "mlx_peak_bytes": 7491684992
+      }
+    ],
+    "library_sha256": "6630fc37242d3ea15c406570cbb384e47263cebc2f4ed5996a91b78c0e9623b1",
+    "corpus_manifest_sha256": "24dbad142e4c8931920a56c5abab4028dd511307c8151abc0a90cd5a903a3643",
+    "fixed_training_loss_decreased": true,
+    "maximum_executed_training_sequence": 8192,
+    "elapsed_seconds": 2131.848582124978,
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 6965271248,
+      "lifetime_peak_bytes": 10999829592,
+      "current_resident_bytes": 4815716352,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_rss_bytes": 6540689408
+  },
+  "training": {
+    "model": "Qwen/Qwen3-0.6B",
+    "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "steps": 30,
+    "data": {
+      "version": 3,
+      "train_lines": 128,
+      "validation_lines": 32,
+      "train_sha256": "f53b25bc2b1fbd7eee49ff6939353a4d3938f817aa1693475c198901a62688f5",
+      "validation_sha256": "56db8220674beafa94bdd81f5d2eda058a92aaa53d665f37b07ec6e7f3df0243",
+      "tokenizer_sha256": "6dd55c5383c60de4ef14710c7a19b02df3f57ce1792e5028373a9945b4173574",
+      "max_length": 8192,
+      "pad_to_multiple_of": 128
+    },
+    "mode": "chunked",
+    "checkpoint_layers": 4,
+    "projection_precision": "bf16",
+    "validation_loss": [
+      3.312619686126709,
+      2.5238492488861084
+    ],
+    "fixed_training_loss": [
+      3.4543731212615967,
+      2.4982457160949707
+    ],
+    "audits": [],
+    "reference_retained_during_training": false,
+    "provider": "mlx",
+    "segment_target_nodes": null,
+    "ort_graph_optimization": "disabled",
+    "fused_ops": true,
+    "frozen_buffers_unchanged": true,
+    "cpu_fallback_disabled": true,
+    "mlx_compile_disabled": true,
+    "lut4_fusion_disabled": false,
+    "library": "/tmp/onnax-half-runtime/libonnxruntime_mlx_ep.dylib",
+    "library_sha256": "6630fc37242d3ea15c406570cbb384e47263cebc2f4ed5996a91b78c0e9623b1",
+    "artifact_bytes": {
+      "adapter.npz": 2328422,
+      "body.onnx": 911803,
+      "chat_template.jinja": 4168,
+      "checkpoint_plan.json": 24046,
+      "decoder_0_4_backward.onnx": 262448,
+      "decoder_0_4_forward.onnx": 154129,
+      "decoder_12_16_backward.onnx": 261314,
+      "decoder_12_16_forward.onnx": 152556,
+      "decoder_16_20_backward.onnx": 261314,
+      "decoder_16_20_forward.onnx": 152556,
+      "decoder_20_24_backward.onnx": 261314,
+      "decoder_20_24_forward.onnx": 152556,
+      "decoder_24_28_backward.onnx": 261557,
+      "decoder_24_28_forward.onnx": 152916,
+      "decoder_4_8_backward.onnx": 260049,
+      "decoder_4_8_forward.onnx": 151589,
+      "decoder_8_12_backward.onnx": 260663,
+      "decoder_8_12_forward.onnx": 152070,
+      "forward.onnx": 3213077,
+      "head_forward.onnx": 15133,
+      "head_gradient.onnx": 20013,
+      "head_loss.onnx": 15974,
+      "interface.json": 90315,
+      "prefix_forward.onnx": 27131,
+      "quantization.json": 70122,
+      "suffix_backward.onnx": 35718,
+      "suffix_forward.onnx": 31109,
+      "tokenizer.json": 11422650,
+      "tokenizer_config.json": 690,
+      "weights-8eb7b9f71a66bb2ec3632b6ecc33910ac30aee6542744dccf302f99ce3c1f9bd.data": 1513357312
+    },
+    "forward_nodes": 1927,
+    "adapter_parameter_bytes": 2293760,
+    "requested_audits": {
+      "reference": false,
+      "strict_reference": false,
+      "peft": false,
+      "fp64": false,
+      "stable_reference": false
+    }
+  },
+  "guard": {
+    "command": [
+      "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+      "-m",
+      "examples.huggingface.long_context",
+      "--corpus",
+      "/tmp/onnax-qwen-longalpaca-8k",
+      "--library",
+      "/tmp/onnax-half-runtime/libonnxruntime_mlx_ep.dylib",
+      "--precision",
+      "bf16",
+      "--max-length",
+      "8192",
+      "--checkpoint-layers",
+      "4",
+      "--fused-ops",
+      "--pad-to-multiple-of",
+      "128",
+      "--steps",
+      "30",
+      "--output-dir",
+      "/tmp/onnax-qwen8k-bf16-quality-v1"
+    ],
+    "cwd": "/private/tmp/onnax-qwen8k-worktree",
+    "status": "complete",
+    "physical_memory_budget_bytes": 25769803776,
+    "minimum_free_disk_bytes": 5368709120,
+    "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+    "observation_errors": 0,
+    "pid": 32348,
+    "started": "2026-11-02T02:29:26.923786+00:00",
+    "returncode": 0,
+    "finished": "2026-11-02T03:05:04.195970+00:00",
+    "temporary_files_removed": true
+  },
+  "quantization": {
+    "format": "onnax-row-major-nf4-v1",
+    "codebook": [
+      -1.0,
+      -0.6961928009986877,
+      -0.5250730514526367,
+      -0.39491748809814453,
+      -0.28444138169288635,
+      -0.18477343022823334,
+      -0.09105003625154495,
+      0.0,
+      0.07958029955625534,
+      0.16093020141124725,
+      0.24611230194568634,
+      0.33791524171829224,
+      0.44070982933044434,
+      0.5626170039176941,
+      0.7229568362236023,
+      1.0
+    ],
+    "packing": "high nibble first; row-major transposed Linear weight",
+    "block_size": 64,
+    "compute_dtype": "bfloat16",
+    "adapter_dtype": "float32",
+    "embedding_dtype": "float32",
+    "lm_head_dtype": "float32",
+    "original_decoder_bytes": 1761607680,
+    "packed_decoder_bytes": 247726080
+  },
+  "raw_artifact_sha256": {
+    "qualification.json": "66cd8cda8175134393665feef757f80f1a8cdd88fc49e24c65de20261f56d944",
+    "report.json": "47c61697c9cb392d6e014b716c103e440e3ccb82f52d00a770d5246582b94e34"
+  },
+  "recovery": {
+    "qualification": {
+      "status": "complete",
+      "precision": "bf16",
+      "max_length": 8192,
+      "fused_ops": true,
+      "pad_to_multiple_of": 128,
+      "checkpoint_layers": 4,
+      "training_batches": [
+        {
+          "update": 15,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 103
+        },
+        {
+          "update": 15,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 38
+        },
+        {
+          "update": 15,
+          "batch": 1,
+          "sequence": 384,
+          "valid_shifted_tokens": 302
+        },
+        {
+          "update": 15,
+          "batch": 1,
+          "sequence": 6784,
+          "valid_shifted_tokens": 6660
+        },
+        {
+          "update": 16,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 113
+        },
+        {
+          "update": 16,
+          "batch": 1,
+          "sequence": 384,
+          "valid_shifted_tokens": 378
+        },
+        {
+          "update": 16,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 63
+        },
+        {
+          "update": 16,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 32
+        },
+        {
+          "update": 17,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 37
+        },
+        {
+          "update": 17,
+          "batch": 1,
+          "sequence": 6400,
+          "valid_shifted_tokens": 6286
+        },
+        {
+          "update": 17,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 87
+        },
+        {
+          "update": 17,
+          "batch": 1,
+          "sequence": 8064,
+          "valid_shifted_tokens": 7970
+        },
+        {
+          "update": 18,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 56
+        },
+        {
+          "update": 18,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 59
+        },
+        {
+          "update": 18,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 120
+        },
+        {
+          "update": 18,
+          "batch": 1,
+          "sequence": 7808,
+          "valid_shifted_tokens": 7807
+        },
+        {
+          "update": 19,
+          "batch": 1,
+          "sequence": 7936,
+          "valid_shifted_tokens": 7822
+        },
+        {
+          "update": 19,
+          "batch": 1,
+          "sequence": 256,
+          "valid_shifted_tokens": 142
+        },
+        {
+          "update": 19,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 44
+        },
+        {
+          "update": 19,
+          "batch": 1,
+          "sequence": 7040,
+          "valid_shifted_tokens": 7001
+        },
+        {
+          "update": 20,
+          "batch": 1,
+          "sequence": 7680,
+          "valid_shifted_tokens": 7617
+        },
+        {
+          "update": 20,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 47
+        },
+        {
+          "update": 20,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 59
+        },
+        {
+          "update": 20,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 75
+        },
+        {
+          "update": 21,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 36
+        },
+        {
+          "update": 21,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 41
+        },
+        {
+          "update": 21,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 100
+        },
+        {
+          "update": 21,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 74
+        },
+        {
+          "update": 22,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 35
+        },
+        {
+          "update": 22,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 44
+        },
+        {
+          "update": 22,
+          "batch": 1,
+          "sequence": 256,
+          "valid_shifted_tokens": 136
+        },
+        {
+          "update": 22,
+          "batch": 1,
+          "sequence": 7808,
+          "valid_shifted_tokens": 7755
+        },
+        {
+          "update": 23,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 113
+        },
+        {
+          "update": 23,
+          "batch": 1,
+          "sequence": 512,
+          "valid_shifted_tokens": 386
+        },
+        {
+          "update": 23,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 44
+        },
+        {
+          "update": 23,
+          "batch": 1,
+          "sequence": 7296,
+          "valid_shifted_tokens": 7273
+        },
+        {
+          "update": 24,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 47
+        },
+        {
+          "update": 24,
+          "batch": 1,
+          "sequence": 6656,
+          "valid_shifted_tokens": 6582
+        },
+        {
+          "update": 24,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 44
+        },
+        {
+          "update": 24,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 37
+        },
+        {
+          "update": 25,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 27
+        },
+        {
+          "update": 25,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 34
+        },
+        {
+          "update": 25,
+          "batch": 1,
+          "sequence": 7680,
+          "valid_shifted_tokens": 7679
+        },
+        {
+          "update": 25,
+          "batch": 1,
+          "sequence": 7040,
+          "valid_shifted_tokens": 7026
+        },
+        {
+          "update": 26,
+          "batch": 1,
+          "sequence": 7424,
+          "valid_shifted_tokens": 7378
+        },
+        {
+          "update": 26,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 60
+        },
+        {
+          "update": 26,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 95
+        },
+        {
+          "update": 26,
+          "batch": 1,
+          "sequence": 7168,
+          "valid_shifted_tokens": 7129
+        },
+        {
+          "update": 27,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 62
+        },
+        {
+          "update": 27,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 34
+        },
+        {
+          "update": 27,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 26
+        },
+        {
+          "update": 27,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 46
+        },
+        {
+          "update": 28,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 38
+        },
+        {
+          "update": 28,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 97
+        },
+        {
+          "update": 28,
+          "batch": 1,
+          "sequence": 8192,
+          "valid_shifted_tokens": 8072
+        },
+        {
+          "update": 28,
+          "batch": 1,
+          "sequence": 7680,
+          "valid_shifted_tokens": 7575
+        },
+        {
+          "update": 29,
+          "batch": 1,
+          "sequence": 256,
+          "valid_shifted_tokens": 170
+        },
+        {
+          "update": 29,
+          "batch": 1,
+          "sequence": 8064,
+          "valid_shifted_tokens": 7969
+        },
+        {
+          "update": 29,
+          "batch": 1,
+          "sequence": 7936,
+          "valid_shifted_tokens": 7870
+        },
+        {
+          "update": 29,
+          "batch": 1,
+          "sequence": 128,
+          "valid_shifted_tokens": 44
+        }
+      ],
+      "evaluations": [
+        {
+          "step": 0,
+          "elapsed_seconds": 465.9368823330151,
+          "metrics": {
+            "fixed_train_loss": 3.4543731212615967,
+            "fixed_train_model_preparation_time": 0.0004,
+            "fixed_train_runtime": 323.7627,
+            "fixed_train_samples_per_second": 0.395,
+            "fixed_train_steps_per_second": 0.395,
+            "epoch": 0
+          }
+        },
+        {
+          "step": 0,
+          "elapsed_seconds": 548.1381276249886,
+          "metrics": {
+            "eval_loss": 3.312619686126709,
+            "eval_model_preparation_time": 0.0004,
+            "eval_runtime": 82.1998,
+            "eval_samples_per_second": 0.389,
+            "eval_steps_per_second": 0.389,
+            "epoch": 0
+          }
+        },
+        {
+          "step": 30,
+          "elapsed_seconds": 1291.9923902910086,
+          "metrics": {
+            "eval_loss": 2.5238492488861084,
+            "eval_model_preparation_time": 0.0004,
+            "eval_runtime": 80.3161,
+            "eval_samples_per_second": 0.398,
+            "eval_steps_per_second": 0.398,
+            "epoch": 0.9375
+          }
+        },
+        {
+          "step": 30,
+          "elapsed_seconds": 1610.7287179580308,
+          "metrics": {
+            "fixed_train_loss": 2.4982457160949707,
+            "fixed_train_model_preparation_time": 0.0004,
+            "fixed_train_runtime": 318.7365,
+            "fixed_train_samples_per_second": 0.402,
+            "fixed_train_steps_per_second": 0.402,
+            "epoch": 0.9375
+          }
+        }
+      ],
+      "source_commit": "5ff56810cd384f45b64417e446c8387e50a3c6e7",
+      "working_tree_dirty": false,
+      "versions": {
+        "onnx": "1.23.2",
+        "onnx-ir": "1.1.0",
+        "onnxscript": "0.7.2",
+        "onnxruntime": "1.31.1",
+        "numpy": "2.4.6",
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "trl": "0.24.0",
+        "peft": "0.21.2"
+      },
+      "mlx_memory_limit_bytes": 21474836480,
+      "previous_mlx_memory_limit_bytes": 32641751449,
+      "mlx_cache_limit_bytes": 536870912,
+      "updates": [
+        {
+          "step": 16,
+          "elapsed_seconds": 581.2714586250368,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6903534632,
+            "lifetime_peak_bytes": 10254160912,
+            "current_resident_bytes": 4218880000,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 560103436,
+          "mlx_peak_bytes": 6943804032
+        },
+        {
+          "step": 17,
+          "elapsed_seconds": 584.3772247500019,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6885495872,
+            "lifetime_peak_bytes": 10254160912,
+            "current_resident_bytes": 4225187840,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 537084857,
+          "mlx_peak_bytes": 6943804032
+        },
+        {
+          "step": 18,
+          "elapsed_seconds": 652.9541979579953,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6999823520,
+            "lifetime_peak_bytes": 10813330472,
+            "current_resident_bytes": 2706866176,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 566165520,
+          "mlx_peak_bytes": 7426591360
+        },
+        {
+          "step": 19,
+          "elapsed_seconds": 692.8763468330144,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6999774344,
+            "lifetime_peak_bytes": 10901787712,
+            "current_resident_bytes": 2687451136,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 567066636,
+          "mlx_peak_bytes": 7426591360
+        },
+        {
+          "step": 20,
+          "elapsed_seconds": 765.3353258330026,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6977967312,
+            "lifetime_peak_bytes": 10972271728,
+            "current_resident_bytes": 2725462016,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 547880976,
+          "mlx_peak_bytes": 7465118344
+        },
+        {
+          "step": 21,
+          "elapsed_seconds": 804.0558492080308,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6950524064,
+            "lifetime_peak_bytes": 10972271728,
+            "current_resident_bytes": 2697412608,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 548159543,
+          "mlx_peak_bytes": 7465118344
+        },
+        {
+          "step": 22,
+          "elapsed_seconds": 806.4934181250283,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6949721272,
+            "lifetime_peak_bytes": 10972271728,
+            "current_resident_bytes": 2698346496,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 546521143,
+          "mlx_peak_bytes": 7465118344
+        },
+        {
+          "step": 23,
+          "elapsed_seconds": 845.4971732909908,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6968824944,
+            "lifetime_peak_bytes": 10972271728,
+            "current_resident_bytes": 2696282112,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 567066636,
+          "mlx_peak_bytes": 7465118344
+        },
+        {
+          "step": 24,
+          "elapsed_seconds": 880.8455635830178,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 7243879584,
+            "lifetime_peak_bytes": 10972271728,
+            "current_resident_bytes": 2739732480,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 566501392,
+          "mlx_peak_bytes": 7465118344
+        },
+        {
+          "step": 25,
+          "elapsed_seconds": 910.7263227080111,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6955537520,
+            "lifetime_peak_bytes": 10972271728,
+            "current_resident_bytes": 2710454272,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 544948151,
+          "mlx_peak_bytes": 7465118344
+        },
+        {
+          "step": 26,
+          "elapsed_seconds": 979.3730365409865,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6954226752,
+            "lifetime_peak_bytes": 10972271728,
+            "current_resident_bytes": 2709159936,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 547880976,
+          "mlx_peak_bytes": 7465118344
+        },
+        {
+          "step": 27,
+          "elapsed_seconds": 1049.711845999991,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6974362760,
+            "lifetime_peak_bytes": 10972271728,
+            "current_resident_bytes": 1519468544,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 537772044,
+          "mlx_peak_bytes": 7465118344
+        },
+        {
+          "step": 28,
+          "elapsed_seconds": 1052.1803275410202,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6957061256,
+            "lifetime_peak_bytes": 10972271728,
+            "current_resident_bytes": 1492123648,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 548160567,
+          "mlx_peak_bytes": 7465118344
+        },
+        {
+          "step": 29,
+          "elapsed_seconds": 1131.2950688329875,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6982948000,
+            "lifetime_peak_bytes": 10972271728,
+            "current_resident_bytes": 1640349696,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 539197444,
+          "mlx_peak_bytes": 7491684992
+        },
+        {
+          "step": 30,
+          "elapsed_seconds": 1211.5870780000114,
+          "physical_footprint": {
+            "available": true,
+            "current_bytes": 6952998024,
+            "lifetime_peak_bytes": 10984412224,
+            "current_resident_bytes": 1578008576,
+            "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+          },
+          "mlx_active_bytes": 3338406336,
+          "mlx_cache_bytes": 538202280,
+          "mlx_peak_bytes": 7491684992
+        }
+      ],
+      "library_sha256": "6630fc37242d3ea15c406570cbb384e47263cebc2f4ed5996a91b78c0e9623b1",
+      "corpus_manifest_sha256": "24dbad142e4c8931920a56c5abab4028dd511307c8151abc0a90cd5a903a3643",
+      "fixed_training_loss_decreased": true,
+      "maximum_executed_training_sequence": 8192,
+      "elapsed_seconds": 1616.7960372079979,
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 7597546528,
+        "lifetime_peak_bytes": 10984412224,
+        "current_resident_bytes": 5161140224,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "peak_rss_bytes": 6545555456
+    },
+    "training": {
+      "model": "Qwen/Qwen3-0.6B",
+      "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+      "steps": 30,
+      "data": {
+        "version": 3,
+        "train_lines": 128,
+        "validation_lines": 32,
+        "train_sha256": "f53b25bc2b1fbd7eee49ff6939353a4d3938f817aa1693475c198901a62688f5",
+        "validation_sha256": "56db8220674beafa94bdd81f5d2eda058a92aaa53d665f37b07ec6e7f3df0243",
+        "tokenizer_sha256": "6dd55c5383c60de4ef14710c7a19b02df3f57ce1792e5028373a9945b4173574",
+        "max_length": 8192,
+        "pad_to_multiple_of": 128
+      },
+      "mode": "chunked",
+      "checkpoint_layers": 4,
+      "projection_precision": "bf16",
+      "validation_loss": [
+        3.312619686126709,
+        2.5238492488861084
+      ],
+      "fixed_training_loss": [
+        3.4543731212615967,
+        2.4982457160949707
+      ],
+      "audits": [],
+      "reference_retained_during_training": false,
+      "provider": "mlx",
+      "segment_target_nodes": null,
+      "ort_graph_optimization": "disabled",
+      "fused_ops": true,
+      "frozen_buffers_unchanged": true,
+      "cpu_fallback_disabled": true,
+      "mlx_compile_disabled": true,
+      "lut4_fusion_disabled": false,
+      "library": "/tmp/onnax-half-runtime/libonnxruntime_mlx_ep.dylib",
+      "library_sha256": "6630fc37242d3ea15c406570cbb384e47263cebc2f4ed5996a91b78c0e9623b1",
+      "forward_nodes": 1927,
+      "adapter_parameter_bytes": 2293760,
+      "requested_audits": {
+        "reference": false,
+        "strict_reference": false,
+        "peft": false,
+        "fp64": false,
+        "stable_reference": false
+      }
+    },
+    "checkpoint_state": {
+      "step": 30,
+      "checkpoint_tensors": 113,
+      "checkpoint_bitwise_equal": true,
+      "optimizer_bitwise_equal": true,
+      "scheduler_bitwise_equal": true,
+      "scope": "Checkpoint state only; exported graph execution is validated by the subsequent replay job"
+    },
+    "guard": {
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "-m",
+        "examples.huggingface.long_context",
+        "--corpus",
+        "/tmp/onnax-qwen-longalpaca-8k",
+        "--library",
+        "/tmp/onnax-half-runtime/libonnxruntime_mlx_ep.dylib",
+        "--precision",
+        "bf16",
+        "--max-length",
+        "8192",
+        "--checkpoint-layers",
+        "4",
+        "--fused-ops",
+        "--pad-to-multiple-of",
+        "128",
+        "--steps",
+        "30",
+        "--resume",
+        "/tmp/onnax-qwen8k-bf16-quality-v1/checkpoint-15",
+        "--output-dir",
+        "/tmp/onnax-qwen8k-bf16-resumed-v1"
+      ],
+      "cwd": "/private/tmp/onnax-qwen8k-worktree",
+      "status": "complete",
+      "physical_memory_budget_bytes": 25769803776,
+      "minimum_free_disk_bytes": 5368709120,
+      "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+      "observation_errors": 0,
+      "pid": 34945,
+      "started": "2026-11-02T03:05:29.960879+00:00",
+      "returncode": 0,
+      "finished": "2026-11-02T03:32:33.726625+00:00",
+      "temporary_files_removed": true
+    }
+  },
+  "export_replay": {
+    "step": 30,
+    "input_shape": [
+      1,
+      8192
+    ],
+    "input_sha256": "27c1ba5162121451299e746a9c234eca325c82184efca56e54b78ff2388c929d",
+    "padding_tokens": 17,
+    "forward_output_digests": [
+      {
+        "dtype": "float32",
+        "shape": [
+          1,
+          8192,
+          151936
+        ],
+        "sha256": "aaa01168973ba9ee4f56a243e653b9384c26c19b0370aaeea1b6c463bf43af6d"
+      },
+      {
+        "dtype": "float32",
+        "shape": [
+          1,
+          8192,
+          1024
+        ],
+        "sha256": "9335ebd97bca54c307a4f0649ee7559cb737c7e3bcd13d3dd29aaf8920f464b7"
+      }
+    ],
+    "adapter_tensors": 112,
+    "checkpoint_tensors": 113,
+    "frozen_initializers": 511,
+    "adapter_bitwise_equal": true,
+    "checkpoint_bitwise_equal": true,
+    "optimizer_bitwise_equal": true,
+    "scheduler_equal": true,
+    "frozen_hashes_equal": true,
+    "export_load_outputs_bitwise_equal": true,
+    "provider": "mlx",
+    "ort_memory_reuse": null,
+    "export_load_loss_gradients_bitwise_equal": true,
+    "exported_gradient_tensors": 112
+  },
+  "peft_exchange": {
+    "adapter_tensors": 112,
+    "format_roundtrip_bitwise": true,
+    "loss_check_passed": false,
+    "loss": 6.874031066894531,
+    "reference_loss": 6.865070343017578,
+    "loss_abs_difference": 0.008960723876953125,
+    "gradient_check_passed": false,
+    "gradient_failures": {
+      "model.layers.0.self_attn.q_proj.lora.A": {
+        "violations": 3860,
+        "max_abs": 0.00024487730115652084
+      },
+      "model.layers.0.self_attn.q_proj.lora.B": {
+        "violations": 7669,
+        "max_abs": 0.0014364100061357021
+      },
+      "model.layers.0.self_attn.v_proj.lora.A": {
+        "violations": 4026,
+        "max_abs": 0.0010308451019227505
+      },
+      "model.layers.0.self_attn.v_proj.lora.B": {
+        "violations": 4066,
+        "max_abs": 0.0028215646743774414
+      },
+      "model.layers.1.self_attn.q_proj.lora.A": {
+        "violations": 3581,
+        "max_abs": 0.00023466721177101135
+      },
+      "model.layers.1.self_attn.q_proj.lora.B": {
+        "violations": 5822,
+        "max_abs": 9.626871906220913e-05
+      },
+      "model.layers.1.self_attn.v_proj.lora.A": {
+        "violations": 3865,
+        "max_abs": 0.0016888827085494995
+      },
+      "model.layers.1.self_attn.v_proj.lora.B": {
+        "violations": 4050,
+        "max_abs": 0.0004034419544041157
+      },
+      "model.layers.2.self_attn.q_proj.lora.A": {
+        "violations": 3931,
+        "max_abs": 0.00026880018413066864
+      },
+      "model.layers.2.self_attn.q_proj.lora.B": {
+        "violations": 6786,
+        "max_abs": 0.00044721364974975586
+      },
+      "model.layers.2.self_attn.v_proj.lora.A": {
+        "violations": 4017,
+        "max_abs": 0.003140270709991455
+      },
+      "model.layers.2.self_attn.v_proj.lora.B": {
+        "violations": 4043,
+        "max_abs": 0.000767003744840622
+      },
+      "model.layers.3.self_attn.q_proj.lora.A": {
+        "violations": 4066,
+        "max_abs": 0.002415485680103302
+      },
+      "model.layers.3.self_attn.q_proj.lora.B": {
+        "violations": 7273,
+        "max_abs": 0.017529010772705078
+      },
+      "model.layers.3.self_attn.v_proj.lora.A": {
+        "violations": 3807,
+        "max_abs": 0.0007422231137752533
+      },
+      "model.layers.3.self_attn.v_proj.lora.B": {
+        "violations": 4036,
+        "max_abs": 0.0009136684238910675
+      },
+      "model.layers.4.self_attn.q_proj.lora.A": {
+        "violations": 3964,
+        "max_abs": 0.0010094083845615387
+      },
+      "model.layers.4.self_attn.q_proj.lora.B": {
+        "violations": 7346,
+        "max_abs": 0.0013908296823501587
+      },
+      "model.layers.4.self_attn.v_proj.lora.A": {
+        "violations": 3904,
+        "max_abs": 0.0016157329082489014
+      },
+      "model.layers.4.self_attn.v_proj.lora.B": {
+        "violations": 4028,
+        "max_abs": 0.0008623627945780754
+      },
+      "model.layers.5.self_attn.q_proj.lora.A": {
+        "violations": 4033,
+        "max_abs": 0.0014900416135787964
+      },
+      "model.layers.5.self_attn.q_proj.lora.B": {
+        "violations": 7556,
+        "max_abs": 0.0015414953231811523
+      },
+      "model.layers.5.self_attn.v_proj.lora.A": {
+        "violations": 3737,
+        "max_abs": 0.0008942820131778717
+      },
+      "model.layers.5.self_attn.v_proj.lora.B": {
+        "violations": 3970,
+        "max_abs": 0.0004672575742006302
+      },
+      "model.layers.6.self_attn.q_proj.lora.A": {
+        "violations": 3722,
+        "max_abs": 0.0001075640320777893
+      },
+      "model.layers.6.self_attn.q_proj.lora.B": {
+        "violations": 4395,
+        "max_abs": 0.0014439933001995087
+      },
+      "model.layers.6.self_attn.v_proj.lora.A": {
+        "violations": 3828,
+        "max_abs": 0.0007910095155239105
+      },
+      "model.layers.6.self_attn.v_proj.lora.B": {
+        "violations": 3941,
+        "max_abs": 0.00021108891814947128
+      },
+      "model.layers.7.self_attn.q_proj.lora.A": {
+        "violations": 3950,
+        "max_abs": 0.000674273818731308
+      },
+      "model.layers.7.self_attn.q_proj.lora.B": {
+        "violations": 6912,
+        "max_abs": 0.00038184598088264465
+      },
+      "model.layers.7.self_attn.v_proj.lora.A": {
+        "violations": 3590,
+        "max_abs": 0.0003026723861694336
+      },
+      "model.layers.7.self_attn.v_proj.lora.B": {
+        "violations": 3980,
+        "max_abs": 0.0002193528925999999
+      },
+      "model.layers.8.self_attn.q_proj.lora.A": {
+        "violations": 3833,
+        "max_abs": 0.0005099773406982422
+      },
+      "model.layers.8.self_attn.q_proj.lora.B": {
+        "violations": 5903,
+        "max_abs": 0.0011578947305679321
+      },
+      "model.layers.8.self_attn.v_proj.lora.A": {
+        "violations": 3492,
+        "max_abs": 0.0003995802253484726
+      },
+      "model.layers.8.self_attn.v_proj.lora.B": {
+        "violations": 3961,
+        "max_abs": 0.0002244110219180584
+      },
+      "model.layers.9.self_attn.q_proj.lora.A": {
+        "violations": 3948,
+        "max_abs": 0.0011139214038848877
+      },
+      "model.layers.9.self_attn.q_proj.lora.B": {
+        "violations": 6819,
+        "max_abs": 0.0008718520402908325
+      },
+      "model.layers.9.self_attn.v_proj.lora.A": {
+        "violations": 3860,
+        "max_abs": 0.0006361352279782295
+      },
+      "model.layers.9.self_attn.v_proj.lora.B": {
+        "violations": 3982,
+        "max_abs": 0.00033404305577278137
+      },
+      "model.layers.10.self_attn.q_proj.lora.A": {
+        "violations": 3712,
+        "max_abs": 0.0003758557140827179
+      },
+      "model.layers.10.self_attn.q_proj.lora.B": {
+        "violations": 6307,
+        "max_abs": 0.0005113482475280762
+      },
+      "model.layers.10.self_attn.v_proj.lora.A": {
+        "violations": 3258,
+        "max_abs": 0.0006464719772338867
+      },
+      "model.layers.10.self_attn.v_proj.lora.B": {
+        "violations": 4025,
+        "max_abs": 0.0003038151189684868
+      },
+      "model.layers.11.self_attn.q_proj.lora.A": {
+        "violations": 3656,
+        "max_abs": 0.0006255451589822769
+      },
+      "model.layers.11.self_attn.q_proj.lora.B": {
+        "violations": 5595,
+        "max_abs": 0.0002774810418486595
+      },
+      "model.layers.11.self_attn.v_proj.lora.A": {
+        "violations": 3792,
+        "max_abs": 0.0006311144679784775
+      },
+      "model.layers.11.self_attn.v_proj.lora.B": {
+        "violations": 3905,
+        "max_abs": 0.0002481054107192904
+      },
+      "model.layers.12.self_attn.q_proj.lora.A": {
+        "violations": 3903,
+        "max_abs": 0.0014947280287742615
+      },
+      "model.layers.12.self_attn.q_proj.lora.B": {
+        "violations": 4566,
+        "max_abs": 0.0007684715092182159
+      },
+      "model.layers.12.self_attn.v_proj.lora.A": {
+        "violations": 2634,
+        "max_abs": 0.0003185868263244629
+      },
+      "model.layers.12.self_attn.v_proj.lora.B": {
+        "violations": 3832,
+        "max_abs": 0.0001776060089468956
+      },
+      "model.layers.13.self_attn.q_proj.lora.A": {
+        "violations": 3884,
+        "max_abs": 0.0005867350846529007
+      },
+      "model.layers.13.self_attn.q_proj.lora.B": {
+        "violations": 5587,
+        "max_abs": 0.0004925429821014404
+      },
+      "model.layers.13.self_attn.v_proj.lora.A": {
+        "violations": 3032,
+        "max_abs": 0.0005174092948436737
+      },
+      "model.layers.13.self_attn.v_proj.lora.B": {
+        "violations": 3941,
+        "max_abs": 0.00018018856644630432
+      },
+      "model.layers.14.self_attn.q_proj.lora.A": {
+        "violations": 3284,
+        "max_abs": 0.0002871546894311905
+      },
+      "model.layers.14.self_attn.q_proj.lora.B": {
+        "violations": 5341,
+        "max_abs": 0.00021081685554236174
+      },
+      "model.layers.14.self_attn.v_proj.lora.A": {
+        "violations": 3244,
+        "max_abs": 0.0010751262307167053
+      },
+      "model.layers.14.self_attn.v_proj.lora.B": {
+        "violations": 3914,
+        "max_abs": 0.0003213314339518547
+      },
+      "model.layers.15.self_attn.q_proj.lora.A": {
+        "violations": 3962,
+        "max_abs": 0.0007423050701618195
+      },
+      "model.layers.15.self_attn.q_proj.lora.B": {
+        "violations": 4992,
+        "max_abs": 0.0004912111908197403
+      },
+      "model.layers.15.self_attn.v_proj.lora.A": {
+        "violations": 3498,
+        "max_abs": 0.0012368718162178993
+      },
+      "model.layers.15.self_attn.v_proj.lora.B": {
+        "violations": 3983,
+        "max_abs": 0.0003646407276391983
+      },
+      "model.layers.16.self_attn.q_proj.lora.A": {
+        "violations": 3850,
+        "max_abs": 0.0011756420135498047
+      },
+      "model.layers.16.self_attn.q_proj.lora.B": {
+        "violations": 5186,
+        "max_abs": 0.002171628177165985
+      },
+      "model.layers.16.self_attn.v_proj.lora.A": {
+        "violations": 3598,
+        "max_abs": 0.0004451777786016464
+      },
+      "model.layers.16.self_attn.v_proj.lora.B": {
+        "violations": 3974,
+        "max_abs": 0.0002882183762267232
+      },
+      "model.layers.17.self_attn.q_proj.lora.A": {
+        "violations": 3800,
+        "max_abs": 0.0003622155636548996
+      },
+      "model.layers.17.self_attn.q_proj.lora.B": {
+        "violations": 6655,
+        "max_abs": 0.0006338115781545639
+      },
+      "model.layers.17.self_attn.v_proj.lora.A": {
+        "violations": 3717,
+        "max_abs": 0.0014498159289360046
+      },
+      "model.layers.17.self_attn.v_proj.lora.B": {
+        "violations": 3976,
+        "max_abs": 0.00022309506312012672
+      },
+      "model.layers.18.self_attn.q_proj.lora.A": {
+        "violations": 3921,
+        "max_abs": 0.000584946945309639
+      },
+      "model.layers.18.self_attn.q_proj.lora.B": {
+        "violations": 5858,
+        "max_abs": 0.0008307322859764099
+      },
+      "model.layers.18.self_attn.v_proj.lora.A": {
+        "violations": 3209,
+        "max_abs": 0.0012258850038051605
+      },
+      "model.layers.18.self_attn.v_proj.lora.B": {
+        "violations": 3898,
+        "max_abs": 0.0002613416872918606
+      },
+      "model.layers.19.self_attn.q_proj.lora.A": {
+        "violations": 3878,
+        "max_abs": 0.0003799400292336941
+      },
+      "model.layers.19.self_attn.q_proj.lora.B": {
+        "violations": 6260,
+        "max_abs": 0.0007910281419754028
+      },
+      "model.layers.19.self_attn.v_proj.lora.A": {
+        "violations": 3368,
+        "max_abs": 0.0019306689500808716
+      },
+      "model.layers.19.self_attn.v_proj.lora.B": {
+        "violations": 3963,
+        "max_abs": 0.0003731735050678253
+      },
+      "model.layers.20.self_attn.q_proj.lora.A": {
+        "violations": 3754,
+        "max_abs": 0.00017225556075572968
+      },
+      "model.layers.20.self_attn.q_proj.lora.B": {
+        "violations": 6355,
+        "max_abs": 0.0018745139241218567
+      },
+      "model.layers.20.self_attn.v_proj.lora.A": {
+        "violations": 3570,
+        "max_abs": 0.0014882832765579224
+      },
+      "model.layers.20.self_attn.v_proj.lora.B": {
+        "violations": 3912,
+        "max_abs": 0.00031548645347356796
+      },
+      "model.layers.21.self_attn.q_proj.lora.A": {
+        "violations": 3934,
+        "max_abs": 0.0005030110478401184
+      },
+      "model.layers.21.self_attn.q_proj.lora.B": {
+        "violations": 6625,
+        "max_abs": 0.0021752119064331055
+      },
+      "model.layers.21.self_attn.v_proj.lora.A": {
+        "violations": 2956,
+        "max_abs": 0.0010837242007255554
+      },
+      "model.layers.21.self_attn.v_proj.lora.B": {
+        "violations": 4024,
+        "max_abs": 0.0005455976352095604
+      },
+      "model.layers.22.self_attn.q_proj.lora.A": {
+        "violations": 3950,
+        "max_abs": 0.0006984695792198181
+      },
+      "model.layers.22.self_attn.q_proj.lora.B": {
+        "violations": 6192,
+        "max_abs": 0.0011934032663702965
+      },
+      "model.layers.22.self_attn.v_proj.lora.A": {
+        "violations": 3062,
+        "max_abs": 0.00046957843005657196
+      },
+      "model.layers.22.self_attn.v_proj.lora.B": {
+        "violations": 4002,
+        "max_abs": 0.00030135735869407654
+      },
+      "model.layers.23.self_attn.q_proj.lora.A": {
+        "violations": 3974,
+        "max_abs": 0.0022938698530197144
+      },
+      "model.layers.23.self_attn.q_proj.lora.B": {
+        "violations": 5770,
+        "max_abs": 0.0023838579654693604
+      },
+      "model.layers.23.self_attn.v_proj.lora.A": {
+        "violations": 3817,
+        "max_abs": 0.0006172358989715576
+      },
+      "model.layers.23.self_attn.v_proj.lora.B": {
+        "violations": 3958,
+        "max_abs": 0.0002760798088274896
+      },
+      "model.layers.24.self_attn.q_proj.lora.A": {
+        "violations": 3887,
+        "max_abs": 0.0002034120261669159
+      },
+      "model.layers.24.self_attn.q_proj.lora.B": {
+        "violations": 4000,
+        "max_abs": 0.00018083583563566208
+      },
+      "model.layers.24.self_attn.v_proj.lora.A": {
+        "violations": 3380,
+        "max_abs": 0.0007647201418876648
+      },
+      "model.layers.24.self_attn.v_proj.lora.B": {
+        "violations": 3859,
+        "max_abs": 0.0002108728513121605
+      },
+      "model.layers.25.self_attn.q_proj.lora.A": {
+        "violations": 3758,
+        "max_abs": 0.0003564702346920967
+      },
+      "model.layers.25.self_attn.q_proj.lora.B": {
+        "violations": 5394,
+        "max_abs": 0.0002987695625051856
+      },
+      "model.layers.25.self_attn.v_proj.lora.A": {
+        "violations": 3618,
+        "max_abs": 0.0005594193935394287
+      },
+      "model.layers.25.self_attn.v_proj.lora.B": {
+        "violations": 3994,
+        "max_abs": 0.000247173011302948
+      },
+      "model.layers.26.self_attn.q_proj.lora.A": {
+        "violations": 3828,
+        "max_abs": 0.0008351914584636688
+      },
+      "model.layers.26.self_attn.q_proj.lora.B": {
+        "violations": 4055,
+        "max_abs": 0.0007225498557090759
+      },
+      "model.layers.26.self_attn.v_proj.lora.A": {
+        "violations": 3576,
+        "max_abs": 0.0009335391223430634
+      },
+      "model.layers.26.self_attn.v_proj.lora.B": {
+        "violations": 3962,
+        "max_abs": 0.000561099499464035
+      },
+      "model.layers.27.self_attn.q_proj.lora.A": {
+        "violations": 3424,
+        "max_abs": 0.00013553095050156116
+      },
+      "model.layers.27.self_attn.q_proj.lora.B": {
+        "violations": 4149,
+        "max_abs": 0.0003275773487985134
+      },
+      "model.layers.27.self_attn.v_proj.lora.A": {
+        "violations": 3545,
+        "max_abs": 0.0010652253404259682
+      },
+      "model.layers.27.self_attn.v_proj.lora.B": {
+        "violations": 3861,
+        "max_abs": 0.0002383347600698471
+      }
+    },
+    "update_check_passed": false,
+    "update_failures": {
+      "model.layers.0.self_attn.q_proj.lora.A": {
+        "violations": 31,
+        "max_abs": 0.0059983208775520325
+      },
+      "model.layers.0.self_attn.q_proj.lora.B": {
+        "violations": 99,
+        "max_abs": 0.005999550689011812
+      },
+      "model.layers.0.self_attn.v_proj.lora.A": {
+        "violations": 11,
+        "max_abs": 0.005999661982059479
+      },
+      "model.layers.0.self_attn.v_proj.lora.B": {
+        "violations": 17,
+        "max_abs": 0.0059998175129294395
+      },
+      "model.layers.1.self_attn.q_proj.lora.A": {
+        "violations": 59,
+        "max_abs": 0.005992532707750797
+      },
+      "model.layers.1.self_attn.q_proj.lora.B": {
+        "violations": 124,
+        "max_abs": 0.005994328297674656
+      },
+      "model.layers.1.self_attn.v_proj.lora.A": {
+        "violations": 21,
+        "max_abs": 0.005992725491523743
+      },
+      "model.layers.1.self_attn.v_proj.lora.B": {
+        "violations": 23,
+        "max_abs": 0.00599914463236928
+      },
+      "model.layers.2.self_attn.q_proj.lora.A": {
+        "violations": 23,
+        "max_abs": 0.005996313877403736
+      },
+      "model.layers.2.self_attn.q_proj.lora.B": {
+        "violations": 151,
+        "max_abs": 0.005996163003146648
+      },
+      "model.layers.2.self_attn.v_proj.lora.A": {
+        "violations": 24,
+        "max_abs": 0.0059968456625938416
+      },
+      "model.layers.2.self_attn.v_proj.lora.B": {
+        "violations": 27,
+        "max_abs": 0.005999697372317314
+      },
+      "model.layers.3.self_attn.q_proj.lora.A": {
+        "violations": 27,
+        "max_abs": 0.0059990547597408295
+      },
+      "model.layers.3.self_attn.q_proj.lora.B": {
+        "violations": 136,
+        "max_abs": 0.005999110639095306
+      },
+      "model.layers.3.self_attn.v_proj.lora.A": {
+        "violations": 49,
+        "max_abs": 0.005991857498884201
+      },
+      "model.layers.3.self_attn.v_proj.lora.B": {
+        "violations": 20,
+        "max_abs": 0.0059989504516124725
+      },
+      "model.layers.4.self_attn.q_proj.lora.A": {
+        "violations": 46,
+        "max_abs": 0.005998661741614342
+      },
+      "model.layers.4.self_attn.q_proj.lora.B": {
+        "violations": 212,
+        "max_abs": 0.0059956144541502
+      },
+      "model.layers.4.self_attn.v_proj.lora.A": {
+        "violations": 66,
+        "max_abs": 0.005998525768518448
+      },
+      "model.layers.4.self_attn.v_proj.lora.B": {
+        "violations": 22,
+        "max_abs": 0.005999673157930374
+      },
+      "model.layers.5.self_attn.q_proj.lora.A": {
+        "violations": 16,
+        "max_abs": 0.005998525768518448
+      },
+      "model.layers.5.self_attn.q_proj.lora.B": {
+        "violations": 229,
+        "max_abs": 0.005999167449772358
+      },
+      "model.layers.5.self_attn.v_proj.lora.A": {
+        "violations": 63,
+        "max_abs": 0.0059958454221487045
+      },
+      "model.layers.5.self_attn.v_proj.lora.B": {
+        "violations": 29,
+        "max_abs": 0.005999179556965828
+      },
+      "model.layers.6.self_attn.q_proj.lora.A": {
+        "violations": 106,
+        "max_abs": 0.005996383726596832
+      },
+      "model.layers.6.self_attn.q_proj.lora.B": {
+        "violations": 751,
+        "max_abs": 0.0059861550107598305
+      },
+      "model.layers.6.self_attn.v_proj.lora.A": {
+        "violations": 69,
+        "max_abs": 0.005995218642055988
+      },
+      "model.layers.6.self_attn.v_proj.lora.B": {
+        "violations": 33,
+        "max_abs": 0.005997978616505861
+      },
+      "model.layers.7.self_attn.q_proj.lora.A": {
+        "violations": 50,
+        "max_abs": 0.005998002365231514
+      },
+      "model.layers.7.self_attn.q_proj.lora.B": {
+        "violations": 108,
+        "max_abs": 0.0059958286583423615
+      },
+      "model.layers.7.self_attn.v_proj.lora.A": {
+        "violations": 73,
+        "max_abs": 0.005994059145450592
+      },
+      "model.layers.7.self_attn.v_proj.lora.B": {
+        "violations": 31,
+        "max_abs": 0.0059984647668898106
+      },
+      "model.layers.8.self_attn.q_proj.lora.A": {
+        "violations": 65,
+        "max_abs": 0.005999254062771797
+      },
+      "model.layers.8.self_attn.q_proj.lora.B": {
+        "violations": 191,
+        "max_abs": 0.005991440266370773
+      },
+      "model.layers.8.self_attn.v_proj.lora.A": {
+        "violations": 39,
+        "max_abs": 0.005989823490381241
+      },
+      "model.layers.8.self_attn.v_proj.lora.B": {
+        "violations": 30,
+        "max_abs": 0.005998409818857908
+      },
+      "model.layers.9.self_attn.q_proj.lora.A": {
+        "violations": 61,
+        "max_abs": 0.005998209118843079
+      },
+      "model.layers.9.self_attn.q_proj.lora.B": {
+        "violations": 216,
+        "max_abs": 0.005994150415062904
+      },
+      "model.layers.9.self_attn.v_proj.lora.A": {
+        "violations": 43,
+        "max_abs": 0.005997452884912491
+      },
+      "model.layers.9.self_attn.v_proj.lora.B": {
+        "violations": 33,
+        "max_abs": 0.005998607724905014
+      },
+      "model.layers.10.self_attn.q_proj.lora.A": {
+        "violations": 68,
+        "max_abs": 0.00599643774330616
+      },
+      "model.layers.10.self_attn.q_proj.lora.B": {
+        "violations": 235,
+        "max_abs": 0.005996677093207836
+      },
+      "model.layers.10.self_attn.v_proj.lora.A": {
+        "violations": 59,
+        "max_abs": 0.005982659757137299
+      },
+      "model.layers.10.self_attn.v_proj.lora.B": {
+        "violations": 36,
+        "max_abs": 0.0059992726892232895
+      },
+      "model.layers.11.self_attn.q_proj.lora.A": {
+        "violations": 43,
+        "max_abs": 0.005995939020067453
+      },
+      "model.layers.11.self_attn.q_proj.lora.B": {
+        "violations": 390,
+        "max_abs": 0.005997471511363983
+      },
+      "model.layers.11.self_attn.v_proj.lora.A": {
+        "violations": 64,
+        "max_abs": 0.00599810853600502
+      },
+      "model.layers.11.self_attn.v_proj.lora.B": {
+        "violations": 40,
+        "max_abs": 0.005998846143484116
+      },
+      "model.layers.12.self_attn.q_proj.lora.A": {
+        "violations": 44,
+        "max_abs": 0.005997428670525551
+      },
+      "model.layers.12.self_attn.q_proj.lora.B": {
+        "violations": 259,
+        "max_abs": 0.005997029598802328
+      },
+      "model.layers.12.self_attn.v_proj.lora.A": {
+        "violations": 127,
+        "max_abs": 0.0059880539774894714
+      },
+      "model.layers.12.self_attn.v_proj.lora.B": {
+        "violations": 47,
+        "max_abs": 0.005995434708893299
+      },
+      "model.layers.13.self_attn.q_proj.lora.A": {
+        "violations": 53,
+        "max_abs": 0.005994223058223724
+      },
+      "model.layers.13.self_attn.q_proj.lora.B": {
+        "violations": 233,
+        "max_abs": 0.005994975566864014
+      },
+      "model.layers.13.self_attn.v_proj.lora.A": {
+        "violations": 53,
+        "max_abs": 0.005981515161693096
+      },
+      "model.layers.13.self_attn.v_proj.lora.B": {
+        "violations": 27,
+        "max_abs": 0.005998344160616398
+      },
+      "model.layers.14.self_attn.q_proj.lora.A": {
+        "violations": 71,
+        "max_abs": 0.005986705422401428
+      },
+      "model.layers.14.self_attn.q_proj.lora.B": {
+        "violations": 223,
+        "max_abs": 0.0059987884014844894
+      },
+      "model.layers.14.self_attn.v_proj.lora.A": {
+        "violations": 95,
+        "max_abs": 0.005995577201247215
+      },
+      "model.layers.14.self_attn.v_proj.lora.B": {
+        "violations": 31,
+        "max_abs": 0.005999134853482246
+      },
+      "model.layers.15.self_attn.q_proj.lora.A": {
+        "violations": 55,
+        "max_abs": 0.005991348996758461
+      },
+      "model.layers.15.self_attn.q_proj.lora.B": {
+        "violations": 357,
+        "max_abs": 0.005994647741317749
+      },
+      "model.layers.15.self_attn.v_proj.lora.A": {
+        "violations": 338,
+        "max_abs": 0.005998502019792795
+      },
+      "model.layers.15.self_attn.v_proj.lora.B": {
+        "violations": 60,
+        "max_abs": 0.005999445915222168
+      },
+      "model.layers.16.self_attn.q_proj.lora.A": {
+        "violations": 48,
+        "max_abs": 0.005994752049446106
+      },
+      "model.layers.16.self_attn.q_proj.lora.B": {
+        "violations": 674,
+        "max_abs": 0.005997142754495144
+      },
+      "model.layers.16.self_attn.v_proj.lora.A": {
+        "violations": 67,
+        "max_abs": 0.005987878888845444
+      },
+      "model.layers.16.self_attn.v_proj.lora.B": {
+        "violations": 32,
+        "max_abs": 0.005998333916068077
+      },
+      "model.layers.17.self_attn.q_proj.lora.A": {
+        "violations": 56,
+        "max_abs": 0.0059896185994148254
+      },
+      "model.layers.17.self_attn.q_proj.lora.B": {
+        "violations": 243,
+        "max_abs": 0.0059984102845191956
+      },
+      "model.layers.17.self_attn.v_proj.lora.A": {
+        "violations": 37,
+        "max_abs": 0.005971570499241352
+      },
+      "model.layers.17.self_attn.v_proj.lora.B": {
+        "violations": 35,
+        "max_abs": 0.005998088046908379
+      },
+      "model.layers.18.self_attn.q_proj.lora.A": {
+        "violations": 23,
+        "max_abs": 0.00599340396001935
+      },
+      "model.layers.18.self_attn.q_proj.lora.B": {
+        "violations": 174,
+        "max_abs": 0.005993213504552841
+      },
+      "model.layers.18.self_attn.v_proj.lora.A": {
+        "violations": 108,
+        "max_abs": 0.0059971995651721954
+      },
+      "model.layers.18.self_attn.v_proj.lora.B": {
+        "violations": 48,
+        "max_abs": 0.005998939275741577
+      },
+      "model.layers.19.self_attn.q_proj.lora.A": {
+        "violations": 107,
+        "max_abs": 0.005997512489557266
+      },
+      "model.layers.19.self_attn.q_proj.lora.B": {
+        "violations": 209,
+        "max_abs": 0.005997077561914921
+      },
+      "model.layers.19.self_attn.v_proj.lora.A": {
+        "violations": 91,
+        "max_abs": 0.005994129925966263
+      },
+      "model.layers.19.self_attn.v_proj.lora.B": {
+        "violations": 22,
+        "max_abs": 0.005998414941132069
+      },
+      "model.layers.20.self_attn.q_proj.lora.A": {
+        "violations": 29,
+        "max_abs": 0.005997087806463242
+      },
+      "model.layers.20.self_attn.q_proj.lora.B": {
+        "violations": 290,
+        "max_abs": 0.005997991189360619
+      },
+      "model.layers.20.self_attn.v_proj.lora.A": {
+        "violations": 41,
+        "max_abs": 0.0059885140508413315
+      },
+      "model.layers.20.self_attn.v_proj.lora.B": {
+        "violations": 33,
+        "max_abs": 0.005997428670525551
+      },
+      "model.layers.21.self_attn.q_proj.lora.A": {
+        "violations": 36,
+        "max_abs": 0.0059984964318573475
+      },
+      "model.layers.21.self_attn.q_proj.lora.B": {
+        "violations": 237,
+        "max_abs": 0.005998415872454643
+      },
+      "model.layers.21.self_attn.v_proj.lora.A": {
+        "violations": 100,
+        "max_abs": 0.0059923590160906315
+      },
+      "model.layers.21.self_attn.v_proj.lora.B": {
+        "violations": 28,
+        "max_abs": 0.005999499931931496
+      },
+      "model.layers.22.self_attn.q_proj.lora.A": {
+        "violations": 26,
+        "max_abs": 0.00599907198920846
+      },
+      "model.layers.22.self_attn.q_proj.lora.B": {
+        "violations": 176,
+        "max_abs": 0.005996875464916229
+      },
+      "model.layers.22.self_attn.v_proj.lora.A": {
+        "violations": 63,
+        "max_abs": 0.0059845782816410065
+      },
+      "model.layers.22.self_attn.v_proj.lora.B": {
+        "violations": 20,
+        "max_abs": 0.005999007262289524
+      },
+      "model.layers.23.self_attn.q_proj.lora.A": {
+        "violations": 23,
+        "max_abs": 0.0059981029480695724
+      },
+      "model.layers.23.self_attn.q_proj.lora.B": {
+        "violations": 279,
+        "max_abs": 0.005998058244585991
+      },
+      "model.layers.23.self_attn.v_proj.lora.A": {
+        "violations": 25,
+        "max_abs": 0.005998469889163971
+      },
+      "model.layers.23.self_attn.v_proj.lora.B": {
+        "violations": 23,
+        "max_abs": 0.005999535322189331
+      },
+      "model.layers.24.self_attn.q_proj.lora.A": {
+        "violations": 36,
+        "max_abs": 0.005997821688652039
+      },
+      "model.layers.24.self_attn.q_proj.lora.B": {
+        "violations": 332,
+        "max_abs": 0.005995376035571098
+      },
+      "model.layers.24.self_attn.v_proj.lora.A": {
+        "violations": 80,
+        "max_abs": 0.0059905219823122025
+      },
+      "model.layers.24.self_attn.v_proj.lora.B": {
+        "violations": 19,
+        "max_abs": 0.005998317152261734
+      },
+      "model.layers.25.self_attn.q_proj.lora.A": {
+        "violations": 48,
+        "max_abs": 0.00599844241514802
+      },
+      "model.layers.25.self_attn.q_proj.lora.B": {
+        "violations": 155,
+        "max_abs": 0.005994139239192009
+      },
+      "model.layers.25.self_attn.v_proj.lora.A": {
+        "violations": 21,
+        "max_abs": 0.005987927317619324
+      },
+      "model.layers.25.self_attn.v_proj.lora.B": {
+        "violations": 11,
+        "max_abs": 0.00599832646548748
+      },
+      "model.layers.26.self_attn.q_proj.lora.A": {
+        "violations": 45,
+        "max_abs": 0.0059950631111860275
+      },
+      "model.layers.26.self_attn.q_proj.lora.B": {
+        "violations": 427,
+        "max_abs": 0.005997318774461746
+      },
+      "model.layers.26.self_attn.v_proj.lora.A": {
+        "violations": 31,
+        "max_abs": 0.005979652516543865
+      },
+      "model.layers.26.self_attn.v_proj.lora.B": {
+        "violations": 21,
+        "max_abs": 0.0059988778084516525
+      },
+      "model.layers.27.self_attn.q_proj.lora.A": {
+        "violations": 64,
+        "max_abs": 0.005992002785205841
+      },
+      "model.layers.27.self_attn.q_proj.lora.B": {
+        "violations": 207,
+        "max_abs": 0.005988532677292824
+      },
+      "model.layers.27.self_attn.v_proj.lora.A": {
+        "violations": 141,
+        "max_abs": 0.005995234474539757
+      },
+      "model.layers.27.self_attn.v_proj.lora.B": {
+        "violations": 12,
+        "max_abs": 0.005998085718601942
+      }
+    },
+    "logit_violations": 797451,
+    "logits_max_abs": 0.125,
+    "stable_reference_audit": {
+      "reference_loss": 6.865093231201172,
+      "reference_computation": "target-excluded stable CE; BF16 forward; FP32 pairwise head backward, K blocks 128",
+      "loss_check_passed": false,
+      "adapter_tensors": 112,
+      "rtol": 0.0001,
+      "atol": 1e-06,
+      "optimizer": {
+        "name": "AdamW",
+        "lr": 0.003,
+        "eps": 1e-08,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "weight_decay": 0
+      },
+      "gradient_check_passed": false,
+      "gradients_max_abs": 0.017550528049468994,
+      "gradient_failures": {
+        "model.layers.0.self_attn.q_proj.lora.A": {
+          "violations": 3869,
+          "max_abs": 0.0002452526241540909
+        },
+        "model.layers.0.self_attn.q_proj.lora.B": {
+          "violations": 7677,
+          "max_abs": 0.0014357862528413534
+        },
+        "model.layers.0.self_attn.v_proj.lora.A": {
+          "violations": 4024,
+          "max_abs": 0.0010402281768620014
+        },
+        "model.layers.0.self_attn.v_proj.lora.B": {
+          "violations": 4067,
+          "max_abs": 0.0028303414583206177
+        },
+        "model.layers.1.self_attn.q_proj.lora.A": {
+          "violations": 3583,
+          "max_abs": 0.0002343757078051567
+        },
+        "model.layers.1.self_attn.q_proj.lora.B": {
+          "violations": 5831,
+          "max_abs": 9.62188933044672e-05
+        },
+        "model.layers.1.self_attn.v_proj.lora.A": {
+          "violations": 3864,
+          "max_abs": 0.0016955286264419556
+        },
+        "model.layers.1.self_attn.v_proj.lora.B": {
+          "violations": 4049,
+          "max_abs": 0.00040303729474544525
+        },
+        "model.layers.2.self_attn.q_proj.lora.A": {
+          "violations": 3933,
+          "max_abs": 0.0002711806446313858
+        },
+        "model.layers.2.self_attn.q_proj.lora.B": {
+          "violations": 6792,
+          "max_abs": 0.00045010074973106384
+        },
+        "model.layers.2.self_attn.v_proj.lora.A": {
+          "violations": 4020,
+          "max_abs": 0.0031629055738449097
+        },
+        "model.layers.2.self_attn.v_proj.lora.B": {
+          "violations": 4034,
+          "max_abs": 0.000768020749092102
+        },
+        "model.layers.3.self_attn.q_proj.lora.A": {
+          "violations": 4066,
+          "max_abs": 0.0024190321564674377
+        },
+        "model.layers.3.self_attn.q_proj.lora.B": {
+          "violations": 7271,
+          "max_abs": 0.017550528049468994
+        },
+        "model.layers.3.self_attn.v_proj.lora.A": {
+          "violations": 3808,
+          "max_abs": 0.0007441826164722443
+        },
+        "model.layers.3.self_attn.v_proj.lora.B": {
+          "violations": 4032,
+          "max_abs": 0.0009174086153507233
+        },
+        "model.layers.4.self_attn.q_proj.lora.A": {
+          "violations": 3962,
+          "max_abs": 0.0010096058249473572
+        },
+        "model.layers.4.self_attn.q_proj.lora.B": {
+          "violations": 7352,
+          "max_abs": 0.0013939030468463898
+        },
+        "model.layers.4.self_attn.v_proj.lora.A": {
+          "violations": 3904,
+          "max_abs": 0.001620471477508545
+        },
+        "model.layers.4.self_attn.v_proj.lora.B": {
+          "violations": 4027,
+          "max_abs": 0.0008627958595752716
+        },
+        "model.layers.5.self_attn.q_proj.lora.A": {
+          "violations": 4037,
+          "max_abs": 0.0014935433864593506
+        },
+        "model.layers.5.self_attn.q_proj.lora.B": {
+          "violations": 7555,
+          "max_abs": 0.0015443861484527588
+        },
+        "model.layers.5.self_attn.v_proj.lora.A": {
+          "violations": 3743,
+          "max_abs": 0.0008959025144577026
+        },
+        "model.layers.5.self_attn.v_proj.lora.B": {
+          "violations": 3971,
+          "max_abs": 0.0004673609510064125
+        },
+        "model.layers.6.self_attn.q_proj.lora.A": {
+          "violations": 3714,
+          "max_abs": 0.00010703876614570618
+        },
+        "model.layers.6.self_attn.q_proj.lora.B": {
+          "violations": 4403,
+          "max_abs": 0.0014500059187412262
+        },
+        "model.layers.6.self_attn.v_proj.lora.A": {
+          "violations": 3824,
+          "max_abs": 0.0007923729717731476
+        },
+        "model.layers.6.self_attn.v_proj.lora.B": {
+          "violations": 3937,
+          "max_abs": 0.00021182396449148655
+        },
+        "model.layers.7.self_attn.q_proj.lora.A": {
+          "violations": 3951,
+          "max_abs": 0.0006746500730514526
+        },
+        "model.layers.7.self_attn.q_proj.lora.B": {
+          "violations": 6911,
+          "max_abs": 0.00038398057222366333
+        },
+        "model.layers.7.self_attn.v_proj.lora.A": {
+          "violations": 3588,
+          "max_abs": 0.00029809027910232544
+        },
+        "model.layers.7.self_attn.v_proj.lora.B": {
+          "violations": 3981,
+          "max_abs": 0.00021964998450130224
+        },
+        "model.layers.8.self_attn.q_proj.lora.A": {
+          "violations": 3836,
+          "max_abs": 0.0005105448653921485
+        },
+        "model.layers.8.self_attn.q_proj.lora.B": {
+          "violations": 5905,
+          "max_abs": 0.0011587068438529968
+        },
+        "model.layers.8.self_attn.v_proj.lora.A": {
+          "violations": 3492,
+          "max_abs": 0.0004026778042316437
+        },
+        "model.layers.8.self_attn.v_proj.lora.B": {
+          "violations": 3954,
+          "max_abs": 0.00022459588944911957
+        },
+        "model.layers.9.self_attn.q_proj.lora.A": {
+          "violations": 3948,
+          "max_abs": 0.0011150166392326355
+        },
+        "model.layers.9.self_attn.q_proj.lora.B": {
+          "violations": 6823,
+          "max_abs": 0.0008733607828617096
+        },
+        "model.layers.9.self_attn.v_proj.lora.A": {
+          "violations": 3860,
+          "max_abs": 0.000636102631688118
+        },
+        "model.layers.9.self_attn.v_proj.lora.B": {
+          "violations": 3985,
+          "max_abs": 0.00033425167202949524
+        },
+        "model.layers.10.self_attn.q_proj.lora.A": {
+          "violations": 3712,
+          "max_abs": 0.00037679634988307953
+        },
+        "model.layers.10.self_attn.q_proj.lora.B": {
+          "violations": 6311,
+          "max_abs": 0.0005107205361127853
+        },
+        "model.layers.10.self_attn.v_proj.lora.A": {
+          "violations": 3261,
+          "max_abs": 0.0006463862955570221
+        },
+        "model.layers.10.self_attn.v_proj.lora.B": {
+          "violations": 4033,
+          "max_abs": 0.00030364561825990677
+        },
+        "model.layers.11.self_attn.q_proj.lora.A": {
+          "violations": 3656,
+          "max_abs": 0.000622553750872612
+        },
+        "model.layers.11.self_attn.q_proj.lora.B": {
+          "violations": 5599,
+          "max_abs": 0.0002764509990811348
+        },
+        "model.layers.11.self_attn.v_proj.lora.A": {
+          "violations": 3793,
+          "max_abs": 0.0006301021203398705
+        },
+        "model.layers.11.self_attn.v_proj.lora.B": {
+          "violations": 3903,
+          "max_abs": 0.00024801131803542376
+        },
+        "model.layers.12.self_attn.q_proj.lora.A": {
+          "violations": 3903,
+          "max_abs": 0.0014948826283216476
+        },
+        "model.layers.12.self_attn.q_proj.lora.B": {
+          "violations": 4570,
+          "max_abs": 0.0007696747779846191
+        },
+        "model.layers.12.self_attn.v_proj.lora.A": {
+          "violations": 2638,
+          "max_abs": 0.00031620636582374573
+        },
+        "model.layers.12.self_attn.v_proj.lora.B": {
+          "violations": 3839,
+          "max_abs": 0.0001777301076799631
+        },
+        "model.layers.13.self_attn.q_proj.lora.A": {
+          "violations": 3882,
+          "max_abs": 0.0005885250866413116
+        },
+        "model.layers.13.self_attn.q_proj.lora.B": {
+          "violations": 5590,
+          "max_abs": 0.0004942417144775391
+        },
+        "model.layers.13.self_attn.v_proj.lora.A": {
+          "violations": 3032,
+          "max_abs": 0.0005136951804161072
+        },
+        "model.layers.13.self_attn.v_proj.lora.B": {
+          "violations": 3938,
+          "max_abs": 0.00018020952120423317
+        },
+        "model.layers.14.self_attn.q_proj.lora.A": {
+          "violations": 3281,
+          "max_abs": 0.0002872822806239128
+        },
+        "model.layers.14.self_attn.q_proj.lora.B": {
+          "violations": 5343,
+          "max_abs": 0.00021089008077979088
+        },
+        "model.layers.14.self_attn.v_proj.lora.A": {
+          "violations": 3243,
+          "max_abs": 0.00107550248503685
+        },
+        "model.layers.14.self_attn.v_proj.lora.B": {
+          "violations": 3917,
+          "max_abs": 0.00032164575532078743
+        },
+        "model.layers.15.self_attn.q_proj.lora.A": {
+          "violations": 3961,
+          "max_abs": 0.0007427111268043518
+        },
+        "model.layers.15.self_attn.q_proj.lora.B": {
+          "violations": 4989,
+          "max_abs": 0.0004917122423648834
+        },
+        "model.layers.15.self_attn.v_proj.lora.A": {
+          "violations": 3496,
+          "max_abs": 0.0012351088225841522
+        },
+        "model.layers.15.self_attn.v_proj.lora.B": {
+          "violations": 3988,
+          "max_abs": 0.00036526331678032875
+        },
+        "model.layers.16.self_attn.q_proj.lora.A": {
+          "violations": 3848,
+          "max_abs": 0.001180887222290039
+        },
+        "model.layers.16.self_attn.q_proj.lora.B": {
+          "violations": 5185,
+          "max_abs": 0.0021744221448898315
+        },
+        "model.layers.16.self_attn.v_proj.lora.A": {
+          "violations": 3599,
+          "max_abs": 0.0004456453025341034
+        },
+        "model.layers.16.self_attn.v_proj.lora.B": {
+          "violations": 3975,
+          "max_abs": 0.0002881860127672553
+        },
+        "model.layers.17.self_attn.q_proj.lora.A": {
+          "violations": 3796,
+          "max_abs": 0.00036489125341176987
+        },
+        "model.layers.17.self_attn.q_proj.lora.B": {
+          "violations": 6654,
+          "max_abs": 0.0006360318511724472
+        },
+        "model.layers.17.self_attn.v_proj.lora.A": {
+          "violations": 3717,
+          "max_abs": 0.0014539435505867004
+        },
+        "model.layers.17.self_attn.v_proj.lora.B": {
+          "violations": 3970,
+          "max_abs": 0.00022364547476172447
+        },
+        "model.layers.18.self_attn.q_proj.lora.A": {
+          "violations": 3920,
+          "max_abs": 0.0005844105035066605
+        },
+        "model.layers.18.self_attn.q_proj.lora.B": {
+          "violations": 5861,
+          "max_abs": 0.0008328631520271301
+        },
+        "model.layers.18.self_attn.v_proj.lora.A": {
+          "violations": 3206,
+          "max_abs": 0.0012307390570640564
+        },
+        "model.layers.18.self_attn.v_proj.lora.B": {
+          "violations": 3899,
+          "max_abs": 0.00026192842051386833
+        },
+        "model.layers.19.self_attn.q_proj.lora.A": {
+          "violations": 3880,
+          "max_abs": 0.0003796229138970375
+        },
+        "model.layers.19.self_attn.q_proj.lora.B": {
+          "violations": 6264,
+          "max_abs": 0.0007950887084007263
+        },
+        "model.layers.19.self_attn.v_proj.lora.A": {
+          "violations": 3375,
+          "max_abs": 0.001935414969921112
+        },
+        "model.layers.19.self_attn.v_proj.lora.B": {
+          "violations": 3968,
+          "max_abs": 0.0003732088953256607
+        },
+        "model.layers.20.self_attn.q_proj.lora.A": {
+          "violations": 3755,
+          "max_abs": 0.00017189979553222656
+        },
+        "model.layers.20.self_attn.q_proj.lora.B": {
+          "violations": 6350,
+          "max_abs": 0.0018792003393173218
+        },
+        "model.layers.20.self_attn.v_proj.lora.A": {
+          "violations": 3572,
+          "max_abs": 0.0014886260032653809
+        },
+        "model.layers.20.self_attn.v_proj.lora.B": {
+          "violations": 3918,
+          "max_abs": 0.00031639449298381805
+        },
+        "model.layers.21.self_attn.q_proj.lora.A": {
+          "violations": 3936,
+          "max_abs": 0.0005005188286304474
+        },
+        "model.layers.21.self_attn.q_proj.lora.B": {
+          "violations": 6625,
+          "max_abs": 0.0021761059761047363
+        },
+        "model.layers.21.self_attn.v_proj.lora.A": {
+          "violations": 2957,
+          "max_abs": 0.001080535352230072
+        },
+        "model.layers.21.self_attn.v_proj.lora.B": {
+          "violations": 4025,
+          "max_abs": 0.0005445810966193676
+        },
+        "model.layers.22.self_attn.q_proj.lora.A": {
+          "violations": 3947,
+          "max_abs": 0.0007001273334026337
+        },
+        "model.layers.22.self_attn.q_proj.lora.B": {
+          "violations": 6188,
+          "max_abs": 0.0011920426040887833
+        },
+        "model.layers.22.self_attn.v_proj.lora.A": {
+          "violations": 3058,
+          "max_abs": 0.0004816334694623947
+        },
+        "model.layers.22.self_attn.v_proj.lora.B": {
+          "violations": 4005,
+          "max_abs": 0.0003027096390724182
+        },
+        "model.layers.23.self_attn.q_proj.lora.A": {
+          "violations": 3971,
+          "max_abs": 0.0022932887077331543
+        },
+        "model.layers.23.self_attn.q_proj.lora.B": {
+          "violations": 5765,
+          "max_abs": 0.0023825913667678833
+        },
+        "model.layers.23.self_attn.v_proj.lora.A": {
+          "violations": 3816,
+          "max_abs": 0.0006154701113700867
+        },
+        "model.layers.23.self_attn.v_proj.lora.B": {
+          "violations": 3960,
+          "max_abs": 0.0002767224214039743
+        },
+        "model.layers.24.self_attn.q_proj.lora.A": {
+          "violations": 3885,
+          "max_abs": 0.00020328722894191742
+        },
+        "model.layers.24.self_attn.q_proj.lora.B": {
+          "violations": 4002,
+          "max_abs": 0.00017953896895051003
+        },
+        "model.layers.24.self_attn.v_proj.lora.A": {
+          "violations": 3387,
+          "max_abs": 0.0007614046335220337
+        },
+        "model.layers.24.self_attn.v_proj.lora.B": {
+          "violations": 3865,
+          "max_abs": 0.00021089054644107819
+        },
+        "model.layers.25.self_attn.q_proj.lora.A": {
+          "violations": 3753,
+          "max_abs": 0.00035521574318408966
+        },
+        "model.layers.25.self_attn.q_proj.lora.B": {
+          "violations": 5384,
+          "max_abs": 0.00029691506642848253
+        },
+        "model.layers.25.self_attn.v_proj.lora.A": {
+          "violations": 3616,
+          "max_abs": 0.000561244785785675
+        },
+        "model.layers.25.self_attn.v_proj.lora.B": {
+          "violations": 3987,
+          "max_abs": 0.0002482188865542412
+        },
+        "model.layers.26.self_attn.q_proj.lora.A": {
+          "violations": 3831,
+          "max_abs": 0.0008341316133737564
+        },
+        "model.layers.26.self_attn.q_proj.lora.B": {
+          "violations": 4059,
+          "max_abs": 0.0007226094603538513
+        },
+        "model.layers.26.self_attn.v_proj.lora.A": {
+          "violations": 3573,
+          "max_abs": 0.0009672828018665314
+        },
+        "model.layers.26.self_attn.v_proj.lora.B": {
+          "violations": 3960,
+          "max_abs": 0.0005608536303043365
+        },
+        "model.layers.27.self_attn.q_proj.lora.A": {
+          "violations": 3419,
+          "max_abs": 0.00013642851263284683
+        },
+        "model.layers.27.self_attn.q_proj.lora.B": {
+          "violations": 4152,
+          "max_abs": 0.00032567838206887245
+        },
+        "model.layers.27.self_attn.v_proj.lora.A": {
+          "violations": 3541,
+          "max_abs": 0.0010727099142968655
+        },
+        "model.layers.27.self_attn.v_proj.lora.B": {
+          "violations": 3874,
+          "max_abs": 0.00023863185197114944
+        }
+      },
+      "update_check_passed": false,
+      "updates_max_abs": 0.005999818444252014,
+      "update_failures": {
+        "model.layers.0.self_attn.q_proj.lora.A": {
+          "violations": 31,
+          "max_abs": 0.005998317152261734
+        },
+        "model.layers.0.self_attn.q_proj.lora.B": {
+          "violations": 99,
+          "max_abs": 0.005999549757689238
+        },
+        "model.layers.0.self_attn.v_proj.lora.A": {
+          "violations": 11,
+          "max_abs": 0.005999665707349777
+        },
+        "model.layers.0.self_attn.v_proj.lora.B": {
+          "violations": 17,
+          "max_abs": 0.005999818444252014
+        },
+        "model.layers.1.self_attn.q_proj.lora.A": {
+          "violations": 59,
+          "max_abs": 0.005992568098008633
+        },
+        "model.layers.1.self_attn.q_proj.lora.B": {
+          "violations": 124,
+          "max_abs": 0.005994346924126148
+        },
+        "model.layers.1.self_attn.v_proj.lora.A": {
+          "violations": 21,
+          "max_abs": 0.00599275529384613
+        },
+        "model.layers.1.self_attn.v_proj.lora.B": {
+          "violations": 23,
+          "max_abs": 0.005999145098030567
+        },
+        "model.layers.2.self_attn.q_proj.lora.A": {
+          "violations": 23,
+          "max_abs": 0.005996335297822952
+        },
+        "model.layers.2.self_attn.q_proj.lora.B": {
+          "violations": 151,
+          "max_abs": 0.005996161140501499
+        },
+        "model.layers.2.self_attn.v_proj.lora.A": {
+          "violations": 24,
+          "max_abs": 0.005996860563755035
+        },
+        "model.layers.2.self_attn.v_proj.lora.B": {
+          "violations": 27,
+          "max_abs": 0.005999697372317314
+        },
+        "model.layers.3.self_attn.q_proj.lora.A": {
+          "violations": 27,
+          "max_abs": 0.0059990547597408295
+        },
+        "model.layers.3.self_attn.q_proj.lora.B": {
+          "violations": 137,
+          "max_abs": 0.005999110639095306
+        },
+        "model.layers.3.self_attn.v_proj.lora.A": {
+          "violations": 49,
+          "max_abs": 0.005992036312818527
+        },
+        "model.layers.3.self_attn.v_proj.lora.B": {
+          "violations": 20,
+          "max_abs": 0.005998954176902771
+        },
+        "model.layers.4.self_attn.q_proj.lora.A": {
+          "violations": 46,
+          "max_abs": 0.0059986598789691925
+        },
+        "model.layers.4.self_attn.q_proj.lora.B": {
+          "violations": 212,
+          "max_abs": 0.005995616316795349
+        },
+        "model.layers.4.self_attn.v_proj.lora.A": {
+          "violations": 66,
+          "max_abs": 0.005998525768518448
+        },
+        "model.layers.4.self_attn.v_proj.lora.B": {
+          "violations": 22,
+          "max_abs": 0.005999673157930374
+        },
+        "model.layers.5.self_attn.q_proj.lora.A": {
+          "violations": 16,
+          "max_abs": 0.005998525768518448
+        },
+        "model.layers.5.self_attn.q_proj.lora.B": {
+          "violations": 231,
+          "max_abs": 0.005999167449772358
+        },
+        "model.layers.5.self_attn.v_proj.lora.A": {
+          "violations": 63,
+          "max_abs": 0.005995847284793854
+        },
+        "model.layers.5.self_attn.v_proj.lora.B": {
+          "violations": 29,
+          "max_abs": 0.00599918095394969
+        },
+        "model.layers.6.self_attn.q_proj.lora.A": {
+          "violations": 107,
+          "max_abs": 0.005996394902467728
+        },
+        "model.layers.6.self_attn.q_proj.lora.B": {
+          "violations": 751,
+          "max_abs": 0.005985729396343231
+        },
+        "model.layers.6.self_attn.v_proj.lora.A": {
+          "violations": 69,
+          "max_abs": 0.005995225161314011
+        },
+        "model.layers.6.self_attn.v_proj.lora.B": {
+          "violations": 33,
+          "max_abs": 0.005997980944812298
+        },
+        "model.layers.7.self_attn.q_proj.lora.A": {
+          "violations": 50,
+          "max_abs": 0.005998003296554089
+        },
+        "model.layers.7.self_attn.q_proj.lora.B": {
+          "violations": 109,
+          "max_abs": 0.0059958286583423615
+        },
+        "model.layers.7.self_attn.v_proj.lora.A": {
+          "violations": 73,
+          "max_abs": 0.005994049832224846
+        },
+        "model.layers.7.self_attn.v_proj.lora.B": {
+          "violations": 31,
+          "max_abs": 0.005998464301228523
+        },
+        "model.layers.8.self_attn.q_proj.lora.A": {
+          "violations": 65,
+          "max_abs": 0.005999255925416946
+        },
+        "model.layers.8.self_attn.q_proj.lora.B": {
+          "violations": 191,
+          "max_abs": 0.005991365760564804
+        },
+        "model.layers.8.self_attn.v_proj.lora.A": {
+          "violations": 39,
+          "max_abs": 0.005989830940961838
+        },
+        "model.layers.8.self_attn.v_proj.lora.B": {
+          "violations": 30,
+          "max_abs": 0.005998414941132069
+        },
+        "model.layers.9.self_attn.q_proj.lora.A": {
+          "violations": 61,
+          "max_abs": 0.00599820539355278
+        },
+        "model.layers.9.self_attn.q_proj.lora.B": {
+          "violations": 216,
+          "max_abs": 0.005994152277708054
+        },
+        "model.layers.9.self_attn.v_proj.lora.A": {
+          "violations": 43,
+          "max_abs": 0.005997452884912491
+        },
+        "model.layers.9.self_attn.v_proj.lora.B": {
+          "violations": 33,
+          "max_abs": 0.005998610518872738
+        },
+        "model.layers.10.self_attn.q_proj.lora.A": {
+          "violations": 68,
+          "max_abs": 0.0059964340180158615
+        },
+        "model.layers.10.self_attn.q_proj.lora.B": {
+          "violations": 235,
+          "max_abs": 0.005996675230562687
+        },
+        "model.layers.10.self_attn.v_proj.lora.A": {
+          "violations": 59,
+          "max_abs": 0.00598270446062088
+        },
+        "model.layers.10.self_attn.v_proj.lora.B": {
+          "violations": 36,
+          "max_abs": 0.005999278277158737
+        },
+        "model.layers.11.self_attn.q_proj.lora.A": {
+          "violations": 43,
+          "max_abs": 0.00599594647064805
+        },
+        "model.layers.11.self_attn.q_proj.lora.B": {
+          "violations": 391,
+          "max_abs": 0.005997443571686745
+        },
+        "model.layers.11.self_attn.v_proj.lora.A": {
+          "violations": 64,
+          "max_abs": 0.00599810853600502
+        },
+        "model.layers.11.self_attn.v_proj.lora.B": {
+          "violations": 40,
+          "max_abs": 0.005998844280838966
+        },
+        "model.layers.12.self_attn.q_proj.lora.A": {
+          "violations": 44,
+          "max_abs": 0.005997428670525551
+        },
+        "model.layers.12.self_attn.q_proj.lora.B": {
+          "violations": 260,
+          "max_abs": 0.0059970286674797535
+        },
+        "model.layers.12.self_attn.v_proj.lora.A": {
+          "violations": 129,
+          "max_abs": 0.005988080054521561
+        },
+        "model.layers.12.self_attn.v_proj.lora.B": {
+          "violations": 47,
+          "max_abs": 0.0059954458847641945
+        },
+        "model.layers.13.self_attn.q_proj.lora.A": {
+          "violations": 53,
+          "max_abs": 0.005994226783514023
+        },
+        "model.layers.13.self_attn.q_proj.lora.B": {
+          "violations": 234,
+          "max_abs": 0.005994975566864014
+        },
+        "model.layers.13.self_attn.v_proj.lora.A": {
+          "violations": 54,
+          "max_abs": 0.0059815095737576485
+        },
+        "model.layers.13.self_attn.v_proj.lora.B": {
+          "violations": 27,
+          "max_abs": 0.005998342297971249
+        },
+        "model.layers.14.self_attn.q_proj.lora.A": {
+          "violations": 71,
+          "max_abs": 0.005986705422401428
+        },
+        "model.layers.14.self_attn.q_proj.lora.B": {
+          "violations": 223,
+          "max_abs": 0.005998790264129639
+        },
+        "model.layers.14.self_attn.v_proj.lora.A": {
+          "violations": 95,
+          "max_abs": 0.0059955790638923645
+        },
+        "model.layers.14.self_attn.v_proj.lora.B": {
+          "violations": 30,
+          "max_abs": 0.005999132990837097
+        },
+        "model.layers.15.self_attn.q_proj.lora.A": {
+          "violations": 55,
+          "max_abs": 0.0059913527220487595
+        },
+        "model.layers.15.self_attn.q_proj.lora.B": {
+          "violations": 357,
+          "max_abs": 0.005994655191898346
+        },
+        "model.layers.15.self_attn.v_proj.lora.A": {
+          "violations": 337,
+          "max_abs": 0.005998500622808933
+        },
+        "model.layers.15.self_attn.v_proj.lora.B": {
+          "violations": 60,
+          "max_abs": 0.005999445915222168
+        },
+        "model.layers.16.self_attn.q_proj.lora.A": {
+          "violations": 48,
+          "max_abs": 0.005994752049446106
+        },
+        "model.layers.16.self_attn.q_proj.lora.B": {
+          "violations": 674,
+          "max_abs": 0.005997205153107643
+        },
+        "model.layers.16.self_attn.v_proj.lora.A": {
+          "violations": 67,
+          "max_abs": 0.005987886339426041
+        },
+        "model.layers.16.self_attn.v_proj.lora.B": {
+          "violations": 32,
+          "max_abs": 0.0059983208775520325
+        },
+        "model.layers.17.self_attn.q_proj.lora.A": {
+          "violations": 56,
+          "max_abs": 0.0059896595776081085
+        },
+        "model.layers.17.self_attn.q_proj.lora.B": {
+          "violations": 244,
+          "max_abs": 0.005998407490551472
+        },
+        "model.layers.17.self_attn.v_proj.lora.A": {
+          "violations": 37,
+          "max_abs": 0.0059716165997087955
+        },
+        "model.layers.17.self_attn.v_proj.lora.B": {
+          "violations": 35,
+          "max_abs": 0.005998091772198677
+        },
+        "model.layers.18.self_attn.q_proj.lora.A": {
+          "violations": 23,
+          "max_abs": 0.005993399303406477
+        },
+        "model.layers.18.self_attn.q_proj.lora.B": {
+          "violations": 174,
+          "max_abs": 0.005993211641907692
+        },
+        "model.layers.18.self_attn.v_proj.lora.A": {
+          "violations": 109,
+          "max_abs": 0.005997205153107643
+        },
+        "model.layers.18.self_attn.v_proj.lora.B": {
+          "violations": 48,
+          "max_abs": 0.005998952314257622
+        },
+        "model.layers.19.self_attn.q_proj.lora.A": {
+          "violations": 108,
+          "max_abs": 0.005997540429234505
+        },
+        "model.layers.19.self_attn.q_proj.lora.B": {
+          "violations": 210,
+          "max_abs": 0.005997081287205219
+        },
+        "model.layers.19.self_attn.v_proj.lora.A": {
+          "violations": 93,
+          "max_abs": 0.005994129925966263
+        },
+        "model.layers.19.self_attn.v_proj.lora.B": {
+          "violations": 22,
+          "max_abs": 0.005998419597744942
+        },
+        "model.layers.20.self_attn.q_proj.lora.A": {
+          "violations": 29,
+          "max_abs": 0.005997061729431152
+        },
+        "model.layers.20.self_attn.q_proj.lora.B": {
+          "violations": 291,
+          "max_abs": 0.005997993052005768
+        },
+        "model.layers.20.self_attn.v_proj.lora.A": {
+          "violations": 42,
+          "max_abs": 0.005988685414195061
+        },
+        "model.layers.20.self_attn.v_proj.lora.B": {
+          "violations": 33,
+          "max_abs": 0.005997419822961092
+        },
+        "model.layers.21.self_attn.q_proj.lora.A": {
+          "violations": 36,
+          "max_abs": 0.005998496897518635
+        },
+        "model.layers.21.self_attn.q_proj.lora.B": {
+          "violations": 237,
+          "max_abs": 0.005998415872454643
+        },
+        "model.layers.21.self_attn.v_proj.lora.A": {
+          "violations": 100,
+          "max_abs": 0.005992352496832609
+        },
+        "model.layers.21.self_attn.v_proj.lora.B": {
+          "violations": 28,
+          "max_abs": 0.005999499931931496
+        },
+        "model.layers.22.self_attn.q_proj.lora.A": {
+          "violations": 26,
+          "max_abs": 0.005999073851853609
+        },
+        "model.layers.22.self_attn.q_proj.lora.B": {
+          "violations": 177,
+          "max_abs": 0.005996886640787125
+        },
+        "model.layers.22.self_attn.v_proj.lora.A": {
+          "violations": 63,
+          "max_abs": 0.005984749644994736
+        },
+        "model.layers.22.self_attn.v_proj.lora.B": {
+          "violations": 20,
+          "max_abs": 0.0059990109875798225
+        },
+        "model.layers.23.self_attn.q_proj.lora.A": {
+          "violations": 23,
+          "max_abs": 0.005998104810714722
+        },
+        "model.layers.23.self_attn.q_proj.lora.B": {
+          "violations": 279,
+          "max_abs": 0.00599805498495698
+        },
+        "model.layers.23.self_attn.v_proj.lora.A": {
+          "violations": 24,
+          "max_abs": 0.005998469889163971
+        },
+        "model.layers.23.self_attn.v_proj.lora.B": {
+          "violations": 23,
+          "max_abs": 0.0059995390474796295
+        },
+        "model.layers.24.self_attn.q_proj.lora.A": {
+          "violations": 35,
+          "max_abs": 0.00599781796336174
+        },
+        "model.layers.24.self_attn.q_proj.lora.B": {
+          "violations": 332,
+          "max_abs": 0.005995325744152069
+        },
+        "model.layers.24.self_attn.v_proj.lora.A": {
+          "violations": 80,
+          "max_abs": 0.0059904251247644424
+        },
+        "model.layers.24.self_attn.v_proj.lora.B": {
+          "violations": 17,
+          "max_abs": 0.005998317152261734
+        },
+        "model.layers.25.self_attn.q_proj.lora.A": {
+          "violations": 48,
+          "max_abs": 0.005998426582664251
+        },
+        "model.layers.25.self_attn.q_proj.lora.B": {
+          "violations": 155,
+          "max_abs": 0.005994138307869434
+        },
+        "model.layers.25.self_attn.v_proj.lora.A": {
+          "violations": 21,
+          "max_abs": 0.005987834185361862
+        },
+        "model.layers.25.self_attn.v_proj.lora.B": {
+          "violations": 11,
+          "max_abs": 0.005998231470584869
+        },
+        "model.layers.26.self_attn.q_proj.lora.A": {
+          "violations": 44,
+          "max_abs": 0.005995059385895729
+        },
+        "model.layers.26.self_attn.q_proj.lora.B": {
+          "violations": 425,
+          "max_abs": 0.005997318774461746
+        },
+        "model.layers.26.self_attn.v_proj.lora.A": {
+          "violations": 32,
+          "max_abs": 0.0059794168919324875
+        },
+        "model.layers.26.self_attn.v_proj.lora.B": {
+          "violations": 21,
+          "max_abs": 0.0059988852590322495
+        },
+        "model.layers.27.self_attn.q_proj.lora.A": {
+          "violations": 64,
+          "max_abs": 0.005992113146930933
+        },
+        "model.layers.27.self_attn.q_proj.lora.B": {
+          "violations": 206,
+          "max_abs": 0.0059884595684707165
+        },
+        "model.layers.27.self_attn.v_proj.lora.A": {
+          "violations": 140,
+          "max_abs": 0.00599527545273304
+        },
+        "model.layers.27.self_attn.v_proj.lora.B": {
+          "violations": 12,
+          "max_abs": 0.0059980787336826324
+        }
+      }
+    },
+    "trained_checkpoint_restored_bitwise": true,
+    "restored_loss_and_gradients_bitwise_equal": true,
+    "projection_precision": "bf16",
+    "source": "/tmp/onnax-qwen8k-bf16-quality-v1"
+  },
+  "mps_group4_capacity": {
+    "command": [
+      "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+      "-m",
+      "examples.huggingface.context_capacity",
+      "--provider",
+      "mps",
+      "--projection-precision",
+      "bf16",
+      "--sequence-length",
+      "8192",
+      "--checkpoint-layers",
+      "4",
+      "--chunk-size",
+      "128",
+      "--trace-phases",
+      "--train-file",
+      "/tmp/onnax-qwen-longalpaca-8k/benchmark.jsonl",
+      "--output-dir",
+      "/tmp/onnax-qwen8k-followups-v1/mps-capacity"
+    ],
+    "cwd": "/private/tmp/onnax-qwen8k-worktree",
+    "status": "failed",
+    "physical_memory_budget_bytes": 25769803776,
+    "minimum_free_disk_bytes": 5368709120,
+    "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+    "observation_errors": 0,
+    "pid": 38079,
+    "started": "2026-11-02T03:35:05.894920+00:00",
+    "returncode": 1,
+    "finished": "2026-11-02T03:35:43.253510+00:00",
+    "temporary_files_removed": true,
+    "failure": "MPS allocated 16.63 GiB under a 20 GiB allocator limit; backward checkpoint recomputation requested another 4.00 GiB",
+    "classification": "allocator_out_of_memory",
+    "physical_footprint_peak_bytes": 22021048216
+  },
+  "mps_followup_capacity": {
+    "source_commit": "a7cc694d7dc01d6795e1ae1814a1e48277549079",
+    "allocator_limit_bytes": 21474836480,
+    "physical_footprint_limit_bytes": 25769803776,
+    "jobs": [
+      {
+        "name": "mps-group2-capacity",
+        "status": "failed",
+        "started": "2026-11-02T04:51:35.161562+00:00",
+        "command": [
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.guard",
+          "--output-dir",
+          "/tmp/onnax-qwen8k-fallbacks-v1/mps-group2-capacity-guard",
+          "--",
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.context_capacity",
+          "--provider",
+          "mps",
+          "--projection-precision",
+          "bf16",
+          "--sequence-length",
+          "8192",
+          "--checkpoint-layers",
+          "2",
+          "--chunk-size",
+          "128",
+          "--trace-phases",
+          "--train-file",
+          "/tmp/onnax-qwen-longalpaca-8k/benchmark.jsonl",
+          "--output-dir",
+          "/tmp/onnax-qwen8k-fallbacks-v1/mps-group2-capacity"
+        ],
+        "source_commit": "a7cc694d7dc01d6795e1ae1814a1e48277549079",
+        "working_tree_dirty": false,
+        "returncode": 1,
+        "finished": "2026-11-02T04:52:11.687507+00:00",
+        "physical_footprint_peak_bytes": 22286649216
+      },
+      {
+        "name": "mps-group1-capacity",
+        "status": "complete",
+        "started": "2026-11-02T04:52:11.721195+00:00",
+        "command": [
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.guard",
+          "--output-dir",
+          "/tmp/onnax-qwen8k-fallbacks-v1/mps-group1-capacity-guard",
+          "--",
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.context_capacity",
+          "--provider",
+          "mps",
+          "--projection-precision",
+          "bf16",
+          "--sequence-length",
+          "8192",
+          "--checkpoint-layers",
+          "1",
+          "--chunk-size",
+          "128",
+          "--trace-phases",
+          "--train-file",
+          "/tmp/onnax-qwen-longalpaca-8k/benchmark.jsonl",
+          "--output-dir",
+          "/tmp/onnax-qwen8k-fallbacks-v1/mps-group1-capacity"
+        ],
+        "source_commit": "a7cc694d7dc01d6795e1ae1814a1e48277549079",
+        "working_tree_dirty": false,
+        "returncode": 0,
+        "finished": "2026-11-02T04:53:18.480054+00:00",
+        "physical_footprint_peak_bytes": 25504745800
+      },
+      {
+        "name": "mps-group1-steady",
+        "status": "failed",
+        "started": "2026-11-02T04:53:18.517635+00:00",
+        "command": [
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.guard",
+          "--output-dir",
+          "/tmp/onnax-qwen8k-fallbacks-v1/mps-group1-steady-guard",
+          "--",
+          "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+          "-m",
+          "examples.huggingface.benchmark",
+          "--mode",
+          "pytorch",
+          "--torch-device",
+          "mps",
+          "--torch-attention",
+          "sdpa",
+          "--torch-chunked",
+          "--torch-mps-memory-limit-gib",
+          "20",
+          "--real",
+          "--nf4",
+          "--projection-precision",
+          "bf16",
+          "--batch-size",
+          "1",
+          "--sequence-length",
+          "8192",
+          "--checkpoint-layers",
+          "1",
+          "--chunk-size",
+          "128",
+          "--train-file",
+          "/tmp/onnax-qwen-longalpaca-8k/benchmark.jsonl",
+          "--warmup",
+          "10",
+          "--samples",
+          "100",
+          "--progress-every",
+          "1"
+        ],
+        "source_commit": "a7cc694d7dc01d6795e1ae1814a1e48277549079",
+        "working_tree_dirty": false,
+        "returncode": 1,
+        "finished": "2026-11-02T04:59:36.154705+00:00",
+        "physical_footprint_peak_bytes": 25516034328
+      }
+    ],
+    "group1_cold_update": {
+      "mode": "pytorch",
+      "phase_instrumentation": true,
+      "validated_updates": 1,
+      "parameter_tensors": 112,
+      "checkpoint_layers": 1,
+      "save_activations": false,
+      "mlx_memory_limit_bytes": null,
+      "torch_mps_memory_limit_bytes": 21474836480,
+      "mps_memory_fraction": 0.8012818357492058,
+      "provider": "pytorch_mps",
+      "torch_chunked_head": true,
+      "mps_fallback_enabled": false,
+      "attention_implementation": "sdpa",
+      "fused_ops": false,
+      "synchronization": "MPS at each phase boundary",
+      "segment_target_nodes": null,
+      "lut4_fusion_disabled": false,
+      "mlx_compile_disabled": true,
+      "real": true,
+      "weight_values": "nf4_reconstructed_fp32",
+      "projection_precision": "bf16",
+      "gradient_and_optimizer_dtype": "float32",
+      "base_storage": "fp32",
+      "warmup": 0,
+      "samples": 1,
+      "losses": [
+        4.591896057128906
+      ],
+      "batch": 1,
+      "sequence": 8192,
+      "valid_shifted_tokens": 8191,
+      "input_ids_sha256": "06c5419049d167d2213094c92afe26e0235aea3f7f44b0ee14c17b66c7009933",
+      "input_pattern": "Prefix of the first naturally long corpus example",
+      "head_chunk_size": 128,
+      "full_logits_bytes": 4978638848,
+      "chunk_logits_bytes": 77791232,
+      "initialization_seconds": 12.762105249974411,
+      "timings_ms": {
+        "forward_and_loss": {
+          "median": 10054.71741699148,
+          "p95": 10054.71741699148
+        },
+        "backward": {
+          "median": 36943.26562498463,
+          "p95": 36943.26562498463
+        },
+        "process_cpu": {
+          "median": 18418.245,
+          "p95": 18418.245
+        },
+        "adamw": {
+          "median": 270.82224999321625,
+          "p95": 270.82224999321625
+        },
+        "step": {
+          "median": 47268.80529196933,
+          "p95": 47268.80529196933
+        }
+      },
+      "timing_samples_ms": [
+        {
+          "forward_and_loss": 10054.71741699148,
+          "backward": 36943.26562498463,
+          "process_cpu": 18418.245,
+          "adamw": 270.82224999321625,
+          "step": 47268.80529196933
+        }
+      ],
+      "effective_tokens_per_second": 173.28553047630334,
+      "peak_rss_bytes": 5067390976,
+      "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+      "initialization_scope": "PyTorch model construction and FP32 base reconstruction",
+      "parameter_bytes": 2293760,
+      "threads": {
+        "torch": 1,
+        "ort_intra": 1,
+        "ort_inter": 1
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      },
+      "ort_optimizer": "disabled",
+      "platform": "macOS-27.0.1-arm64-arm-64bit",
+      "hardware": {
+        "cpu": "Apple M1 Max",
+        "logical_cores": 10,
+        "physical_memory_bytes": 34359738368
+      },
+      "versions": {
+        "torch": "2.15.0",
+        "transformers": "5.22.1",
+        "onnxruntime": "1.31.1",
+        "onnxscript": "0.7.2",
+        "mobius-onnx": "0.1.0"
+      },
+      "physical_footprint": {
+        "available": true,
+        "current_bytes": 19552667568,
+        "lifetime_peak_bytes": 25504745800,
+        "current_resident_bytes": 128335872,
+        "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+      },
+      "mps_allocator": {
+        "active_bytes": 2408776448,
+        "driver_bytes": 18946883584,
+        "recommended_max_bytes": 26800603136,
+        "scope": "Allocator snapshot after synchronized final update; process peak is reported separately"
+      },
+      "source_commit": "a7cc694d7dc01d6795e1ae1814a1e48277549079",
+      "working_tree_dirty": false,
+      "qualification_scope": "Cold one-update capacity, with FP32 parameter/gradient/AdamW validation",
+      "phase_journal": "phases.jsonl",
+      "input_file_sha256": "b43f8b73b2879a42e1335eba65db41ab69a70073e200106a209265baf4b9145e"
+    },
+    "group1_warmup_updates": [
+      {
+        "update": 1,
+        "loss": 4.5919,
+        "step_seconds": 46.609
+      },
+      {
+        "update": 2,
+        "loss": 4.40275,
+        "step_seconds": 47.337
+      },
+      {
+        "update": 3,
+        "loss": 4.08074,
+        "step_seconds": 46.726
+      },
+      {
+        "update": 4,
+        "loss": 3.85359,
+        "step_seconds": 48.816
+      },
+      {
+        "update": 5,
+        "loss": 3.75807,
+        "step_seconds": 50.278
+      },
+      {
+        "update": 6,
+        "loss": 3.75794,
+        "step_seconds": 50.573
+      },
+      {
+        "update": 7,
+        "loss": 3.69378,
+        "step_seconds": 50.142
+      }
+    ],
+    "measured_samples": 0,
+    "failure": "Group two failed during its cold backward; group one completed seven warmup updates then hit the 20 GiB allocator limit requesting a 4 GiB attention allocation.",
+    "conclusion": "MPS SDPA did not complete the 8K steady-state workload within these memory limits.",
+    "worker_log_sha256": "dc2c0f800002dcc0bc1b78b095af889a4f4349c45c79fb00123299c66098f4ff"
+  }
+}

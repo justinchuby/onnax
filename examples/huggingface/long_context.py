@@ -28,6 +28,11 @@ def _require_decrease(losses):
         raise AssertionError("Fixed training-set loss did not decrease")
 
 
+def _validate_corpus_context(manifest, max_length):
+    if manifest.get("max_length") != max_length:
+        raise ValueError("Qualification context must match the corpus manifest max_length")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", required=True)
@@ -35,6 +40,8 @@ def main():
     parser.add_argument("--library", required=True)
     parser.add_argument("--precision", choices=("fp32", "bf16"), required=True)
     parser.add_argument("--resume")
+    parser.add_argument("--fused-ops", action="store_true")
+    parser.add_argument("--pad-to-multiple-of", type=int)
     parser.add_argument("--steps", type=int, default=30)
     parser.add_argument("--max-length", type=int, default=4096)
     parser.add_argument("--checkpoint-layers", type=int, default=1)
@@ -54,6 +61,7 @@ def main():
 
     with open(os.path.join(args.corpus, "manifest.json"), encoding="utf-8") as stream:
         manifest = json.load(stream)
+    _validate_corpus_context(manifest, args.max_length)
     for metadata in manifest["files"].values():
         with open(os.path.join(args.corpus, metadata["filename"]), "rb") as stream:
             actual = hashlib.file_digest(stream, "sha256").hexdigest()
@@ -63,6 +71,12 @@ def main():
     journal = {
         "status": "running",
         "precision": args.precision,
+        "max_length": args.max_length,
+        "fused_ops": args.fused_ops,
+        "pad_to_multiple_of": args.pad_to_multiple_of,
+        "checkpoint_layers": args.checkpoint_layers,
+        "training_batches": [],
+        "evaluations": [],
         "source_commit": subprocess.check_output(
             ["git", "rev-parse", "HEAD"], text=True
         ).strip(),
@@ -104,6 +118,39 @@ def main():
         os.replace(path + ".tmp", path)
 
     class Observe(TrainerCallback):
+        def on_train_begin(self, args, state, control, model, **kwargs):
+            def capture(module, inputs, named):
+                if (
+                    not module.training
+                    or not torch.is_grad_enabled()
+                    or named.get("labels") is None
+                ):
+                    return
+                ids, labels = named["input_ids"], named["labels"]
+                journal["training_batches"].append(
+                    {
+                        "update": state.global_step,
+                        "batch": ids.shape[0],
+                        "sequence": ids.shape[1],
+                        "valid_shifted_tokens": int(labels[:, 1:].ne(-100).sum()),
+                    }
+                )
+
+            self.handle = model.register_forward_pre_hook(capture, with_kwargs=True)
+
+        def on_train_end(self, args, state, control, **kwargs):
+            self.handle.remove()
+
+        def on_evaluate(self, args, state, control, metrics, **kwargs):
+            row = {
+                "step": state.global_step,
+                "elapsed_seconds": time.perf_counter() - start,
+                "metrics": metrics,
+            }
+            journal["evaluations"].append(row)
+            persist()
+            print(json.dumps({"phase": "evaluation_complete", **row}), flush=True)
+
         def on_pre_optimizer_step(self, args, state, control, model, **kwargs):
             for parameter in model.onnx.adapters:
                 if parameter.grad is None or not torch.isfinite(parameter.grad).all():
@@ -152,10 +199,15 @@ def main():
             validation_file=os.path.join(args.corpus, "validation.jsonl"),
             max_length=args.max_length,
             evaluate_train=True,
+            fused_ops=args.fused_ops,
+            pad_to_multiple_of=args.pad_to_multiple_of,
             callbacks=[Observe()],
         )
         losses = report["fixed_training_loss"]
         journal["fixed_training_loss_decreased"] = losses[1] < losses[0]
+        journal["maximum_executed_training_sequence"] = max(
+            row["sequence"] for row in journal["training_batches"]
+        )
         _require_decrease(losses)
         journal["status"] = "complete"
     except BaseException as error:

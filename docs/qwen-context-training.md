@@ -368,3 +368,129 @@ Pass that guard directory to the collector using
 `--profile-dir`. The report preserves the final cumulative summary and capture
 settings. The benchmark CLI also writes progress to stderr and records per-step
 timing samples for future runs.
+
+## Prepare the 8K workload
+
+Select complete QA examples with a 6144–8192-token long bucket:
+
+```sh
+python -m examples.huggingface.long_corpus \
+  --max-length 8192 --output-dir /tmp/qwen-8k-corpus
+```
+
+The pinned source and document-group holdout policy stay the same. This selection
+contains 128 training examples and 32 validation examples. The selected training
+set reaches 8125 tokens; the validation set reaches 8024. Short examples supply
+96 training and 24 validation rows.
+
+Use fused operators, four-layer checkpoint groups and 128-token alignment:
+
+```sh
+ONNAX_TILED_ATTENTION=1 \
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 \
+ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912 \
+ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES=1073741824 \
+python -m examples.huggingface.long_context \
+  --corpus /tmp/qwen-8k-corpus --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --precision bf16 --max-length 8192 --checkpoint-layers 4 \
+  --fused-ops --pad-to-multiple-of 128 --output-dir /tmp/qwen-8k-bf16
+```
+
+Run through the process guard shown above to retain the 24 GiB footprint budget
+and 5 GiB disk reserve. The runner also caps the MLX allocator at 20 GiB.
+
+Alignment pads labels with `-100` and preserves effective shifted-token counts.
+The checkpoint data identity records the padding policy. `qualification.json`
+records every executed training batch's shape and valid token count, as well as
+evaluation and update events. The requested context must match the corpus manifest.
+
+### Training result on M1 Max
+
+Qwen3-0.6B completed 30 AdamW updates with BF16 projections, NF4 frozen decoder
+weights and FP32 adapter parameters, gradients and optimizer moments. Microbatch
+size was one with four accumulation batches per update. Training executed 120
+batches, including tensors with sequence length 8192.
+
+| Metric | Before training | After 30 updates |
+|---|---:|---:|
+| Fixed training-set loss | 3.45437 | 2.49825 |
+| Validation loss | 3.31262 | 2.52385 |
+
+Frozen buffers remained unchanged. The kernel-reported whole-process physical
+footprint peaked at 10.24 GiB, including model construction, training, evaluation
+and export. The complete run took 35.5 minutes on an Apple M1 Max with 32 GiB
+unified memory. The [training report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-8k-training-m1max.json)
+records all batch shapes, effective token counts, update memory snapshots,
+evaluation results and artifact identities.
+
+A fresh process resumed from update 15 and reproduced update 30's 113 checkpoint
+tensors, AdamW moments and scheduler state byte for byte. Its final fixed-training
+and validation losses matched the uninterrupted run. Reloaded ONNX execution at
+8192 tokens also reproduced the complete logits, hidden states, loss and all 112
+adapter gradients byte for byte, including 17 padding positions. The replay
+verified 511 frozen initializer hashes.
+
+All 112 adapter tensors completed the PEFT format roundtrip byte for byte. The
+separate short-batch BF16 reference audit recorded ONNX/PyTorch losses of
+6.87403/6.86507; its pointwise gradient and update differences remain in the report.
+The trained adapter was restored exactly after that audit.
+
+The matched four-layer PyTorch MPS capacity probe reached its 20 GiB allocator
+limit during backward recomputation: 16.63 GiB was allocated when attention
+requested another 4 GiB. Two-layer groups hit the same limit. One-layer groups
+completed a cold update and seven warmup updates, then exhausted the allocator
+on the next backward pass. Peak whole-process physical footprint was 23.76 GiB
+for that attempt. MPS therefore produced no steady-state timing samples at 8K
+under the 20 GiB allocator and 24 GiB process limits.
+
+### Steady-state 8K execution
+
+The [four-layer MLX report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-8k-mlx-group4-m1max.json)
+contains ten warmups followed by 100 measured updates. Each update uses one
+8192-token sequence with 8191 valid shifted targets, BF16 projection computation,
+FP32 adapter gradients/AdamW state, NF4 frozen decoder weights and 128-token head
+chunks. This timing workload uses one microbatch per update; quality training
+uses accumulation over four microbatches.
+
+| Phase | Median (s) | P95 (s) |
+|---|---:|---:|
+| Complete update | 39.687 | 41.254 |
+| Forward and loss | 10.068 | 10.587 |
+| Backward | 29.615 | 30.619 |
+| External AdamW | 0.00241 | 0.00300 |
+
+Median throughput was 206.4 valid tokens/s. Session/model preparation took
+136.1 seconds. Whole-process physical footprint peaked at 10.16 GiB, including
+construction and all 110 updates. Host input-view preparation had a 27-microsecond
+median; runtime transfers are included in ONNX execution timing. The report keeps
+all timing samples, losses, graph/parameter sizes, source hashes, runtime binary
+identity and thread settings.
+
+### Inspect capacity phases
+
+The capacity command validates one cold update and can record memory before and
+after graph preparation and every forward/VJP session call:
+
+```sh
+ONNAX_TILED_ATTENTION=1 \
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 \
+ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912 \
+ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES=1073741824 \
+python -m examples.huggingface.context_capacity \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --projection-precision bf16 --sequence-length 8192 --trace-phases \
+  --train-file /tmp/qwen-8k-corpus/benchmark.jsonl \
+  --output-dir /tmp/qwen-8k-capacity
+```
+
+Run this command through the process guard as well. `report.json` records the
+input and source identities, one update's loss and the 112-parameter interface.
+It checks finite FP32 gradients, updated parameters and AdamW moments.
+`phases.jsonl` attributes construction and execution peaks to their phases.
+Use the separate benchmark command with ten warmups and 100 measured steps for
+steady-state timing; phase instrumentation is optional there at the Python API.
+
+For a matched PyTorch MPS capacity probe, select `--provider mps` and omit the
+native library. It uses SDPA, chunked loss, four-layer checkpoints and a 20 GiB GPU
+allocator limit, bounded by the device recommendation. CPU capacity probes use `--provider cpu` with
+`--projection-precision fp32`.
