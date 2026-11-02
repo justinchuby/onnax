@@ -368,3 +368,38 @@ Pass that guard directory to the collector using
 `--profile-dir`. The report preserves the final cumulative summary and capture
 settings. The benchmark CLI also writes progress to stderr and records per-step
 timing samples for future runs.
+
+## Prepare the 8K workload
+
+Select complete QA examples with a 6144–8192-token long bucket:
+
+```sh
+python -m examples.huggingface.long_corpus \
+  --max-length 8192 --output-dir /tmp/qwen-8k-corpus
+```
+
+The pinned source and document-group holdout policy stay the same. This selection
+contains 128 training examples and 32 validation examples. The selected training
+set reaches 8125 tokens; the validation set reaches 8024. Short examples supply
+96 training and 24 validation rows.
+
+Use fused operators, four-layer checkpoint groups and 128-token alignment:
+
+```sh
+ONNAX_TILED_ATTENTION=1 \
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 \
+ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912 \
+ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES=1073741824 \
+python -m examples.huggingface.long_context \
+  --corpus /tmp/qwen-8k-corpus --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --precision bf16 --max-length 8192 --checkpoint-layers 4 \
+  --fused-ops --pad-to-multiple-of 128 --output-dir /tmp/qwen-8k-bf16
+```
+
+Run through the process guard shown above to retain the 24 GiB footprint budget
+and 5 GiB disk reserve. The runner also caps the MLX allocator at 20 GiB.
+
+Alignment pads labels with `-100` and preserves effective shifted-token counts.
+The checkpoint data identity records the padding policy. `qualification.json`
+records every executed training batch's shape and valid token count, as well as
+evaluation and update events. The requested context must match the corpus manifest.
