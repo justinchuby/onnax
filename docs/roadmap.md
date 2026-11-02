@@ -193,50 +193,53 @@ Transformers updates, TRL training, export/load and fresh-process recovery
 validate the family interface. Shared graph construction and decomposition
 also remain in use by the original Qwen workload.
 
-The [8192-token workload](qwen-context-training.md) has now completed 30 updates
-with fused operators, NF4 decoder weights and BF16 projections. Fixed training
-loss fell from 3.45437 to 2.49825 and validation loss from 3.31262 to 2.52385;
-whole-process physical footprint peaked at 10.24 GiB. Finish fresh-process
-checkpoint recovery, adapter/export validation and matched MLX/MPS measurements.
+The [8192-token workload](qwen-context-training.md) completes 30 updates with
+fused operators, NF4 decoder weights and BF16 projections. Fixed training loss
+fell from 3.45437 to 2.49825 and validation loss from 3.31262 to 2.52385;
+whole-process physical footprint peaked at 10.24 GiB. Fresh-process recovery and
+loaded forward/loss/gradient execution reproduced the final checkpoint byte for
+byte. All 112 adapter tensors completed the PEFT format roundtrip; the separate
+BF16 numerical reference differences are recorded in the report.
 
-### Next architecture workloads: hybrid attention and diffusion
+One hundred measured MLX updates at 8192 tokens yielded a 39.687-second median,
+41.254-second P95 and 206.4 valid tokens/s. MPS exhausted its allocator with
+one-, two- and four-layer checkpoint groups under the matched memory limits.
 
-After the 8K acceptance, qualify these two workloads through the public execution
-layer. Keep model construction and task conventions in example adapters until
-both workloads establish the shared interfaces.
+### Hybrid attention and diffusion
 
-1. **Qwen3.5 hybrid attention.** Mobius builds Gated DeltaNet layers alongside
-   full attention. Start with a tiny four-layer stack containing three linear
-   attention layers and one full attention layer, then qualify a pinned small
-   pretrained checkpoint. Mobius represents the recurrent path with
-   `com.microsoft::LinearAttention` and `CausalConvWithState`; its reference
-   linear-attention function uses ONNX `Scan`. Implement direct pullbacks for
-   the recurrent update and causal convolution, retaining ordinary ONNX local
-   functions in `pkg.onnax` as the portable derivative representation. Validate
-   all six recurrence inputs, both output cotangents, grouped heads, padding,
-   nonzero initial state and reverse propagation across chunk boundaries.
-   Full-sequence training starts from zero state and differentiates through the
-   entire sequence. Compare forward values, adapter gradients, external updates,
-   held-out loss and recovered checkpoints with Transformers. Measure recurrent
-   state and saved-activation memory as sequence length grows.
-2. **Conditional diffusion fine-tuning.** Start with Mobius's two-layer DiT:
-   hidden size 64, four attention heads, four latent channels, patch size two,
-   8-by-8 latent images and 32-dimensional text conditioning. A local graph
-   construction check confirms `sample`, `timestep`, `encoder_hidden_states`
-   inputs and a `noise_pred` output. Train attention adapters against fixed
-   synthetic clean-latent/noise/timestep triples using the noise-prediction
-   objective. Reuse Attention, LayerNormalization, Swish and Gelu pullbacks;
-   check the frozen patch-embedding Conv boundary before adding convolution
-   derivatives. Compare with an independent PyTorch denoiser, including gradients
-   through frozen output layers, multiple updates, export/load and recovery.
-   Then qualify a small pretrained Diffusers denoiser and its declared prediction
-   target. Diffusers supplies the noise schedule and sampling loop; datasets,
-   text encoders and VAE execution remain outside onnax.
+Both workloads now have an offline end-to-end example through the public
+execution layer. Model construction and task conventions remain in example
+adapters while the shared interface develops.
 
-For each workload, publish a runnable CLI, independent reference checks and
-isolated timing/memory measurements before extending the shared package API.
-Qwen3.5 exercises recurrent state and sequence differentiation; DiT exercises
-spatial shapes, timestep conditioning and noncausal cross-attention.
+1. **[Qwen3.5 hybrid attention](qwen35-training.md).** Mobius builds a four-layer
+   stack with three Gated DeltaNet layers and one full-attention layer. Direct
+   JVP/VJP rules preserve `LinearAttention` and `CausalConvWithState` calls;
+   the portable reverse recurrence saves chunk boundaries and recomputes one
+   chunk at a time. Tests cover all six recurrence inputs, both output
+   cotangents, grouped heads, both decay layouts, dynamic shapes and nonzero
+   initial state. The tiny model trains ten rank-four A/B tensors for 100
+   updates on CPU and MLX, with Transformers checks for logits, token loss and
+   every adapter gradient. Training/validation loss reaches 4.42861 / 4.95735
+   on CPU. Export/load, frozen weights and fresh-process optimizer recovery
+   are verified. Right padding and the source's fused QKV/query-gate layouts
+   are preserved.
+2. **[Conditional diffusion fine-tuning](diffusion.md).** The two-layer Mobius
+   DiT uses hidden size 64, four heads, four latent channels, patch size two,
+   8-by-8 latent images and 32-dimensional text conditioning. An external
+   noise schedule creates fixed clean-latent/noise/timestep triples. Sixteen
+   attention A/B tensors train through ONNX VJP for 100 updates: training
+   loss falls from 1.20757 to 0.49772 and validation loss from 1.22232 to
+   0.85458. An independent PyTorch denoiser checks forward values and all
+   adapter gradients; dynamic spatial shapes, export/load, frozen weights and
+   fresh-process recovery are covered by CI.
+
+The next milestones are shared Trainer/TRL/PEFT task adapters, a pinned
+Qwen3.5-0.8B run and a small pretrained Diffusers denoiser with its declared
+prediction target. Diffusers supplies the noise schedule and sampling loop;
+text encoders, VAE execution and datasets remain external. MLX measurements will
+separate execution, host exchange and updates, then guide recurrent backward
+fusion and state recomputation. Portable derivative functions use `pkg.onnax`
+when extracted from the generated tensor graph.
 
 ## Engineering boundaries
 
