@@ -45,10 +45,23 @@ def _frozen(model):
     }
 
 
-def run(directory, *, steps=100, resume=None):
+def run(directory, *, steps=100, resume=None, provider="cpu", library=None):
     """Align logits, token loss and every adapter gradient against Transformers."""
     if isinstance(steps, bool) or not isinstance(steps, int) or steps < 2:
         raise ValueError("Use at least two updates")
+    if provider not in ("cpu", "mlx") or (library is not None and provider != "mlx"):
+        raise ValueError("Select cpu or mlx; a development library requires mlx")
+    execution_options = {}
+    library_sha256 = None
+    if provider == "mlx":
+        from examples.lora.mlx_runtime import register_library
+        from examples.lora.mlx_runtime import session as mlx_session
+
+        if library is not None:
+            register_library(library)
+            with open(library, "rb") as stream:
+                library_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
+        execution_options["session_factory"] = mlx_session
     os.makedirs(directory, exist_ok=False)
     torch.set_num_threads(1)
     start = time.perf_counter()
@@ -74,7 +87,12 @@ def run(directory, *, steps=100, resume=None):
     losses, maximum_gradient_error, maximum_parameter_error = [], 0.0, 0.0
     trajectory_diagnostics = []
     with OnnxModule(
-        graph, arrays, outputs=["logits"], input_gradients=[], optimize=optimizer.optimize
+        graph,
+        arrays,
+        outputs=["logits"],
+        input_gradients=[],
+        optimize=optimizer.optimize,
+        **execution_options,
     ) as model:
         update = torch.optim.AdamW(model.parameters(), lr=0.03, eps=1e-5, weight_decay=0)
         reference_update = torch.optim.AdamW(
@@ -207,7 +225,7 @@ def run(directory, *, steps=100, resume=None):
                 and parameter.detach().numpy().tobytes() != frozen_reference[name]
             ):
                 raise AssertionError("Frozen Transformers base weights changed")
-        with OnnxModule.load(exported) as restored:
+        with OnnxModule.load(exported, **execution_options) as restored:
             torch.testing.assert_close(restored(**validation), prediction, rtol=0, atol=0)
         for name in ("model.onnx", "execution.onnx", "derivative.onnx", "forward.onnx"):
             onnx.checker.check_model(os.path.join(exported, name), full_check=True)
@@ -241,6 +259,8 @@ def run(directory, *, steps=100, resume=None):
         "steps": steps,
         "start_step": start_step,
         "dtype": "float32",
+        "provider": provider,
+        "library_sha256": library_sha256,
         "adapter_tensors": len(arrays),
         "mapping": mapping,
         "train_loss": [losses[0], train_after],
@@ -288,8 +308,20 @@ def main():
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--steps", type=int, default=100)
     parser.add_argument("--resume")
+    parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
+    parser.add_argument("--library")
     args = parser.parse_args()
-    print(json.dumps(run(args.output_dir, steps=args.steps, resume=args.resume)))
+    print(
+        json.dumps(
+            run(
+                args.output_dir,
+                steps=args.steps,
+                resume=args.resume,
+                provider=args.provider,
+                library=args.library,
+            )
+        )
+    )
 
 
 if __name__ == "__main__":
