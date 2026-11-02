@@ -13,6 +13,15 @@ def compare(full, bounded):
         left = json.load(stream)
     with open(bounded, encoding="utf-8") as stream:
         right = json.load(stream)
+    for report in (left, right):
+        if report.get("version") != 1 or report.get("qualification_status") == "invalid":
+            raise ValueError("Expected a valid version-one measurement")
+        samples = report["samples"]
+        if not samples or len(samples) != report["options"]["samples"]:
+            raise ValueError("Measured sample count differs from the declared workload")
+        durations = np.asarray([row["step_seconds"] for row in samples])
+        if not np.isfinite(durations).all() or np.any(durations <= 0):
+            raise ValueError("Expected finite positive measured durations")
     for field in (
         "input_sha256",
         "library_sha256",
@@ -23,6 +32,8 @@ def compare(full, bounded):
         "versions",
         "hardware",
         "source_sha256",
+        "timing_scope",
+        "memory_scope",
     ):
         if left.get(field) != right.get(field):
             raise ValueError(f"Measurement configuration differs: {field}")
