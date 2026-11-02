@@ -8,7 +8,12 @@ import hashlib
 import json
 import math
 import os
+import platform
+import resource
+import subprocess
+import sys
 import time
+from importlib.metadata import version
 
 import torch
 from transformers import AutoConfig, PretrainedConfig, PreTrainedModel
@@ -382,6 +387,51 @@ def main():
             resume=args.resume,
             **options,
         )
+    source_directory = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    commit = subprocess.run(
+        ["git", "-C", source_directory, "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    status = subprocess.run(
+        ["git", "-C", source_directory, "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    library_sha256 = None
+    if args.library is not None:
+        with open(args.library, "rb") as stream:
+            library_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
+    report.update(
+        provider=args.provider,
+        dtype="float32",
+        library_sha256=library_sha256,
+        source_commit=commit.stdout.strip() if commit.returncode == 0 else None,
+        working_tree_dirty=bool(status.stdout.strip()) if status.returncode == 0 else None,
+        platform=platform.platform(),
+        versions={
+            name: version(name)
+            for name in (
+                "onnax",
+                "onnx",
+                "onnx-ir",
+                "onnxscript",
+                "onnxruntime",
+                "torch",
+                "transformers",
+                "trl",
+                "datasets",
+                "peft",
+                "mobius-onnx",
+            )
+        },
+        threads={"torch": torch.get_num_threads(), "ort_intra": 1, "ort_inter": 1},
+        process_peak_rss_bytes=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        * (1 if sys.platform == "darwin" else 1024),
+        rss_scope="process, imports, construction, runtime, training or audit, and export",
+    )
     with open(os.path.join(args.output_dir, "report.json"), "w", encoding="utf-8") as stream:
         json.dump(report, stream, indent=2)
     print(json.dumps(report, indent=2))
