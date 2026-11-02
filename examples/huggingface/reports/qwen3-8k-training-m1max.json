@@ -1,0 +1,1386 @@
+{
+  "schema_version": 1,
+  "scope": "Qwen3-0.6B 8192-token BF16/NF4 training qualification",
+  "hardware": {
+    "chip": "Apple M1 Max",
+    "unified_memory_bytes": 34359738368
+  },
+  "qualification": {
+    "status": "complete",
+    "precision": "bf16",
+    "max_length": 8192,
+    "fused_ops": true,
+    "pad_to_multiple_of": 128,
+    "checkpoint_layers": 4,
+    "training_batches": [
+      {
+        "update": 0,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 58
+      },
+      {
+        "update": 0,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 43
+      },
+      {
+        "update": 0,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 64
+      },
+      {
+        "update": 0,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 94
+      },
+      {
+        "update": 1,
+        "batch": 1,
+        "sequence": 7168,
+        "valid_shifted_tokens": 7051
+      },
+      {
+        "update": 1,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 67
+      },
+      {
+        "update": 1,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 33
+      },
+      {
+        "update": 1,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 182
+      },
+      {
+        "update": 2,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 35
+      },
+      {
+        "update": 2,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 137
+      },
+      {
+        "update": 2,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 92
+      },
+      {
+        "update": 2,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 197
+      },
+      {
+        "update": 3,
+        "batch": 1,
+        "sequence": 7936,
+        "valid_shifted_tokens": 7829
+      },
+      {
+        "update": 3,
+        "batch": 1,
+        "sequence": 7680,
+        "valid_shifted_tokens": 7669
+      },
+      {
+        "update": 3,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 93
+      },
+      {
+        "update": 3,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 57
+      },
+      {
+        "update": 4,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 176
+      },
+      {
+        "update": 4,
+        "batch": 1,
+        "sequence": 7296,
+        "valid_shifted_tokens": 7265
+      },
+      {
+        "update": 4,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 51
+      },
+      {
+        "update": 4,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 54
+      },
+      {
+        "update": 5,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 65
+      },
+      {
+        "update": 5,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 38
+      },
+      {
+        "update": 5,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 43
+      },
+      {
+        "update": 5,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 127
+      },
+      {
+        "update": 6,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 47
+      },
+      {
+        "update": 6,
+        "batch": 1,
+        "sequence": 8192,
+        "valid_shifted_tokens": 8101
+      },
+      {
+        "update": 6,
+        "batch": 1,
+        "sequence": 384,
+        "valid_shifted_tokens": 327
+      },
+      {
+        "update": 6,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 36
+      },
+      {
+        "update": 7,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 38
+      },
+      {
+        "update": 7,
+        "batch": 1,
+        "sequence": 7552,
+        "valid_shifted_tokens": 7544
+      },
+      {
+        "update": 7,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 83
+      },
+      {
+        "update": 7,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 150
+      },
+      {
+        "update": 8,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 159
+      },
+      {
+        "update": 8,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 40
+      },
+      {
+        "update": 8,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 77
+      },
+      {
+        "update": 8,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 42
+      },
+      {
+        "update": 9,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 96
+      },
+      {
+        "update": 9,
+        "batch": 1,
+        "sequence": 8064,
+        "valid_shifted_tokens": 7951
+      },
+      {
+        "update": 9,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 173
+      },
+      {
+        "update": 9,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 175
+      },
+      {
+        "update": 10,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 152
+      },
+      {
+        "update": 10,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 49
+      },
+      {
+        "update": 10,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 56
+      },
+      {
+        "update": 10,
+        "batch": 1,
+        "sequence": 7296,
+        "valid_shifted_tokens": 7232
+      },
+      {
+        "update": 11,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 43
+      },
+      {
+        "update": 11,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 33
+      },
+      {
+        "update": 11,
+        "batch": 1,
+        "sequence": 7680,
+        "valid_shifted_tokens": 7596
+      },
+      {
+        "update": 11,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 46
+      },
+      {
+        "update": 12,
+        "batch": 1,
+        "sequence": 7808,
+        "valid_shifted_tokens": 7789
+      },
+      {
+        "update": 12,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 109
+      },
+      {
+        "update": 12,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 38
+      },
+      {
+        "update": 12,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 117
+      },
+      {
+        "update": 13,
+        "batch": 1,
+        "sequence": 384,
+        "valid_shifted_tokens": 268
+      },
+      {
+        "update": 13,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 30
+      },
+      {
+        "update": 13,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 43
+      },
+      {
+        "update": 13,
+        "batch": 1,
+        "sequence": 7040,
+        "valid_shifted_tokens": 6916
+      },
+      {
+        "update": 14,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 28
+      },
+      {
+        "update": 14,
+        "batch": 1,
+        "sequence": 8192,
+        "valid_shifted_tokens": 8077
+      },
+      {
+        "update": 14,
+        "batch": 1,
+        "sequence": 7424,
+        "valid_shifted_tokens": 7389
+      },
+      {
+        "update": 14,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 59
+      },
+      {
+        "update": 15,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 103
+      },
+      {
+        "update": 15,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 38
+      },
+      {
+        "update": 15,
+        "batch": 1,
+        "sequence": 384,
+        "valid_shifted_tokens": 302
+      },
+      {
+        "update": 15,
+        "batch": 1,
+        "sequence": 6784,
+        "valid_shifted_tokens": 6660
+      },
+      {
+        "update": 16,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 113
+      },
+      {
+        "update": 16,
+        "batch": 1,
+        "sequence": 384,
+        "valid_shifted_tokens": 378
+      },
+      {
+        "update": 16,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 63
+      },
+      {
+        "update": 16,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 32
+      },
+      {
+        "update": 17,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 37
+      },
+      {
+        "update": 17,
+        "batch": 1,
+        "sequence": 6400,
+        "valid_shifted_tokens": 6286
+      },
+      {
+        "update": 17,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 87
+      },
+      {
+        "update": 17,
+        "batch": 1,
+        "sequence": 8064,
+        "valid_shifted_tokens": 7970
+      },
+      {
+        "update": 18,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 56
+      },
+      {
+        "update": 18,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 59
+      },
+      {
+        "update": 18,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 120
+      },
+      {
+        "update": 18,
+        "batch": 1,
+        "sequence": 7808,
+        "valid_shifted_tokens": 7807
+      },
+      {
+        "update": 19,
+        "batch": 1,
+        "sequence": 7936,
+        "valid_shifted_tokens": 7822
+      },
+      {
+        "update": 19,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 142
+      },
+      {
+        "update": 19,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 44
+      },
+      {
+        "update": 19,
+        "batch": 1,
+        "sequence": 7040,
+        "valid_shifted_tokens": 7001
+      },
+      {
+        "update": 20,
+        "batch": 1,
+        "sequence": 7680,
+        "valid_shifted_tokens": 7617
+      },
+      {
+        "update": 20,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 47
+      },
+      {
+        "update": 20,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 59
+      },
+      {
+        "update": 20,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 75
+      },
+      {
+        "update": 21,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 36
+      },
+      {
+        "update": 21,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 41
+      },
+      {
+        "update": 21,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 100
+      },
+      {
+        "update": 21,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 74
+      },
+      {
+        "update": 22,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 35
+      },
+      {
+        "update": 22,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 44
+      },
+      {
+        "update": 22,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 136
+      },
+      {
+        "update": 22,
+        "batch": 1,
+        "sequence": 7808,
+        "valid_shifted_tokens": 7755
+      },
+      {
+        "update": 23,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 113
+      },
+      {
+        "update": 23,
+        "batch": 1,
+        "sequence": 512,
+        "valid_shifted_tokens": 386
+      },
+      {
+        "update": 23,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 44
+      },
+      {
+        "update": 23,
+        "batch": 1,
+        "sequence": 7296,
+        "valid_shifted_tokens": 7273
+      },
+      {
+        "update": 24,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 47
+      },
+      {
+        "update": 24,
+        "batch": 1,
+        "sequence": 6656,
+        "valid_shifted_tokens": 6582
+      },
+      {
+        "update": 24,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 44
+      },
+      {
+        "update": 24,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 37
+      },
+      {
+        "update": 25,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 27
+      },
+      {
+        "update": 25,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 34
+      },
+      {
+        "update": 25,
+        "batch": 1,
+        "sequence": 7680,
+        "valid_shifted_tokens": 7679
+      },
+      {
+        "update": 25,
+        "batch": 1,
+        "sequence": 7040,
+        "valid_shifted_tokens": 7026
+      },
+      {
+        "update": 26,
+        "batch": 1,
+        "sequence": 7424,
+        "valid_shifted_tokens": 7378
+      },
+      {
+        "update": 26,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 60
+      },
+      {
+        "update": 26,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 95
+      },
+      {
+        "update": 26,
+        "batch": 1,
+        "sequence": 7168,
+        "valid_shifted_tokens": 7129
+      },
+      {
+        "update": 27,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 62
+      },
+      {
+        "update": 27,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 34
+      },
+      {
+        "update": 27,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 26
+      },
+      {
+        "update": 27,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 46
+      },
+      {
+        "update": 28,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 38
+      },
+      {
+        "update": 28,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 97
+      },
+      {
+        "update": 28,
+        "batch": 1,
+        "sequence": 8192,
+        "valid_shifted_tokens": 8072
+      },
+      {
+        "update": 28,
+        "batch": 1,
+        "sequence": 7680,
+        "valid_shifted_tokens": 7575
+      },
+      {
+        "update": 29,
+        "batch": 1,
+        "sequence": 256,
+        "valid_shifted_tokens": 170
+      },
+      {
+        "update": 29,
+        "batch": 1,
+        "sequence": 8064,
+        "valid_shifted_tokens": 7969
+      },
+      {
+        "update": 29,
+        "batch": 1,
+        "sequence": 7936,
+        "valid_shifted_tokens": 7870
+      },
+      {
+        "update": 29,
+        "batch": 1,
+        "sequence": 128,
+        "valid_shifted_tokens": 44
+      }
+    ],
+    "evaluations": [
+      {
+        "step": 0,
+        "elapsed_seconds": 438.5229652909911,
+        "metrics": {
+          "fixed_train_loss": 3.4543731212615967,
+          "fixed_train_model_preparation_time": 0.0004,
+          "fixed_train_runtime": 304.1987,
+          "fixed_train_samples_per_second": 0.421,
+          "fixed_train_steps_per_second": 0.421,
+          "epoch": 0
+        }
+      },
+      {
+        "step": 0,
+        "elapsed_seconds": 518.8985234160209,
+        "metrics": {
+          "eval_loss": 3.312619686126709,
+          "eval_model_preparation_time": 0.0004,
+          "eval_runtime": 80.374,
+          "eval_samples_per_second": 0.398,
+          "eval_steps_per_second": 0.398,
+          "epoch": 0
+        }
+      },
+      {
+        "step": 30,
+        "elapsed_seconds": 1804.5881494579953,
+        "metrics": {
+          "eval_loss": 2.5238492488861084,
+          "eval_model_preparation_time": 0.0004,
+          "eval_runtime": 81.4999,
+          "eval_samples_per_second": 0.393,
+          "eval_steps_per_second": 0.393,
+          "epoch": 0.9375
+        }
+      },
+      {
+        "step": 30,
+        "elapsed_seconds": 2125.8641302500037,
+        "metrics": {
+          "fixed_train_loss": 2.4982457160949707,
+          "fixed_train_model_preparation_time": 0.0004,
+          "fixed_train_runtime": 321.2751,
+          "fixed_train_samples_per_second": 0.398,
+          "fixed_train_steps_per_second": 0.398,
+          "epoch": 0.9375
+        }
+      }
+    ],
+    "source_commit": "1008cff9c3eb1d2f39f9a3725bad4f5d7f1704ee",
+    "working_tree_dirty": false,
+    "versions": {
+      "onnx": "1.23.2",
+      "onnx-ir": "1.1.0",
+      "onnxscript": "0.7.2",
+      "onnxruntime": "1.31.1",
+      "numpy": "2.4.6",
+      "torch": "2.15.0",
+      "transformers": "5.22.1",
+      "trl": "0.24.0",
+      "peft": "0.21.2"
+    },
+    "mlx_memory_limit_bytes": 21474836480,
+    "previous_mlx_memory_limit_bytes": 32641751449,
+    "mlx_cache_limit_bytes": 536870912,
+    "updates": [
+      {
+        "step": 1,
+        "elapsed_seconds": 521.550780874968,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6679237480,
+          "lifetime_peak_bytes": 8227115808,
+          "current_resident_bytes": 2860531712,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 547637303,
+        "mlx_peak_bytes": 4969834172
+      },
+      {
+        "step": 2,
+        "elapsed_seconds": 560.4779954999685,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6922277952,
+          "lifetime_peak_bytes": 10471707640,
+          "current_resident_bytes": 1737474048,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 544244340,
+        "mlx_peak_bytes": 7137110664
+      },
+      {
+        "step": 3,
+        "elapsed_seconds": 563.1859646660159,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6914856000,
+          "lifetime_peak_bytes": 10471707640,
+          "current_resident_bytes": 1739390976,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 537250424,
+        "mlx_peak_bytes": 7137110664
+      },
+      {
+        "step": 4,
+        "elapsed_seconds": 648.222804124991,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6948967488,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2143322112,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 545406903,
+        "mlx_peak_bytes": 7465118344
+      },
+      {
+        "step": 5,
+        "elapsed_seconds": 687.5101725829882,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6952064064,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2174582784,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548094007,
+        "mlx_peak_bytes": 7465118344
+      },
+      {
+        "step": 6,
+        "elapsed_seconds": 690.1703186659724,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6952080448,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2174779392,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548093879,
+        "mlx_peak_bytes": 7465118344
+      },
+      {
+        "step": 7,
+        "elapsed_seconds": 734.8500873330049,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6960600152,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1984577536,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 536900952,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 8,
+        "elapsed_seconds": 772.5422819160158,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6964401240,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2153168896,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 544506484,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 9,
+        "elapsed_seconds": 775.1122007910162,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6961910872,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2153906176,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548093879,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 10,
+        "elapsed_seconds": 818.663797999965,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6963876952,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2153250816,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 544248445,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 11,
+        "elapsed_seconds": 854.547844375018,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6984012888,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2212020224,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 542130188,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 12,
+        "elapsed_seconds": 893.9447691660025,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6961321048,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2179252224,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 547047479,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 13,
+        "elapsed_seconds": 934.1555334579898,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6962238552,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 2181251072,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548160567,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 14,
+        "elapsed_seconds": 968.916987915989,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6973248600,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1822720000,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 560618372,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 15,
+        "elapsed_seconds": 1047.0977096249699,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6961517680,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 975273984,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 536971300,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 16,
+        "elapsed_seconds": 1079.2324779579649,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7010325640,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1110458368,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 559667852,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 17,
+        "elapsed_seconds": 1081.951700582984,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6968497240,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1084129280,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 544948151,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 18,
+        "elapsed_seconds": 1150.229657666001,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6989927488,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1138262016,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 566165516,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 19,
+        "elapsed_seconds": 1190.120384207985,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7023121520,
+          "lifetime_peak_bytes": 10967225384,
+          "current_resident_bytes": 1169408000,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 567066636,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 20,
+        "elapsed_seconds": 1262.559623790963,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7004591240,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 1170325504,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 551723024,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 21,
+        "elapsed_seconds": 1301.6349793749978,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6971593816,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 1084768256,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 545996855,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 22,
+        "elapsed_seconds": 1304.1132049160078,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6973625432,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 1084850176,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548161591,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 23,
+        "elapsed_seconds": 1344.6724387499853,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6993974408,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 1033715712,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 537747472,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 24,
+        "elapsed_seconds": 1381.048083874979,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7030035592,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 976355328,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 572014604,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 25,
+        "elapsed_seconds": 1412.3192546250066,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6978229336,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 949682176,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548093879,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 26,
+        "elapsed_seconds": 1482.6771860409644,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7009145968,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 1035599872,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 552198160,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 27,
+        "elapsed_seconds": 1554.9663115409785,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 7015158920,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 641417216,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 557842444,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 28,
+        "elapsed_seconds": 1557.8890175410197,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6977967192,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 623788032,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 548161591,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 29,
+        "elapsed_seconds": 1640.3428710000007,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6998922376,
+          "lifetime_peak_bytes": 10994340928,
+          "current_resident_bytes": 959545344,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 539197448,
+        "mlx_peak_bytes": 7491684992
+      },
+      {
+        "step": 30,
+        "elapsed_seconds": 1723.0043380829738,
+        "physical_footprint": {
+          "available": true,
+          "current_bytes": 6977475672,
+          "lifetime_peak_bytes": 10999829592,
+          "current_resident_bytes": 954499072,
+          "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+        },
+        "mlx_active_bytes": 3338406336,
+        "mlx_cache_bytes": 547571767,
+        "mlx_peak_bytes": 7491684992
+      }
+    ],
+    "library_sha256": "6630fc37242d3ea15c406570cbb384e47263cebc2f4ed5996a91b78c0e9623b1",
+    "corpus_manifest_sha256": "24dbad142e4c8931920a56c5abab4028dd511307c8151abc0a90cd5a903a3643",
+    "fixed_training_loss_decreased": true,
+    "maximum_executed_training_sequence": 8192,
+    "elapsed_seconds": 2131.848582124978,
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 6965271248,
+      "lifetime_peak_bytes": 10999829592,
+      "current_resident_bytes": 4815716352,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_rss_bytes": 6540689408
+  },
+  "training": {
+    "model": "Qwen/Qwen3-0.6B",
+    "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "steps": 30,
+    "data": {
+      "version": 3,
+      "train_lines": 128,
+      "validation_lines": 32,
+      "train_sha256": "f53b25bc2b1fbd7eee49ff6939353a4d3938f817aa1693475c198901a62688f5",
+      "validation_sha256": "56db8220674beafa94bdd81f5d2eda058a92aaa53d665f37b07ec6e7f3df0243",
+      "tokenizer_sha256": "6dd55c5383c60de4ef14710c7a19b02df3f57ce1792e5028373a9945b4173574",
+      "max_length": 8192,
+      "pad_to_multiple_of": 128
+    },
+    "mode": "chunked",
+    "checkpoint_layers": 4,
+    "projection_precision": "bf16",
+    "validation_loss": [
+      3.312619686126709,
+      2.5238492488861084
+    ],
+    "fixed_training_loss": [
+      3.4543731212615967,
+      2.4982457160949707
+    ],
+    "audits": [],
+    "reference_retained_during_training": false,
+    "provider": "mlx",
+    "segment_target_nodes": null,
+    "ort_graph_optimization": "disabled",
+    "fused_ops": true,
+    "frozen_buffers_unchanged": true,
+    "cpu_fallback_disabled": true,
+    "mlx_compile_disabled": true,
+    "lut4_fusion_disabled": false,
+    "library": "/tmp/onnax-half-runtime/libonnxruntime_mlx_ep.dylib",
+    "library_sha256": "6630fc37242d3ea15c406570cbb384e47263cebc2f4ed5996a91b78c0e9623b1",
+    "artifact_bytes": {
+      "adapter.npz": 2328422,
+      "body.onnx": 911803,
+      "chat_template.jinja": 4168,
+      "checkpoint_plan.json": 24046,
+      "decoder_0_4_backward.onnx": 262448,
+      "decoder_0_4_forward.onnx": 154129,
+      "decoder_12_16_backward.onnx": 261314,
+      "decoder_12_16_forward.onnx": 152556,
+      "decoder_16_20_backward.onnx": 261314,
+      "decoder_16_20_forward.onnx": 152556,
+      "decoder_20_24_backward.onnx": 261314,
+      "decoder_20_24_forward.onnx": 152556,
+      "decoder_24_28_backward.onnx": 261557,
+      "decoder_24_28_forward.onnx": 152916,
+      "decoder_4_8_backward.onnx": 260049,
+      "decoder_4_8_forward.onnx": 151589,
+      "decoder_8_12_backward.onnx": 260663,
+      "decoder_8_12_forward.onnx": 152070,
+      "forward.onnx": 3213077,
+      "head_forward.onnx": 15133,
+      "head_gradient.onnx": 20013,
+      "head_loss.onnx": 15974,
+      "interface.json": 90315,
+      "prefix_forward.onnx": 27131,
+      "quantization.json": 70122,
+      "suffix_backward.onnx": 35718,
+      "suffix_forward.onnx": 31109,
+      "tokenizer.json": 11422650,
+      "tokenizer_config.json": 690,
+      "weights-8eb7b9f71a66bb2ec3632b6ecc33910ac30aee6542744dccf302f99ce3c1f9bd.data": 1513357312
+    },
+    "forward_nodes": 1927,
+    "adapter_parameter_bytes": 2293760,
+    "requested_audits": {
+      "reference": false,
+      "strict_reference": false,
+      "peft": false,
+      "fp64": false,
+      "stable_reference": false
+    }
+  },
+  "guard": {
+    "command": [
+      "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+      "-m",
+      "examples.huggingface.long_context",
+      "--corpus",
+      "/tmp/onnax-qwen-longalpaca-8k",
+      "--library",
+      "/tmp/onnax-half-runtime/libonnxruntime_mlx_ep.dylib",
+      "--precision",
+      "bf16",
+      "--max-length",
+      "8192",
+      "--checkpoint-layers",
+      "4",
+      "--fused-ops",
+      "--pad-to-multiple-of",
+      "128",
+      "--steps",
+      "30",
+      "--output-dir",
+      "/tmp/onnax-qwen8k-bf16-quality-v1"
+    ],
+    "cwd": "/private/tmp/onnax-qwen8k-worktree",
+    "status": "complete",
+    "physical_memory_budget_bytes": 25769803776,
+    "minimum_free_disk_bytes": 5368709120,
+    "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+    "observation_errors": 0,
+    "pid": 32348,
+    "started": "2026-11-02T02:29:26.923786+00:00",
+    "returncode": 0,
+    "finished": "2026-11-02T03:05:04.195970+00:00",
+    "temporary_files_removed": true
+  },
+  "quantization": {
+    "format": "onnax-row-major-nf4-v1",
+    "codebook": [
+      -1.0,
+      -0.6961928009986877,
+      -0.5250730514526367,
+      -0.39491748809814453,
+      -0.28444138169288635,
+      -0.18477343022823334,
+      -0.09105003625154495,
+      0.0,
+      0.07958029955625534,
+      0.16093020141124725,
+      0.24611230194568634,
+      0.33791524171829224,
+      0.44070982933044434,
+      0.5626170039176941,
+      0.7229568362236023,
+      1.0
+    ],
+    "packing": "high nibble first; row-major transposed Linear weight",
+    "block_size": 64,
+    "compute_dtype": "bfloat16",
+    "adapter_dtype": "float32",
+    "embedding_dtype": "float32",
+    "lm_head_dtype": "float32",
+    "original_decoder_bytes": 1761607680,
+    "packed_decoder_bytes": 247726080
+  },
+  "raw_artifact_sha256": {
+    "qualification.json": "66cd8cda8175134393665feef757f80f1a8cdd88fc49e24c65de20261f56d944",
+    "report.json": "47c61697c9cb392d6e014b716c103e440e3ccb82f52d00a770d5246582b94e34"
+  }
+}

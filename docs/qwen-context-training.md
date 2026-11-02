@@ -404,6 +404,25 @@ The checkpoint data identity records the padding policy. `qualification.json`
 records every executed training batch's shape and valid token count, as well as
 evaluation and update events. The requested context must match the corpus manifest.
 
+### Training result on M1 Max
+
+Qwen3-0.6B completed 30 AdamW updates with BF16 projections, NF4 frozen decoder
+weights and FP32 adapter parameters, gradients and optimizer moments. Microbatch
+size was one with four accumulation batches per update. Training executed 120
+batches, including tensors with sequence length 8192.
+
+| Metric | Before training | After 30 updates |
+|---|---:|---:|
+| Fixed training-set loss | 3.45437 | 2.49825 |
+| Validation loss | 3.31262 | 2.52385 |
+
+Frozen buffers remained unchanged. The kernel-reported whole-process physical
+footprint peaked at 10.24 GiB, including model construction, training, evaluation
+and export. The complete run took 35.5 minutes on an Apple M1 Max with 32 GiB
+unified memory. The [training report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen3-8k-training-m1max.json)
+records all batch shapes, effective token counts, update memory snapshots,
+evaluation results and artifact identities.
+
 ### Inspect capacity phases
 
 The capacity command validates one cold update and can record memory before and
