@@ -332,6 +332,30 @@ Keep this planner in the example layer while the saved-value and execution
 contracts develop. The first delivery is an explicit, inspectable replay plan and
 one executed candidate; automatic budget selection follows those measurements.
 
+### Block-local replay implementation
+
+The example VJP splitter now accepts explicit saved-value names to regenerate.
+Its deterministic producer-slice planner preserves retained cut values and shared
+producers. Saved-value reports expose the replay plan, and an isolated paired
+forward/backward command validates candidates against actual checkpoint feeds.
+Dynamic batches, accumulation, multi-step updates and Adam state restoration are
+covered. The real-model study uses the complete 4032-token Qwen3.5 QA capture
+and compares saved activations, MLP replay and whole-block checkpointing.
+
+The 4032-token full-attention comparison keeps whole-block replay as the
+lowest-memory default. The saved-value audit finds 15 retained
+tensors read only through `Shape`. A shape-vector boundary transform now replaces
+425 MiB of payloads with 384 bytes of runtime metadata. The MLP-replay route then
+saves 276 MiB, with a 323 ms median paired invocation and 4.47 GiB process peak.
+Whole-block replay retains the lowest process and allocator peaks for this case.
+Qualify full-decoder updates and recovery before selecting a new execution
+policy. See the {ref}`block-local measurements <complete-context-block-replay>`.
+
+The next attention deployment target is Qwen3.5's 256-wide heads. The existing
+attention-VJP packaging pass accepts widths 16, 32, 64 and 128, so this block
+currently uses the portable pullback. Extend and measure that fusion contract
+against the captured 4k inputs, then validate full-decoder training and recovery.
+
 ```{toctree}
 :hidden:
 
@@ -352,23 +376,3 @@ ort-training-handoff
 
 The [MLX precision workflow](mlx-precision.md) covers BF16/FP16 projections,
 FP32 adjoints and precision-preserving lookup-4 deployment.
-
-### Block-local replay implementation
-
-The example VJP splitter now accepts explicit saved-value names to regenerate.
-Its deterministic producer-slice planner preserves retained cut values and shared
-producers. Saved-value reports expose the replay plan, and an isolated paired
-forward/backward command validates candidates against actual checkpoint feeds.
-Dynamic batches, accumulation, multi-step updates and Adam state restoration are
-covered. The first real-model study uses the complete 4032-token Qwen3.5 QA
-capture and the full-attention MLP producer slice. Compare this candidate with
-both saved activations and the existing whole-block checkpoint policy before
-changing decoder execution defaults.
-
-The first 4032-token full-attention comparison now measures the whole-block,
-save-all and MLP-replay routes. Whole-block replay uses the least memory and time
-in this case, so it remains the default. The saved-value audit finds 15 retained
-tensors read only through `Shape`. Next, represent those boundaries with shape
-vectors, then repeat the three-route comparison and qualify full-decoder updates
-and recovery for any selected execution policy. See the
-{ref}`block-local measurements <complete-context-block-replay>`.

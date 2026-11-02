@@ -36,6 +36,7 @@ def measure(
     *,
     recompute=(),
     checkpoint=False,
+    save_shapes=False,
     factory,
     memory=None,
     warmup=10,
@@ -45,8 +46,10 @@ def measure(
     if warmup < 0 or samples < 1:
         raise ValueError("Expected warmup >= 0 and samples >= 1")
     recompute = tuple(recompute)
-    if checkpoint and recompute:
-        raise ValueError("Whole checkpoint replay and selected values are mutually exclusive")
+    if checkpoint and (recompute or save_shapes):
+        raise ValueError(
+            "Whole checkpoint replay and saved-value edits are mutually exclusive"
+        )
     record, block, feeds, expected = load_case(directory, captures, name)
     row = record["blocks"][block["index"]]
     source = ir.load(os.path.join(directory, f"block_{block['index']}_forward.onnx"))
@@ -90,6 +93,14 @@ def measure(
     outputs = [value for value in forward.graph.outputs if value.name in retained_outputs]
     forward.graph.outputs.clear()
     forward.graph.outputs.extend(outputs)
+    if save_shapes:
+        from examples.huggingface.shape_residuals import compress
+
+        forward, backward, residuals, shape_plan = compress(
+            forward, backward, residuals, outputs=original_outputs
+        )
+        backward = optimize_training_graph(backward)
+        plan["shape_boundaries"] = shape_plan
     if not checkpoint:
         forward = optimize_training_graph(forward)
     plan["retained_values"] = list(residuals)
@@ -210,6 +221,7 @@ def main():
     strategies = parser.add_mutually_exclusive_group()
     strategies.add_argument("--recompute", nargs="+", default=[])
     strategies.add_argument("--checkpoint", action="store_true")
+    parser.add_argument("--save-shapes", action="store_true")
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
     parser.add_argument("--library")
     parser.add_argument("--warmup", type=int, default=10)
@@ -235,6 +247,7 @@ def main():
         args.block,
         recompute=args.recompute,
         checkpoint=args.checkpoint,
+        save_shapes=args.save_shapes,
         factory=session,
         memory=memory,
         warmup=args.warmup,
@@ -256,6 +269,7 @@ def main():
                 __file__,
                 os.path.join(os.path.dirname(__file__), "residuals.py"),
                 os.path.join(os.path.dirname(__file__), "recomputation.py"),
+                os.path.join(os.path.dirname(__file__), "shape_residuals.py"),
                 os.path.join(os.path.dirname(__file__), "optimization.py"),
             )
         },

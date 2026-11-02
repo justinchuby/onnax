@@ -1,0 +1,451 @@
+{
+  "version": 1,
+  "block": "decoder_3_4",
+  "bundle_identity": "684aaefb43b19c36b413661d93120f71971b29425736a57239cc1770844ef076",
+  "input_arrays": {
+    "position_ids": {
+      "shape": [
+        1,
+        4032
+      ],
+      "dtype": "int64",
+      "bytes": 32256,
+      "sha256": "42f147e20f9815324ebaabbe868244b6c405c850c23edca03ee04201121928cc"
+    },
+    "attention_mask": {
+      "shape": [
+        1,
+        4032
+      ],
+      "dtype": "int64",
+      "bytes": 32256,
+      "sha256": "8c04b075483d668ceda5c5381744cb73cb50ae4f9a1d7dbb3e051baecf0d099b"
+    },
+    "input_ids": {
+      "shape": [
+        1,
+        4032
+      ],
+      "dtype": "int64",
+      "bytes": 32256,
+      "sha256": "e7eb188a4c860579198c1e3d31ada13bdaddcfaab5884798ba7f62edad0f996e"
+    },
+    "v_model.layers.2.Add_365": {
+      "shape": [
+        1,
+        4032,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 16515072,
+      "sha256": "9b6eab5a1bfaf0a483b664f9a7f63c226fe640e3cf6409425c508de0e4a4ed0f"
+    },
+    "model.layers.3.self_attn.q_proj.lora.A": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "f7302b561fd3ccc632964d50c0416012987df7a4c4484188329d751b756364b1"
+    },
+    "model.layers.3.self_attn.q_proj.lora.B": {
+      "shape": [
+        4,
+        4096
+      ],
+      "dtype": "float32",
+      "bytes": 65536,
+      "sha256": "cb94461c57de0543b13a33c2d2e23d5de91201cd47eadca75e4f0f98a3d414da"
+    },
+    "model.layers.3.self_attn.v_proj.lora.A": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "35e88eb6b78dc9e0af086ef4aea249c0088099dc5d53688baddb88ccd481b9b0"
+    },
+    "model.layers.3.self_attn.v_proj.lora.B": {
+      "shape": [
+        4,
+        512
+      ],
+      "dtype": "float32",
+      "bytes": 8192,
+      "sha256": "cdc86ae3b503cf5d02d2b6b86ba82d578816a0d09edf34fc868e755ec8d4abbf"
+    },
+    "v_model.layers.3.Add_402_cotangent": {
+      "shape": [
+        1,
+        4032,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 16515072,
+      "sha256": "9a95418f461bff1991a29e68255502dddcad4fdaf3e0edac713c0a81c3b4a0cf"
+    }
+  },
+  "plan": {
+    "version": 1,
+    "recomputed_values": [
+      "v_model.layers.3.mlp.gate_proj.MatMul_395",
+      "v_model.layers.3.mlp.Swish_396",
+      "v_model.layers.3.mlp.up_proj.MatMul_398"
+    ],
+    "retained_values": [
+      "v_model.rotary_emb.Where_130",
+      "v_model.rotary_emb.Where_132",
+      "v_model.Unsqueeze_146",
+      "v_model.layers.3.input_layernorm.RMSNormalization_367",
+      "v_model.layers.3.self_attn.q_proj.MatMul_369.shape",
+      "model.layers.3.self_attn.q_proj.adapter.0.0.0",
+      "model.layers.3.self_attn.q_proj.adapter.0.1.0.shape",
+      "model.layers.3.self_attn.q_proj.adapter.0.3.0.shape",
+      "model.layers.3.self_attn.q_proj.adapter.0.4.0.shape",
+      "v_model.layers.3.self_attn.Split_371_0",
+      "v_model.layers.3.self_attn.Split_371_1.shape",
+      "v_model.layers.3.self_attn.Reshape_372",
+      "v_model.layers.3.self_attn.k_proj.MatMul_374.shape",
+      "v_model.layers.3.self_attn.v_proj.MatMul_376.shape",
+      "model.layers.3.self_attn.v_proj.adapter.0.0.0",
+      "model.layers.3.self_attn.v_proj.adapter.0.1.0.shape",
+      "model.layers.3.self_attn.v_proj.adapter.0.3.0.shape",
+      "model.layers.3.self_attn.v_proj.adapter.0.4.0",
+      "v_model.layers.3.self_attn.Reshape_377",
+      "v_model.layers.3.self_attn.q_norm.RMSNormalization_379.shape",
+      "v_model.layers.3.self_attn.k_norm.RMSNormalization_381.shape",
+      "v_model.layers.3.self_attn.Reshape_382.shape",
+      "v_model.layers.3.self_attn.Reshape_383.shape",
+      "v_model.layers.3.self_attn.RotaryEmbedding_384",
+      "v_model.layers.3.self_attn.RotaryEmbedding_385",
+      "v_model.layers.3.self_attn.Attention_386_0",
+      "v_model.layers.3.self_attn.Sigmoid_387",
+      "v_model.layers.3.self_attn.o_proj.MatMul_390.shape",
+      "v_model.layers.3.Add_391",
+      "v_model.layers.3.mlp.down_proj.MatMul_401.shape"
+    ],
+    "replay_inputs": [
+      "v_model.layers.3.Add_391",
+      "v_model.layers.3.post_attention_layernorm.Add_392",
+      "model.layers.3.mlp.gate_proj.weight_t",
+      "model.layers.3.mlp.up_proj.weight_t"
+    ],
+    "nodes": [
+      {
+        "name": "model/layers.3/post_attention_layernorm/RMSNormalization_node_393",
+        "op_type": "RMSNormalization",
+        "outputs": [
+          "v_model.layers.3.post_attention_layernorm.RMSNormalization_393"
+        ]
+      },
+      {
+        "name": "model/layers.3/mlp/gate_proj/MatMul_node_395",
+        "op_type": "MatMul",
+        "outputs": [
+          "v_model.layers.3.mlp.gate_proj.MatMul_395"
+        ]
+      },
+      {
+        "name": "model/layers.3/mlp/Swish_node_396",
+        "op_type": "Swish",
+        "outputs": [
+          "v_model.layers.3.mlp.Swish_396"
+        ]
+      },
+      {
+        "name": "model/layers.3/mlp/up_proj/MatMul_node_398",
+        "op_type": "MatMul",
+        "outputs": [
+          "v_model.layers.3.mlp.up_proj.MatMul_398"
+        ]
+      }
+    ],
+    "invocations_per_backward": 1,
+    "release_policy": "Replay temporaries follow their final consumer in the backward graph",
+    "strategy": "selective",
+    "shape_boundaries": {
+      "version": 1,
+      "compressed": [
+        {
+          "tensor": "v_model.layers.3.self_attn.q_proj.MatMul_369",
+          "shape_vectors": [
+            {
+              "name": "v_model.layers.3.self_attn.q_proj.MatMul_369.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "model.layers.3.self_attn.q_proj.adapter.0.1.0",
+          "shape_vectors": [
+            {
+              "name": "model.layers.3.self_attn.q_proj.adapter.0.1.0.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "model.layers.3.self_attn.q_proj.adapter.0.3.0",
+          "shape_vectors": [
+            {
+              "name": "model.layers.3.self_attn.q_proj.adapter.0.3.0.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "model.layers.3.self_attn.q_proj.adapter.0.4.0",
+          "shape_vectors": [
+            {
+              "name": "model.layers.3.self_attn.q_proj.adapter.0.4.0.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "v_model.layers.3.self_attn.Split_371_1",
+          "shape_vectors": [
+            {
+              "name": "v_model.layers.3.self_attn.Split_371_1.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "v_model.layers.3.self_attn.k_proj.MatMul_374",
+          "shape_vectors": [
+            {
+              "name": "v_model.layers.3.self_attn.k_proj.MatMul_374.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "v_model.layers.3.self_attn.v_proj.MatMul_376",
+          "shape_vectors": [
+            {
+              "name": "v_model.layers.3.self_attn.v_proj.MatMul_376.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "model.layers.3.self_attn.v_proj.adapter.0.1.0",
+          "shape_vectors": [
+            {
+              "name": "model.layers.3.self_attn.v_proj.adapter.0.1.0.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "model.layers.3.self_attn.v_proj.adapter.0.3.0",
+          "shape_vectors": [
+            {
+              "name": "model.layers.3.self_attn.v_proj.adapter.0.3.0.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "v_model.layers.3.self_attn.q_norm.RMSNormalization_379",
+          "shape_vectors": [
+            {
+              "name": "v_model.layers.3.self_attn.q_norm.RMSNormalization_379.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "v_model.layers.3.self_attn.k_norm.RMSNormalization_381",
+          "shape_vectors": [
+            {
+              "name": "v_model.layers.3.self_attn.k_norm.RMSNormalization_381.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "v_model.layers.3.self_attn.Reshape_382",
+          "shape_vectors": [
+            {
+              "name": "v_model.layers.3.self_attn.Reshape_382.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "v_model.layers.3.self_attn.Reshape_383",
+          "shape_vectors": [
+            {
+              "name": "v_model.layers.3.self_attn.Reshape_383.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "v_model.layers.3.self_attn.o_proj.MatMul_390",
+          "shape_vectors": [
+            {
+              "name": "v_model.layers.3.self_attn.o_proj.MatMul_390.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        },
+        {
+          "tensor": "v_model.layers.3.mlp.down_proj.MatMul_401",
+          "shape_vectors": [
+            {
+              "name": "v_model.layers.3.mlp.down_proj.MatMul_401.shape",
+              "attributes": {}
+            }
+          ],
+          "consumers": 1
+        }
+      ]
+    },
+    "release_points": [
+      {
+        "value": "v_model.layers.3.post_attention_layernorm.RMSNormalization_393",
+        "last_consumer_node_index": 3,
+        "returned_gradient": false,
+        "managed_by": "ONNX runtime graph execution"
+      },
+      {
+        "value": "v_model.layers.3.mlp.gate_proj.MatMul_395",
+        "last_consumer_node_index": 64,
+        "returned_gradient": false,
+        "managed_by": "ONNX runtime graph execution"
+      },
+      {
+        "value": "v_model.layers.3.mlp.Swish_396",
+        "last_consumer_node_index": 46,
+        "returned_gradient": false,
+        "managed_by": "ONNX runtime graph execution"
+      },
+      {
+        "value": "v_model.layers.3.mlp.up_proj.MatMul_398",
+        "last_consumer_node_index": 47,
+        "returned_gradient": false,
+        "managed_by": "ONNX runtime graph execution"
+      }
+    ]
+  },
+  "retained_activation_bytes": 289143168,
+  "gradient_checks": {
+    "v_model.layers.2.Add_365_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "37ff28c5dc8ef7c5f9f64aaa2d266f7408bed0dc499681cca91e4944edf7a00f"
+    },
+    "model.layers.3.self_attn.q_proj.lora.A_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "1145b58d34a3d2b948fbef6f9128bc5ebd74a751140ad5eb199f2b24393e9497"
+    },
+    "model.layers.3.self_attn.q_proj.lora.B_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "e004c28fa65b11e7d6a552d61cacd1e9d84cfd79cb56ed35aeed132281cc1819"
+    },
+    "model.layers.3.self_attn.v_proj.lora.A_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "4c8e5de15e69cb308b6c36a00f1e87cf6f4eac61030ac12f4281aa27358e84c5"
+    },
+    "model.layers.3.self_attn.v_proj.lora.B_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "04a8ab8c09cd378e23f01446b6291aa8854249f5b500c424b953af3a829a903c"
+    }
+  },
+  "final_gradient_checks": {
+    "v_model.layers.2.Add_365_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "37ff28c5dc8ef7c5f9f64aaa2d266f7408bed0dc499681cca91e4944edf7a00f"
+    },
+    "model.layers.3.self_attn.q_proj.lora.A_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "1145b58d34a3d2b948fbef6f9128bc5ebd74a751140ad5eb199f2b24393e9497"
+    },
+    "model.layers.3.self_attn.q_proj.lora.B_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "e004c28fa65b11e7d6a552d61cacd1e9d84cfd79cb56ed35aeed132281cc1819"
+    },
+    "model.layers.3.self_attn.v_proj.lora.A_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "4c8e5de15e69cb308b6c36a00f1e87cf6f4eac61030ac12f4281aa27358e84c5"
+    },
+    "model.layers.3.self_attn.v_proj.lora.B_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "04a8ab8c09cd378e23f01446b6291aa8854249f5b500c424b953af3a829a903c"
+    }
+  },
+  "warmup": 10,
+  "samples": 100,
+  "session_creation_seconds": 0.30390020803315565,
+  "timing_seconds": {
+    "forward": {
+      "median": 0.09876489598536864,
+      "p95": 0.10215211637550965
+    },
+    "backward": {
+      "median": 0.22342174948425964,
+      "p95": 0.22919433485076296
+    },
+    "paired": {
+      "median": 0.322935979522299,
+      "p95": 0.33005055447574705
+    }
+  },
+  "allocator_before": {
+    "active_bytes": 184561932,
+    "cache_bytes": 561512448,
+    "peak_bytes": 0
+  },
+  "allocator_after": {
+    "active_bytes": 184561932,
+    "cache_bytes": 561512448,
+    "peak_bytes": 4435757552
+  },
+  "window_allocator_peak_bytes": 4435757552,
+  "physical_memory": {
+    "available": true,
+    "current_bytes": 1467124304,
+    "lifetime_peak_bytes": 4797745696,
+    "current_resident_bytes": 1167343616,
+    "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+  },
+  "timing_scope": "Paired split block forward and backward, including runtime exchange and saved-array scheduling; fixed parameters; excludes other blocks, task loss and optimizer",
+  "memory_scope": "One worker, source and derivative graphs, captured CPU arrays and two runtime sessions; allocator peak reset after warmup",
+  "provider": "mlx",
+  "cpu_fallback_disabled": true,
+  "ort_graph_optimization": "disabled",
+  "library_sha256": "3b99b06a078d7145b0aca822f3ed5e169bf72209de35aa455eb6b49968a5704c",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "versions": {
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnxscript": "0.7.2",
+    "onnxruntime": "1.31.1",
+    "numpy": "2.4.6"
+  },
+  "source_sha256": {
+    "block_recompute.py": "8c88e79aabc5a9a4fba6504e52528f3885e24cc2eaa0e5eef3d82ce3d7689eac",
+    "residuals.py": "a56b3a20d5811e61b26a4e6fca4bf82b45205043f55e5f4386b805ebda591d0f",
+    "recomputation.py": "94516a574084943cb9b8bd13291b605a5c68a39356d30ec4f9a5d886b6c1e825",
+    "shape_residuals.py": "605b52af9fc7a1c204c3d3cdff09a293132372fd65a691f01e960b3b3a60fb3d",
+    "optimization.py": "9011549155b94ccb650f6f88ccaa953c8d58e3fbf7062276ce3b6dd17d838cd2"
+  }
+}

@@ -89,12 +89,13 @@ class OnnxModule(torch.nn.Module):
         save_activations=False,
         reuse_frozen_weights=False,
         recompute=(),
+        save_shapes=False,
         session_factory=session,
     ):
         super().__init__()
         recompute = tuple(recompute)
-        if recompute and not save_activations:
-            raise ValueError("Selective recomputation requires save_activations=True")
+        if (recompute or save_shapes) and not save_activations:
+            raise ValueError("Saved-value edits require save_activations=True")
         self._init_parameters(model, params, output)
         vjp = onnax.vjp(model, inputs=list(params), outputs=[self.output])
         self.seed = vjp.graph.inputs[-1].name
@@ -120,6 +121,19 @@ class OnnxModule(torch.nn.Module):
             self.optimized_vjp = optimize_training_graph(executable)
         else:
             self.optimized_vjp = vjp
+        self.shape_plan = None
+        if save_shapes:
+            from examples.huggingface.shape_residuals import compress
+
+            forward_model, self.optimized_vjp, self.residual_names, self.shape_plan = compress(
+                forward_model,
+                self.optimized_vjp,
+                self.residual_names,
+                outputs=[value.name for value in model.graph.outputs],
+            )
+            if optimize:
+                forward_model = optimize_training_graph(forward_model)
+                self.optimized_vjp = optimize_training_graph(self.optimized_vjp)
         self.runtime_directory = tempfile.TemporaryDirectory(prefix="onnax-runtime-")
 
         self.forward_session = graph_session(
