@@ -55,6 +55,17 @@ class OnnxDecoder(PreTrainedModel):
             from examples.huggingface.decoder_head import identity
 
             digest = identity(head)
+            source = head.model.graph.initializers["head.weight"].const_value
+            if head.weight_layout != "vocab_hidden" or list(source.shape) != [
+                config.vocab_size,
+                config.hidden_size,
+            ]:
+                raise ValueError(
+                    "Frozen-head dimensions differ from the decoder configuration"
+                )
+            previous = getattr(config, "onnax_head", None)
+            if previous is not None and previous.get("identity") != digest:
+                raise ValueError("Frozen-head identity differs from the decoder configuration")
             self.register_buffer(
                 "_head_identity", torch.tensor(list(bytes.fromhex(digest)), dtype=torch.uint8)
             )

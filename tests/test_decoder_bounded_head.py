@@ -110,3 +110,56 @@ def test_invalid_head_size_rejected_before_building(monkeypatch, chunk_size):
     monkeypatch.setattr("examples.huggingface.decoder_sft.prepare_graph", unexpected_build)
     with pytest.raises(ValueError, match="head_chunk_size"):
         prepare("qwen3", head_chunk_size=chunk_size)
+
+
+@pytest.mark.parametrize("change", ["identity", "vocab", "hidden", "weight_bytes", "path"])
+def test_bounded_task_rejects_inconsistent_head(tmp_path, change):
+    model, _ = prepare("phi3", head_chunk_size=3)
+    try:
+        model.export(tmp_path / "export")
+    finally:
+        model.close()
+    directory = tmp_path / "export"
+    if change in ("identity", "vocab", "hidden"):
+        path = directory / "config.json"
+        record = json.loads(path.read_text())
+        if change == "identity":
+            record["onnax_head"]["identity"] = "00" * 32
+        else:
+            record["vocab_size" if change == "vocab" else "hidden_size"] += 1
+        path.write_text(json.dumps(record))
+    elif change == "weight_bytes":
+        record = json.loads((directory / "task.json").read_text())
+        name = next(name for name in record["head"]["files"] if name.endswith(".data"))
+        path = directory / "execution" / name
+        data = bytearray(path.read_bytes())
+        data[0] ^= 1
+        path.write_bytes(data)
+    else:
+        path = directory / "task.json"
+        record = json.loads(path.read_text())
+        record["head"]["files"]["../outside.data"] = "00" * 32
+        path.write_text(json.dumps(record))
+    with pytest.raises(ValueError, match=r"head|Head|shape/rank"):
+        OnnxDecoder.load(directory)
+
+
+def test_loaded_head_owns_artifact_snapshot(tmp_path):
+    import shutil
+
+    model, _ = prepare("phi3", head_chunk_size=3)
+    try:
+        expected = model(**batch()).loss.detach()
+        model.export(tmp_path / "export")
+    finally:
+        model.close()
+    restored = OnnxDecoder.load(tmp_path / "export")
+    snapshot = restored.head.directory.name
+    try:
+        shutil.rmtree(tmp_path / "export")
+        torch.testing.assert_close(restored(**batch()).loss, expected, rtol=0, atol=0)
+        restored(**batch()).loss.backward()
+        assert all(p.grad is not None for p in restored.parameters())
+    finally:
+        restored.close()
+    assert not os.path.exists(snapshot)
