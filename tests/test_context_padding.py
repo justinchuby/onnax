@@ -53,3 +53,34 @@ def test_resume_rejects_changed_padding_before_model_construction(tmp_path, monk
         sft.run(
             str(tmp_path / "resumed"), steps=2, resume=str(checkpoint), pad_to_multiple_of=16
         )
+
+
+def test_capacity_phase_observer_keeps_training_values():
+    from examples.huggingface.benchmark import measure
+
+    events = []
+    options = dict(samples=1, warmup=0, batch_size=1, sequence_length=8, checkpoint_layers=1)
+    baseline = measure("chunked", **options)
+    traced = measure(
+        "chunked",
+        **options,
+        phase_observer=lambda phase, **details: events.append((phase, details)),
+        validate_updates=True,
+    )
+    assert traced["losses"] == baseline["losses"]
+    assert traced["validated_updates"] == 1 and traced["parameter_tensors"] == 8
+    names = [name for name, _ in events]
+    assert names.index("source_load_complete") < names.index("execution_begin")
+    assert names.index("construction_complete") < names.index("step_begin")
+    assert names[-1] == "step_complete"
+    assert names.count("session_run_begin") == names.count("session_run_complete")
+
+
+def test_pytorch_benchmark_executes_requested_half_precision():
+    from examples.huggingface.benchmark import measure
+
+    options = dict(nf4=True, samples=1, warmup=0, batch_size=1, sequence_length=8)
+    bf16 = measure("pytorch", **options, projection_precision="bf16")
+    fp16 = measure("pytorch", **options, projection_precision="fp16")
+    assert fp16["losses"] != bf16["losses"]
+    assert fp16["gradient_and_optimizer_dtype"] == "float32"

@@ -279,27 +279,55 @@ class OnnxQwen3(PreTrainedModel):
         return CausalLMOutput(loss=loss, logits=logits)
 
 
+def _stage(observer, name, function, *args, **kwargs):
+    if observer is not None:
+        observer(name + "_begin")
+    result = function(*args, **kwargs)
+    if observer is not None:
+        observer(name + "_complete")
+    return result
+
+
 def _prepare_graph(
-    real=False, *, nf4=False, projection_precision="fp32", checkpoints=False, fused_ops=False
+    real=False,
+    *,
+    nf4=False,
+    projection_precision="fp32",
+    checkpoints=False,
+    fused_ops=False,
+    phase_observer=None,
 ):
     """Build one canonical Mobius source and matching reconstructed reference."""
     if projection_precision not in ("fp32", "bf16", "fp16"):
         raise ValueError("Expected fp32, bf16 or fp16 projection precision")
-    reference = reference_model(real)
-    base = build_base(reference)
+    reference = _stage(phase_observer, "source_load", reference_model, real)
+    base = _stage(phase_observer, "source_graph", build_base, reference)
     if checkpoints:
         protect_decoder_boundaries(base)
-    adapted, params, mapping = inject(base)
-    graph = decompose(adapted, preserve_fused=fused_ops)
+    adapted, params, mapping = _stage(phase_observer, "adapters", inject, base)
+    graph = _stage(phase_observer, "decompose", decompose, adapted, preserve_fused=fused_ops)
     quantization = None
     if nf4:
         from examples.huggingface.nf4 import lower_decoder
 
-        graph, quantization = lower_decoder(graph, reference, precision=projection_precision)
+        graph, quantization = _stage(
+            phase_observer,
+            "nf4",
+            lower_decoder,
+            graph,
+            reference,
+            precision=projection_precision,
+        )
     if projection_precision != "fp32":
         from examples.huggingface.mixed_precision import precision_projections
 
-        graph = precision_projections(graph, precision=projection_precision)
+        graph = _stage(
+            phase_observer,
+            "precision",
+            precision_projections,
+            graph,
+            precision=projection_precision,
+        )
     if checkpoints:
         restore_decoder_outputs(graph)
     return reference, graph, params, mapping, quantization
@@ -317,6 +345,7 @@ def prepare(
     projection_precision="fp32",
     session_factory=session,
     fused_ops=False,
+    phase_observer=None,
 ):
     _validate_checkpoints(mode, checkpoint_layers, save_activations)
     if projection_precision not in ("fp32", "bf16", "fp16"):
@@ -329,8 +358,12 @@ def prepare(
         projection_precision=projection_precision,
         checkpoints=bool(checkpoint_layers),
         fused_ops=fused_ops,
+        **({"phase_observer": phase_observer} if phase_observer is not None else {}),
     )
-    model = OnnxQwen3(
+    model = _stage(
+        phase_observer,
+        "execution",
+        OnnxQwen3,
         reference.config,
         graph,
         params,

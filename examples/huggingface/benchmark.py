@@ -39,6 +39,13 @@ def hardware():
     }
 
 
+def _validate_tensors(values, name):
+    if not values or any(value is None or value.dtype != torch.float32 for value in values):
+        raise AssertionError(f"Expected FP32 {name}")
+    if not torch.isfinite(torch.cat([value.detach().reshape(-1) for value in values])).all():
+        raise FloatingPointError(f"Nonfinite {name}")
+
+
 def measure(
     mode,
     *,
@@ -61,6 +68,8 @@ def measure(
     torch_chunked=False,
     torch_attention="eager",
     progress_every=0,
+    phase_observer=None,
+    validate_updates=False,
     fused_ops=False,
 ):
     for name, value, minimum in (
@@ -109,6 +118,8 @@ def measure(
     ):
         raise ValueError("Half-precision measurement uses PyTorch or MLX joint/chunked mode")
     torch.set_num_threads(1)
+    if phase_observer is not None:
+        phase_observer("construction_begin")
     session_totals = {}
     start = time.perf_counter()
     if mode == "pytorch":
@@ -132,7 +143,7 @@ def measure(
         if projection_precision != "fp32":
             from examples.huggingface.mixed_precision import reference_projections
 
-            model = reference_projections(model)
+            model = reference_projections(model, precision=projection_precision)
         if checkpoint_layers:
             from examples.huggingface.torch_context import checkpoint_qwen
 
@@ -169,13 +180,19 @@ def measure(
             def __init__(self, source):
                 self.executor = selected_factory(source)
                 self.name = os.path.basename(source) if isinstance(source, str) else "body"
+                if phase_observer is not None:
+                    phase_observer("session_constructed", source=self.name)
 
             def run(self, *args, **kwargs):
+                if phase_observer is not None:
+                    phase_observer("session_run_begin", source=self.name)
                 before = time.perf_counter()
                 result = self.executor.run(*args, **kwargs)
                 session_totals[self.name] = (
                     session_totals.get(self.name, 0.0) + time.perf_counter() - before
                 )
+                if phase_observer is not None:
+                    phase_observer("session_run_complete", source=self.name)
                 return result
 
             def __getattr__(self, name):
@@ -192,6 +209,7 @@ def measure(
             projection_precision=projection_precision,
             session_factory=TimedSession,
             fused_ops=fused_ops,
+            **({"phase_observer": phase_observer} if phase_observer is not None else {}),
         )
         del reference
     from examples.huggingface.torch_context import synchronize
@@ -201,6 +219,8 @@ def measure(
     params = [p for p in model.parameters() if p.requires_grad]
     update = torch.optim.AdamW(params, lr=0.003, weight_decay=0)
     initialized = time.perf_counter()
+    if phase_observer is not None:
+        phase_observer("construction_complete")
     tok = tokenizer(real)
     if sequence_length > model.config.max_position_embeddings:
         raise ValueError("Sequence length exceeds the model context limit")
@@ -242,6 +262,8 @@ def measure(
         synchronize(device)
         before = time.perf_counter()
         cpu_before = time.process_time()
+        if phase_observer is not None:
+            phase_observer("step_begin", index=index)
         update.zero_grad(set_to_none=True)
         if mode == "pytorch":
             if torch_chunked:
@@ -255,12 +277,30 @@ def measure(
             loss = model(**batch, labels=labels).loss
         synchronize(device)
         forward = time.perf_counter()
+        if phase_observer is not None:
+            phase_observer("forward_complete", index=index)
         loss.backward()
         synchronize(device)
         backward = time.perf_counter()
+        if phase_observer is not None:
+            phase_observer("backward_complete", index=index)
+        if validate_updates:
+            _validate_tensors([p.grad for p in params], "adapter gradients")
         update.step()
         synchronize(device)
         finished = time.perf_counter()
+        if validate_updates:
+            _validate_tensors(params, "adapter parameters")
+            _validate_tensors(
+                [
+                    state[key]
+                    for state in update.state.values()
+                    for key in ("exp_avg", "exp_avg_sq")
+                ],
+                "AdamW state",
+            )
+        if phase_observer is not None:
+            phase_observer("step_complete", index=index)
         losses.append(float(loss.detach()))
         if not np.isfinite(losses[-1]):
             raise FloatingPointError(f"Nonfinite training loss at step {index + 1}")
@@ -300,6 +340,9 @@ def measure(
             )
     report = {
         "mode": mode,
+        "phase_instrumentation": phase_observer is not None,
+        "validated_updates": warmup + samples if validate_updates else 0,
+        "parameter_tensors": len(params),
         "checkpoint_layers": checkpoint_layers,
         "save_activations": mode == "saved" or save_activations,
         "mlx_memory_limit_bytes": mlx_memory_limit_bytes,

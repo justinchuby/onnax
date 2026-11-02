@@ -403,3 +403,32 @@ Alignment pads labels with `-100` and preserves effective shifted-token counts.
 The checkpoint data identity records the padding policy. `qualification.json`
 records every executed training batch's shape and valid token count, as well as
 evaluation and update events. The requested context must match the corpus manifest.
+
+### Inspect capacity phases
+
+The capacity command validates one cold update and can record memory before and
+after graph preparation and every forward/VJP session call:
+
+```sh
+ONNAX_TILED_ATTENTION=1 \
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 \
+ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912 \
+ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES=1073741824 \
+python -m examples.huggingface.context_capacity \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --projection-precision bf16 --sequence-length 8192 --trace-phases \
+  --train-file /tmp/qwen-8k-corpus/benchmark.jsonl \
+  --output-dir /tmp/qwen-8k-capacity
+```
+
+Run this command through the process guard as well. `report.json` records the
+input and source identities, one update's loss and the 112-parameter interface.
+It checks finite FP32 gradients, updated parameters and AdamW moments.
+`phases.jsonl` attributes construction and execution peaks to their phases.
+Use the separate benchmark command with ten warmups and 100 measured steps for
+steady-state timing; phase instrumentation is optional there at the Python API.
+
+For a matched PyTorch MPS capacity probe, select `--provider mps` and omit the
+native library. It uses SDPA, chunked loss, four-layer checkpoints and a GPU
+memory fraction of 0.8. CPU capacity probes use `--provider cpu` with
+`--projection-precision fp32`.
