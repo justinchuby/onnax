@@ -425,7 +425,19 @@ evaluation results and artifact identities.
 
 A fresh process resumed from update 15 and reproduced update 30's 113 checkpoint
 tensors, AdamW moments and scheduler state byte for byte. Its final fixed-training
-and validation losses matched the uninterrupted run.
+and validation losses matched the uninterrupted run. Reloaded ONNX execution at
+8192 tokens also reproduced the complete logits, hidden states, loss and all 112
+adapter gradients byte for byte, including 17 padding positions. The replay
+verified 511 frozen initializer hashes.
+
+All 112 adapter tensors completed the PEFT format roundtrip byte for byte. The
+separate short-batch BF16 reference audit recorded ONNX/PyTorch losses of
+6.87403/6.86507; its pointwise gradient and update differences remain in the report.
+The trained adapter was restored exactly after that audit.
+
+The matched four-layer PyTorch MPS capacity probe reached its 20 GiB allocator
+limit during backward recomputation: 16.63 GiB was allocated when attention
+requested another 4 GiB. Smaller checkpoint groups are the next capacity cases.
 
 ### Inspect capacity phases
 
