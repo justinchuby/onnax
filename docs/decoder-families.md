@@ -489,3 +489,11 @@ The [Qwen3.5 evidence report](https://github.com/justinchuby/onnax/blob/main/exa
 contains commands, source/library hashes, corpus identity, dependency versions,
 per-process RSS and physical-footprint peaks, audit results and export checks.
 Recorded elapsed times cover evaluation, training and export after construction.
+
+The complete-context run also resumes from update two in a fresh process using
+`--load-export`. At update four, all 62 checkpoint tensors, Adam state, scheduler
+and PEFT adapter weights match continuous training byte for byte. The
+[replay report](../examples/huggingface/reports/qwen35-context4k-replay.json)
+checks 114 ONNX models and 3,736 named tensor records; loaded loss, all 60 adapter
+gradients and inference outputs match on the recorded eight-token replay input.
+The optimizer updates themselves use the complete 3.6k–4k-token QA sequences.

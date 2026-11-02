@@ -22,5 +22,24 @@
   "minimum_free_disk_bytes": 8094740480,
   "timing_scope": "initial/final evaluation, training and export; excludes construction",
   "elapsed_seconds": 377.5492859579972,
-  "recovery": "pending"
+  "recovery": {
+    "checkpoint_step": 2,
+    "final_step": 4,
+    "fresh_process": true,
+    "loaded_export": true,
+    "checkpoint_tensors": 62,
+    "checkpoint_bitwise_equal": true,
+    "optimizer_bitwise_equal": true,
+    "scheduler_equal": true,
+    "peft_bitwise_equal": true,
+    "onnx_models_checked": 114,
+    "named_tensor_records": 3736,
+    "exported_gradient_tensors": 60,
+    "export_load_bitwise_equal": true,
+    "replay_input_shape": [
+      1,
+      8
+    ],
+    "report": "qwen35-context4k-replay.json"
+  }
 }
