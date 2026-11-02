@@ -379,7 +379,17 @@ def _validate_max_length(max_length, *, limit=None):
         raise ValueError(f"max_length exceeds the model context limit of {limit}")
 
 
-def _data_identity(train, validation, tok, *, max_length=64):
+def _validate_padding(max_length, multiple):
+    if multiple is not None and (
+        isinstance(multiple, bool)
+        or not isinstance(multiple, int)
+        or multiple < 1
+        or max_length % multiple
+    ):
+        raise ValueError("pad_to_multiple_of must be a positive integer dividing max_length")
+
+
+def _data_identity(train, validation, tok, *, max_length=64, pad_to_multiple_of=None):
     multiline = any(
         "\n" in text or "\r" in text for rows in (train, validation) for text in rows
     )
@@ -392,7 +402,7 @@ def _data_identity(train, validation, tok, *, max_length=64):
         )
         return hashlib.sha256(content.encode()).hexdigest()
 
-    return {
+    result = {
         "version": 2 if multiline else 1,
         "train_lines": len(train),
         "validation_lines": len(validation),
@@ -401,6 +411,9 @@ def _data_identity(train, validation, tok, *, max_length=64):
         "tokenizer_sha256": _tokenizer_digest(tok),
         "max_length": max_length,
     }
+    if pad_to_multiple_of is not None:
+        result.update(version=3, pad_to_multiple_of=pad_to_multiple_of)
+    return result
 
 
 class _DataIdentityCallback(TrainerCallback):
@@ -429,8 +442,10 @@ def make_trainer(
     eval_texts=None,
     max_length=64,
     adam_epsilon=1e-8,
+    pad_to_multiple_of=None,
 ):
     _validate_max_length(max_length, limit=model.config.max_position_embeddings)
+    _validate_padding(max_length, pad_to_multiple_of)
     if (train_texts is None) != (eval_texts is None):
         raise ValueError("Provide both training and evaluation texts")
     if train_texts is None:
@@ -453,6 +468,7 @@ def make_trainer(
         prediction_loss_only=True,
         max_length=max_length,
         packing=False,
+        pad_to_multiple_of=pad_to_multiple_of,
         gradient_checkpointing=False,
         dataset_num_proc=None,
         report_to="none",
@@ -472,7 +488,13 @@ def make_trainer(
         callbacks=[
             *(callbacks or ()),
             _DataIdentityCallback(
-                _data_identity(train_texts, eval_texts, tok, max_length=max_length)
+                _data_identity(
+                    train_texts,
+                    eval_texts,
+                    tok,
+                    max_length=max_length,
+                    pad_to_multiple_of=pad_to_multiple_of,
+                )
             ),
         ],
     )
@@ -505,6 +527,7 @@ def run(
     evaluate_train=False,
     callbacks=None,
     fused_ops=False,
+    pad_to_multiple_of=None,
 ):
     _validate_checkpoints(mode, checkpoint_layers, save_activations)
     if checkpoint_layers and fp64_audit:
@@ -546,9 +569,16 @@ def run(
         )
     if projection_precision != "fp32" and provider == "cpu":
         raise ValueError("Select mlx or reference for Half-precision projection execution")
+    _validate_padding(max_length, pad_to_multiple_of)
     train_lines, validation_lines = _training_texts(train_file, validation_file)
     tok = tokenizer(real, training_texts=train_lines if train_file is not None else None)
-    data_identity = _data_identity(train_lines, validation_lines, tok, max_length=max_length)
+    data_identity = _data_identity(
+        train_lines,
+        validation_lines,
+        tok,
+        max_length=max_length,
+        pad_to_multiple_of=pad_to_multiple_of,
+    )
     if resume is True:
         from transformers.trainer_utils import get_last_checkpoint
 
@@ -626,6 +656,7 @@ def run(
         eval_texts=validation_lines,
         max_length=max_length,
         callbacks=callbacks,
+        pad_to_multiple_of=pad_to_multiple_of,
     )
     train_before = (
         trainer.evaluate(eval_dataset=trainer.train_dataset, metric_key_prefix="fixed_train")[
@@ -795,6 +826,7 @@ if __name__ == "__main__":
     parser.add_argument("--mode", choices=["full", "chunked", "joint"], default="full")
     parser.add_argument("--chunk-size", type=int, default=128)
     parser.add_argument("--max-length", type=int, default=64)
+    parser.add_argument("--pad-to-multiple-of", type=int)
     parser.add_argument(
         "--reference-audit",
         action="store_true",
@@ -849,6 +881,7 @@ if __name__ == "__main__":
                 mode=args.mode,
                 chunk_size=args.chunk_size,
                 max_length=args.max_length,
+                pad_to_multiple_of=args.pad_to_multiple_of,
                 reference_audit=args.reference_audit,
                 diagnose_rounding=args.diagnose_rounding,
                 save_activations=args.save_activations,

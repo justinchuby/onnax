@@ -55,3 +55,32 @@ def test_selection_is_deterministic_and_document_disjoint():
     )
     with pytest.raises(ValueError, match="document-separated"):
         _select(candidates[:2])
+
+
+def test_8k_selection_keeps_complete_long_examples():
+    rows = [
+        {"instruction": "word " * count, "output": "Answer"}
+        for count in (10, 3500, 7000, 8500)
+    ]
+    old, _ = _collect(rows, Tokenizer())
+    extended, _ = _collect(rows, Tokenizer(), max_length=8192)
+    assert [row["source_index"] for row in old] == [0, 1]
+    assert [row["source_index"] for row in extended] == [0, 2]
+    assert extended[1]["bucket"] == "long"
+    assert extended[1]["tokens"] == 7003
+    assert extended[1]["text"] == _render(rows[2]) + "<eos>"
+    assert old[0] == extended[0]
+
+
+@pytest.mark.parametrize("length", [-1, True, 4096.0, 2048, 16384])
+def test_unsupported_corpus_context(length):
+    with pytest.raises(ValueError, match="max_length"):
+        _collect([], Tokenizer(), max_length=length)
+
+
+def test_qualification_rejects_shorter_corpus_for_8k():
+    from examples.huggingface.long_context import _validate_corpus_context
+
+    _validate_corpus_context({"max_length": 8192}, 8192)
+    with pytest.raises(ValueError, match="corpus manifest"):
+        _validate_corpus_context({"max_length": 4096}, 8192)

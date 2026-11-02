@@ -1,6 +1,6 @@
 # Copyright (c) 2026 onnax contributors
 # SPDX-License-Identifier: MIT
-"""Prepare complete short and 4k LongAlpaca QA with document-group holdout."""
+"""Prepare complete short and long LongAlpaca QA with document-group holdout."""
 
 import argparse
 import hashlib
@@ -46,7 +46,18 @@ def _document_keys(row):
     return keys
 
 
-def _collect(rows, tokenizer):
+def _long_minimum(max_length):
+    if (
+        isinstance(max_length, bool)
+        or not isinstance(max_length, int)
+        or max_length not in (4096, 8192)
+    ):
+        raise ValueError("Expected max_length 4096 or 8192")
+    return max_length * 3 // 4
+
+
+def _collect(rows, tokenizer, *, max_length=4096):
+    long_minimum = _long_minimum(max_length)
     parents, candidates, seen = {}, [], set()
     counts = {
         "source_rows": len(rows),
@@ -92,7 +103,11 @@ def _collect(rows, tokenizer):
         for (index, text, identity, key), ids in zip(batch, encoded, strict=True):
             length = len(ids)
             bucket = (
-                "short" if 2 <= length <= 1024 else "long" if 3072 <= length <= 4096 else None
+                "short"
+                if 2 <= length <= 1024
+                else "long"
+                if long_minimum <= length <= max_length
+                else None
             )
             if bucket is None:
                 counts["outside_buckets"] += 1
@@ -173,7 +188,8 @@ def _select(candidates):
     return result
 
 
-def prepare(directory):
+def prepare(directory, *, max_length=4096):
+    long_minimum = _long_minimum(max_length)
     from huggingface_hub import hf_hub_download
 
     from examples.huggingface.qwen import MODEL_ID
@@ -189,7 +205,7 @@ def prepare(directory):
     tok = tokenizer(real=True)
     with open(source, encoding="utf-8") as stream:
         rows = json.load(stream)
-    candidates, counts = _collect(rows, tok)
+    candidates, counts = _collect(rows, tok, max_length=max_length)
     selected = _select(candidates)
     with open(source, "rb") as stream:
         source_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
@@ -248,10 +264,10 @@ def prepare(directory):
         "tokenizer_sha256": _tokenizer_digest(tok),
         "seed": SEED,
         "quotas": QUOTAS,
-        "selection": "Complete QA; short 2-1024 tokens, long 3072-4096; shared context/source-file groups held out together; smallest holdout groups first with seeded ties",
+        "selection": f"Complete QA; short 2-1024 tokens, long {long_minimum}-{max_length}; shared context/source-file groups held out together; smallest holdout groups first with seeded ties",
         "format": "jsonl-text",
         "packing": False,
-        "max_length": 4096,
+        "max_length": max_length,
         "eos_token": tok.eos_token,
         "loss": "All shifted nonpadding tokens",
         "source_counts": counts,
@@ -271,8 +287,9 @@ def prepare(directory):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--max-length", type=int, choices=(4096, 8192), default=4096)
     args = parser.parse_args()
-    report = prepare(args.output_dir)
+    report = prepare(args.output_dir, max_length=args.max_length)
     print(
         json.dumps(
             {"dataset_revision": report["dataset_revision"], "files": report["files"]},
