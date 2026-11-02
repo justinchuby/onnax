@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "full": "qwen35-bounded-head-512-mlx-full.json",
+  "bounded": "qwen35-bounded-head-512-mlx-chunked.json",
+  "correctness": {
+    "rtol": 0.0001,
+    "atol": 1e-06,
+    "max_abs_errors": {
+      "model.layers.0.linear_attn.in_proj_qkv.lora.A": 1.6740523278713226e-07,
+      "model.layers.0.linear_attn.in_proj_qkv.lora.B": 8.167698979377747e-07,
+      "model.layers.1.linear_attn.in_proj_qkv.lora.A": 1.4808028936386108e-07,
+      "model.layers.1.linear_attn.in_proj_qkv.lora.B": 3.950553946197033e-07,
+      "model.layers.2.linear_attn.in_proj_qkv.lora.A": 2.8265640139579773e-07,
+      "model.layers.2.linear_attn.in_proj_qkv.lora.B": 4.284083843231201e-07,
+      "model.layers.3.self_attn.q_proj.lora.A": 2.407468855381012e-07,
+      "model.layers.3.self_attn.q_proj.lora.B": 2.5436747819185257e-07,
+      "model.layers.3.self_attn.v_proj.lora.A": 2.630986273288727e-07,
+      "model.layers.3.self_attn.v_proj.lora.B": 1.9837170839309692e-07,
+      "model.layers.4.linear_attn.in_proj_qkv.lora.A": 1.4348188415169716e-07,
+      "model.layers.4.linear_attn.in_proj_qkv.lora.B": 2.654269337654114e-07,
+      "model.layers.5.linear_attn.in_proj_qkv.lora.A": 1.1222437024116516e-07,
+      "model.layers.5.linear_attn.in_proj_qkv.lora.B": 3.594905138015747e-07,
+      "model.layers.6.linear_attn.in_proj_qkv.lora.A": 1.2153759598731995e-07,
+      "model.layers.6.linear_attn.in_proj_qkv.lora.B": 1.7136335372924805e-07,
+      "model.layers.7.self_attn.q_proj.lora.A": 4.738103598356247e-08,
+      "model.layers.7.self_attn.q_proj.lora.B": 1.739244908094406e-07,
+      "model.layers.7.self_attn.v_proj.lora.A": 3.1478703022003174e-07,
+      "model.layers.7.self_attn.v_proj.lora.B": 3.501772880554199e-07,
+      "model.layers.8.linear_attn.in_proj_qkv.lora.A": 1.3853423297405243e-07,
+      "model.layers.8.linear_attn.in_proj_qkv.lora.B": 1.434236764907837e-07,
+      "model.layers.9.linear_attn.in_proj_qkv.lora.A": 1.3237877283245325e-07,
+      "model.layers.9.linear_attn.in_proj_qkv.lora.B": 8.533243089914322e-08,
+      "model.layers.10.linear_attn.in_proj_qkv.lora.A": 2.2258609533309937e-07,
+      "model.layers.10.linear_attn.in_proj_qkv.lora.B": 3.548339009284973e-07,
+      "model.layers.11.self_attn.q_proj.lora.A": 1.4062970876693726e-07,
+      "model.layers.11.self_attn.q_proj.lora.B": 3.045424818992615e-07,
+      "model.layers.11.self_attn.v_proj.lora.A": 1.8347054719924927e-07,
+      "model.layers.11.self_attn.v_proj.lora.B": 1.1734664440155029e-07,
+      "model.layers.12.linear_attn.in_proj_qkv.lora.A": 7.927883416414261e-08,
+      "model.layers.12.linear_attn.in_proj_qkv.lora.B": 1.7927959561347961e-07,
+      "model.layers.13.linear_attn.in_proj_qkv.lora.A": 1.3317912817001343e-07,
+      "model.layers.13.linear_attn.in_proj_qkv.lora.B": 2.4633482098579407e-07,
+      "model.layers.14.linear_attn.in_proj_qkv.lora.A": 4.0512531995773315e-07,
+      "model.layers.14.linear_attn.in_proj_qkv.lora.B": 1.685693860054016e-07,
+      "model.layers.15.self_attn.q_proj.lora.A": 1.2561213225126266e-07,
+      "model.layers.15.self_attn.q_proj.lora.B": 1.5011755749583244e-07,
+      "model.layers.15.self_attn.v_proj.lora.A": 3.1711533665657043e-07,
+      "model.layers.15.self_attn.v_proj.lora.B": 6.005575414747e-07,
+      "model.layers.16.linear_attn.in_proj_qkv.lora.A": 8.509960025548935e-08,
+      "model.layers.16.linear_attn.in_proj_qkv.lora.B": 2.7811620384454727e-07,
+      "model.layers.17.linear_attn.in_proj_qkv.lora.A": 1.5459954738616943e-07,
+      "model.layers.17.linear_attn.in_proj_qkv.lora.B": 2.5937333703041077e-07,
+      "model.layers.18.linear_attn.in_proj_qkv.lora.A": 6.01867213845253e-08,
+      "model.layers.18.linear_attn.in_proj_qkv.lora.B": 1.0884832590818405e-07,
+      "model.layers.19.self_attn.q_proj.lora.A": 1.8649734556674957e-07,
+      "model.layers.19.self_attn.q_proj.lora.B": 1.1816155165433884e-07,
+      "model.layers.19.self_attn.v_proj.lora.A": 1.5455589164048433e-07,
+      "model.layers.19.self_attn.v_proj.lora.B": 1.9511207938194275e-07,
+      "model.layers.20.linear_attn.in_proj_qkv.lora.A": 8.009374141693115e-08,
+      "model.layers.20.linear_attn.in_proj_qkv.lora.B": 2.0302832126617432e-07,
+      "model.layers.21.linear_attn.in_proj_qkv.lora.A": 2.9604416340589523e-07,
+      "model.layers.21.linear_attn.in_proj_qkv.lora.B": 1.519802026450634e-07,
+      "model.layers.22.linear_attn.in_proj_qkv.lora.A": 1.755543053150177e-07,
+      "model.layers.22.linear_attn.in_proj_qkv.lora.B": 7.636845111846924e-07,
+      "model.layers.23.self_attn.q_proj.lora.A": 5.871988832950592e-07,
+      "model.layers.23.self_attn.q_proj.lora.B": 9.834766387939453e-07,
+      "model.layers.23.self_attn.v_proj.lora.A": 5.438923835754395e-07,
+      "model.layers.23.self_attn.v_proj.lora.B": 3.3230753615498543e-07,
+      "loss": 1.430511474609375e-05
+    }
+  },
+  "timings": {
+    "full": {
+      "step_seconds": {
+        "median": 3.1316872914903797,
+        "p95": 3.184153712223633
+      }
+    },
+    "bounded": {
+      "step_seconds": {
+        "median": 2.578276854008436,
+        "p95": 2.6454421747184824
+      },
+      "boundary_seconds": {
+        "median": 5.862500984221697e-05,
+        "p95": 7.04038655385375e-05
+      },
+      "gather_seconds": {
+        "median": 7.03544938005507e-05,
+        "p95": 7.804586202837527e-05
+      },
+      "execute_seconds": {
+        "median": 0.08230504152015783,
+        "p95": 0.09382250771450344
+      },
+      "scatter_seconds": {
+        "median": 0.00011060398537665606,
+        "p95": 0.00011959756084252149
+      }
+    }
+  },
+  "peak_rss_bytes": {
+    "full": 10385965056,
+    "bounded": 12543164416
+  },
+  "timing_scope": "Fixed-parameter forward, loss, backward and runtime exchange; excludes optimizer",
+  "memory_scope": "Independent worker, imports, source construction, sessions and execution",
+  "guard_records": {
+    "full": {
+      "status": "complete",
+      "returncode": 0,
+      "started": "2026-11-02T21:36:30.504903+00:00",
+      "finished": "2026-11-02T21:42:49.093244+00:00",
+      "physical_memory_budget_bytes": 25769803776,
+      "minimum_free_disk_bytes": 5368709120,
+      "observation_errors": 0,
+      "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+      "sha256": "f55e2f28e2fbb837af7c0264af34eaf6cbd4aab564947088f5cd1e8342fdda8c",
+      "peak_physical_footprint_bytes": 9205185104
+    },
+    "chunked": {
+      "status": "complete",
+      "returncode": 0,
+      "started": "2026-11-02T21:42:49.179382+00:00",
+      "finished": "2026-11-02T21:48:00.020711+00:00",
+      "physical_memory_budget_bytes": 25769803776,
+      "minimum_free_disk_bytes": 5368709120,
+      "observation_errors": 0,
+      "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+      "sha256": "2c118ac6027a7293948b70273ba77bcb7812e201112ab1f4a413fa2863a77cfd",
+      "peak_physical_footprint_bytes": 7564392368
+    }
+  },
+  "numerical_archives": {
+    "full": "fe6e244bd0be39c281a93e4ddbde69bbd85ff2a8c0e1432e034f70cb00d002a0",
+    "chunked": "92fb24fc50e181e0510801698e1696037a4a42e39cb1eac8441fc6e3a4b5f15c"
+  },
+  "pretrained_source": {
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17"
+  }
+}

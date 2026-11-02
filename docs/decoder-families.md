@@ -299,6 +299,35 @@ retain [full-head samples](../examples/huggingface/reports/bounded-head-tiny-qwe
 and [bounded-head samples](../examples/huggingface/reports/bounded-head-tiny-qwen35-mlx-chunked.json),
 source hashes, library digest and environment versions.
 
+### Pretrained Qwen3.5 at 512 tokens
+
+On the same M1 Max, the pinned Qwen3.5-0.8B uses batch one, FP32 and 128
+supervised targets in a 512-token context. Each route runs in an independent
+process with 10 warmups and 100 measured samples. The bounded head uses chunks
+of 128 rows. Loss and all 60 adapter gradients match at `rtol=1e-4, atol=1e-6`.
+
+| Route | Step median / P95 | Peak physical footprint | Peak RSS |
+|---|---:|---:|---:|
+| Full head | 3.132 / 3.184 s | 8.57 GiB | 9.67 GiB |
+| Bounded head | 2.578 / 2.645 s | 7.04 GiB | 11.68 GiB |
+
+The bounded route reduces median step time by 17.7% (1.21 times the throughput).
+The full route returns complete logits for CPU cross-entropy. The bounded route
+executes projection, cross-entropy and hidden derivatives in ONNX on MLX, returning
+chunk loss sums and hidden gradients across the runtime boundary.
+These steps compute forward, loss and all adapter gradients at fixed nonzero
+adapter parameters. Process peaks include source loading, session construction
+and execution. The macOS process guard records physical footprint; `getrusage`
+records peak RSS.
+
+The bounded head's median runtime call takes 82.31 ms, including execution and
+runtime transfers. Python gathering takes 0.070 ms and scattering takes 0.111 ms.
+The [comparison report](../examples/huggingface/reports/qwen35-bounded-head-512-mlx-comparison.json)
+contains per-output numerical errors and guard summaries; the
+[full-head](../examples/huggingface/reports/qwen35-bounded-head-512-mlx-full.json)
+and [bounded-head](../examples/huggingface/reports/qwen35-bounded-head-512-mlx-chunked.json)
+reports retain all timing samples, versions, source hashes and the native library digest.
+
 ## Recorded workload results
 
 On Apple M1 Max, both CPU ORT and MLX completed 30 SFT updates with the same
