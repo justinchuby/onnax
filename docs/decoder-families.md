@@ -249,6 +249,33 @@ The frozen projection retains its source `[vocab, hidden]` layout and uses
 the frozen head, loss convention and projection precision. Resume with the same
 head mode; chunk size can change without changing the loss definition.
 
+## Choose training text and context length
+
+Provide separate training and validation files to train on your own text. Files
+can contain one example per line or JSONL objects with a `text` field. The tiny
+models train a local tokenizer from the training split; pretrained models use
+their pinned tokenizer.
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family qwen35 --real --cache-dir /path/to/model-cache \
+  --train-file /path/to/train.jsonl --validation-file /path/to/validation.jsonl \
+  --max-length 512 --pad-to-multiple-of 64 --head-chunk-size 128 \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --output-dir /tmp/qwen35-context-training
+```
+
+`max_length` truncates examples to the requested context. Padding rounds each
+batch to the chosen multiple. Reports record the actual sequence length and
+supervised target count for each batch. Longer examples supply longer training
+contexts; increasing the padding multiple alone adds padding positions.
+
+Checkpoints record text hashes, tokenizer encoding semantics, context length and
+padding settings. Resume with the same settings and files to reproduce the
+training trajectory. The CLI validates this identity before building the ONNX
+model. Offline tiny models accept context lengths up to 64; pretrained models use
+their source configuration's limit.
+
 ## Execute on MLX
 
 ```sh

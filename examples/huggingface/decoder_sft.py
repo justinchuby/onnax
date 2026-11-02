@@ -30,7 +30,16 @@ from examples.huggingface.decoder_graph import DECODER_BOUNDARIES
 from examples.huggingface.optimization import optimize_training_graph
 from examples.huggingface.peft_adapter import export_adapter, roundtrip
 from examples.huggingface.pretrained import load_tokenizer
-from examples.huggingface.sft import make_trainer, token_loss, tokenizer
+from examples.huggingface.sft import (
+    _data_identity,
+    _training_texts,
+    _validate_max_length,
+    _validate_padding,
+    _validate_resume_data,
+    make_trainer,
+    token_loss,
+    tokenizer,
+)
 from examples.huggingface.validation import add_reference_parameters
 from onnax.torch import CheckpointedModule
 
@@ -289,9 +298,9 @@ def batch():
     }
 
 
-def task_tokenizer(family, *, real=False, cache_dir=None):
+def task_tokenizer(family, *, real=False, cache_dir=None, training_texts=None):
     if not real:
-        return tokenizer()
+        return tokenizer(training_texts=training_texts)
     source = FAMILIES[family].pretrained
     if source is None:
         raise ValueError(f"No pinned pretrained source for {family}")
@@ -461,8 +470,16 @@ def run(
     real=False,
     cache_dir=None,
     head_chunk_size=None,
+    max_length=64,
+    pad_to_multiple_of=None,
+    train_file=None,
+    validation_file=None,
 ):
     """Let TRL own training, accumulation, optimizer and checkpoint policy."""
+    _validate_max_length(max_length, limit=None if real else 64)
+    if pad_to_multiple_of is None and real:
+        pad_to_multiple_of = 64
+    _validate_padding(max_length, pad_to_multiple_of)
     if isinstance(steps, bool) or not isinstance(steps, int) or steps < 1:
         raise ValueError("steps must be a positive integer")
     if stop is not None and (
@@ -490,7 +507,21 @@ def run(
         if not real and previous_source is not None:
             raise ValueError("A pretrained checkpoint requires real-model execution")
     os.makedirs(directory, exist_ok=True)
-    tok = task_tokenizer(family, real=real, cache_dir=cache_dir)
+    train_texts, eval_texts = _training_texts(train_file, validation_file)
+    tok = task_tokenizer(
+        family,
+        real=real,
+        cache_dir=cache_dir,
+        training_texts=train_texts if train_file is not None else None,
+    )
+    data_identity = _data_identity(
+        train_texts,
+        eval_texts,
+        tok,
+        max_length=max_length,
+        pad_to_multiple_of=pad_to_multiple_of,
+    )
+    _validate_resume_data(resume, data_identity, required=True)
     model, reference = prepare(
         family,
         session_factory=session_factory,
@@ -526,7 +557,10 @@ def run(
             real=real,
             steps=steps,
             adam_epsilon=adam_epsilon,
-            pad_to_multiple_of=64 if real else None,
+            pad_to_multiple_of=pad_to_multiple_of,
+            max_length=max_length,
+            train_texts=train_texts,
+            eval_texts=eval_texts,
         )
         trainer.args.save_steps = max(1, steps // 2)
         if stop is not None:
@@ -552,8 +586,9 @@ def run(
             "steps": trainer.state.global_step,
             "microbatch_size": trainer.args.per_device_train_batch_size,
             "gradient_accumulation_steps": trainer.args.gradient_accumulation_steps,
-            "max_length": 64,
-            "pad_to_multiple_of": 64 if real else None,
+            "max_length": max_length,
+            "pad_to_multiple_of": pad_to_multiple_of,
+            "data": data_identity,
             "batches": batch_records,
             "adam_epsilon": adam_epsilon,
             "validation_loss": [initial, final],
@@ -580,6 +615,10 @@ def main():
     parser.add_argument("--audit-steps", type=int, default=6)
     parser.add_argument("--fused-ops", action="store_true")
     parser.add_argument("--head-chunk-size", type=int)
+    parser.add_argument("--max-length", type=int, default=64)
+    parser.add_argument("--pad-to-multiple-of", type=int)
+    parser.add_argument("--train-file")
+    parser.add_argument("--validation-file")
     parser.add_argument("--provider", choices=("cpu", "mlx"), default="cpu")
     parser.add_argument("--library")
     parser.add_argument("--resume")
@@ -592,6 +631,13 @@ def main():
         or args.adam_epsilon <= 0
     ):
         parser.error("Require positive steps/epsilon and at least two audit steps")
+    if args.audit_only and (
+        args.max_length != 64
+        or args.pad_to_multiple_of is not None
+        or args.train_file
+        or args.validation_file
+    ):
+        parser.error("Context and data options apply to training")
     torch.set_num_threads(1)
     factory = None
     library_sha256 = None
@@ -621,6 +667,10 @@ def main():
             family=args.family,
             steps=args.steps,
             resume=args.resume,
+            max_length=args.max_length,
+            pad_to_multiple_of=args.pad_to_multiple_of,
+            train_file=args.train_file,
+            validation_file=args.validation_file,
             **options,
         )
     source_directory = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))

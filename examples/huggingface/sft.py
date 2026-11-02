@@ -422,6 +422,20 @@ def _validate_padding(max_length, multiple):
         raise ValueError("pad_to_multiple_of must be a positive integer dividing max_length")
 
 
+def _validate_resume_data(resume, identity, *, required=False):
+    if not resume:
+        return
+    path = os.path.join(resume, "onnax_data.json")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as stream:
+            if json.load(stream) != identity:
+                raise ValueError(
+                    "Checkpoint training data, tokenizer or context length differs"
+                )
+    elif required:
+        raise ValueError("Resume requires checkpoint data identity metadata")
+
+
 def _data_identity(train, validation, tok, *, max_length=64, pad_to_multiple_of=None):
     multiline = any(
         "\n" in text or "\r" in text for rows in (train, validation) for text in rows
@@ -618,18 +632,9 @@ def run(
         resume = get_last_checkpoint(directory) if os.path.isdir(directory) else None
         if resume is None:
             raise ValueError("No checkpoint found to resume")
-    if resume:
-        path = os.path.join(resume, "onnax_data.json")
-        if os.path.exists(path):
-            with open(path, encoding="utf-8") as stream:
-                if json.load(stream) != data_identity:
-                    raise ValueError(
-                        "Checkpoint training data, tokenizer or context length differs"
-                    )
-        elif train_file is not None or max_length != 64:
-            raise ValueError(
-                "Custom-text or context resume requires checkpoint data identity metadata"
-            )
+    _validate_resume_data(
+        resume, data_identity, required=train_file is not None or max_length != 64
+    )
     torch.set_num_threads(4 if real else 1)
     model, reference = prepare(
         real,
