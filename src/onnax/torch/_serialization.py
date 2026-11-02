@@ -10,6 +10,8 @@ import os
 import numpy as np
 import onnx_ir as ir
 
+from onnax._shared_weights import SharedWeights as SharedWeights
+
 
 def file_digest(path: str) -> str:
     with open(path, "rb") as stream:

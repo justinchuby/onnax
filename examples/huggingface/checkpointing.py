@@ -7,13 +7,11 @@ import os
 import tempfile
 import time
 from collections import Counter
-from dataclasses import dataclass
 
 import numpy as np
 import onnx
 import onnx_ir as ir
 import torch
-from torch.autograd.function import once_differentiable
 
 import onnax
 from examples.huggingface.bridge import OnnxModule
@@ -21,198 +19,27 @@ from examples.huggingface.optimization import optimize_training_graph
 from examples.huggingface.qwen import DECODER_BOUNDARIES
 from examples.huggingface.serialization import SharedWeights
 from examples.lora.train import session
-
-
-@dataclass(frozen=True)
-class Block:
-    """One bounded primal graph and its differentiable interface."""
-
-    name: str
-    model: ir.Model
-    inputs: tuple[str, ...]
-    outputs: tuple[str, ...]
-    active_inputs: tuple[str, ...]
-    active_outputs: tuple[str, ...]
-
-
-def _ancestors(value):
-    pending, result = [value], set()
-    while pending:
-        producer = pending.pop().producer()
-        if producer is not None and producer not in result:
-            result.add(producer)
-            pending.extend(v for v in producer.inputs if v is not None)
-    return result
+from onnax._checkpoint import Block
+from onnax._checkpoint import partition as partition_graph
+from onnax.torch._checkpoint_execution import _Execution, execute
 
 
 def partition(model, parameters, *, layers=1):
-    """Extract prefix, decoder groups and suffix, including shared captures.
-
-    Each node belongs to the earliest boundary that depends on it. Every edge
-    crossing a group is an explicit output/input pair, including shape values,
-    masks and RoPE operands reused after decomposition or CSE.
-    """
+    """Translate preserved Qwen decoder metadata into named checkpoint boundaries."""
     if isinstance(layers, bool) or not isinstance(layers, int) or layers < 1:
         raise ValueError("checkpoint layers must be a positive integer")
     if len(model.graph.outputs) != 1:
         raise ValueError("Checkpoint body requires one hidden-state output")
-    if any(
-        attr.type in (ir.AttributeType.GRAPH, ir.AttributeType.GRAPHS)
-        for node in model.graph
-        for attr in node.attributes.values()
-    ):
-        raise ValueError("Decoder checkpointing expects a flat graph")
     record = json.loads(model.metadata_props[DECODER_BOUNDARIES])
     if record.get("version") != 1:
         raise ValueError("Unsupported decoder boundary metadata version")
-    values = ir.convenience.create_value_mapping(model.graph)
     hidden = record["hidden_states"]
     exits = hidden[1:]
-    goals = [("prefix", hidden[0])]
+    goals = {"prefix": hidden[0]}
     for start in range(0, len(exits), layers):
         stop = min(start + layers, len(exits))
-        goals.append((f"decoder_{start}_{stop}", exits[stop - 1]))
-    goals.append(("suffix", model.graph.outputs[0].name))
-    groups, seen = [], set()
-    for name, goal in goals:
-        ancestors = _ancestors(values[goal])
-        if not seen.issubset(ancestors):
-            raise ValueError(f"Decoder boundary {goal} does not follow the preceding group")
-        members = ancestors - seen
-        if members:
-            groups.append((name, members))
-        seen = ancestors
-    owner = {node: index for index, (_, nodes) in enumerate(groups) for node in nodes}
-    floating = {
-        ir.DataType.FLOAT,
-        ir.DataType.DOUBLE,
-        ir.DataType.FLOAT16,
-        ir.DataType.BFLOAT16,
-    }
-    active = {values[name] for name in parameters} | {values[hidden[0]]}
-    for node in model.graph:
-        if any(value in active for value in node.inputs if value is not None):
-            active.update(value for value in node.outputs if value.dtype in floating)
-    blocks = []
-    for index, (name, members) in enumerate(groups):
-        nodes = [node for node in model.graph if node in members]
-        incoming = dict.fromkeys(
-            value.name
-            for node in nodes
-            for value in node.inputs
-            if value is not None
-            and value.producer() not in members
-            and value.name not in model.graph.initializers
-        )
-        outgoing = [
-            value.name
-            for node in nodes
-            for value in node.outputs
-            if value in model.graph.outputs
-            or any(owner.get(use.node, index) > index for use in value.uses())
-        ]
-        graph = ir.convenience.extract(model.graph, list(incoming), outgoing)
-        if len(graph) != len(nodes):
-            raise ValueError(f"Checkpoint extraction changed the node set for {name}")
-        graph.name = name
-        # Extension rules can emit companion functions absent from primal calls
-        # (e.g. NF4 InputGrad). Keep those definitions available to VJP generation.
-        piece = ir.Model(
-            graph,
-            ir_version=model.ir_version,
-            functions=[function.clone() for function in model.functions.values()],
-        )
-        piece.metadata_props.update(model.metadata_props)
-        blocks.append(
-            Block(
-                name,
-                piece,
-                tuple(incoming),
-                tuple(outgoing),
-                tuple(value for value in incoming if values[value] in active),
-                tuple(value for value in outgoing if values[value] in active),
-            )
-        )
-    if set().union(*(nodes for _, nodes in groups)) != seen:
-        raise AssertionError("Checkpoint node ownership is incomplete")
-    return blocks
-
-
-@dataclass(frozen=True)
-class _Execution:
-    block: Block
-    forward: object
-    backward: object
-    seeds: tuple[str, ...]
-    gradients: tuple[str, ...]
-    derivative: ir.Model | None
-
-
-class _GroupFunction(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, runtime, execution, invocation, *inputs):
-        ctx.runtime, ctx.execution, ctx.invocation = runtime, execution, invocation
-        ctx.save_for_backward(*inputs)
-        feeds = {
-            name: tensor.detach().contiguous().numpy()
-            for name, tensor in zip(execution.block.inputs, inputs, strict=True)
-        }
-        arrays = execution.forward.run(list(execution.block.outputs), feeds)
-        outputs = []
-        for index, array in enumerate(arrays):
-            if any(
-                np.shares_memory(array, other) for other in (*feeds.values(), *arrays[:index])
-            ):
-                array = array.copy()
-            outputs.append(torch.from_numpy(array))
-        ctx.shapes = [value.shape for value in outputs]
-        ctx.mark_non_differentiable(
-            *(
-                value
-                for name, value in zip(execution.block.outputs, outputs, strict=True)
-                if name not in execution.block.active_outputs
-            )
-        )
-        ctx.set_materialize_grads(False)
-        return tuple(outputs)
-
-    @staticmethod
-    @once_differentiable
-    def backward(ctx, *upstreams):
-        runtime, execution = ctx.runtime, ctx.execution
-        block = execution.block
-        feeds = {
-            name: value.detach().contiguous().numpy()
-            for name, value in zip(block.inputs, ctx.saved_tensors, strict=True)
-        }
-        gradients = dict(zip(block.outputs, upstreams, strict=True))
-        shapes = dict(zip(block.outputs, ctx.shapes, strict=True))
-        for name, seed in zip(block.active_outputs, execution.seeds, strict=True):
-            value = gradients[name]
-            feeds[seed] = (
-                np.zeros(shapes[name], dtype=np.float32)
-                if value is None
-                else value.detach().contiguous().numpy()
-            )
-        start = time.perf_counter()
-        values = execution.backward.run(list(execution.gradients), feeds)
-        elapsed = time.perf_counter() - start
-        derivatives = dict(zip(block.active_inputs, values, strict=True))
-        if ctx.invocation["remaining"] == 0:
-            ctx.invocation.update(remaining=ctx.invocation["count"], elapsed=0.0)
-        ctx.invocation["elapsed"] += elapsed
-        ctx.invocation["remaining"] -= 1
-        if ctx.invocation["remaining"] == 0:
-            runtime.timings["backward"].append(ctx.invocation["elapsed"])
-        return (
-            None,
-            None,
-            None,
-            *(
-                torch.from_numpy(derivatives[name]) if name in derivatives else None
-                for name in block.inputs
-            ),
-        )
+        goals[f"decoder_{start}_{stop}"] = exits[stop - 1]
+    return partition_graph(model, parameters, boundaries=goals, input_gradients=[hidden[0]])
 
 
 class CheckpointedModule(OnnxModule):
@@ -380,35 +207,20 @@ class CheckpointedModule(OnnxModule):
         )
         return result
 
+    @property
+    def parameter_names(self):
+        return self.names
+
+    @property
+    def trainable(self):
+        return self.adapters
+
+    @property
+    def output_names(self):
+        return (self.output,)
+
     def _execute(self, feeds, *, save):
-        values = {**feeds, **dict(zip(self.names, self.adapters, strict=True))}
-        remaining = self.forward_uses.copy()
-        checkpoint_bytes = {}
-        invocation = {"elapsed": 0.0, "remaining": 0, "count": 0}
-        for execution in self.executions:
-            block = execution.block
-            inputs = tuple(values[name] for name in block.inputs)
-            if save and any(value.requires_grad for value in inputs):
-                invocation["remaining"] += 1
-                invocation["count"] += 1
-                result = _GroupFunction.apply(self, execution, invocation, *inputs)
-                for name, value in zip(block.inputs, inputs, strict=True):
-                    if name not in self.names and name not in self.data_names:
-                        checkpoint_bytes[name] = value.numel() * value.element_size()
-            else:
-                arguments = {
-                    name: value.detach().contiguous().numpy()
-                    for name, value in zip(block.inputs, inputs, strict=True)
-                }
-                arrays = execution.forward.run(list(block.outputs), arguments)
-                result = tuple(torch.from_numpy(value) for value in arrays)
-            values.update(zip(block.outputs, result, strict=True))
-            for name in block.inputs:
-                remaining[name] -= 1
-                if remaining[name] == 0 and name != self.output:
-                    values.pop(name, None)
-        self.last_residual_bytes = sum(checkpoint_bytes.values())
-        return values[self.output]
+        return execute(self, feeds, save=save)[0]
 
     def forward(self, **inputs):
         if set(inputs) != set(self.data_names):

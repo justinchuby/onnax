@@ -97,3 +97,9 @@ see the [Qwen training tutorial](qwen-sft.md).
 
 An `optimize(model)` callback can apply ONNXScript optimization to execution
 copies. The source graph and stable parameter interface are preserved.
+
+## Checkpoint large graphs
+
+Use [`CheckpointedModule`](checkpointing.md) with named intermediate boundaries
+to retain boundary tensors and recompute block-local activations in backward.
+It shares the parameter, session-factory and external-optimizer conventions above.

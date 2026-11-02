@@ -179,9 +179,16 @@ execution. A session factory selects the backend. Model construction, adapter
 injection, tokenization and PEFT conventions stay in task adapters; Trainer and
 TRL own training loops, optimizers, schedulers and checkpoint policy.
 
-Next, generalize decoder execution strategies around the same parameter and
-session interfaces, and use measured workload costs to choose recomputation,
-attention workspace and output-head chunking.
+The [named checkpoint execution layer](checkpointing.md) now provides
+`onnax.torch.CheckpointedModule`. Qwen and the package share graph partitioning
+and block autograd execution. GQA/RMSNorm/SiLU and MHA/LayerNorm/GELU tiny
+decoders validate independent gradients and multi-step updates; the execution
+bundle restores saved derivatives and supports fresh-process optimizer recovery.
+Model adapters supply boundaries, while Trainer/TRL retain training ownership.
+
+Next, use this execution interface to qualify a second Mobius model family,
+then measure construction/execution peaks for an 8192-token workload. Choose
+recomputation, attention workspace and output-head chunking from those measurements.
 
 ## Engineering boundaries
 
