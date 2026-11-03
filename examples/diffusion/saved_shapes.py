@@ -14,10 +14,11 @@ import onnx
 import onnx_ir as ir
 import torch
 from diffusers import DDPMScheduler
+from huggingface_hub import hf_hub_download
 
 import onnax
 from examples.diffusion.benchmark_unet import load_state, statistics
-from examples.diffusion.unet import pretrained
+from examples.diffusion.unet import MODEL_ID, REVISION
 from examples.diffusion.unet_train import training_batch
 from examples.huggingface.block_runtime import MlxMemory, arrays_record, digest
 from examples.huggingface.optimization import optimize_training_graph
@@ -55,8 +56,11 @@ def measure(
             raise ValueError(f"Source export changed: {name}")
     source = ir.load(os.path.join(export, "model.onnx"))
     encoded = torch.load(batch_file, weights_only=True, map_location="cpu")
-    _, weights, schedule = pretrained()
-    del weights
+    scheduler_path = hf_hub_download(
+        MODEL_ID, "scheduler/scheduler_config.json", revision=REVISION
+    )
+    with open(scheduler_path, encoding="utf-8") as stream:
+        schedule = json.load(stream)
     batch, target = training_batch(
         encoded["clean"],
         encoded["conditioning"],

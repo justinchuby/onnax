@@ -34,3 +34,7 @@ source graphs, whole-VJP control execution, session setup and runtime caches.
 ORT graph optimization and CPU fallback are disabled. Each report records
 source identity, input content hashes, graph and library checksums, versions,
 retained byte counts and the complete shape-compression plan.
+
+The recorded measurements use driver commit `fca005d` and native source
+`c7fa4e4`. The current CLI reads only the pinned scheduler configuration during
+setup, eliminating the earlier unused PyTorch UNet weight load.
