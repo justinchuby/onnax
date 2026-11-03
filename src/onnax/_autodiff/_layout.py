@@ -101,16 +101,13 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
             )
         )
     elif op in ("ScatterND",):
-        if node.attributes.get("reduction") is None or (
-            node.attributes["reduction"].as_string() != "add"
-        ):
-            reduction = node.attributes.get("reduction")
+        reduction = node.attributes.get("reduction")
+        mode = reduction.as_string() if reduction is not None else "none"
+        if mode not in ("none", "add"):
             raise NotImplementedError(
-                "JVP ScatterND requires reduction='add'; "
-                f"got reduction={reduction.as_string() if reduction is not None else 'none (default)'!r} "
-                f"(node {node.name!r}). Only additive ScatterND differentiation is supported. "
-                "Keep the original reduction and use a separate derivative implementation "
-                "for overwrite/mul/min/max semantics; changing to 'add' changes the function."
+                "JVP ScatterND requires reduction='none' or reduction='add'; "
+                f"got reduction={mode!r} (node {node.name!r}). "
+                "Use a separate derivative for mul/min/max; changing reduction changes the function."
             )
         return [
             ctx.op(
@@ -118,7 +115,7 @@ def jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.Valu
                 d[0] if 0 in d else ctx.like(_input(node)),
                 _input(node, 1),
                 d[2] if 2 in d else ctx.like(_input(node, 2)),
-                reduction="add",
+                reduction=mode,
             )
         ]
     raise NotImplementedError(

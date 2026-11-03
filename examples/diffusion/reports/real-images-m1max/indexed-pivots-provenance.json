@@ -1,0 +1,12 @@
+{
+  "artifacts": {
+    "/tmp/onnax-indexed-unet-derivative.onnx": "6e7fa02320edfeac1e0d6e1710beaffcfc21ecf4cdcde626c02b91be07ef5422",
+    "/tmp/onnax-inspect-indexed-unet.py": "4f670d9d3f378aa22307ff3b9a7f62679a2c055d86044dc219f2b38ce51aa189",
+    "/tmp/onnax-run-indexed-unet-measured.py": "7525c66fe92054c92000c438dbbd4a7ddbb7ab38bfa4f2ae0c688724c86e6618"
+  },
+  "weight_storage": "New derivative header references unchanged external tensor payloads from the original qualified bundle. Matching uses dtype, shape and SHA256 of tensor contents.",
+  "validation": "Full ONNX checker at private-copy load; identical named parameter/seed mappings; 74 captured tensors compared by compare_unet.",
+  "native_revision": "bc0a78fd79b9067fcee106404b56ea65605fbc4f",
+  "native_pr": "https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/107",
+  "measurement": "10 warmup steps, 100 measured steps, 10 separate component samples. CPU fallback and ORT graph optimization disabled; MLX compilation disabled; 512 MiB cache."
+}

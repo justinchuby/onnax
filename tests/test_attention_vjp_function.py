@@ -179,3 +179,25 @@ def test_conflicting_seed_metadata_does_not_add_a_partial_function():
     result = fuse_attention_vjp(derivative)
     assert not result.functions
     assert ir.to_proto(result).SerializeToString() == before
+
+
+def test_attention_pullback_uses_row_sized_pivot_storage():
+    feeds = {name: np.ones((1, 2, 3, 16), np.float32) for name in ("q", "k", "v")}
+    derivative = onnax.vjp(_model_for("Attention", feeds), inputs=["q", "k", "v"])
+    nodes = list(derivative.graph)
+    assert not any(node.op_type == "ScatterElements" for node in nodes)
+    scatters = [node for node in nodes if node.op_type == "ScatterND"]
+    assert len(scatters) == 3
+    # The two zero replacements share a vector with one entry per score row.
+    zeros = scatters[0].inputs[2]
+    assert zeros is scatters[1].inputs[2]
+    zero_node = zeros.producer()
+    assert zero_node.op_type == "ConstantOfShape"
+    shape_node = zero_node.inputs[0].producer()
+    assert shape_node.op_type == "Shape"
+    flat_indices = shape_node.inputs[0]
+    assert flat_indices.producer().op_type == "Add"
+    coordinates = scatters[0].inputs[1]
+    assert coordinates.producer().op_type == "Unsqueeze"
+    assert coordinates.producer().inputs[0] is flat_indices
+    CheckerPass(full_check=True)(derivative)

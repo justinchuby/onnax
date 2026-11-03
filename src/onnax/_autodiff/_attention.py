@@ -15,7 +15,6 @@ import onnx_ir as ir
 
 from onnax._autodiff._common import _float, _input, _int, _rank
 from onnax._autodiff._context import _Context
-from onnax._autodiff._reductions import _centered, _conserve
 from onnax._rules import _BUILTINS
 
 
@@ -203,27 +202,44 @@ class _Attention:
     def softmax_product(self, value):
         ctx = self.ctx
         probability = self.p_work
-        value = ctx.op("Cast", value, to=self.precision)
+        value = ctx.op(
+            "Expand", ctx.op("Cast", value, to=self.precision), ctx.op("Shape", probability)
+        )
         axis = ctx.constant([-1])
         index = ctx.op("ArgMax", probability, axis=-1, keepdims=1)
-        ones = ctx.op(
-            "ConstantOfShape",
-            ctx.op("Shape", index),
-            value=ir.tensor([1], dtype=self.precision),
-        )
+        # One pivot per row needs row-sized indices, rather than a full score
+        # matrix of zeros and a dense Boolean mask. Keep the centered product
+        # and exact pivot replacement used by the portable pullback.
+        flat_shape = ctx.constant([-1])
+        row_count = ctx.op("Size", index)
+        width = ctx.op("Squeeze", ctx.op("Shape", probability, start=-1), ctx.constant([0]))
+        rows = ctx.op("Range", ctx.constant(0), row_count, ctx.constant(1))
+        flat_index = ctx.op("Add", ctx.op("Mul", rows, width), ctx.reshape(index, flat_shape))
+        coordinates = ctx.op("Unsqueeze", flat_index, ctx.constant([-1]))
         zeros = ctx.op(
             "ConstantOfShape",
-            ctx.op("Shape", probability),
+            ctx.op("Shape", flat_index),
             value=ir.tensor([0], dtype=self.precision),
         )
-        pivot = ctx.op(
-            "Cast", ctx.op("ScatterElements", zeros, index, ones, axis=-1), to=ir.DataType.BOOL
+        shape = ctx.op("Shape", value)
+        flat = ctx.reshape(value, flat_shape)
+        pivot = ctx.reshape(ctx.op("Gather", flat, flat_index, axis=0), ctx.op("Shape", index))
+        differences = ctx.op("Sub", value, pivot)
+        differences = ctx.reshape(
+            ctx.op("ScatterND", ctx.reshape(differences, flat_shape), coordinates, zeros),
+            shape,
         )
-        zero = ctx.constant(0, self.precision)
-        differences = _centered(ctx, value, pivot, axis, zero)
         total = ctx.op("ReduceSum", ctx.op("Mul", probability, differences), axis, keepdims=1)
         derivative = ctx.op("Mul", probability, ctx.op("Sub", differences, total))
-        return ctx.op("Cast", _conserve(ctx, derivative, pivot, axis, zero), to=self.q.dtype)
+        others_flat = ctx.op(
+            "ScatterND", ctx.reshape(derivative, flat_shape), coordinates, zeros
+        )
+        others = ctx.reshape(others_flat, shape)
+        correction = ctx.op("Neg", ctx.op("ReduceSum", others, axis, keepdims=1))
+        conserved = ctx.op(
+            "ScatterND", others_flat, coordinates, ctx.reshape(correction, flat_shape)
+        )
+        return ctx.op("Cast", ctx.reshape(conserved, shape), to=self.q.dtype)
 
     def reduce_kv(self, value, primal):
         value = self.ctx.op("ReduceSum", value, self.ctx.constant([2]), keepdims=0)

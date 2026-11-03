@@ -27,6 +27,30 @@ implementation recomputes log-sum-exp and probabilities within fixed-size tiles.
 Separate dQ and dK/dV kernels avoid atomic updates; causal attention skips tiles
 above the diagonal. Fully masked rows contribute zero.
 
+## Portable pivot storage
+
+The portable pullback centers each row around its largest-probability entry and
+sets that entry's derivative to the negative sum of the remaining entries. This
+preserves the zero row sum of a softmax derivative. Flattened row offsets let
+`Gather` read each pivot and `ScatterND` replace it, using one index and one zero
+per row. The same construction supports broadcast masks and higher-order JVPs.
+
+For a `[1, 8, 4096, 4096]` score tensor, the previous pivot construction used a
+512 MiB floating zero matrix and a 128 MiB Boolean mask. Row indexing replaces
+both with vectors of 32,768 entries. The probability and score-gradient matrices
+remain part of the portable computation.
+
+A matched 512-pixel UNet LoRA run on M1 Max measured 10 warmup steps and
+100 training steps in FP32. Row indexing reduced median step time from 1.073 s
+to 0.981 s and P95 from 1.098 s to 1.001 s. MLX peak allocation fell from
+6.08 GB to 5.41 GB; whole-process lifetime peak physical footprint fell from
+6.50 GB to 5.99 GB. Prediction, loss and all 72 adapter gradients matched
+bitwise. Both ONNX runs used eager MLX execution, a 512 MiB cache, disabled ORT
+optimization and disabled CPU fallback. The native indexed route uses
+[MLX EP symbolic ScatterND support](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/107).
+The [measurement report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-indexed-pivots.json)
+records the binary hash, versions and component timings.
+
 ## Build the execution graph
 
 Generate derivatives first, then apply deployment fusion before constant folding

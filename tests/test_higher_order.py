@@ -470,8 +470,8 @@ def test_unsupported_active_generated_path_fails_precisely():
     np.testing.assert_array_equal(actual[-2:], np.zeros((2, 2)))
 
 
-@pytest.mark.parametrize("reduction", [None, "mul", "max", "min"])
-def test_scatter_jvp_rejects_nonadditive_updates(reduction):
+@pytest.mark.parametrize("reduction", ["mul", "max", "min"])
+def test_scatter_jvp_rejects_unsupported_reductions(reduction):
     x, updates = _value("x", [2]), _value("updates", [2])
     tape = ir.tape.Tape()
     indices = tape.op("Constant", [], {"value": ir.tensor(np.array([[0], [1]], np.int64))})
@@ -533,3 +533,32 @@ def test_piecewise_zero_curvature_and_batched_hvp(dtype, op, opset, tmp_path):
     )
     np.testing.assert_array_equal(actual[-1], np.zeros_like(batch))
     assert ir.to_proto(source).SerializeToString() == before
+
+
+@pytest.mark.parametrize("inputs", [["x"], ["updates"], ["x", "updates"]])
+@pytest.mark.parametrize("explicit", [False, True])
+def test_overwrite_scatter_jvp_preserves_single_write_semantics(inputs, explicit):
+    x, updates = (
+        _value("x", [3], dtype=ir.DataType.FLOAT),
+        _value("updates", [1], dtype=ir.DataType.FLOAT),
+    )
+    tape = ir.tape.Tape()
+    indices = tape.op("Constant", [], {"value": ir.tensor(np.array([[1]], np.int64))})
+    output = tape.op(
+        "ScatterND", [x, indices, updates], {"reduction": "none"} if explicit else {}
+    )
+    result = JvpPass(inputs=inputs)(_model([x, updates], tape, [output])).model
+    feeds = {"x": np.array([1, 2, 3], np.float32), "updates": np.array([7], np.float32)}
+    for value in result.graph.inputs[2:]:
+        feeds[value.name] = (
+            np.array([0.1, 0.2, 0.3], np.float32)
+            if value.shape[0] == 3
+            else np.array([0.7], np.float32)
+        )
+    actual = _evaluator(result).run(None, feeds)
+    np.testing.assert_array_equal(actual[0], np.array([1, 7, 3], np.float32))
+    expected = (
+        np.array([0.1, 0.2, 0.3], np.float32) if "x" in inputs else np.zeros(3, np.float32)
+    )
+    expected[1] = np.float32(0.7) if "updates" in inputs else np.float32(0)
+    np.testing.assert_array_equal(actual[-1], expected)
