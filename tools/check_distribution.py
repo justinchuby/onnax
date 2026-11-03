@@ -14,6 +14,7 @@ from onnx.reference import ReferenceEvaluator
 
 import onnax
 from onnax import (
+    FuseBroadcastAdjointsPass,
     GradPass,
     HoistLinearCoefficientsPass,
     JvpPass,
@@ -55,6 +56,7 @@ def main() -> None:
         "VjpPass",
         "VmapPass",
         "HoistLinearCoefficientsPass",
+        "FuseBroadcastAdjointsPass",
         "register_jvp",
         "register_vjp",
         "register_batching",
@@ -64,6 +66,29 @@ def main() -> None:
         "AutodiffContext",
         "BatchingContext",
     }
+
+    gradient = ir.val("gradient", dtype=ir.DataType.DOUBLE)
+    reference = ir.val("reference", dtype=ir.DataType.DOUBLE)
+    broadcast_graph = ir.Graph(
+        [gradient, reference],
+        [],
+        nodes=[],
+        opset_imports={"": 18},
+        name="broadcast_distribution_smoke",
+    )
+    reduced = onnax.AutodiffContext(broadcast_graph).unbroadcast(gradient, reference)
+    gradient.shape, reference.shape = ir.Shape([2, 3]), ir.Shape([3])
+    reduced.type, reduced.shape = ir.TensorType(ir.DataType.DOUBLE), ir.Shape([3])
+    broadcast_graph.outputs.append(reduced)
+    packaged = FuseBroadcastAdjointsPass()(ir.Model(broadcast_graph, ir_version=10))
+    assert packaged.modified
+    portable = ir.to_proto(packaged.model)
+    onnx.checker.check_model(portable, full_check=True)
+    actual = ReferenceEvaluator(portable).run(
+        None,
+        {"gradient": np.arange(6, dtype=np.float64).reshape(2, 3), "reference": np.zeros(3)},
+    )[0]
+    np.testing.assert_array_equal(actual, [3.0, 5.0, 7.0])
 
     input_x = ir.val("x", dtype=ir.DataType.DOUBLE, shape=[2])
     tape = ir.tape.Tape()
