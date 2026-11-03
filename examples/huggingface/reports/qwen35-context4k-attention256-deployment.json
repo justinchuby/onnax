@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "source_interface_sha256": "77da90aefd66d7a1d63a841124af178dbcd8c57d0de95f097ff207ec3ffdc51a",
+  "identity": "684aaefb43b19c36b413661d93120f71971b29425736a57239cc1770844ef076",
+  "blocks": [
+    {
+      "name": "decoder_3_4",
+      "model": "block_4_backward.onnx",
+      "calls": [
+        "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5"
+      ]
+    },
+    {
+      "name": "decoder_7_8",
+      "model": "block_8_backward.onnx",
+      "calls": [
+        "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5"
+      ]
+    },
+    {
+      "name": "decoder_11_12",
+      "model": "block_12_backward.onnx",
+      "calls": [
+        "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5"
+      ]
+    },
+    {
+      "name": "decoder_15_16",
+      "model": "block_16_backward.onnx",
+      "calls": [
+        "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5"
+      ]
+    },
+    {
+      "name": "decoder_19_20",
+      "model": "block_20_backward.onnx",
+      "calls": [
+        "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5"
+      ]
+    },
+    {
+      "name": "decoder_23_24",
+      "model": "block_24_backward.onnx",
+      "calls": [
+        "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5"
+      ]
+    }
+  ],
+  "models_checked": 6
+}

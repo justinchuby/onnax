@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "context": 4032,
+  "valid_targets": 4026,
+  "precision": "FP32",
+  "warmup": 10,
+  "samples": 100,
+  "hardware": {
+    "chip": "Apple M1 Max",
+    "memory_bytes": 34359738368
+  },
+  "variants": {
+    "baseline": {
+      "paired_seconds": {
+        "median": 0.3293682289950084,
+        "p95": 0.35035377712920307
+      },
+      "window_allocator_peak_bytes": 4260711788,
+      "physical_lifetime_peak_bytes": 4619372560,
+      "gradient_tensors": 5,
+      "max_gradient_abs": 0.0,
+      "report": "qwen35-context4k-attention256-baseline.json"
+    },
+    "tiled": {
+      "paired_seconds": {
+        "median": 0.375676708528772,
+        "p95": 0.38967810062749775
+      },
+      "window_allocator_peak_bytes": 1863604972,
+      "physical_lifetime_peak_bytes": 2614413496,
+      "gradient_tensors": 5,
+      "max_gradient_abs": 1.0550138540565968e-08,
+      "report": "qwen35-context4k-attention256-tiled.json"
+    },
+    "gemm": {
+      "paired_seconds": {
+        "median": 0.25990102053037845,
+        "p95": 0.27161841463821473
+      },
+      "window_allocator_peak_bytes": 2725562672,
+      "physical_lifetime_peak_bytes": 3168176240,
+      "gradient_tensors": 5,
+      "max_gradient_abs": 1.0870280675590038e-08,
+      "report": "qwen35-context4k-attention256-gemm.json"
+    }
+  },
+  "library_sha256": "a6bc1ad34d68739bbd8e417e00c662479ede313b98cf6b503c05a2ea5bda28bd",
+  "native_source_commit": "98fc6a7726beb141c107982c82c7743dbc7a7538",
+  "native_source_sha256": {
+    "rust/src/ops/attention_vjp.rs": "aa7708c6e3a63decec51ff5880e84debcab6cc967f713869e2ef98e5e189e25a",
+    "rust/src/ops/attention_vjp/dkv.metal": "621030cb24ba311ccb05f86e164fdab052be0e842e236446c7b685f89065a93a"
+  },
+  "native_dependencies": {
+    "mlx": "/opt/homebrew/Cellar/mlx/0.32.4",
+    "mlx-c": "/opt/homebrew/Cellar/mlx-c/0.7.0_1"
+  },
+  "ORT_header_version": "1.31.0",
+  "scope": "One paired decoder_3_4 forward/backward invocation with fixed parameters and runtime exchange; isolated workers; full task training reported separately",
+  "full_model_training": {
+    "optimizer_updates": 4,
+    "initial_adapter": "saved Qwen3.5 context4k update-4 export",
+    "training_loss": [
+      2.1172728538513184,
+      1.9005613327026367
+    ],
+    "validation_loss": [
+      2.432490348815918,
+      2.4299964904785156
+    ],
+    "elapsed_seconds": 369.78662170801545,
+    "timing_scope": "Initial/final evaluation, training and export; excludes construction",
+    "peak_physical_footprint_bytes": 8949176728,
+    "minimum_free_disk_bytes": 5588078592,
+    "report": "qwen35-context4k-attention256-sft.json",
+    "recovery": {
+      "fresh_process": true,
+      "checkpoint_step": 2,
+      "final_step": 4,
+      "checkpoint_tensors": 62,
+      "checkpoint_bitwise_equal": true,
+      "optimizer_bitwise_equal": true,
+      "scheduler_equal": true,
+      "peft_bitwise_equal": true,
+      "named_tensor_records": 4055,
+      "onnx_models_checked": 114,
+      "exported_gradients": 60,
+      "export_load_bitwise_equal": true,
+      "replay_input_shape": [
+        1,
+        8
+      ],
+      "frozen_tensor_records_unchanged": 3935,
+      "report": "qwen35-context4k-attention256-replay.json"
+    },
+    "adam_epsilon": 1e-05
+  },
+  "pretrained_source": {
+    "checkpoint_to_reference_prefix": {
+      "model.language_model.": "model."
+    },
+    "dtype": "float32",
+    "loading": {
+      "error_msgs": [],
+      "mismatched_keys": [],
+      "missing_keys": [],
+      "unexpected_keys": []
+    },
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "parameter_count": 752393024,
+    "reference_class": "Qwen3_5ForCausalLM",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "version": 1
+  },
+  "corpus_manifest": "qwen35-context4k-corpus.json",
+  "deployment_report": "qwen35-context4k-attention256-deployment.json",
+  "training_microbatch": 1,
+  "gradient_accumulation_steps": 4
+}
