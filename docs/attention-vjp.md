@@ -47,7 +47,7 @@ It preserves input, output and gradient names. The source derivative graph stays
 available for further transformations. Each generated function records its
 geometry and fallback-body digest in its name.
 
-The first contract covers FP32 Q/K/V with head dimensions 16, 32, 64 and 128;
+The first contract covers FP32 Q/K/V with head dimensions 16, 32, 64, 128 and 256;
 rank-three/rank-four layouts; MHA/GQA/MQA; boolean/additive masks; and top-left
 causality. Unsupported configurations retain their portable derivative graph.
 
@@ -140,3 +140,59 @@ python -m examples.huggingface.benchmark \
 ```
 
 Select `--projection-precision bf16` for the second precision policy.
+
+## Deploy into a saved decoder task
+
+The deployment pass supports 256-wide heads used by Qwen3.5. Its upstream gradient
+has the same layout as the attention output. The pass supplies this type and shape
+at the function boundary when a dynamic reshape leaves them uninferred. Native
+runtimes can then select the function directly.
+
+For an existing export with retained `Attention` primals:
+
+```bash
+uv run --group huggingface --group training python -m examples.huggingface.attention_bundle \
+  --export qwen_run/export --output qwen_attention_export
+```
+
+This creates a private bundle, generates and packages the eligible block VJPs,
+checks their parameter/gradient interfaces, and updates artifact hashes. The
+frozen weights, forward modules, tokenizer configuration and PEFT mapping remain
+part of the same task. `attention_deployment.json` lists the affected blocks.
+The derivative functions include ordinary ONNX bodies for portable execution.
+
+Pass the resulting directory to the shared Trainer CLI with
+`--load-export qwen_attention_export`. Choose the native score-matrix budget
+before creating sessions:
+
+```bash
+export ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES=1073741824
+```
+
+On an M1 Max, a complete 4032-token Qwen3.5-0.8B FP32 block measures:
+
+| Pullback | Paired median / P95 | MLX allocator peak | Process peak physical |
+|---|---:|---:|---:|
+| Original graph | 329 / 350 ms | 3.97 GiB | 4.30 GiB |
+| Tiled, 64 MiB score budget | 376 / 390 ms | 1.74 GiB | 2.43 GiB |
+| GEMM, 1 GiB score budget | 260 / 272 ms | 2.54 GiB | 2.95 GiB |
+
+Each strategy uses the same runtime binary, ten warmups and 100 paired
+forward/backward calls in an isolated process. Runtime exchange is included.
+All five block gradients pass the original `rtol=1e-4, atol=1e-6` check.
+[Reports](../examples/huggingface/reports/qwen35-context4k-attention256-summary.json)
+include source/library hashes, native dispatch evidence and measurement scope.
+The wider tiled K/V kernel uses eight key rows and 20 KiB of shared memory.
+
+The frozen K projection still contributes an activation gradient: adapters in
+earlier layers receive gradients through Q, K and V. Selecting adapter parameters
+for updates preserves these paths through frozen weights.
+
+The deployed Qwen3.5 task completes four additional 4k updates from a saved
+adapter: training loss moves from 2.11727 to 1.90056, validation loss from
+2.43249 to 2.43000, and process physical footprint peaks at 8.33 GiB. Trainer
+uses the decoder recipe's FP32 AdamW state and `eps=1e-5`. Fresh-process recovery
+from update two reproduces update four byte for byte, including 62 state tensors,
+Adam, scheduler and PEFT weights. Loaded loss, all 60 adapter gradients and inference
+outputs agree on the recorded eight-token replay. The checker validates 114 ONNX
+models; 3935 frozen tensor records remain unchanged throughout training.

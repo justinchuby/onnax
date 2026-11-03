@@ -173,3 +173,13 @@ scripts. Scalar reconstruction uses host arithmetic; training remains FP32.
 The [paired runtime audit](qwen-runtime-audit.md) compares CPU and MLX gradients
 with fixed forward residuals and provides reusable segmented ONNX execution.
 
+
+### Phi-3 Adam epsilon control
+
+The attention deployment check uses the decoder recipe's `eps=1e-5` for independent
+AdamW parameter updates. With `eps=1e-8`, the tiny Phi-3 control has one adapter
+coordinate beyond the original `rtol=1e-4, atol=1e-6` threshold after three updates:
+maximum absolute difference 3.25e-6. CPU ONNX, unfused MLX and fused MLX show the
+same coordinate and magnitude against Transformers. The
+[control record](../examples/huggingface/reports/phi3-attention-adam-epsilon.json)
+retains every step and the original threshold.

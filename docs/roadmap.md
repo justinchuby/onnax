@@ -353,11 +353,18 @@ Whole-block replay retains the lowest process and allocator peaks for this case.
 Qualify full-decoder updates and recovery before selecting a new execution
 policy. See the {ref}`block-local measurements <complete-context-block-replay>`.
 
-The 256-wide attention deployment has completed local qualification in
-[PR #152](https://github.com/justinchuby/onnax/pull/152): all adapter gradients,
-four additional complete-context updates and exact fresh-process recovery.
-The matched single-block GEMM route lowers median execution from 329 to 260 ms
-and process footprint from 4.30 to 2.95 GiB. CI gates the merge.
+The attention deployment contract now covers Qwen3.5's 256-wide heads. A
+rank-aware upstream-gradient boundary lets MLX claim the function directly;
+eight-row K/V tiles fit in 20 KiB of threadgroup memory. Matched 4k block
+measurements record 329 ms / 3.97 GiB for the original graph, 376 ms / 1.74 GiB
+for tiled execution, and 260 ms / 2.54 GiB for the 1 GiB-score-budget GEMM route.
+The saved-task deployment CLI preserves parameter mappings and exports across
+Qwen3, Qwen3.5 and Phi-3. The selected GEMM policy completes four additional 4k updates: training loss
+2.11727 → 1.90056, validation 2.43249 → 2.43000 and peak process footprint
+8.33 GiB. Fresh-process recovery reproduces parameters, Adam/scheduler, PEFT and
+loaded loss/gradient/inference outputs exactly; 3935 frozen tensor records remain
+unchanged. The next workload milestone is a small pretrained Diffusers denoiser
+with its prediction target and external scheduler.
 
 ### Next deliveries from the training handoff
 
@@ -378,6 +385,7 @@ and process footprint from 4.30 to 2.95 GiB. CI gates the merge.
 4. **Measured execution planning.** Combine saved-value lifetimes, native
    allocator peaks and replay costs into candidate selection. Continue to record
    explicit plans so callers can inspect the chosen memory/time tradeoff.
+
 
 ```{toctree}
 :hidden:

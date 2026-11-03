@@ -197,3 +197,41 @@ def test_shape_vector_saved_block_qualifies_captured_gradients(recorded):
     )
     assert result["plan"]["shape_boundaries"]["compressed"]
     assert result["gradient_checks"] == result["final_gradient_checks"]
+
+
+def test_attention_deployment_compares_captured_block_gradients(recorded):
+    from examples.huggingface.block_recompute import measure as measure_split
+
+    bundle, captures, _ = recorded
+    import onnx_ir as ir
+
+    record = json.loads((bundle / "interface.json").read_text())
+    index = next(i for i, row in enumerate(record["blocks"]) if row["name"] == "decoder_0_1")
+    source = ir.load(bundle / f"block_{index}_forward.onnx")
+    eligible = any(node.op_type == "Attention" and node.domain == "" for node in source.graph)
+    if not eligible:
+        with pytest.raises(ValueError, match="No eligible attention"):
+            measure_split(
+                bundle,
+                captures,
+                "decoder_0_1",
+                factory=session,
+                checkpoint=True,
+                attention_vjp=True,
+                warmup=0,
+                samples=1,
+            )
+        return
+    result = measure_split(
+        bundle,
+        captures,
+        "decoder_0_1",
+        factory=session,
+        checkpoint=True,
+        attention_vjp=True,
+        warmup=0,
+        samples=1,
+    )
+    assert result["plan"]["attention_vjp_calls"]
+    assert result["retained_activation_bytes"] == 0
+    assert result["gradient_checks"] == result["final_gradient_checks"]

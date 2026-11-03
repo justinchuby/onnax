@@ -37,7 +37,7 @@ MLX block 运行时测量也已具备；共享冻结权重和通用 bounded head
 
 完整 4k Qwen3.5 已完成保存值、MLP 重算与整块重算对照；shape-only 边界将
 425 MiB 激活替换为 384 字节的 shape 元数据。整块重算保持当前最低内存策略。
-256 维 attention VJP 已通过真实训练及新进程恢复验收，PR #152 等待 CI 合并。
+256 维 attention VJP 已通过真实训练及新进程恢复验收，PR #152 已合并。
 
 本轮先缩短 checkpoint 激活的生命周期：删除 VJP 未使用的输入，只保存实际需要的
 张量，并验证下一块执行前的释放时点、skip connection 和导出恢复。随后推进
