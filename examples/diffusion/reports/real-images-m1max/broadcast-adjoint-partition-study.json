@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "scope": "Same native binary, one warmup and three measured steps per diagnostic; counters include setup. Materialized output bytes are not a device bandwidth measurement.",
+  "library_sha256": "a00574a553b0b2d2bd6fed34574f91ba4d19e7b9ab41ca03bd02b9ef6ed56d98",
+  "traces": [
+    {
+      "route": "compiled control",
+      "trace_sha256": "207440b8a9d43801edc7fbb7dd7595bd5e636647edd6d945c608ae8ae78b7868",
+      "local_path": "/tmp/onnax-unet-broadcast-control-trace.json",
+      "execution_spans": 1172,
+      "summary": {
+        "claimed_nodes": 10723,
+        "total_nodes": 10723,
+        "claim_pct": "100.0",
+        "fused_subgraphs": 585,
+        "path_decode": 0,
+        "path_prefill": 0,
+        "path_general": 8,
+        "path_eager": 1164,
+        "cache_hit": 6,
+        "cache_miss": 2,
+        "cache_retrace": 0,
+        "managed_wrap_bytes": 4683170802,
+        "managed_wrap_aligned": 332,
+        "delta_copyout_bytes": 0,
+        "full_copyout_bytes": 4274358304
+      }
+    },
+    {
+      "route": "compiled broadcast adjoints",
+      "trace_sha256": "8fe170ce426cd0e5f1273bdb2aadbb501de19635ab44a072bcb4c377c05a184d",
+      "local_path": "/tmp/onnax-unet-broadcast-default-trace.json",
+      "execution_spans": 8,
+      "summary": {
+        "claimed_nodes": 6543,
+        "total_nodes": 6543,
+        "claim_pct": "100.0",
+        "fused_subgraphs": 3,
+        "path_decode": 0,
+        "path_prefill": 0,
+        "path_general": 8,
+        "path_eager": 0,
+        "cache_hit": 6,
+        "cache_miss": 2,
+        "cache_retrace": 0,
+        "managed_wrap_bytes": 10139025,
+        "managed_wrap_aligned": 192,
+        "delta_copyout_bytes": 0,
+        "full_copyout_bytes": 3715072
+      }
+    }
+  ]
+}

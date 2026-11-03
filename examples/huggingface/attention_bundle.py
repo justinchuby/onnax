@@ -14,6 +14,7 @@ import onnx
 import onnx_ir as ir
 
 import onnax
+from examples.broadcast_adjoint import fuse_broadcast_adjoints
 from examples.huggingface.attention_vjp import fuse_attention_vjp
 from examples.huggingface.optimization import optimize_training_graph
 from onnax._file_snapshot import copy_file
@@ -25,7 +26,7 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def deploy(source, destination):
+def deploy(source, destination, *, broadcast_adjoints=False):
     """Create a private decoder bundle with unchanged parameter interfaces."""
     source, destination = Path(source), Path(destination)
     if os.path.lexists(destination):
@@ -61,6 +62,8 @@ def deploy(source, destination):
                     forward, inputs=row["active_inputs"], outputs=row["active_outputs"]
                 )
                 joint = fuse_attention_vjp(joint)
+                if broadcast_adjoints:
+                    joint = fuse_broadcast_adjoints(joint)
                 calls = [
                     node.op_type
                     for node in joint.graph
@@ -86,6 +89,10 @@ def deploy(source, destination):
                         "name": row["name"],
                         "model": f"block_{index}_backward.onnx",
                         "calls": calls,
+                        "broadcast_adjoint_calls": sum(
+                            n.domain == "pkg.onnax" and n.op_type == "SumToShape_v1"
+                            for n in joint.graph
+                        ),
                     }
                 )
         if not blocks:
@@ -112,8 +119,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--export", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--broadcast-adjoints", action="store_true")
     args = parser.parse_args()
-    result = deploy(args.export, args.output)
+    result = deploy(args.export, args.output, broadcast_adjoints=args.broadcast_adjoints)
     print(json.dumps(result))
 
 

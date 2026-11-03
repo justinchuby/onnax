@@ -386,14 +386,16 @@ with its prediction target and external scheduler.
    identify reverse execution as the next target: raw MLX 1.073 s/step versus
    MPS eager 0.320 s and checkpointed MPS 0.436 s. Row-indexed pivots,
    fused attention, host shape programs and direct convolution padding now
-   reach 0.696 s with 4.32 GB MLX peak allocation. A supported header-preparation
+   reach 0.696 s with 4.32 GB MLX peak allocation. Shape-keyed broadcast adjoints
+   bring the compiled path to 0.651 s with 4.31 GB MLX peak allocation and
+   5.37 GB process peak. A supported header-preparation
    CLI reuses existing payloads and preserves parameter/gradient interfaces.
-   The latest default-compilation measurement completes at 0.963 s and 7.16 GB
-   process peak. Trace probes show 1172 subgraph executions versus 8 for eager
-   execution. Next, prototype shape-aware broadcast-adjoint fusion with a
-   portable `pkg.onnax` function body and a native shape-keyed reduction, then
-   measure partition count, materialized bytes, numerical agreement and step
-   time across the decoder and denoiser. Reuse the existing frozen exports.
+   A same-binary compiled control measures 0.959 s and 7.15 GB process peak.
+   Broadcast fusion reduces diagnostic execution spans from 1172 to 8 and
+   materialized output bytes from 4.27 GB to 3.72 MB. Native compiled tests
+   cover Qwen3, Qwen3.5 and Phi3 adapter gradients, updates and re-export.
+   Next, expose forward residuals to the reverse path and measure saved-value
+   handoff against whole-graph replay on the same frozen exports.
 3. **Saved-value fusion contracts.** Use the qualified decoder and denoiser to
    choose which attention statistics, normalization statistics and recurrent
    boundaries to expose. Compare saved and regenerated values with the same

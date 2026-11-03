@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 
 import numpy as np
@@ -118,6 +119,8 @@ class AutodiffContext:
                     "Squeeze", gradient, self.constant(list(range(leading_count)))
                 )
             return gradient
+        start = len(self.tape.nodes)
+        original_gradient = gradient
         shape = self.op("Shape", primal)
         grad_shape = self.op("Shape", gradient)
         leading = self.op("Sub", self.op("Size", grad_shape), self.op("Size", shape))
@@ -136,7 +139,16 @@ class AutodiffContext:
         axes = self.op("Concat", axes, self.constant([-1]), axis=0)
         expanded = self.op("Unsqueeze", gradient, self.constant([-1]))
         reduced = self.op("ReduceSum", expanded, axes, keepdims=1)
-        return self.reshape(reduced, shape)
+        result = self.reshape(reduced, shape)
+        region = self.tape.nodes[start:]
+        group = region[0].name
+        assert group is not None
+        for node in region:
+            node.metadata_props["onnax.unbroadcast.region"] = group
+        region[0].metadata_props["onnax.unbroadcast.interface"] = json.dumps(
+            {"inputs": [original_gradient.name, primal.name], "output": result.name}
+        )
+        return result
 
     def transpose(self, value: ir.Value, rank: int) -> ir.Value:
         perm = list(range(rank))

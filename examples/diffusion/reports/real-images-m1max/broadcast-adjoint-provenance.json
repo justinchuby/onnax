@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "native_measurement_source_commit": "dacf065",
+  "native_pr": "https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/111",
+  "transformation_files": {
+    "src/onnax/_autodiff/_context.py": "4166ee216dd7d03087a1636bcbf98e6cec84977ddc50a43df70d7e77c2ce85e4",
+    "examples/broadcast_adjoint.py": "cdff473f0db988e0bde6ebc8f52def2f48052027376fcd771c3d05457eb9eb2c",
+    "examples/torch_deploy.py": "e2cba5170c2a158662367408365d617a4eca5d3d04c8620d43ee50967404b506",
+    "examples/huggingface/attention_bundle.py": "443bc453bd58e5ba66d44aab499c0d2ba2f2bc34ad4cef0735a187a296fe7091"
+  },
+  "numerical_checks": {
+    "prediction_loss_and_adapter_gradients": 74,
+    "same_binary_bitwise_equal": true,
+    "pytorch_rtol": 0.0001,
+    "pytorch_atol": 1e-06
+  },
+  "native_dtype_tests": [
+    "float32",
+    "float16",
+    "bfloat16"
+  ],
+  "decoder_families": [
+    "qwen3",
+    "qwen35",
+    "phi3"
+  ]
+}

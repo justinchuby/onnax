@@ -82,10 +82,10 @@ process on the same cached image and adapter state:
 
 ```sh
 python -m examples.torch_deploy --bundle /tmp/unet-pretrained/export \
-  --fused-attention --output /tmp/unet-attention-vjp.onnx
+  --fused-attention --broadcast-adjoints --output /tmp/unet-attention-vjp.onnx
 python -m examples.diffusion.benchmark_unet --training-run /tmp/unet-pretrained \
   --batch /tmp/unet-images/example-0.pt --provider mps --output /tmp/unet-mps.json
-ONNXRUNTIME_EP_MLX_NO_COMPILE=1 python -m examples.diffusion.benchmark_unet \
+ONNXRUNTIME_EP_MLX_NO_COMPILE=0 python -m examples.diffusion.benchmark_unet \
   --training-run /tmp/unet-pretrained --batch /tmp/unet-images/example-0.pt \
   --provider mlx --derivative-header /tmp/unet-attention-vjp.onnx \
   --mlx-library /path/to/libonnxruntime_mlx_ep.dylib --output /tmp/unet-mlx.json
@@ -116,19 +116,22 @@ Image encoding and initial input transfer are outside the timed steps.
 | PyTorch MPS checkpointed | 0.436 s | 0.441 s | 5.42 GiB |
 | MLX raw execution | 1.073 s | 1.098 s | 6.05 GiB |
 | MLX fused attention + host shapes | 0.745 s | 0.770 s | 4.88 GiB |
-| MLX + direct convolution padding | **0.696 s** | **0.713 s** | **4.95 GiB** |
+| MLX + direct convolution padding | 0.696 s | 0.713 s | 4.95 GiB |
+| MLX + broadcast adjoints, eager | 0.669 s | 0.688 s | 4.94 GiB |
+| MLX + broadcast adjoints, compiled | **0.651 s** | **0.661 s** | **5.00 GiB** |
 
-The current default-compilation variant completes 100 steps at 0.963/0.990 s
-and 6.67 GiB process peak. The earlier raw-graph attempts reached 17.55 GiB
-before their disk-reserve guard stopped them. The
-[matched reports](https://github.com/justinchuby/onnax/tree/main/examples/diffusion/reports/real-images-m1max)
-retain both versions and all 74 captured-output comparisons. The selected eager
-route spends about 0.165 s in forward and 0.534 s in loss/backward.
+Broadcast fusion packages 245 runtime reductions as portable ONNX functions.
+With [MLX EP support](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/111),
+the same-binary compiled comparison changes step median from 0.959 s to 0.651 s
+and process peak from 6.66 GiB to 5.00 GiB. All 74 captures match bitwise.
+Diagnostic subgraph executions fall from 1172 to 8, with recorded materialized
+output bytes changing from 4.27 GB to 3.72 MB. The compiled route spends about
+0.156 s in forward and 0.495 s in loss/backward.
 
-Compilation currently splits the graph into many small native executions;
-shape-aware broadcast-adjoint fusion is the next target. Shared forward values
-and replay remain part of the memory/time planning work.
-
+The [matched reports](https://github.com/justinchuby/onnax/tree/main/examples/diffusion/reports/real-images-m1max)
+retain the graph/runtime variants, binary hashes and numerical comparisons.
+Next, shared forward values can replace the forward replay inside reverse
+execution; the same workload will measure that handoff.
 Footprint and RSS cover the isolated process, including construction, warmup,
 runtime and allocator caches. The raw MLX route caps its reusable cache at
 512 MiB; MPS uses its default allocator. A worker guard limits physical footprint
