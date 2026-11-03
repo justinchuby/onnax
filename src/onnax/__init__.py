@@ -15,6 +15,7 @@ from onnax._autodiff import GradPass, JvpPass, VjpPass
 from onnax._autodiff._context import AutodiffContext
 from onnax._batching import VmapPass
 from onnax._batching._context import BatchingContext
+from onnax._broadcast_adjoint import FuseBroadcastAdjointsPass
 from onnax._functional import grad, jvp, vjp, vmap
 from onnax._linear import HoistLinearCoefficientsPass
 from onnax._rules import (
@@ -32,6 +33,7 @@ __all__ = [
     "VjpPass",
     "VmapPass",
     "HoistLinearCoefficientsPass",
+    "FuseBroadcastAdjointsPass",
     "grad",
     "jvp",
     "vjp",
