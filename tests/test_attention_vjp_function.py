@@ -13,7 +13,7 @@ import onnax
 from examples.huggingface.attention_vjp import fuse_attention_vjp
 
 
-@pytest.mark.parametrize("d", [16, 256])
+@pytest.mark.parametrize("d", [8, 16, 40, 80, 160, 192, 200, 248, 256])
 @pytest.mark.parametrize("rank", [3, 4])
 @pytest.mark.parametrize("mask_type", [None, "bool", "float"])
 @pytest.mark.parametrize("selected", [["q"], ["k", "v"], ["q", "k", "v"]])
@@ -95,7 +95,7 @@ def test_singleton_key_mask_gradient(boolean):
 
 
 def test_unsupported_dimension_stays_portable():
-    feeds = {name: np.ones((1, 1, 2, 8), np.float32) for name in ("q", "k", "v")}
+    feeds = {name: np.ones((1, 1, 2, 7), np.float32) for name in ("q", "k", "v")}
     derivative = onnax.vjp(_model_for("Attention", feeds))
     result = fuse_attention_vjp(derivative)
     assert not result.functions
@@ -201,3 +201,25 @@ def test_attention_pullback_uses_row_sized_pivot_storage():
     assert coordinates.producer().op_type == "Unsqueeze"
     assert coordinates.producer().inputs[0] is flat_indices
     CheckerPass(full_check=True)(derivative)
+
+
+@pytest.mark.parametrize("d", [40, 80, 160])
+def test_optimizer_preserves_unet_native_function_boundary(d):
+    from onnxscript import optimizer
+
+    rng = np.random.default_rng(7)
+    feeds = {
+        name: rng.normal(size=(1, 2, 3, d)).astype(np.float32) for name in ("q", "k", "v")
+    }
+    derivative = onnax.vjp(_model_for("Attention", feeds), inputs=["q", "k", "v"])
+    optimized = optimizer.optimize(fuse_attention_vjp(derivative), inline=False)
+    assert len(optimized.functions) == 1
+    assert sum(node.domain == "pkg.onnax" for node in optimized.graph) == 1
+    CheckerPass(full_check=True)(optimized)
+    feeds[derivative.graph.inputs[-1].name] = rng.normal(size=(1, 2, 3, d)).astype(np.float32)
+    for actual, expected in zip(
+        runtime_session(optimized).run(None, feeds),
+        runtime_session(derivative).run(None, feeds),
+        strict=True,
+    ):
+        np.testing.assert_allclose(actual, expected, rtol=1e-4, atol=1e-6)

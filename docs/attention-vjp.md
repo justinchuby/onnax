@@ -63,7 +63,7 @@ from examples.huggingface.attention_vjp import fuse_attention_vjp
 
 pullback = onnax.vjp(model, inputs=parameter_names, outputs=output_names)
 execution = fuse_attention_vjp(pullback)
-optimizer.fold_constants(execution)
+execution = optimizer.optimize(execution, inline=False)
 ```
 
 The pass uses derivative-region annotations and checks every region boundary.
@@ -71,7 +71,8 @@ It preserves input, output and gradient names. The source derivative graph stays
 available for further transformations. Each generated function records its
 geometry and fallback-body digest in its name.
 
-The first contract covers FP32 Q/K/V with head dimensions 16, 32, 64, 128 and 256;
+The contract covers FP32 Q/K/V with head dimensions from 8 through 256 in steps
+of 8, including UNet dimensions 40, 80 and 160;
 rank-three/rank-four layouts; MHA/GQA/MQA; boolean/additive masks; and top-left
 causality. Unsupported configurations retain their portable derivative graph.
 
