@@ -1,0 +1,428 @@
+{
+  "model": "segmind/tiny-sd",
+  "revision": "3d25de3e8d5aacf94ce91176f204e6d11d120315",
+  "latent_shape": [
+    1,
+    4,
+    64,
+    64
+  ],
+  "conditioning_shape": [
+    1,
+    77,
+    768
+  ],
+  "captured_tensors": 74,
+  "checks": {
+    "prediction": {
+      "max_absolute_error": 7.3909759521484375e-06,
+      "relative_l2_error": 1.2094118569088844e-06,
+      "pointwise_tolerance_failures": 19
+    },
+    "loss": {
+      "max_absolute_error": 2.2351741790771484e-08,
+      "relative_l2_error": 1.922779138820552e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 3.2014213502407074e-10,
+      "relative_l2_error": 7.701239268628405e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 3.310560714453459e-10,
+      "relative_l2_error": 7.881568598579918e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 1.5661498764529824e-09,
+      "relative_l2_error": 1.4860737552865706e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 8.021743269637227e-10,
+      "relative_l2_error": 9.119208039674738e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 1.7820411812863313e-11,
+      "relative_l2_error": 1.437313752135597e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 1.800799509510398e-10,
+      "relative_l2_error": 1.5547422079632237e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 4.656612873077393e-10,
+      "relative_l2_error": 2.2974197878602493e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 1.2078089639544487e-09,
+      "relative_l2_error": 6.846644242055145e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 7.73070496506989e-11,
+      "relative_l2_error": 1.0112475998269449e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 1.2732925824820995e-10,
+      "relative_l2_error": 1.0900849977785654e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 3.965396899729967e-10,
+      "relative_l2_error": 7.0256074824715635e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 3.4015101846307516e-10,
+      "relative_l2_error": 7.396354981390313e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 9.549694368615746e-12,
+      "relative_l2_error": 7.74932984901003e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 7.821654435247183e-11,
+      "relative_l2_error": 7.460076104128718e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 1.4988472685217857e-09,
+      "relative_l2_error": 1.2964675998313438e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 1.6152625903487206e-09,
+      "relative_l2_error": 7.241356625733481e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 2.2282620193436742e-11,
+      "relative_l2_error": 9.576516548572344e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 1.0822986951097846e-10,
+      "relative_l2_error": 1.1192088960630163e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 2.1464074961841106e-10,
+      "relative_l2_error": 3.98735032490863e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 1.6325429896824062e-10,
+      "relative_l2_error": 7.390440093788769e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 5.547917680814862e-11,
+      "relative_l2_error": 1.3911763162472845e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 2.3374013835564256e-10,
+      "relative_l2_error": 1.1905802679786017e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 6.51925802230835e-09,
+      "relative_l2_error": 8.2608662294423e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 1.5697878552600741e-09,
+      "relative_l2_error": 7.803250831040095e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 3.001332515850663e-11,
+      "relative_l2_error": 6.64647679087495e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 1.070930011337623e-10,
+      "relative_l2_error": 8.475930744916302e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 3.0740920919924974e-10,
+      "relative_l2_error": 9.542119884149714e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 1.5552359400317073e-10,
+      "relative_l2_error": 6.2385541035645135e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 2.773958840407431e-11,
+      "relative_l2_error": 5.308681018375816e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 9.276845958083868e-11,
+      "relative_l2_error": 5.965414891144314e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 3.2232492230832577e-09,
+      "relative_l2_error": 4.693133148848696e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 5.911715561524034e-10,
+      "relative_l2_error": 5.604815149764837e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 2.4442670110147446e-11,
+      "relative_l2_error": 7.698926377565839e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 8.162714948412031e-11,
+      "relative_l2_error": 8.917052961460588e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 4.46789272245951e-10,
+      "relative_l2_error": 7.833689779238027e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 2.6557245291769505e-10,
+      "relative_l2_error": 5.941211631971725e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 1.750777300912887e-11,
+      "relative_l2_error": 4.509897327706187e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 2.0372681319713593e-10,
+      "relative_l2_error": 7.3992484297340985e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 1.2441887520253658e-09,
+      "relative_l2_error": 6.2547932587630764e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 7.821654435247183e-10,
+      "relative_l2_error": 6.526886758779864e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 5.5933924159035087e-11,
+      "relative_l2_error": 1.0237226372522156e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 1.6643753042444587e-10,
+      "relative_l2_error": 1.014977268451513e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 5.23186827194877e-10,
+      "relative_l2_error": 8.62309786831127e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 2.874003257602453e-10,
+      "relative_l2_error": 6.3383872694604476e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 6.892264536872972e-12,
+      "relative_l2_error": 1.0141547696897773e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 2.6830093702301383e-11,
+      "relative_l2_error": 1.0101636302375224e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 8.294591680169106e-10,
+      "relative_l2_error": 4.185877267755117e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 8.894858183339238e-10,
+      "relative_l2_error": 7.142431890686759e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 8.003553375601768e-11,
+      "relative_l2_error": 6.913080624284036e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 1.6552803572267294e-10,
+      "relative_l2_error": 5.720138239886269e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 5.456968210637569e-10,
+      "relative_l2_error": 6.629546728610923e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 4.94765117764473e-10,
+      "relative_l2_error": 6.5152295703601036e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 1.1084466677857563e-11,
+      "relative_l2_error": 7.915592783819657e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 6.093614501878619e-11,
+      "relative_l2_error": 9.193367906877147e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 6.111804395914078e-10,
+      "relative_l2_error": 3.2351853254212773e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 5.693436833098531e-10,
+      "relative_l2_error": 6.5271882847143954e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 1.1368683772161603e-10,
+      "relative_l2_error": 1.0215564780126446e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 3.1161562219494954e-10,
+      "relative_l2_error": 9.285893176957588e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 1.0986695997416973e-09,
+      "relative_l2_error": 8.946391217678008e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 6.002665031701326e-10,
+      "relative_l2_error": 6.345961246752715e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 1.432454155292362e-10,
+      "relative_l2_error": 1.5896147116067922e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 1.7917045624926686e-10,
+      "relative_l2_error": 1.1744433855084576e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 4.656612873077393e-10,
+      "relative_l2_error": 5.640279893600434e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 1.5425030142068863e-09,
+      "relative_l2_error": 8.712364705295583e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 7.639755494892597e-11,
+      "relative_l2_error": 2.875207564189362e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 2.2373569663614035e-10,
+      "relative_l2_error": 8.77878539757823e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 4.0745362639427185e-09,
+      "relative_l2_error": 4.64509149625711e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 1.2878444977104664e-09,
+      "relative_l2_error": 4.6679577599579305e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 1.6370904631912708e-10,
+      "relative_l2_error": 8.45861368936074e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 3.055902197957039e-10,
+      "relative_l2_error": 7.001300347022072e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 3.637978807091713e-10,
+      "relative_l2_error": 3.722433143407379e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 7.275957614183426e-10,
+      "relative_l2_error": 5.4103951673366285e-06,
+      "pointwise_tolerance_failures": 0
+    }
+  },
+  "baseline": {
+    "path": "/tmp/onnax-unet-mps64-checkpointed.json",
+    "report_sha256": "e301eee4ef0b73efbd4e1be2bce40038bc88b577ee273d2cdb7949c4fefa62c1",
+    "capture_sha256": "ea7349358ecaff66bcbbf136e769065bccf8138261975ef843d5b7f17d08fd00",
+    "provider": "mps",
+    "full_step_seconds": {
+      "median": 0.4361044584948104,
+      "p95": 0.4407964017271297,
+      "samples": 100
+    },
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 5122836688,
+      "lifetime_peak_bytes": 5824383640,
+      "current_resident_bytes": 1336999936,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_process_rss_bytes": 2463318016
+  },
+  "candidate": {
+    "path": "/tmp/onnax-unet-mlx64-measured-v2.json",
+    "report_sha256": "5b6a2887068b8d12be455e9dbfe769c60b627cdb254ac55babe7f24b4f50d451",
+    "capture_sha256": "26c9161e6a30a8a3c6d7a2b4042150bd361827dcd1e4b180551197ba94787161",
+    "provider": "mlx",
+    "full_step_seconds": {
+      "median": 1.0731105210143141,
+      "p95": 1.0976214565860574,
+      "samples": 100
+    },
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 4230679264,
+      "lifetime_peak_bytes": 6501518048,
+      "current_resident_bytes": 1985003520,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_process_rss_bytes": 3270475776
+  },
+  "candidate_to_baseline_median_ratio": 2.460673125695834,
+  "memory_scope": "Isolated whole-process lifetime peak, including construction and runtime allocator caches; cache policies are recorded in source reports"
+}

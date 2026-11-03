@@ -6,12 +6,13 @@ import torch
 from diffusers import UNet2DConditionModel
 
 
-def make_reference(config, weights, params, mapping):
+def make_reference(config, weights, params, mapping, *, device="cpu"):
     """Attach low-rank branches to corresponding Diffusers Linear modules."""
     model = UNet2DConditionModel.from_config(config).eval().requires_grad_(False)
     model.load_state_dict(weights, strict=True)
+    model.to(device)
     parameters = {
-        name: torch.nn.Parameter(torch.from_numpy(array.copy()))
+        name: torch.nn.Parameter(torch.from_numpy(array.copy()).to(device))
         for name, array in params.items()
     }
     for row in mapping:

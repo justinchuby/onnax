@@ -1,0 +1,807 @@
+{
+  "model": "segmind/tiny-sd",
+  "revision": "3d25de3e8d5aacf94ce91176f204e6d11d120315",
+  "source_identity": "19a71566b8b236ba41e31b6d91e93a5cc79f7e4cc6360ee03d39713e9ef02286",
+  "steps": 20,
+  "resumed_step": 10,
+  "training_images": 2,
+  "validation_images": 1,
+  "gradient_accumulation": 2,
+  "microbatch": 1,
+  "learning_rate": 0.003,
+  "optimizer_epsilon": 1e-05,
+  "provider": "MLXExecutionProvider",
+  "reference": "Diffusers MPS",
+  "cpu_fallback": false,
+  "ort_graph_optimizer": false,
+  "versions": {
+    "torch": "2.15.0",
+    "diffusers": "0.42.1",
+    "onnxruntime": "1.31.1",
+    "mobius-onnx": "0.1.0"
+  },
+  "adapter_initialization": "seeded A, zero B",
+  "encoded_manifest": {
+    "version": 1,
+    "model": "segmind/tiny-sd",
+    "revision": "3d25de3e8d5aacf94ce91176f204e6d11d120315",
+    "source": {
+      "version": 1,
+      "repo_id": "diffusers/dog-example",
+      "revision": "7aac740a23542bde4c568131b815a9ed08a7e192",
+      "photographer": "Alvan Nee",
+      "examples": [
+        {
+          "file": "alvan-nee-9M0tSjb-cpA-unsplash.jpeg",
+          "caption": "a photograph of a dog",
+          "split": "train"
+        },
+        {
+          "file": "alvan-nee-Id1DBHv4fbg-unsplash.jpeg",
+          "caption": "a photograph of a dog",
+          "split": "train"
+        },
+        {
+          "file": "alvan-nee-bQaAJCbNq3g-unsplash.jpeg",
+          "caption": "a photograph of a dog",
+          "split": "validation"
+        }
+      ]
+    },
+    "device": "mps",
+    "dtype": "float32",
+    "image_size": 512,
+    "preprocessing": "EXIF orientation, RGB, centered square crop with Lanczos, pixels / 127.5 - 1",
+    "posterior": "mode",
+    "scaling_factor": 0.18215,
+    "examples": [
+      {
+        "file": "alvan-nee-9M0tSjb-cpA-unsplash.jpeg",
+        "caption": "a photograph of a dog",
+        "split": "train",
+        "output": "example-0.pt",
+        "image_sha256": "e3fa9ca85ccfba82a40d130ba3ca0b0aa63bc966676f643b5cb1947c8b4071cd",
+        "tensors": {
+          "clean": {
+            "shape": [
+              1,
+              4,
+              64,
+              64
+            ],
+            "dtype": "float32",
+            "bytes": 65536,
+            "sha256": "0f8db1e41e3ddc2e2a39ad91460cabc89c1d1b3ec5a802685de122b962ce0ba8"
+          },
+          "conditioning": {
+            "shape": [
+              1,
+              77,
+              768
+            ],
+            "dtype": "float32",
+            "bytes": 236544,
+            "sha256": "e7c6345c9cf852c1f806c70af781ebbbe0650a0a564e768c7ddd8c835b16a3be"
+          },
+          "noise": {
+            "shape": [
+              1,
+              4,
+              64,
+              64
+            ],
+            "dtype": "float32",
+            "bytes": 65536,
+            "sha256": "5ead17ee97ed80a80fdf671fcfd4811c5b5799d7483f94df406dbda20e12a701"
+          },
+          "timesteps": {
+            "shape": [
+              1
+            ],
+            "dtype": "int64",
+            "bytes": 8,
+            "sha256": "d181517db52b7481184ef380392bcfdfd09dec452ec1ac55520705bf272cfbf3"
+          }
+        }
+      },
+      {
+        "file": "alvan-nee-Id1DBHv4fbg-unsplash.jpeg",
+        "caption": "a photograph of a dog",
+        "split": "train",
+        "output": "example-1.pt",
+        "image_sha256": "a65d3a853b7c65dd4d394cb6b209f77666351d2bae7c6670c5677d8eb5981644",
+        "tensors": {
+          "clean": {
+            "shape": [
+              1,
+              4,
+              64,
+              64
+            ],
+            "dtype": "float32",
+            "bytes": 65536,
+            "sha256": "8a2ebc8444c16e5ffb81a8b267430907d53a7dad18e4655a04cc76d8e8387257"
+          },
+          "conditioning": {
+            "shape": [
+              1,
+              77,
+              768
+            ],
+            "dtype": "float32",
+            "bytes": 236544,
+            "sha256": "e7c6345c9cf852c1f806c70af781ebbbe0650a0a564e768c7ddd8c835b16a3be"
+          },
+          "noise": {
+            "shape": [
+              1,
+              4,
+              64,
+              64
+            ],
+            "dtype": "float32",
+            "bytes": 65536,
+            "sha256": "69ec53338597577bc2fc6ad4a17fe844a62d3c91c91696ac1cd26348fab02bfd"
+          },
+          "timesteps": {
+            "shape": [
+              1
+            ],
+            "dtype": "int64",
+            "bytes": 8,
+            "sha256": "d181517db52b7481184ef380392bcfdfd09dec452ec1ac55520705bf272cfbf3"
+          }
+        }
+      },
+      {
+        "file": "alvan-nee-bQaAJCbNq3g-unsplash.jpeg",
+        "caption": "a photograph of a dog",
+        "split": "validation",
+        "output": "example-2.pt",
+        "image_sha256": "4cda55c53c11843ed368eb8eb68fd79521ac7b839bdd70f8f89589cf7006ed97",
+        "tensors": {
+          "clean": {
+            "shape": [
+              1,
+              4,
+              64,
+              64
+            ],
+            "dtype": "float32",
+            "bytes": 65536,
+            "sha256": "140cd4a6a9a15af6ffc1014c3b56fe32ec3915998e6ec59042f69c8bf650c35d"
+          },
+          "conditioning": {
+            "shape": [
+              1,
+              77,
+              768
+            ],
+            "dtype": "float32",
+            "bytes": 236544,
+            "sha256": "e7c6345c9cf852c1f806c70af781ebbbe0650a0a564e768c7ddd8c835b16a3be"
+          },
+          "noise": {
+            "shape": [
+              1,
+              4,
+              64,
+              64
+            ],
+            "dtype": "float32",
+            "bytes": 65536,
+            "sha256": "8ac9b16bbaff480e094e29780eb81da095d1d02c81f6d669b0dfb023b993068f"
+          },
+          "timesteps": {
+            "shape": [
+              1
+            ],
+            "dtype": "int64",
+            "bytes": 8,
+            "sha256": "d181517db52b7481184ef380392bcfdfd09dec452ec1ac55520705bf272cfbf3"
+          }
+        }
+      }
+    ],
+    "versions": {
+      "torch": "2.15.0",
+      "diffusers": "0.42.1",
+      "transformers": "5.22.1",
+      "Pillow": "13.0.0"
+    }
+  },
+  "data": {
+    "example-0.pt": {
+      "clean": {
+        "shape": [
+          1,
+          4,
+          64,
+          64
+        ],
+        "dtype": "float32",
+        "bytes": 65536,
+        "sha256": "0f8db1e41e3ddc2e2a39ad91460cabc89c1d1b3ec5a802685de122b962ce0ba8"
+      },
+      "conditioning": {
+        "shape": [
+          1,
+          77,
+          768
+        ],
+        "dtype": "float32",
+        "bytes": 236544,
+        "sha256": "e7c6345c9cf852c1f806c70af781ebbbe0650a0a564e768c7ddd8c835b16a3be"
+      },
+      "noise": {
+        "shape": [
+          1,
+          4,
+          64,
+          64
+        ],
+        "dtype": "float32",
+        "bytes": 65536,
+        "sha256": "5ead17ee97ed80a80fdf671fcfd4811c5b5799d7483f94df406dbda20e12a701"
+      },
+      "timesteps": {
+        "shape": [
+          1
+        ],
+        "dtype": "int64",
+        "bytes": 8,
+        "sha256": "d181517db52b7481184ef380392bcfdfd09dec452ec1ac55520705bf272cfbf3"
+      }
+    },
+    "example-1.pt": {
+      "clean": {
+        "shape": [
+          1,
+          4,
+          64,
+          64
+        ],
+        "dtype": "float32",
+        "bytes": 65536,
+        "sha256": "8a2ebc8444c16e5ffb81a8b267430907d53a7dad18e4655a04cc76d8e8387257"
+      },
+      "conditioning": {
+        "shape": [
+          1,
+          77,
+          768
+        ],
+        "dtype": "float32",
+        "bytes": 236544,
+        "sha256": "e7c6345c9cf852c1f806c70af781ebbbe0650a0a564e768c7ddd8c835b16a3be"
+      },
+      "noise": {
+        "shape": [
+          1,
+          4,
+          64,
+          64
+        ],
+        "dtype": "float32",
+        "bytes": 65536,
+        "sha256": "69ec53338597577bc2fc6ad4a17fe844a62d3c91c91696ac1cd26348fab02bfd"
+      },
+      "timesteps": {
+        "shape": [
+          1
+        ],
+        "dtype": "int64",
+        "bytes": 8,
+        "sha256": "d181517db52b7481184ef380392bcfdfd09dec452ec1ac55520705bf272cfbf3"
+      }
+    },
+    "example-2.pt": {
+      "clean": {
+        "shape": [
+          1,
+          4,
+          64,
+          64
+        ],
+        "dtype": "float32",
+        "bytes": 65536,
+        "sha256": "140cd4a6a9a15af6ffc1014c3b56fe32ec3915998e6ec59042f69c8bf650c35d"
+      },
+      "conditioning": {
+        "shape": [
+          1,
+          77,
+          768
+        ],
+        "dtype": "float32",
+        "bytes": 236544,
+        "sha256": "e7c6345c9cf852c1f806c70af781ebbbe0650a0a564e768c7ddd8c835b16a3be"
+      },
+      "noise": {
+        "shape": [
+          1,
+          4,
+          64,
+          64
+        ],
+        "dtype": "float32",
+        "bytes": 65536,
+        "sha256": "8ac9b16bbaff480e094e29780eb81da095d1d02c81f6d669b0dfb023b993068f"
+      },
+      "timesteps": {
+        "shape": [
+          1
+        ],
+        "dtype": "int64",
+        "bytes": 8,
+        "sha256": "d181517db52b7481184ef380392bcfdfd09dec452ec1ac55520705bf272cfbf3"
+      }
+    }
+  },
+  "loss_before": {
+    "train": 0.10523966699838638,
+    "validation": 0.10753810405731201
+  },
+  "loss_after": {
+    "train": 0.09503723308444023,
+    "validation": 0.1096227765083313
+  },
+  "history": [
+    {
+      "step": 11,
+      "loss": 0.10523966699838638,
+      "maximum_gradient_error": 1.0099029168486595e-08,
+      "maximum_relative_parameter_l2_error": 4.491890400439856e-07,
+      "predictions": [
+        {
+          "max_absolute_error": 8.463859558105469e-06,
+          "absolute_l2_error": 0.0001531232992419973,
+          "reference_l2_norm": 120.74115753173828,
+          "pointwise_tolerance_failures": 19
+        },
+        {
+          "max_absolute_error": 9.059906005859375e-06,
+          "absolute_l2_error": 0.00015280739171430469,
+          "reference_l2_norm": 121.40228271484375,
+          "pointwise_tolerance_failures": 15
+        }
+      ]
+    },
+    {
+      "step": 12,
+      "loss": 0.1040242649614811,
+      "maximum_gradient_error": 1.3271346688270569e-08,
+      "maximum_relative_parameter_l2_error": 9.29803715108025e-07,
+      "predictions": [
+        {
+          "max_absolute_error": 9.655952453613281e-06,
+          "absolute_l2_error": 0.0001546730927657336,
+          "reference_l2_norm": 120.8780288696289,
+          "pointwise_tolerance_failures": 21
+        },
+        {
+          "max_absolute_error": 9.059906005859375e-06,
+          "absolute_l2_error": 0.00015573615382891148,
+          "reference_l2_norm": 121.4943618774414,
+          "pointwise_tolerance_failures": 21
+        }
+      ]
+    },
+    {
+      "step": 13,
+      "loss": 0.10290194675326347,
+      "maximum_gradient_error": 7.887138053774834e-09,
+      "maximum_relative_parameter_l2_error": 1.42733315865864e-06,
+      "predictions": [
+        {
+          "max_absolute_error": 1.1086463928222656e-05,
+          "absolute_l2_error": 0.00016457945457659662,
+          "reference_l2_norm": 120.89453125,
+          "pointwise_tolerance_failures": 33
+        },
+        {
+          "max_absolute_error": 9.59634780883789e-06,
+          "absolute_l2_error": 0.00016060458438005298,
+          "reference_l2_norm": 121.4833755493164,
+          "pointwise_tolerance_failures": 24
+        }
+      ]
+    },
+    {
+      "step": 14,
+      "loss": 0.10181311517953873,
+      "maximum_gradient_error": 1.0244548320770264e-08,
+      "maximum_relative_parameter_l2_error": 1.8604095904411456e-06,
+      "predictions": [
+        {
+          "max_absolute_error": 1.0132789611816406e-05,
+          "absolute_l2_error": 0.00016728676564525813,
+          "reference_l2_norm": 120.80070495605469,
+          "pointwise_tolerance_failures": 31
+        },
+        {
+          "max_absolute_error": 9.775161743164062e-06,
+          "absolute_l2_error": 0.00016215353389270604,
+          "reference_l2_norm": 121.37946319580078,
+          "pointwise_tolerance_failures": 23
+        }
+      ]
+    },
+    {
+      "step": 15,
+      "loss": 0.10071288421750069,
+      "maximum_gradient_error": 1.1059455573558807e-08,
+      "maximum_relative_parameter_l2_error": 2.3423556782226542e-06,
+      "predictions": [
+        {
+          "max_absolute_error": 9.059906005859375e-06,
+          "absolute_l2_error": 0.000170903789694421,
+          "reference_l2_norm": 120.69648742675781,
+          "pointwise_tolerance_failures": 26
+        },
+        {
+          "max_absolute_error": 1.0967254638671875e-05,
+          "absolute_l2_error": 0.00017030086019076407,
+          "reference_l2_norm": 121.26121520996094,
+          "pointwise_tolerance_failures": 33
+        }
+      ]
+    },
+    {
+      "step": 16,
+      "loss": 0.0997348241508007,
+      "maximum_gradient_error": 2.306478563696146e-08,
+      "maximum_relative_parameter_l2_error": 2.7888079100069164e-06,
+      "predictions": [
+        {
+          "max_absolute_error": 1.3828277587890625e-05,
+          "absolute_l2_error": 0.0001711715158307925,
+          "reference_l2_norm": 120.6806411743164,
+          "pointwise_tolerance_failures": 31
+        },
+        {
+          "max_absolute_error": 1.9073486328125e-05,
+          "absolute_l2_error": 0.00017541975830681622,
+          "reference_l2_norm": 121.21046447753906,
+          "pointwise_tolerance_failures": 20
+        }
+      ]
+    },
+    {
+      "step": 17,
+      "loss": 0.09886076301336288,
+      "maximum_gradient_error": 1.8277205526828766e-08,
+      "maximum_relative_parameter_l2_error": 3.3573872676306778e-06,
+      "predictions": [
+        {
+          "max_absolute_error": 1.1563301086425781e-05,
+          "absolute_l2_error": 0.000174428554601036,
+          "reference_l2_norm": 120.75231170654297,
+          "pointwise_tolerance_failures": 33
+        },
+        {
+          "max_absolute_error": 1.5139579772949219e-05,
+          "absolute_l2_error": 0.00017553426732774824,
+          "reference_l2_norm": 121.23352813720703,
+          "pointwise_tolerance_failures": 21
+        }
+      ]
+    },
+    {
+      "step": 18,
+      "loss": 0.09797095879912376,
+      "maximum_gradient_error": 1.673470251262188e-08,
+      "maximum_relative_parameter_l2_error": 3.862597798662396e-06,
+      "predictions": [
+        {
+          "max_absolute_error": 1.2159347534179688e-05,
+          "absolute_l2_error": 0.00018089250079356134,
+          "reference_l2_norm": 120.87504577636719,
+          "pointwise_tolerance_failures": 27
+        },
+        {
+          "max_absolute_error": 1.4543533325195312e-05,
+          "absolute_l2_error": 0.00018106844800058752,
+          "reference_l2_norm": 121.31329345703125,
+          "pointwise_tolerance_failures": 25
+        }
+      ]
+    },
+    {
+      "step": 19,
+      "loss": 0.09702814370393753,
+      "maximum_gradient_error": 1.4639226719737053e-08,
+      "maximum_relative_parameter_l2_error": 4.423166741383533e-06,
+      "predictions": [
+        {
+          "max_absolute_error": 1.2993812561035156e-05,
+          "absolute_l2_error": 0.0001866603852249682,
+          "reference_l2_norm": 121.07386016845703,
+          "pointwise_tolerance_failures": 24
+        },
+        {
+          "max_absolute_error": 1.6570091247558594e-05,
+          "absolute_l2_error": 0.00018858833936974406,
+          "reference_l2_norm": 121.49690246582031,
+          "pointwise_tolerance_failures": 29
+        }
+      ]
+    },
+    {
+      "step": 20,
+      "loss": 0.09602617099881172,
+      "maximum_gradient_error": 3.211607690900564e-08,
+      "maximum_relative_parameter_l2_error": 5.01435473214488e-06,
+      "predictions": [
+        {
+          "max_absolute_error": 1.1801719665527344e-05,
+          "absolute_l2_error": 0.0001952086458913982,
+          "reference_l2_norm": 121.3458480834961,
+          "pointwise_tolerance_failures": 42
+        },
+        {
+          "max_absolute_error": 1.6450881958007812e-05,
+          "absolute_l2_error": 0.0001953795290319249,
+          "reference_l2_norm": 121.7781982421875,
+          "pointwise_tolerance_failures": 43
+        }
+      ]
+    }
+  ],
+  "frozen_weights_unchanged": true,
+  "loaded_predictions_bitwise_equal": true,
+  "adapter_mapping": [
+    {
+      "module": "down_blocks.0.attentions.0.attn1.to_q",
+      "A": "down_blocks.0.attentions.0.attn1.to_q.lora.A",
+      "B": "down_blocks.0.attentions.0.attn1.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "down_blocks.0.attentions.0.attn1.to_v",
+      "A": "down_blocks.0.attentions.0.attn1.to_v.lora.A",
+      "B": "down_blocks.0.attentions.0.attn1.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "down_blocks.0.attentions.0.attn2.to_q",
+      "A": "down_blocks.0.attentions.0.attn2.to_q.lora.A",
+      "B": "down_blocks.0.attentions.0.attn2.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "down_blocks.0.attentions.0.attn2.to_v",
+      "A": "down_blocks.0.attentions.0.attn2.to_v.lora.A",
+      "B": "down_blocks.0.attentions.0.attn2.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "down_blocks.1.attentions.0.attn1.to_q",
+      "A": "down_blocks.1.attentions.0.attn1.to_q.lora.A",
+      "B": "down_blocks.1.attentions.0.attn1.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "down_blocks.1.attentions.0.attn1.to_v",
+      "A": "down_blocks.1.attentions.0.attn1.to_v.lora.A",
+      "B": "down_blocks.1.attentions.0.attn1.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "down_blocks.1.attentions.0.attn2.to_q",
+      "A": "down_blocks.1.attentions.0.attn2.to_q.lora.A",
+      "B": "down_blocks.1.attentions.0.attn2.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "down_blocks.1.attentions.0.attn2.to_v",
+      "A": "down_blocks.1.attentions.0.attn2.to_v.lora.A",
+      "B": "down_blocks.1.attentions.0.attn2.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "down_blocks.2.attentions.0.attn1.to_q",
+      "A": "down_blocks.2.attentions.0.attn1.to_q.lora.A",
+      "B": "down_blocks.2.attentions.0.attn1.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "down_blocks.2.attentions.0.attn1.to_v",
+      "A": "down_blocks.2.attentions.0.attn1.to_v.lora.A",
+      "B": "down_blocks.2.attentions.0.attn1.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "down_blocks.2.attentions.0.attn2.to_q",
+      "A": "down_blocks.2.attentions.0.attn2.to_q.lora.A",
+      "B": "down_blocks.2.attentions.0.attn2.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "down_blocks.2.attentions.0.attn2.to_v",
+      "A": "down_blocks.2.attentions.0.attn2.to_v.lora.A",
+      "B": "down_blocks.2.attentions.0.attn2.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.0.attentions.0.attn1.to_q",
+      "A": "up_blocks.0.attentions.0.attn1.to_q.lora.A",
+      "B": "up_blocks.0.attentions.0.attn1.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.0.attentions.0.attn1.to_v",
+      "A": "up_blocks.0.attentions.0.attn1.to_v.lora.A",
+      "B": "up_blocks.0.attentions.0.attn1.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.0.attentions.0.attn2.to_q",
+      "A": "up_blocks.0.attentions.0.attn2.to_q.lora.A",
+      "B": "up_blocks.0.attentions.0.attn2.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.0.attentions.0.attn2.to_v",
+      "A": "up_blocks.0.attentions.0.attn2.to_v.lora.A",
+      "B": "up_blocks.0.attentions.0.attn2.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.0.attentions.1.attn1.to_q",
+      "A": "up_blocks.0.attentions.1.attn1.to_q.lora.A",
+      "B": "up_blocks.0.attentions.1.attn1.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.0.attentions.1.attn1.to_v",
+      "A": "up_blocks.0.attentions.1.attn1.to_v.lora.A",
+      "B": "up_blocks.0.attentions.1.attn1.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.0.attentions.1.attn2.to_q",
+      "A": "up_blocks.0.attentions.1.attn2.to_q.lora.A",
+      "B": "up_blocks.0.attentions.1.attn2.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.0.attentions.1.attn2.to_v",
+      "A": "up_blocks.0.attentions.1.attn2.to_v.lora.A",
+      "B": "up_blocks.0.attentions.1.attn2.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.1.attentions.0.attn1.to_q",
+      "A": "up_blocks.1.attentions.0.attn1.to_q.lora.A",
+      "B": "up_blocks.1.attentions.0.attn1.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.1.attentions.0.attn1.to_v",
+      "A": "up_blocks.1.attentions.0.attn1.to_v.lora.A",
+      "B": "up_blocks.1.attentions.0.attn1.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.1.attentions.0.attn2.to_q",
+      "A": "up_blocks.1.attentions.0.attn2.to_q.lora.A",
+      "B": "up_blocks.1.attentions.0.attn2.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.1.attentions.0.attn2.to_v",
+      "A": "up_blocks.1.attentions.0.attn2.to_v.lora.A",
+      "B": "up_blocks.1.attentions.0.attn2.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.1.attentions.1.attn1.to_q",
+      "A": "up_blocks.1.attentions.1.attn1.to_q.lora.A",
+      "B": "up_blocks.1.attentions.1.attn1.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.1.attentions.1.attn1.to_v",
+      "A": "up_blocks.1.attentions.1.attn1.to_v.lora.A",
+      "B": "up_blocks.1.attentions.1.attn1.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.1.attentions.1.attn2.to_q",
+      "A": "up_blocks.1.attentions.1.attn2.to_q.lora.A",
+      "B": "up_blocks.1.attentions.1.attn2.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.1.attentions.1.attn2.to_v",
+      "A": "up_blocks.1.attentions.1.attn2.to_v.lora.A",
+      "B": "up_blocks.1.attentions.1.attn2.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.2.attentions.0.attn1.to_q",
+      "A": "up_blocks.2.attentions.0.attn1.to_q.lora.A",
+      "B": "up_blocks.2.attentions.0.attn1.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.2.attentions.0.attn1.to_v",
+      "A": "up_blocks.2.attentions.0.attn1.to_v.lora.A",
+      "B": "up_blocks.2.attentions.0.attn1.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.2.attentions.0.attn2.to_q",
+      "A": "up_blocks.2.attentions.0.attn2.to_q.lora.A",
+      "B": "up_blocks.2.attentions.0.attn2.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.2.attentions.0.attn2.to_v",
+      "A": "up_blocks.2.attentions.0.attn2.to_v.lora.A",
+      "B": "up_blocks.2.attentions.0.attn2.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.2.attentions.1.attn1.to_q",
+      "A": "up_blocks.2.attentions.1.attn1.to_q.lora.A",
+      "B": "up_blocks.2.attentions.1.attn1.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.2.attentions.1.attn1.to_v",
+      "A": "up_blocks.2.attentions.1.attn1.to_v.lora.A",
+      "B": "up_blocks.2.attentions.1.attn1.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.2.attentions.1.attn2.to_q",
+      "A": "up_blocks.2.attentions.1.attn2.to_q.lora.A",
+      "B": "up_blocks.2.attentions.1.attn2.to_q.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    },
+    {
+      "module": "up_blocks.2.attentions.1.attn2.to_v",
+      "A": "up_blocks.2.attentions.1.attn2.to_v.lora.A",
+      "B": "up_blocks.2.attentions.1.attn2.to_v.lora.B",
+      "rank": 4,
+      "alpha": 4.0
+    }
+  ]
+}
