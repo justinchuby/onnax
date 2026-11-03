@@ -16,9 +16,9 @@ def optimize_training_graph(model):
     """
     result = model.clone()
     if os.environ.get("ONNAX_TILED_ATTENTION") == "1":
-        from examples.huggingface.attention_vjp import fuse_attention_vjp
+        from onnax import FuseAttentionVJPPass
 
-        result = fuse_attention_vjp(result)
+        result = FuseAttentionVJPPass()(result).model
     for _ in range(2):
         optimizer.fold_constants(result)
         common.RemoveUnusedNodesPass()(result)

@@ -117,6 +117,7 @@ def test_public_signatures_exports_and_documentation(function, parameters, defau
         "VmapPass",
         "HoistLinearCoefficientsPass",
         "FuseBroadcastAdjointsPass",
+        "FuseAttentionVJPPass",
         "register_jvp",
         "register_vjp",
         "register_batching",

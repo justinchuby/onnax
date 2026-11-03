@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: MIT
 """Portable attention VJP functions preserve the original derivative graph."""
 
+import json
+import os
+
 import numpy as np
 import onnx_ir as ir
 import pytest
@@ -10,7 +13,6 @@ from onnx_ir.passes.common import CheckerPass
 from test_fused_autodiff import _model_for
 
 import onnax
-from examples.huggingface.attention_vjp import fuse_attention_vjp
 
 
 @pytest.mark.parametrize("causal", [False, True])
@@ -43,7 +45,7 @@ def test_portable_function(d, rank, mask_type, selected, recompute, causal):
     source = _model_for("Attention", feeds, attrs)
     derivative = onnax.vjp(source, inputs=selected)
     before = ir.to_proto(derivative).SerializeToString()
-    optimized = fuse_attention_vjp(derivative, recompute=recompute)
+    optimized = onnax.FuseAttentionVJPPass(recompute=recompute)(derivative).model
     CheckerPass(full_check=True)(optimized)
     assert len(optimized.functions) == 1
     assert next(iter(optimized.functions))[0] == "pkg.onnax"
@@ -63,7 +65,7 @@ def test_portable_function(d, rank, mask_type, selected, recompute, causal):
     ):
         np.testing.assert_allclose(actual, target, rtol=1e-4, atol=1e-6)
     assert (
-        ir.to_proto(fuse_attention_vjp(optimized)).SerializeToString()
+        ir.to_proto(onnax.FuseAttentionVJPPass()(optimized).model).SerializeToString()
         == ir.to_proto(optimized).SerializeToString()
     )
 
@@ -102,7 +104,7 @@ def test_singleton_key_mask_gradient(boolean):
 def test_unsupported_dimension_stays_portable():
     feeds = {name: np.ones((1, 1, 2, 7), np.float32) for name in ("q", "k", "v")}
     derivative = onnax.vjp(_model_for("Attention", feeds))
-    result = fuse_attention_vjp(derivative)
+    result = onnax.FuseAttentionVJPPass()(derivative).model
     assert not result.functions
     assert (
         ir.to_proto(result).SerializeToString() == ir.to_proto(derivative).SerializeToString()
@@ -132,8 +134,6 @@ def test_singleton_additive_mask_has_zero_product(transform):
 
 
 def test_untyped_internal_pullback_seed_keeps_native_boundary():
-    import json
-
     rng = np.random.default_rng(9)
     feeds = {
         name: rng.normal(0, 0.2, (1, 2, 3, 256)).astype(np.float32) for name in ("q", "k", "v")
@@ -160,7 +160,7 @@ def test_untyped_internal_pullback_seed_keeps_native_boundary():
     assert value.producer() is not None
     value.type = value.shape = None
     before = ir.to_proto(derivative).SerializeToString()
-    fused = fuse_attention_vjp(derivative)
+    fused = onnax.FuseAttentionVJPPass()(derivative).model
     call = next(node for node in fused.graph if node.domain == "pkg.onnax")
     assert call.inputs[4].dtype == ir.DataType.FLOAT
     assert list(call.inputs[4].shape) == [1, 2, 3, 256]
@@ -181,7 +181,7 @@ def test_conflicting_seed_metadata_does_not_add_a_partial_function():
     derivative = onnax.vjp(_model_for("Attention", feeds))
     derivative.graph.inputs[-1].shape = ir.Shape([1, 2, 3, 512])
     before = ir.to_proto(derivative).SerializeToString()
-    result = fuse_attention_vjp(derivative)
+    result = onnax.FuseAttentionVJPPass()(derivative).model
     assert not result.functions
     assert ir.to_proto(result).SerializeToString() == before
 
@@ -217,7 +217,9 @@ def test_optimizer_preserves_unet_native_function_boundary(d):
         name: rng.normal(size=(1, 2, 3, d)).astype(np.float32) for name in ("q", "k", "v")
     }
     derivative = onnax.vjp(_model_for("Attention", feeds), inputs=["q", "k", "v"])
-    optimized = optimizer.optimize(fuse_attention_vjp(derivative), inline=False)
+    optimized = optimizer.optimize(
+        onnax.FuseAttentionVJPPass()(derivative).model, inline=False
+    )
     assert len(optimized.functions) == 1
     assert sum(node.domain == "pkg.onnax" for node in optimized.graph) == 1
     CheckerPass(full_check=True)(optimized)
@@ -228,3 +230,171 @@ def test_optimizer_preserves_unet_native_function_boundary(d):
         strict=True,
     ):
         np.testing.assert_allclose(actual, expected, rtol=1e-4, atol=1e-6)
+
+
+def _small_derivative():
+    feeds = {name: np.ones((1, 2, 3, 40), np.float32) for name in ("q", "k", "v")}
+    return onnax.vjp(_model_for("Attention", feeds))
+
+
+@pytest.mark.parametrize("recompute", [False, True])
+def test_public_pass_composition_and_example_compatibility(recompute):
+    from examples.huggingface.attention_vjp import fuse_attention_vjp
+
+    model = _small_derivative()
+    before = ir.to_proto(model).SerializeToString()
+    result = ir.passes.PassManager([onnax.FuseAttentionVJPPass(recompute=recompute)])(model)
+    assert result.modified
+    assert not onnax.FuseAttentionVJPPass(recompute=recompute)(result.model).modified
+    assert (
+        ir.to_proto(result.model).SerializeToString()
+        == ir.to_proto(fuse_attention_vjp(model, recompute=recompute)).SerializeToString()
+    )
+    assert ir.to_proto(model).SerializeToString() == before
+
+
+@pytest.mark.parametrize("recompute", [False, True])
+def test_edited_body_keeps_its_original_computation(recompute):
+    model = _small_derivative()
+    node = next(
+        node
+        for node in model.graph
+        if node.op_type == "Mul" and "onnax.attention_vjp.region" in node.metadata_props
+    )
+    node.op_type = "Add"
+    before = ir.to_proto(model).SerializeToString()
+    result = onnax.FuseAttentionVJPPass(recompute=recompute)(model)
+    assert not result.modified
+    assert ir.to_proto(result.model).SerializeToString() == before
+    assert ir.to_proto(model).SerializeToString() == before
+
+
+@pytest.mark.parametrize(
+    "change", ["json", "inputs", "heads", "mask", "outputs", "attributes", "causal"]
+)
+def test_stale_or_malformed_descriptor_keeps_the_region(change):
+    model = _small_derivative()
+    node = next(
+        node for node in model.graph if "onnax.attention_vjp.interface" in node.metadata_props
+    )
+    key = "onnax.attention_vjp.interface"
+    spec = json.loads(node.metadata_props[key])
+    if change == "json":
+        node.metadata_props[key] = "not JSON"
+    else:
+        if change == "inputs":
+            spec["inputs"] = spec["inputs"][:4]
+        elif change == "heads":
+            spec["hq"] = 7
+        elif change == "mask":
+            spec["mask"] = "missing-mask"
+        elif change == "outputs":
+            spec["outputs"] = {"3": "q"}
+        elif change == "causal":
+            spec["attributes"]["is_causal"] = 1
+        else:
+            spec["attributes"]["is_causal"] = 1.5
+        node.metadata_props[key] = json.dumps(spec)
+    before = ir.to_proto(model).SerializeToString()
+    result = onnax.FuseAttentionVJPPass()(model)
+    assert not result.modified
+    assert ir.to_proto(result.model).SerializeToString() == before
+
+
+@pytest.mark.parametrize("recompute", [False, True])
+def test_incompatible_existing_function_keeps_source(recompute):
+    model = _small_derivative()
+    function = next(
+        iter(onnax.FuseAttentionVJPPass(recompute=recompute)(model).model.functions.values())
+    )
+    next(node for node in function.graph if node.op_type == "Mul").op_type = "Add"
+    model.functions[function.identifier()] = function
+    before = ir.to_proto(model).SerializeToString()
+    with pytest.raises(ValueError, match=r"incompatible pkg\.onnax attention VJP"):
+        onnax.FuseAttentionVJPPass(recompute=recompute)(model)
+    assert ir.to_proto(model).SerializeToString() == before
+
+
+def test_recompute_selection_is_boolean():
+    with pytest.raises(TypeError, match="must be a bool"):
+        onnax.FuseAttentionVJPPass(recompute="yes")
+
+
+def test_shadowed_standard_operation_keeps_portable_region():
+    model = _small_derivative()
+    a, b = [ir.val(name, dtype=ir.DataType.FLOAT, shape=[1]) for name in ("a", "b")]
+    node = ir.node("Add", [a, b], num_outputs=1)
+    function = ir.Function(
+        "",
+        "Mul",
+        graph=ir.Graph([a, b], list(node.outputs), nodes=[node], opset_imports={"": 23}),
+        attributes=[],
+    )
+    model.functions[function.identifier()] = function
+    before = ir.to_proto(model).SerializeToString()
+    result = onnax.FuseAttentionVJPPass()(model)
+    assert not result.modified
+    assert ir.to_proto(result.model).SerializeToString() == before
+
+
+def test_symbolic_key_width_preserves_runtime_contract():
+    model = _small_derivative()
+    model.graph.inputs[1].shape = ir.Shape([1, 2, 3, "key_width"])
+    result = onnax.FuseAttentionVJPPass(recompute=True)(model)
+    assert result.modified
+    feeds = {value.name: np.ones((1, 2, 3, 40), np.float32) for value in model.graph.inputs}
+    for actual, expected in zip(
+        runtime_session(result.model).run(None, feeds),
+        runtime_session(model).run(None, feeds),
+        strict=True,
+    ):
+        np.testing.assert_allclose(actual, expected, rtol=1e-4, atol=1e-6)
+
+
+@pytest.mark.parametrize("provider", ["cpu", "mlx"])
+@pytest.mark.parametrize("recompute", [False, True])
+def test_connected_attention_regions_share_replaced_boundaries(recompute, provider):
+    execute = runtime_session
+    if provider == "mlx":
+        if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
+            pytest.skip("Native MLX opt-in")
+        from examples.lora.mlx_runtime import register_library, session
+
+        if path := os.environ.get("ONNAX_MLX_EP_LIBRARY"):
+            register_library(path)
+        execute = session
+    shape = [1, 2, 3, 40]
+    inputs = [
+        ir.val(name, dtype=ir.DataType.FLOAT, shape=shape)
+        for name in ("q", "k", "v", "next_k", "next_v")
+    ]
+    first = ir.val("first", dtype=ir.DataType.FLOAT, shape=shape)
+    output = ir.val("output", dtype=ir.DataType.FLOAT, shape=shape)
+    nodes = [
+        ir.node("Attention", inputs[:3], outputs=[first]),
+        ir.node("Attention", [first, *inputs[3:]], outputs=[output]),
+    ]
+    source = ir.Model(
+        ir.Graph(
+            inputs, [output], nodes=nodes, opset_imports={"": 23}, name="connected_attention"
+        ),
+        ir_version=10,
+    )
+    derivative = onnax.vjp(source)
+    before = ir.to_proto(derivative).SerializeToString()
+    result = onnax.FuseAttentionVJPPass(recompute=recompute)(derivative)
+    assert result.modified
+    assert sum(node.domain == "pkg.onnax" for node in result.model.graph) == 2
+    CheckerPass(full_check=True)(result.model)
+    rng = np.random.default_rng(71)
+    feeds = {
+        value.name: rng.normal(0, 0.2, shape).astype(np.float32)
+        for value in derivative.graph.inputs
+    }
+    for actual, expected in zip(
+        execute(result.model).run(None, feeds),
+        runtime_session(derivative).run(None, feeds),
+        strict=True,
+    ):
+        np.testing.assert_allclose(actual, expected, rtol=1e-4, atol=1e-6)
+    assert ir.to_proto(derivative).SerializeToString() == before

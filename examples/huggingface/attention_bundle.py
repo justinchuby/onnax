@@ -14,9 +14,8 @@ import onnx
 import onnx_ir as ir
 
 import onnax
-from examples.huggingface.attention_vjp import fuse_attention_vjp
 from examples.huggingface.optimization import optimize_training_graph
-from onnax import FuseBroadcastAdjointsPass
+from onnax import FuseAttentionVJPPass, FuseBroadcastAdjointsPass
 from onnax._file_snapshot import copy_file
 from onnax._shared_weights import SharedWeights
 
@@ -61,7 +60,7 @@ def deploy(source, destination, *, broadcast_adjoints=False, recompute_attention
                 joint = onnax.vjp(
                     forward, inputs=row["active_inputs"], outputs=row["active_outputs"]
                 )
-                joint = fuse_attention_vjp(joint, recompute=recompute_attention)
+                joint = FuseAttentionVJPPass(recompute=recompute_attention)(joint).model
                 if broadcast_adjoints:
                     joint = FuseBroadcastAdjointsPass()(joint).model
                 calls = [

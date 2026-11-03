@@ -14,6 +14,7 @@ from onnx.reference import ReferenceEvaluator
 
 import onnax
 from onnax import (
+    FuseAttentionVJPPass,
     FuseBroadcastAdjointsPass,
     GradPass,
     HoistLinearCoefficientsPass,
@@ -57,6 +58,7 @@ def main() -> None:
         "VmapPass",
         "HoistLinearCoefficientsPass",
         "FuseBroadcastAdjointsPass",
+        "FuseAttentionVJPPass",
         "register_jvp",
         "register_vjp",
         "register_batching",
@@ -89,6 +91,31 @@ def main() -> None:
         {"gradient": np.arange(6, dtype=np.float64).reshape(2, 3), "reference": np.zeros(3)},
     )[0]
     np.testing.assert_array_equal(actual, [3.0, 5.0, 7.0])
+
+    shape = [1, 1, 2, 32]
+    q, k, v = [ir.val(name, dtype=ir.DataType.FLOAT, shape=shape) for name in ("q", "k", "v")]
+    y = ir.val("y", dtype=ir.DataType.FLOAT, shape=shape)
+    attention = ir.node("Attention", [q, k, v], outputs=[y])
+    model = ir.Model(
+        ir.Graph(
+            [q, k, v],
+            [y],
+            nodes=[attention],
+            opset_imports={"": 23},
+            name="attention_distribution_smoke",
+        ),
+        ir_version=10,
+    )
+    derivative = vjp(model, inputs=["q", "k", "v"])
+    packaged = FuseAttentionVJPPass(recompute=True)(derivative)
+    assert packaged.modified
+    portable = ir.to_proto(packaged.model)
+    onnx.checker.check_model(portable, full_check=True)
+    values = ReferenceEvaluator(portable).run(
+        None, {value.name: np.ones(shape, np.float32) for value in packaged.model.graph.inputs}
+    )
+    for actual, expected in zip(values, (1, 0, 0, 1), strict=True):
+        np.testing.assert_array_equal(actual, np.full(shape, expected, np.float32))
 
     input_x = ir.val("x", dtype=ir.DataType.DOUBLE, shape=[2])
     tape = ir.tape.Tape()

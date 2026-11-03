@@ -11,6 +11,7 @@ Global registration decorators and public context types support extensions.
 Implementation modules remain private.
 """
 
+from onnax._attention_vjp import FuseAttentionVJPPass
 from onnax._autodiff import GradPass, JvpPass, VjpPass
 from onnax._autodiff._context import AutodiffContext
 from onnax._batching import VmapPass
@@ -34,6 +35,7 @@ __all__ = [
     "VmapPass",
     "HoistLinearCoefficientsPass",
     "FuseBroadcastAdjointsPass",
+    "FuseAttentionVJPPass",
     "grad",
     "jvp",
     "vjp",
