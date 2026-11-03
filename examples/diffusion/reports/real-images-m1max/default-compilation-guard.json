@@ -1,0 +1,38 @@
+{
+  "model": "segmind/tiny-sd",
+  "revision": "3d25de3e8d5aacf94ce91176f204e6d11d120315",
+  "latent_shape": [
+    1,
+    4,
+    64,
+    64
+  ],
+  "requested_warmup": 10,
+  "requested_samples": 100,
+  "configuration": "Default compilation settings, 512 MiB MLX cache limit",
+  "outcome": "Measurement interrupted by disk-reserve guard",
+  "attempts": [
+    {
+      "status": "failed",
+      "guard_reason": "Free disk below reserve",
+      "returncode": -15,
+      "started": "2026-11-03T02:18:38.850406+00:00",
+      "finished": "2026-11-03T02:19:15.760269+00:00",
+      "physical_memory_budget_bytes": 25769803776,
+      "minimum_free_disk_bytes": 5368709120,
+      "peak_observed_physical_footprint_bytes": 18670380704,
+      "last_free_disk_bytes": 5091155968
+    },
+    {
+      "status": "failed",
+      "guard_reason": "Free disk below reserve",
+      "returncode": -15,
+      "started": "2026-11-03T02:25:14.952684+00:00",
+      "finished": "2026-11-03T02:27:39.991898+00:00",
+      "physical_memory_budget_bytes": 25769803776,
+      "minimum_free_disk_bytes": 5368709120,
+      "peak_observed_physical_footprint_bytes": 18847770344,
+      "last_free_disk_bytes": 5366562816
+    }
+  ]
+}

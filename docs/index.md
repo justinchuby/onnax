@@ -20,6 +20,7 @@ vjp-memory
 block-runtime
 decoder-families
 diffusion
+diffusion-images
 qwen35-training
 qwen-sft
 fused-autodiff

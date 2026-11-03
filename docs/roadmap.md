@@ -366,14 +366,13 @@ loaded loss/gradient/inference outputs exactly; 3935 frozen tensor records remai
 unchanged. The next workload milestone is a small pretrained Diffusers denoiser
 with its prediction target and external scheduler.
 
-### Next deliveries from the training handoff
+### Training handoff delivery status
 
-1. **Release activations unused by checkpoint VJPs.** Remove unused derivative
-   inputs and save only the remaining inputs in autograd. Check actual object
-   lifetimes before the next block executes, including skip connections, shared
-   parameters, repeated backward and exported-module recovery. Scope exchange
-   temporaries to each block invocation. Logical retained bytes follow the VJP's
-   input contract.
+1. **Delivered: release unused checkpoint inputs.** Derivative graphs omit unused
+   inputs, and autograd saves the remaining VJP inputs. Exchange arrays and input
+   references are scoped to each block. Tests verify release before the next
+   block, skip connections, shared parameters, repeated backward and exported
+   recovery. Logical retained bytes follow this saved-input contract.
 2. **Pretrained Diffusers denoiser qualification.** The shared Mobius UNet path
    loads pinned Tiny-SD weights and injects source-named q/v adapters. The
    [diffusion tutorial](diffusion.md) covers Diffusers scheduler targets, all adapter
@@ -381,8 +380,16 @@ with its prediction target and external scheduler.
    qualification records 100 offline updates and three pretrained updates on
    synthetic latents. Native MLX dynamic-batch update and reload tests also pass; the pretrained
    16×16-latent export completes three additional native updates with all adapter
-   gradients aligned. Next, measure MLX execution and application-encoded image
-   latents at the model's 64×64 latent resolution.
+   gradients aligned. The [real-image workflow](diffusion-images.md) now encodes 512-pixel photos
+   with the external VAE/CLIP, completes 20 accumulated updates and validates
+   fresh-process recovery at 64×64 latent resolution. Matched measurements
+   identify reverse execution as the next target: raw MLX 1.073 s/step versus
+   MPS eager 0.320 s and checkpointed MPS 0.436 s. Profile attention products,
+   convolution products and replay before selecting an optimization. Default
+   compilation also needs a buffer-lifetime study: its cold numerical checks
+   pass, while the 100-step qualification reaches an observed 17.55 GiB and
+   stops at the disk-reserve guard. Reuse the existing exports for these studies;
+   establish an artifact-retention inventory before generating more large bundles.
 3. **Saved-value fusion contracts.** Use the qualified decoder and denoiser to
    choose which attention statistics, normalization statistics and recurrent
    boundaries to expose. Compare saved and regenerated values with the same
