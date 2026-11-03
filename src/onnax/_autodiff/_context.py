@@ -95,11 +95,11 @@ class AutodiffContext:
         if (
             primal.shape is not None
             and source_shape is not None
-            and all(isinstance(d, int) for d in (*primal.shape, *source_shape))
+            and all(isinstance(d, int) for d in primal.shape)
         ):
-            # For concrete shapes, broadcasting is known before graph execution.
-            # Symbolic/unknown dimensions must keep the general runtime path:
-            # equal-looking symbolic names alone cannot prove a dimension is 1.
+            # A fixed target determines the reduction axes even when the source
+            # extents are dynamic. Reducing a singleton source axis is an identity.
+            # Symbolic target extents still require the runtime path.
             leading_count = len(source_shape) - len(primal.shape)
             reduction_axes = [
                 *range(leading_count),

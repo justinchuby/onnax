@@ -1,0 +1,33 @@
+{
+  "scope": "Same one-warmup/three-step diagnostic. Includes setup/translation events. Handler spans cover graph construction and any synchronization, not individual GPU kernel times. Categories may overlap.",
+  "traces": [
+    {
+      "trace_sha256": "6c85fcd2883c38b0c51583862b9dd330d3869bc88a4e29e257a097cfffa52754",
+      "local_path": "/tmp/onnax-unet-aligned-trace.json",
+      "translation_microseconds": 715055,
+      "boundary_eval_microseconds": 2760723,
+      "nonzero_handler_microseconds": 206282,
+      "reduce_sum_handler_microseconds": 200775,
+      "cpu_shape_marks": 0
+    },
+    {
+      "trace_sha256": "5af6219884be1cd20405735c4210422da0ba712d0d9868778472f9ff539f0535",
+      "local_path": "/tmp/onnax-unet-host-shapes-trace.json",
+      "translation_microseconds": 243641,
+      "boundary_eval_microseconds": 2996343,
+      "nonzero_handler_microseconds": 40602,
+      "reduce_sum_handler_microseconds": 26701,
+      "cpu_shape_marks": 5248
+    }
+  ],
+  "additional_native_tests": {
+    "passed": 465,
+    "skipped": 1,
+    "files": [
+      "test_nested_host_controls.py",
+      "test_loop_host_controls.py",
+      "test_linear_attention_scan.py",
+      "test_shape.py"
+    ]
+  }
+}

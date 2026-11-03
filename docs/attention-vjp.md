@@ -66,6 +66,29 @@ run uses the same model, data, precision, optimizer and 100-step protocol. Its
 [report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-fused-attention-gemm.json)
 records the explicit budget. The 64 MiB default gives lower peak allocation.
 
+## Shape programs in the pullback
+
+For fixed parameter shapes, onnax emits constant broadcast-reduction axes even
+when output extents are dynamic. Symbolic target shapes use runtime axes.
+[MLX EP shape-program execution](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/109)
+keeps small shape-derived integer and Boolean operations on the MLX CPU stream,
+so reduction axes reach their host consumer without a GPU round trip.
+`ONNXRUNTIME_EP_MLX_GPU_SHAPE_OPS=1` selects the previous route for comparison.
+
+With the same fused UNet graph and 64 MiB attention budget, 100 measured steps
+reach 0.745/0.770 s median/P95, versus 0.827/0.848 s before this runtime change.
+MLX peak allocation stays at 4.32 GB; whole-process physical peak is 5.24 GB.
+Prediction, loss and all 72 adapter gradients match bitwise. The
+[report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-host-shapes.json)
+records the binary hash, memory counters and component timings.
+
+A same-binary ablation with GPU shape operations measured 0.839/0.854 s
+median/P95; all 74 captured tensors match the host-shape route bitwise. The
+[ablation report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-host-shapes-gpu-ablation.json)
+records the explicit execution switch. Diagnostic traces reduce aggregate
+translation/synchronization spans from 715 ms to 244 ms across the same probe,
+including setup. Further profiling focuses on convolution layouts and replay.
+
 ## Build the execution graph
 
 Generate derivatives first, then apply deployment fusion before constant folding

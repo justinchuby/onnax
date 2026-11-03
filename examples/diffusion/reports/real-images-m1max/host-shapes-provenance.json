@@ -1,0 +1,12 @@
+{
+  "native_pr": "https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/109",
+  "native_source_commit": "e48df1c",
+  "onnax_source_commit": "59d2c1e",
+  "derivative_header_sha256": "10f890093ac89006d2c1b067d32db13eca2d3a27222d5e127eee488424371cdf",
+  "native_binary_sha256": "cdb57b6086c10ab69c8d918fde10a3214446c645ca73a211d32fb0f1204b2de8",
+  "cpu_shape_programs": true,
+  "attention_dense_limit_bytes": 67108864,
+  "scope": "Same fused derivative header and frozen payloads as the previous attention measurement. Only the execution-provider implementation changes. 10 warmup, 100 measured steps, 10 separate component samples. ORT optimization and CPU fallback disabled.",
+  "validated_captures": 74,
+  "capture_max_absolute_error": 0.0
+}
