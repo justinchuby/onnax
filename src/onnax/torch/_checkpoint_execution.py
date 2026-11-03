@@ -51,7 +51,15 @@ class _GroupFunction(torch.autograd.Function):
     @staticmethod
     def forward(ctx, runtime, execution, invocation, *inputs):
         ctx.runtime, ctx.execution, ctx.invocation = runtime, execution, invocation
-        ctx.save_for_backward(*inputs)
+        needed = {value.name for value in execution.derivative.graph.inputs}
+        ctx.saved_names = tuple(name for name in execution.block.inputs if name in needed)
+        ctx.save_for_backward(
+            *(
+                value
+                for name, value in zip(execution.block.inputs, inputs, strict=True)
+                if name in needed
+            )
+        )
         feeds = {
             name: tensor.detach().contiguous().numpy()
             for name, tensor in zip(execution.block.inputs, inputs, strict=True)
@@ -78,7 +86,7 @@ class _GroupFunction(torch.autograd.Function):
             runtime._ensure_open()
         feeds = {
             name: value.detach().contiguous().numpy()
-            for name, value in zip(block.inputs, ctx.saved_tensors, strict=True)
+            for name, value in zip(ctx.saved_names, ctx.saved_tensors, strict=True)
         }
         gradients = dict(zip(block.outputs, upstreams, strict=True))
         specs = dict(zip(block.outputs, ctx.specs, strict=True))
@@ -113,6 +121,36 @@ class _GroupFunction(torch.autograd.Function):
         )
 
 
+def _execute_block(runtime, execution, inputs, *, save, invocation, checkpoint_bytes):
+    """Scope exchange arrays and input references to a single block invocation."""
+    block = execution.block
+    if (
+        save
+        and block.active_inputs
+        and block.active_outputs
+        and any(value.requires_grad for value in inputs)
+    ):
+        invocation["remaining"] += 1
+        invocation["count"] += 1
+        result = _GroupFunction.apply(runtime, execution, invocation, *inputs)
+        needed = {value.name for value in execution.derivative.graph.inputs}
+        for name, value in zip(block.inputs, inputs, strict=True):
+            if (
+                name in needed
+                and name not in runtime.parameter_names
+                and name not in runtime.data_names
+            ):
+                checkpoint_bytes[name] = value.numel() * value.element_size()
+    else:
+        arguments = {
+            name: value.detach().contiguous().numpy()
+            for name, value in zip(block.inputs, inputs, strict=True)
+        }
+        arrays = _forward_arrays(execution, arguments)
+        result = tuple(torch.from_numpy(value) for value in arrays)
+    return result
+
+
 def execute(self, feeds, *, save):
     values = {
         **getattr(self, "_constant_outputs", {}),
@@ -120,31 +158,21 @@ def execute(self, feeds, *, save):
         **dict(zip(self.parameter_names, self.trainable, strict=True)),
     }
     remaining = self.forward_uses.copy()
-    checkpoint_bytes = {}
+    checkpoint_bytes: dict[str, int] = {}
     invocation = {"elapsed": 0.0, "remaining": 0, "count": 0}
     for execution in self.executions:
         block = execution.block
         inputs = tuple(values[name] for name in block.inputs)
-        if (
-            save
-            and block.active_inputs
-            and block.active_outputs
-            and any(value.requires_grad for value in inputs)
-        ):
-            invocation["remaining"] += 1
-            invocation["count"] += 1
-            result = _GroupFunction.apply(self, execution, invocation, *inputs)
-            for name, value in zip(block.inputs, inputs, strict=True):
-                if name not in self.parameter_names and name not in self.data_names:
-                    checkpoint_bytes[name] = value.numel() * value.element_size()
-        else:
-            arguments = {
-                name: value.detach().contiguous().numpy()
-                for name, value in zip(block.inputs, inputs, strict=True)
-            }
-            arrays = _forward_arrays(execution, arguments)
-            result = tuple(torch.from_numpy(value) for value in arrays)
+        result = _execute_block(
+            self,
+            execution,
+            inputs,
+            save=save,
+            invocation=invocation,
+            checkpoint_bytes=checkpoint_bytes,
+        )
         values.update(zip(block.outputs, result, strict=True))
+        del inputs, result
         for name in block.inputs:
             remaining[name] -= 1
             if remaining[name] == 0 and name not in self.output_names:

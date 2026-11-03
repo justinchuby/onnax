@@ -114,6 +114,9 @@ class CheckpointedModule(OnnxModule):
                             "Optimization must preserve checkpoint gradient names and order"
                         )
                     common.RemoveUnusedNodesPass()(derivative)
+                    for value in list(derivative.graph.inputs):
+                        if not value.uses() and value not in derivative.graph.outputs:
+                            derivative.graph.inputs.remove(value)
                     derivative.graph.metadata_props["onnax.torch.source_identity"] = identity
                     path = weights.save(derivative, f"block_{index}_backward")
                     backward = factory(path)

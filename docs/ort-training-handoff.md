@@ -35,10 +35,14 @@
 Qwen3、Qwen3.5 和 Phi-3。保存值分析、嵌套 Scan live-set 报告以及
 MLX block 运行时测量也已具备；共享冻结权重和通用 bounded head 已交付。
 
-接下来以完整 4k Qwen3.5 训练为基线，完成导出图恢复核验，再从一个
-linear-attention block 和一个 full-attention block 的实测峰值选择重算区域。
-交付显式保存/重算/释放计划、可执行候选及梯度、更新、恢复和内存对照。
-具体步骤见{ref}`当前路线 <block-local-recomputation>`。
+完整 4k Qwen3.5 已完成保存值、MLP 重算与整块重算对照；shape-only 边界将
+425 MiB 激活替换为 384 字节的 shape 元数据。整块重算保持当前最低内存策略。
+256 维 attention VJP 已通过真实训练及新进程恢复验收，PR #152 等待 CI 合并。
+
+本轮先缩短 checkpoint 激活的生命周期：删除 VJP 未使用的输入，只保存实际需要的
+张量，并验证下一块执行前的释放时点、skip connection 和导出恢复。随后推进
+预训练 Diffusers denoiser，将保存值和融合接口用于第二类真实工作负载。
+具体排期见{ref}`训练图与内存路线 <training-graph-memory-priorities>`。
 
 下文保留最初的设计建议，实施状态以上述对照和路线图为准。
 

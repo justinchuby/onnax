@@ -331,3 +331,64 @@ def test_decoder_dynamic_batch_sequence_and_input_gradients(kind):
             actual.square().sum().backward()
             expected.square().sum().backward()
             torch.testing.assert_close(data.grad, expected_data.grad, rtol=1e-4, atol=1e-6)
+
+
+@pytest.mark.parametrize("skip", [False, True])
+def test_checkpoint_releases_values_unused_by_backward(skip, monkeypatch, tmp_path):
+    """A frozen linear VJP needs its cotangent, rather than its activation input."""
+    import weakref
+
+    from onnax.torch import _checkpoint_execution as execution
+
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=["batch", 3])
+    w = ir.val("weight", dtype=ir.DataType.FLOAT, shape=[3, 3])
+    frozen = ir.val("frozen", const_value=ir.tensor(np.eye(3, dtype=np.float32) * 0.7))
+    tape = ir.tape.Tape()
+    first = tape.op("Tanh", [tape.op("MatMul", [x, w])])
+    first.name = "first"
+    middle = tape.op("MatMul", [first, frozen])
+    middle.name = "middle"
+    output = tape.op("Tanh", [middle])
+    if skip:
+        output = tape.op("Add", [output, first])
+    output.name = "prediction"
+    source = ir.Model(
+        ir.Graph(
+            [x, w], [output], nodes=tape.nodes, initializers=[frozen], opset_imports={"": 18}
+        ),
+        ir_version=10,
+    )
+    initial = {"weight": np.eye(3, dtype=np.float32)}
+    original = execution._forward_arrays
+    references = []
+
+    def observed(block, feeds):
+        if block.block.name == "suffix":
+            assert (references[-1]() is not None) == skip
+        arrays = original(block, feeds)
+        if block.block.name == "first":
+            references.append(weakref.ref(arrays[0]))
+        return arrays
+
+    monkeypatch.setattr(execution, "_forward_arrays", observed)
+    with CheckpointedModule(
+        source, initial, boundaries={"first": "first", "frozen": "middle"}
+    ) as model:
+        assert "first" not in {v.name for v in model.executions[1].derivative.graph.inputs}
+        model.export(tmp_path / "bundle")
+        with CheckpointedModule.load(tmp_path / "bundle") as restored:
+            for runtime in (model, restored):
+                actual = runtime(x=torch.ones(2, 3))
+                assert runtime.last_residual_bytes == (1 + skip) * 2 * 3 * 4
+                parameter = torch.tensor(initial["weight"], requires_grad=True)
+                first_ref = torch.tanh(torch.ones(2, 3) @ parameter)
+                expected = torch.tanh(first_ref * 0.7)
+                if skip:
+                    expected = expected + first_ref
+                torch.testing.assert_close(actual, expected)
+                actual.sum().backward(retain_graph=True)
+                gradient = runtime.trainable[0].grad.clone()
+                actual.sum().backward()
+                expected.sum().backward()
+                torch.testing.assert_close(gradient, parameter.grad)
+                torch.testing.assert_close(runtime.trainable[0].grad, 2 * parameter.grad)

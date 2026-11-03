@@ -1,7 +1,7 @@
 # Train through named ONNX checkpoints
 
 `onnax.torch.CheckpointedModule` trains an ONNX graph in blocks. It saves each
-block's inputs during the forward pass and recomputes that block's internal
+block inputs read by its VJP during the forward pass and recomputes that block's internal
 activations when its VJP runs. This bounds saved activations by the chosen
 checkpoint interfaces.
 
@@ -82,6 +82,10 @@ Pass `session_factory(path)` and `optimize(model)` as with
 released on context exit. An optimizer callback can apply ONNXScript to execution
 copies. The NumPy boundary accepts CPU PyTorch tensors; the supplied session
 factory chooses backend execution and transfers.
+
+Unused VJP inputs are removed before session creation. Autograd saves the
+remaining inputs, and each block scopes its NumPy exchange temporaries to that
+invocation. Skip connections stay live until their final consumer.
 
 `last_residual_bytes` counts saved intermediate checkpoint inputs after a
 forward pass, excluding original data and parameters. It is a logical tensor
