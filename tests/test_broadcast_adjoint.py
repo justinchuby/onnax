@@ -49,6 +49,7 @@ def _expected(gradient, shape):
     return gradient.sum(axis=axes, keepdims=True).reshape(shape)
 
 
+@pytest.mark.parametrize("shape_inputs", [False, True])
 @pytest.mark.parametrize("dtype", [ir.DataType.FLOAT, ir.DataType.DOUBLE])
 @pytest.mark.parametrize(
     "shapes",
@@ -63,14 +64,14 @@ def _expected(gradient, shape):
         ((2, 3), (2, 3)),
     ],
 )
-def test_portable_runtime_shapes_and_products(dtype, shapes):
+def test_portable_runtime_shapes_and_products(dtype, shapes, shape_inputs):
     model = _model(dtype)
     before = ir.to_proto(model).SerializeToString()
-    result = onnax.FuseBroadcastAdjointsPass()(model)
+    result = onnax.FuseBroadcastAdjointsPass(shape_inputs=shape_inputs)(model)
     assert result.modified
     fused = result.model
     assert not onnax.FuseBroadcastAdjointsPass()(fused).modified
-    assert len(fused.graph) == 1
+    assert len(fused.graph) == 1 + int(shape_inputs)
     assert len(fused.functions) == 1
     assert ir.to_proto(model).SerializeToString() == before
     assert (
@@ -119,7 +120,8 @@ def test_shared_intermediate_keeps_portable_region():
     )
 
 
-def test_fused_nonlinear_vjp_and_second_directional_product():
+@pytest.mark.parametrize("shape_inputs", [False, True])
+def test_fused_nonlinear_vjp_and_second_directional_product(shape_inputs):
     x = ir.val("x", dtype=ir.DataType.FLOAT, shape=["batch", "width"])
     z = ir.val("z", dtype=ir.DataType.FLOAT, shape=["batch", "width"])
     tape = ir.tape.Tape()
@@ -130,8 +132,9 @@ def test_fused_nonlinear_vjp_and_second_directional_product():
         ir_version=10,
     )
     baseline = onnax.vjp(model)
-    fused = onnax.FuseBroadcastAdjointsPass()(baseline).model
-    assert sum(n.op_type == "SumToShape_v1" for n in fused.graph) == 2
+    fused = onnax.FuseBroadcastAdjointsPass(shape_inputs=shape_inputs)(baseline).model
+    name = "SumToShape_v2" if shape_inputs else "SumToShape_v1"
+    assert sum(n.op_type == name for n in fused.graph) == 2
     # Equal symbolic names still allow independent singleton broadcast extents.
     feeds = {
         "x": np.array([[0.2], [0.5]], np.float32),
@@ -158,7 +161,8 @@ def test_fused_nonlinear_vjp_and_second_directional_product():
                 np.testing.assert_allclose(actual, expected, rtol=1e-5, atol=1e-6)
 
 
-def test_connected_regions_share_one_function():
+@pytest.mark.parametrize("shape_inputs", [False, True])
+def test_connected_regions_share_one_function(shape_inputs):
     inputs = [ir.val(name, dtype=ir.DataType.FLOAT) for name in ("gradient", "row", "scalar")]
     graph = ir.Graph(inputs, [], nodes=[], opset_imports={"": 18}, name="connected")
     ctx = onnax.AutodiffContext(graph)
@@ -167,8 +171,8 @@ def test_connected_regions_share_one_function():
     output.type = ir.TensorType(ir.DataType.FLOAT)
     graph.outputs.append(output)
     model = ir.Model(graph, ir_version=10)
-    fused = onnax.FuseBroadcastAdjointsPass()(model).model
-    assert len(fused.graph) == 2
+    fused = onnax.FuseBroadcastAdjointsPass(shape_inputs=shape_inputs)(model).model
+    assert len(fused.graph) == 2 * (1 + int(shape_inputs))
     assert len(fused.functions) == 1
     feeds = {
         "gradient": np.arange(6, dtype=np.float32).reshape(2, 3),
@@ -192,16 +196,17 @@ def test_public_pass_manager_and_example_compatibility():
     assert ir.to_proto(model).SerializeToString() == before
 
 
-def test_incompatible_existing_function_preserves_source():
+@pytest.mark.parametrize("shape_inputs", [False, True])
+def test_incompatible_existing_function_preserves_source(shape_inputs):
     model = _model()
-    packaged = onnax.FuseBroadcastAdjointsPass()(model).model
+    packaged = onnax.FuseBroadcastAdjointsPass(shape_inputs=shape_inputs)(model).model
     function = next(iter(packaged.functions.values()))
     reduction = next(node for node in function.graph if node.op_type == "ReduceSum")
     reduction.attributes["keepdims"] = ir.AttrInt64("keepdims", 0)
     model.functions[function.identifier()] = function
     before = ir.to_proto(model).SerializeToString()
     with pytest.raises(ValueError, match=r"incompatible.*SumToShape"):
-        onnax.FuseBroadcastAdjointsPass()(model)
+        onnax.FuseBroadcastAdjointsPass(shape_inputs=shape_inputs)(model)
     assert ir.to_proto(model).SerializeToString() == before
 
 

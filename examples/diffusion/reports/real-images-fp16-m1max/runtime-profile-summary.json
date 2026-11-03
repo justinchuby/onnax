@@ -1,0 +1,242 @@
+{
+  "scope": "Seven invocations including two warmups; overlapping CPU spans are not additive. mlx.eval is synchronous GPU-inclusive evaluation, not per-kernel GPU timing.",
+  "spans": {
+    "mlx.subgraph": {
+      "count": 7,
+      "total_ms": 2802.663
+    },
+    "mlx.eval": {
+      "count": 7,
+      "total_ms": 2654.0499999999997
+    },
+    "Reshape": {
+      "count": 1543,
+      "total_ms": 50.972999999999764
+    },
+    "mlx.compile": {
+      "count": 1,
+      "total_ms": 15.274
+    },
+    "Slice": {
+      "count": 365,
+      "total_ms": 2.4879999999999995
+    },
+    "Cast": {
+      "count": 2401,
+      "total_ms": 2.2589999999999737
+    },
+    "GroupNormalization": {
+      "count": 112,
+      "total_ms": 1.645
+    },
+    "MatMul": {
+      "count": 1298,
+      "total_ms": 1.3519999999999954
+    },
+    "Add": {
+      "count": 795,
+      "total_ms": 1.2649999999999846
+    },
+    "Conv": {
+      "count": 150,
+      "total_ms": 1.2600000000000005
+    },
+    "Mul": {
+      "count": 938,
+      "total_ms": 1.1789999999999943
+    },
+    "ReduceMean": {
+      "count": 411,
+      "total_ms": 1.1189999999999989
+    },
+    "LayerNormalization": {
+      "count": 108,
+      "total_ms": 1.0850000000000004
+    },
+    "Shape": {
+      "count": 826,
+      "total_ms": 1.0230000000000006
+    },
+    "Concat": {
+      "count": 433,
+      "total_ms": 0.6850000000000004
+    },
+    "Attention": {
+      "count": 72,
+      "total_ms": 0.5700000000000003
+    },
+    "SumToShape_v1": {
+      "count": 494,
+      "total_ms": 0.5240000000000004
+    },
+    "ConvTranspose": {
+      "count": 92,
+      "total_ms": 0.33200000000000024
+    },
+    "Transpose": {
+      "count": 458,
+      "total_ms": 0.32500000000000023
+    },
+    "Sub": {
+      "count": 343,
+      "total_ms": 0.23700000000000018
+    },
+    "AttentionVJP_v2_r3_q8_k8_d40_s3e21e89b_c0_o02_m0_d5ad57d4c0b88ebb": {
+      "count": 6,
+      "total_ms": 0.22799999999999998
+    },
+    "AttentionVJP_v2_r3_q8_k8_d160_s3da1e89b_c0_o02_m0_ae6ba90ebdebb354": {
+      "count": 9,
+      "total_ms": 0.22700000000000004
+    },
+    "AttentionVJP_v2_r3_q8_k8_d160_s3da1e89b_c0_o012_m0_683f15be98f044c2": {
+      "count": 9,
+      "total_ms": 0.2
+    },
+    "AttentionVJP_v2_r3_q8_k8_d80_s3de4f92e_c0_o012_m0_300fc86744e46827": {
+      "count": 6,
+      "total_ms": 0.15000000000000002
+    },
+    "AttentionVJP_v2_r3_q8_k8_d40_s3e21e89b_c0_o012_m0_9f00983d82287049": {
+      "count": 6,
+      "total_ms": 0.139
+    },
+    "AttentionVJP_v2_r3_q8_k8_d80_s3de4f92e_c0_o02_m0_0be1c9b1e18e3ff8": {
+      "count": 6,
+      "total_ms": 0.13599999999999998
+    },
+    "Reciprocal": {
+      "count": 102,
+      "total_ms": 0.12100000000000008
+    },
+    "Where": {
+      "count": 104,
+      "total_ms": 0.11400000000000009
+    },
+    "AttentionVJP_v2_r3_q8_k8_d80_s3de4f92e_c0_o02_m0_d8f951048fba5c84": {
+      "count": 3,
+      "total_ms": 0.08499999999999999
+    },
+    "Gelu": {
+      "count": 27,
+      "total_ms": 0.08
+    },
+    "Resize": {
+      "count": 6,
+      "total_ms": 0.077
+    },
+    "Div": {
+      "count": 70,
+      "total_ms": 0.07400000000000004
+    },
+    "AttentionVJP_v2_r3_q8_k8_d40_s3e21e89b_c0_o02_m0_4d20ecf9607ee175": {
+      "count": 3,
+      "total_ms": 0.07400000000000001
+    },
+    "AttentionVJP_v2_r3_q8_k8_d80_s3de4f92e_c0_o012_m0_2797f1f5371b90b0": {
+      "count": 3,
+      "total_ms": 0.07
+    },
+    "Split": {
+      "count": 39,
+      "total_ms": 0.06900000000000002
+    },
+    "AttentionVJP_v2_r3_q8_k8_d40_s3e21e89b_c0_o02_m0_93d7301955239ccc": {
+      "count": 3,
+      "total_ms": 0.063
+    },
+    "Unsqueeze": {
+      "count": 30,
+      "total_ms": 0.05200000000000002
+    },
+    "Equal": {
+      "count": 18,
+      "total_ms": 0.04600000000000001
+    },
+    "Expand": {
+      "count": 2,
+      "total_ms": 0.043000000000000003
+    },
+    "GreaterOrEqual": {
+      "count": 34,
+      "total_ms": 0.03800000000000002
+    },
+    "Swish": {
+      "count": 63,
+      "total_ms": 0.03000000000000002
+    },
+    "Neg": {
+      "count": 68,
+      "total_ms": 0.024000000000000007
+    },
+    "Sqrt": {
+      "count": 102,
+      "total_ms": 0.024
+    },
+    "Greater": {
+      "count": 18,
+      "total_ms": 0.022000000000000006
+    },
+    "Erf": {
+      "count": 18,
+      "total_ms": 0.014000000000000002
+    },
+    "Exp": {
+      "count": 52,
+      "total_ms": 0.013000000000000005
+    },
+    "ReduceSum": {
+      "count": 4,
+      "total_ms": 0.008
+    },
+    "Sin": {
+      "count": 3,
+      "total_ms": 0.005
+    },
+    "Size": {
+      "count": 2,
+      "total_ms": 0.002
+    },
+    "Cos": {
+      "count": 3,
+      "total_ms": 0.001
+    }
+  },
+  "session_summaries": [
+    {
+      "claimed_nodes": 17897,
+      "total_nodes": 18243,
+      "claim_pct": "98.1",
+      "fused_subgraphs": 156,
+      "path_decode": 0,
+      "path_prefill": 0,
+      "path_general": 7,
+      "path_eager": 0,
+      "cache_hit": 6,
+      "cache_miss": 1,
+      "cache_retrace": 0,
+      "managed_wrap_bytes": 8911153,
+      "managed_wrap_aligned": 138,
+      "delta_copyout_bytes": 0,
+      "full_copyout_bytes": 6501404
+    },
+    {
+      "claimed_nodes": 17897,
+      "total_nodes": 18243,
+      "claim_pct": "98.1",
+      "fused_subgraphs": 156,
+      "path_decode": 0,
+      "path_prefill": 0,
+      "path_general": 7,
+      "path_eager": 0,
+      "cache_hit": 6,
+      "cache_miss": 1,
+      "cache_retrace": 0,
+      "managed_wrap_bytes": 8911153,
+      "managed_wrap_aligned": 138,
+      "delta_copyout_bytes": 0,
+      "full_copyout_bytes": 6501404
+    }
+  ],
+  "trace_path": "/tmp/onnax-unet-fp16-runtime-trace.json"
+}

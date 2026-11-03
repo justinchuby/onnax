@@ -14,6 +14,7 @@ from onnxscript import optimizer
 
 torch = pytest.importorskip("torch")
 
+import onnax
 from examples.torch_deploy import install_header, prepare_header, read_header
 from onnax.torch import OnnxModule
 
@@ -72,7 +73,8 @@ def provider(request):
 
 
 @pytest.mark.parametrize("eager", [False, True])
-def test_weighted_accumulation_and_dynamic_batch_updates(eager, provider):
+@pytest.mark.parametrize("shape_inputs", [False, True])
+def test_weighted_accumulation_and_dynamic_batch_updates(eager, provider, shape_inputs):
     calls = []
     initial = np.arange(6, dtype=np.float32).reshape(3, 2) / 20
     reference = torch.nn.Parameter(torch.from_numpy(initial.copy()))
@@ -82,7 +84,15 @@ def test_weighted_accumulation_and_dynamic_batch_updates(eager, provider):
         input_gradients=["x"],
         eager_gradients=eager,
         session_factory=factory(calls, provider=provider),
+        optimize=lambda model: (
+            onnax.FuseBroadcastAdjointsPass(shape_inputs=True)(model).model
+            if shape_inputs
+            else model
+        ),
     ) as model:
+        if shape_inputs:
+            derivative = ir.load(os.path.join(model._directory.name, "derivative.onnx"))
+            assert any(node.op_type == "SumToShape_v2" for node in derivative.graph)
         actual = torch.optim.AdamW(model.parameters(), lr=0.01, eps=1e-5, weight_decay=0)
         expected = torch.optim.AdamW([reference], lr=0.01, eps=1e-5, weight_decay=0)
         for step in range(4):
