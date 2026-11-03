@@ -186,3 +186,14 @@ def test_invalid_recorded_training_batch_is_rejected(tmp_path, fault):
     np.savez(path, **arrays)
     with pytest.raises(ValueError):
         load_batch(path, vocab_size=4, max_sequence=8)
+
+
+def test_shape_vector_saved_block_qualifies_captured_gradients(recorded):
+    from examples.huggingface.block_recompute import measure as measure_split
+
+    bundle, captures, _ = recorded
+    result = measure_split(
+        bundle, captures, "decoder_0_1", factory=session, save_shapes=True, warmup=0, samples=1
+    )
+    assert result["plan"]["shape_boundaries"]["compressed"]
+    assert result["gradient_checks"] == result["final_gradient_checks"]

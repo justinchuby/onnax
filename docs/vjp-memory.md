@@ -197,10 +197,12 @@ and CPU fallback disabled, a 512 MiB cache limit, ten warmups and 100 timed pair
 | Whole-block checkpoint | 0 MiB | 327 / 347 ms | 3.97 GiB | 4.35 GiB |
 | Save all required values | 866 MiB | 373 / 385 ms | 4.32 GiB | 5.16 GiB |
 | Recompute MLP region | 701 MiB | 362 / 391 ms | 4.13 GiB | 4.90 GiB |
+| Save values and shape vectors | 441 MiB | 345 / 354 ms | 4.32 GiB | 4.69 GiB |
+| Replay MLP and save shape vectors | 276 MiB | 323 / 330 ms | 4.13 GiB | 4.47 GiB |
 
-Whole-block checkpointing remains the decoder default. Local MLP replay reduces
-storage relative to saving all values; the whole-block route has the lowest
-measured time and memory for this case. The paired interval includes forward,
+Whole-block checkpointing remains the decoder default and has the lowest
+allocator and process peaks in this case. Shape-vector boundaries reduce saved
+arrays and paired execution time in the saved and partial-replay routes. The paired interval includes forward,
 backward and runtime exchange. Process peaks also include construction, loaded
 graphs and captured arrays. These are block measurements with fixed parameters.
 The [summary](../examples/huggingface/reports/qwen35-context4k-recompute-summary.json)
@@ -208,7 +210,26 @@ links the detailed runtime and gradient records.
 
 The exported dynamic pullback has 15 saved tensors whose consumers only read
 `Shape`, accounting for the difference between its saved arrays and the
-concrete-shape report. Shape metadata is the next storage candidate: forward can
-return the required shape vectors, and backward can consume those vectors instead
-of retaining full activations. The existing saved-value consumer records identify
-these edges; dynamic shape and direct gradient outputs must remain intact.
+concrete-shape report. The shape-vector boundary transform below replaces those 425 MiB with 384 bytes
+of runtime shape metadata. Original results, dynamic dimensions and gradient
+output names retain their interfaces. The
+[shape-boundary report](../examples/huggingface/reports/qwen35-context4k-shapes-summary.json)
+adds both transformed routes to the original three-route comparison.
+
+## Save runtime shape vectors
+
+`block_recompute --save-shapes` replaces a saved tensor when every consumer in
+backward reads it through `Shape`. Forward returns the required `int64` vector;
+backward consumes that vector directly. The original forward results and gradient
+output names stay stable. Shape vectors use the actual tensor dimensions, including
+zero extents and changing batch or sequence lengths.
+
+Combine `--save-shapes` with the MLP `--recompute` selection to save shape vectors
+and regenerate the selected numeric activations. The example autograd bridge
+exposes the same choice through `save_activations=True, save_shapes=True`.
+
+The compression plan maps each original tensor to its shape-vector boundaries
+and records sliced `Shape` attributes. Duplicate consumers share a vector.
+Normal value consumers and tensors returned as gradients retain their full
+storage. Scan captures and body outputs preserve their names. Vector length
+metadata comes from tensor rank; the runtime supplies the dimension values.
