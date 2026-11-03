@@ -187,7 +187,11 @@ class _Function(torch.autograd.Function):
         if eager:
             ctx.feeds.clear()
         elif save_activations:
-            ctx.feeds = {n: a for n, a in ctx.feeds.items() if n in module._session_inputs[1]}
+            needed = {n: a for n, a in ctx.feeds.items() if n in module._session_inputs[1]}
+            ctx.data_offset = len(saved)
+            ctx.saved_data_names = tuple(needed)
+            saved.extend(torch.from_numpy(array) for array in needed.values())
+            ctx.feeds.clear()
         if save_activations:
             saved.extend(outputs)
         ctx.save_for_backward(*saved)
@@ -219,6 +223,15 @@ class _Function(torch.autograd.Function):
                 )
             ),
         }
+        if hasattr(ctx, "saved_data_names"):
+            feeds.update(
+                (name, value.detach().numpy())
+                for name, value in zip(
+                    ctx.saved_data_names,
+                    saved[ctx.data_offset : ctx.data_offset + len(ctx.saved_data_names)],
+                    strict=True,
+                )
+            )
         if ctx.saved_names:
             feeds.update(
                 (name, value.detach().numpy())

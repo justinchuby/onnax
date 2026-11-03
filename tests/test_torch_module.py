@@ -438,3 +438,40 @@ def test_saved_activation_bundle_rejects_disabled_mode(tmp_path):
     path.write_text(json.dumps(interface))
     with pytest.raises(ValueError, match="requires save_activations"):
         OnnxModule.load(tmp_path / "saved")
+
+
+def test_saved_runtime_arrays_are_released_after_backward():
+    import weakref
+
+    from onnax.torch._module import _ort_session
+
+    references = {}
+
+    def factory(path):
+        runtime = _ort_session(path)
+
+        class Session:
+            def run(self, names, feeds):
+                arrays = runtime.run(names, feeds)
+                if path.endswith("execution.onnx"):
+                    references.update(
+                        (name, weakref.ref(array))
+                        for name, array in zip(names, arrays, strict=True)
+                    )
+                return arrays
+
+        return Session()
+
+    with OnnxModule(
+        graph(), weights(), outputs=["sum"], save_activations=True, session_factory=factory
+    ) as model:
+        loss = model(features=torch.ones(2, 3))
+        hidden = [ref for name, ref in references.items() if name != "sum"]
+        assert hidden and all(ref() is not None for ref in hidden)
+        assert not loss.grad_fn.feeds
+        loss.backward(retain_graph=True)
+        assert all(ref() is not None for ref in hidden)
+        model.zero_grad()
+        loss.backward()
+        assert all(ref() is None for ref in hidden)
+        assert loss.item() > 0
