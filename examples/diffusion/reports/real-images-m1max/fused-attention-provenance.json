@@ -1,0 +1,13 @@
+{
+  "native_source_commit": "3b10f41",
+  "onnax_source_commit": "498f080",
+  "native_binary_sha256": "8d1080b30fc1e82cc6312f497300b93ee57cf86f6261563285097b6f5fc78e48",
+  "derivative_header_sha256": "10f890093ac89006d2c1b067d32db13eca2d3a27222d5e127eee488424371cdf",
+  "native_attention_calls": 18,
+  "distinct_local_functions": 10,
+  "optimizer_inline": false,
+  "attention_dense_limit_bytes": 67108864,
+  "weight_storage": "Frozen initializer payloads reference the existing qualified bundle after dtype/shape/content-SHA256 matching.",
+  "validation": "Full ONNX checker; unchanged parameter/seed names; compare_unet verifies 74 captured tensors against independent PyTorch MPS.",
+  "benchmark": "10 warmup, 100 full steps, 10 separate component samples; fixed adapter values with AdamW state advancing; native eager execution, 512 MiB cache, ORT optimization and CPU fallback disabled."
+}

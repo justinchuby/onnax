@@ -51,6 +51,15 @@ optimization and disabled CPU fallback. The native indexed route uses
 The [measurement report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-indexed-pivots.json)
 records the binary hash, versions and component timings.
 
+Fusing all 18 attention pullbacks in the same UNet workload reduces median/P95
+step time to 0.827/0.848 s. MLX peak allocation is 4.32 GB and whole-process
+lifetime peak physical footprint is 5.28 GB. All 72 adapter gradients agree with
+independent PyTorch MPS at `rtol=1e-4, atol=1e-6`; maximum absolute gradient error
+is 6.4e-9. The matched MPS median is 0.320 s. The fused ONNX profile spends
+0.168 s in forward and 0.663 s in loss/backward.
+The [fused report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-fused-attention.json)
+records the same 10-warmup/100-step protocol, with a 64 MiB per-score GEMM budget.
+
 ## Build the execution graph
 
 Generate derivatives first, then apply deployment fusion before constant folding
