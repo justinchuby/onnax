@@ -87,3 +87,40 @@ def test_header_reuses_payloads_and_preserves_updates(tmp_path):
     header.write_bytes(header.read_bytes() + b"corrupt")
     with pytest.raises(ValueError, match="integrity"):
         read_header(header, interface)
+
+
+def test_recomputed_attention_header(tmp_path):
+    from test_fused_autodiff import _model_for
+
+    rng = np.random.default_rng(191)
+    feeds = {
+        name: rng.normal(0, 0.2, (1, 2, 5, 40)).astype(np.float32) for name in ("q", "k", "v")
+    }
+    source = _model_for("Attention", feeds)
+    bundle = tmp_path / "bundle"
+    with OnnxModule(source, feeds, input_gradients=[]) as module:
+        module.export(bundle)
+    header = tmp_path / "recomputed.onnx"
+    record = prepare_header(bundle, header, recompute_attention=True)
+    assert record["recomputed_attention_calls"] == 1
+    assert record["fused_attention_calls"] == 1
+    interface = json.loads((bundle / "interface.json").read_text())
+    deployment = read_header(header, interface)
+
+    def factory(path):
+        options = ort.SessionOptions()
+        options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
+        return ort.InferenceSession(
+            install_header(path, deployment), options, providers=["CPUExecutionProvider"]
+        )
+
+    with (
+        OnnxModule.load(bundle) as reference,
+        OnnxModule.load(bundle, session_factory=factory) as actual,
+    ):
+        reference().square().mean().backward()
+        actual().square().mean().backward()
+        for name, value in actual.parameters_by_name().items():
+            torch.testing.assert_close(
+                value.grad, reference.parameters_by_name()[name].grad, rtol=1e-4, atol=1e-6
+            )

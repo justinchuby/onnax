@@ -15,11 +15,14 @@ REGION = "onnax.attention_vjp.region"
 INTERFACE = "onnax.attention_vjp.interface"
 
 
-def fuse_attention_vjp(model):
+def fuse_attention_vjp(model, *, recompute=False):
     """Return a model whose eligible pullbacks have standard ONNX function bodies.
 
     Apply immediately after VJP generation, before folding or residual splitting.
     The runtime can implement this function contract with a tiled kernel.
+    With recompute=True, eligible unmasked, noncausal 32-64-wide heads use a
+    v2 body that recomputes its primal output from Q/K/V
+    and omits Y from the interface, enabling fused forward/backward kernels.
     """
     result = model.clone()
     graph = result.graph
@@ -113,6 +116,28 @@ def fuse_attention_vjp(model):
         for index, value in enumerate(body.inputs):
             value.name = ("Q", "K", "V", "Y", "G", "Mask")[index]
             value.const_value = None
+        use_recompute = (
+            recompute and kind == 0 and not attrs.get("is_causal", 0) and 32 <= d <= 64
+        )
+        if use_recompute:
+            query, key, value, primal, _seed, formal_mask = body.inputs
+            recomputed = ir.val("recomputed_Y", type=primal.type, shape=primal.shape)
+            forward_attrs = {
+                "scale": float(attrs.get("scale", 1 / math.sqrt(d))),
+                "is_causal": attrs.get("is_causal", 0),
+            }
+            if rank == 3:
+                forward_attrs.update(q_num_heads=hq, kv_num_heads=hk)
+            forward = ir.node(
+                "Attention",
+                [query, key, value] + ([formal_mask] if kind else []),
+                outputs=[recomputed],
+                attributes=forward_attrs,
+            )
+            body.insert_before(body[0], forward)
+            primal.replace_all_uses_with(recomputed)
+            body.inputs.remove(primal)
+            inputs.remove(y)
         for index, n in enumerate(body):
             n.name = f"node_{index}"
             n.metadata_props.clear()
@@ -127,7 +152,8 @@ def fuse_attention_vjp(model):
                 ir.Function(DOMAIN, "body", graph=body, attributes=[])
             ).SerializeToString()
         ).hexdigest()[:16]
-        name = f"AttentionVJP_v1_r{rank}_q{hq}_k{hk}_d{d}_s{bits:08x}_c{attrs.get('is_causal', 0)}_o{''.join(map(str, selected))}_m{kind}_{signature}"
+        version = 2 if use_recompute else 1
+        name = f"AttentionVJP_v{version}_r{rank}_q{hq}_k{hk}_d{d}_s{bits:08x}_c{attrs.get('is_causal', 0)}_o{''.join(map(str, selected))}_m{kind}_{signature}"
         function = ir.Function(DOMAIN, name, graph=body, attributes=[])
         result.functions[function.identifier()] = function
         call = ir.Node(DOMAIN, name, inputs, num_outputs=len(outputs), version=1)

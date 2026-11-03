@@ -398,7 +398,12 @@ with its prediction target and external scheduler.
    `OnnxModule(..., eager_gradients=True)`: 0.474 s, 4.32 GB MLX peak allocation
    and 5.40 GB process peak, with 20 real-image updates and fresh-process recovery.
    Trainer also completes its 200-step recovery workflow through this schedule.
-   Next, profile remaining MLX compute costs on this joint graph. Arbitrary
+   Padded short-head forward attention measures 0.464 s. Recomputed attention
+   functions then enable MLX's fused pullback: 0.372 s, 3.98 GB MLX peak and
+   5.11 GB process peak. The ordinary ONNX bodies define both saved-output and
+   recomputed-output contracts explicitly. Continuous and resumed
+   20-step runs have byte-identical state and export tensors. Next, broaden fused
+   attention by measured precision/mask needs. Arbitrary
    vector-cotangent workloads use saved-value planning: the UNet study finds
    1.75 GB of logical saved outputs, including 0.95 GB needed only for shape;
    compress those boundaries before evaluating full activation handoff.

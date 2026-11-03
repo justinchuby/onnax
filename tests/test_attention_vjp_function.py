@@ -13,11 +13,13 @@ import onnax
 from examples.huggingface.attention_vjp import fuse_attention_vjp
 
 
+@pytest.mark.parametrize("causal", [False, True])
+@pytest.mark.parametrize("recompute", [False, True])
 @pytest.mark.parametrize("d", [8, 16, 40, 80, 160, 192, 200, 248, 256])
 @pytest.mark.parametrize("rank", [3, 4])
 @pytest.mark.parametrize("mask_type", [None, "bool", "float"])
 @pytest.mark.parametrize("selected", [["q"], ["k", "v"], ["q", "k", "v"]])
-def test_portable_function(d, rank, mask_type, selected):
+def test_portable_function(d, rank, mask_type, selected, recompute, causal):
     rng = np.random.default_rng(42)
 
     def shape(h, s):
@@ -35,18 +37,21 @@ def test_portable_function(d, rank, mask_type, selected):
             if mask_type == "bool"
             else np.where(allowed, 0, -np.inf).astype(np.float32)
         )
-    attrs = {"is_causal": 1}
+    attrs = {"is_causal": int(causal)}
     if rank == 3:
         attrs.update(q_num_heads=4, kv_num_heads=2)
     source = _model_for("Attention", feeds, attrs)
     derivative = onnax.vjp(source, inputs=selected)
     before = ir.to_proto(derivative).SerializeToString()
-    optimized = fuse_attention_vjp(derivative)
+    optimized = fuse_attention_vjp(derivative, recompute=recompute)
     CheckerPass(full_check=True)(optimized)
     assert len(optimized.functions) == 1
     assert next(iter(optimized.functions))[0] == "pkg.onnax"
     assert len(optimized.graph) < len(derivative.graph)
-    assert any(n.op_type.startswith("AttentionVJP_v1_") for n in optimized.graph)
+    version = 2 if recompute and not causal and mask_type is None and 32 <= d <= 64 else 1
+    calls = [n for n in optimized.graph if n.op_type.startswith(f"AttentionVJP_v{version}_")]
+    assert len(calls) == 1
+    assert len(calls[0].inputs) == (5 if version == 2 else 6)
     assert ir.to_proto(derivative).SerializeToString() == before
     seed = derivative.graph.inputs[-1]
     output_shape = shape(4, 5)

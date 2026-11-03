@@ -17,7 +17,7 @@ from onnax.torch import OnnxModule
 from onnax.torch._serialization import file_digest
 
 
-def prepare(training_run, destination):
+def prepare(training_run, destination, *, recompute_attention=False):
     """Compose MSE with a qualified source; export independently loadable sessions."""
     if os.path.lexists(destination):
         raise FileExistsError(destination)
@@ -50,7 +50,8 @@ def prepare(training_run, destination):
 
     def optimize(model):
         return optimizer.optimize(
-            fuse_broadcast_adjoints(fuse_attention_vjp(model)), inline=False
+            fuse_broadcast_adjoints(fuse_attention_vjp(model, recompute=recompute_attention)),
+            inline=False,
         )
 
     with OnnxModule(
@@ -155,8 +156,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--training-run", required=True)
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--recompute-attention", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(prepare(args.training_run, args.output_dir)))
+    print(
+        json.dumps(
+            prepare(
+                args.training_run,
+                args.output_dir,
+                recompute_attention=args.recompute_attention,
+            )
+        )
+    )
 
 
 if __name__ == "__main__":

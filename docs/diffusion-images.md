@@ -131,7 +131,9 @@ Image encoding and initial input transfer are outside the timed steps.
 | MLX + direct convolution padding | 0.696 s | 0.713 s | 4.95 GiB |
 | MLX + broadcast adjoints, eager | 0.669 s | 0.688 s | 4.94 GiB |
 | MLX + broadcast adjoints, compiled | 0.651 s | 0.661 s | 5.00 GiB |
-| MLX joint scalar objective | **0.474 s** | **0.482 s** | **5.03 GiB** |
+| MLX joint scalar objective | 0.474 s | 0.482 s | 5.03 GiB |
+| MLX + padded forward attention | 0.464 s | 0.472 s | 4.63 GiB |
+| MLX + recomputed fused pullback | **0.372 s** | **0.382 s** | **4.76 GiB** |
 
 Broadcast fusion packages 245 runtime reductions as portable ONNX functions.
 With [MLX EP support](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/111),
@@ -150,6 +152,20 @@ Prediction and all 72 gradients match the two-call route bitwise; loss differs b
 handoff and 0.002 s for AdamW. The report labels those phases explicitly.
 The diagnostic prediction output leaves the public module's loss and all 72
 weighted gradients bitwise unchanged.
+
+The optional {ref}`recomputed pullback <recomputed-pullbacks>` uses
+MLX's fused attention forward/backward kernel for six short-head attention calls.
+Its matched run measures 0.372/0.382 s median/P95, 3.98 GB MLX peak allocation
+and 5.11 GB whole-process peak. The same-binary saved-output control measures
+0.465/0.472 s and 5.21 GB process peak. Prediction, loss and all 72 adapter gradients
+pass the existing comparison gates. Twenty accumulated updates and a fresh-process
+checkpoint recovery also pass: all 289 state tensors, ten exported file hashes
+and 74 loaded execution tensors match bitwise. Export this schedule with:
+
+```sh
+python -m examples.diffusion.objective --training-run run \
+  --output-dir objective --recompute-attention
+```
 
 Saved-value handoff remains the execution route for arbitrary vector cotangents.
 The current UNet boundary study finds 1.75 GB of logical saved outputs, including

@@ -44,8 +44,16 @@ def _tensors(message):
                 yield from _tensors(child)
 
 
-def prepare_header(bundle, output, *, fused_attention=False, broadcast_adjoints=False):
+def prepare_header(
+    bundle,
+    output,
+    *,
+    fused_attention=False,
+    broadcast_adjoints=False,
+    recompute_attention=False,
+):
     """Regenerate derivatives, match immutable payloads, and write a header plus manifest."""
+    fused_attention = fused_attention or recompute_attention
     started = time.perf_counter()
     bundle, output = Path(bundle), Path(output)
     sidecar = Path(str(output) + ".json")
@@ -77,13 +85,14 @@ def prepare_header(bundle, output, *, fused_attention=False, broadcast_adjoints=
     result.graph.outputs.clear()
     result.graph.outputs.extend(values[value.name] for value in old.graph.outputs)
     if fused_attention:
-        result = fuse_attention_vjp(result)
+        result = fuse_attention_vjp(result, recompute=recompute_attention)
     if broadcast_adjoints:
         result = fuse_broadcast_adjoints(result)
     result = optimizer.optimize(result, inline=False)
     RemoveUnusedNodesPass()(result)
     calls = sum(
-        node.domain == "pkg.onnax" and node.op_type.startswith("AttentionVJP_v1_")
+        node.domain == "pkg.onnax"
+        and node.op_type.startswith(("AttentionVJP_v1_", "AttentionVJP_v2_"))
         for node in result.graph
     )
     if fused_attention and not calls:
@@ -146,6 +155,10 @@ def prepare_header(bundle, output, *, fused_attention=False, broadcast_adjoints=
         header_sha256=hashlib.sha256(data).hexdigest(),
         header_bytes=len(data),
         fused_attention_calls=calls,
+        recomputed_attention_calls=sum(
+            node.domain == "pkg.onnax" and node.op_type.startswith("AttentionVJP_v2_")
+            for node in result.graph
+        ),
         broadcast_adjoint_calls=sum(
             node.domain == "pkg.onnax" and node.op_type == "SumToShape_v1"
             for node in result.graph
@@ -226,6 +239,7 @@ def main():
     parser.add_argument("--output", required=True)
     parser.add_argument("--fused-attention", action="store_true")
     parser.add_argument("--broadcast-adjoints", action="store_true")
+    parser.add_argument("--recompute-attention", action="store_true")
     args = parser.parse_args()
     print(
         json.dumps(
@@ -234,6 +248,7 @@ def main():
                 args.output,
                 fused_attention=args.fused_attention,
                 broadcast_adjoints=args.broadcast_adjoints,
+                recompute_attention=args.recompute_attention,
             )
         )
     )
