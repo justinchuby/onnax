@@ -16,6 +16,7 @@ import torch
 from diffusers import DDPMScheduler
 
 from examples.diffusion.benchmark_unet import load_state
+from examples.diffusion.objective import DiagnosticSessions, export_prediction, read_objective
 from examples.diffusion.train import frozen_hashes
 from examples.diffusion.unet import pretrained
 from examples.diffusion.unet_reference import make_reference
@@ -58,6 +59,7 @@ def run(
     library=None,
     resume=None,
     checkpoint_every=10,
+    objective_export=None,
 ):
     """Accumulate image gradients and compare every update with Diffusers on MPS."""
     if os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "0") != "0":
@@ -68,7 +70,18 @@ def run(
 
     if library:
         register_library(library)
-    source, interface, _ = load_state(directory)
+    source, interface, initial = load_state(directory)
+    objective = read_objective(objective_export, interface) if objective_export else None
+    diagnostics = DiagnosticSessions(session, objective) if objective else None
+    factory = diagnostics or session
+
+    def execute(module, batch, target):
+        if objective:
+            loss = module(**batch, **{objective["target"]: target})
+            return loss, torch.from_numpy(diagnostics.prediction)
+        prediction = module(**batch)
+        return (prediction - target).square().mean(), prediction
+
     manifest, encoded, identity = encoded_data(encoded_directory)
     os.makedirs(output, exist_ok=False)
     torch.set_num_threads(1)
@@ -84,7 +97,15 @@ def run(
         for name, rows in encoded.items()
     }
     frozen = frozen_hashes(ir.load(os.path.join(directory, "export", "model.onnx")))
-    with OnnxModule.load(os.path.join(directory, "export"), session_factory=session) as model:
+    with OnnxModule.load(
+        objective_export or os.path.join(directory, "export"), session_factory=factory
+    ) as model:
+        if objective and (
+            not model._eager_gradients or model._identity != objective["objective_identity"]
+        ):
+            raise ValueError("Objective execution interface differs from its manifest")
+        if arrays_record(model.arrays()) != arrays_record(initial):
+            raise ValueError("Objective adapter values differ from the source")
         # Begin image adaptation from a zero-effect adapter at the pretrained base.
         with torch.no_grad():
             for index, row in enumerate(source["adapter_mapping"]):
@@ -126,8 +147,7 @@ def run(
         def evaluate(split):
             with torch.no_grad():
                 return sum(
-                    float((model(**batch) - target).square().mean())
-                    for batch, target in batches[split]
+                    float(execute(model, batch, target)[0]) for batch, target in batches[split]
                 ) / len(batches[split])
 
         before = {name: evaluate(name) for name in batches}
@@ -140,10 +160,10 @@ def run(
             for (batch, target), (reference_batch, reference_target) in zip(
                 batches["train"], controls["train"], strict=True
             ):
-                actual = model(**batch)
+                objective_loss, actual = execute(model, batch, target)
                 expected = reference(**reference_batch).sample
                 predictions.append(compare_prediction(actual, expected.cpu()))
-                loss = (actual - target).square().mean() / len(batches["train"])
+                loss = objective_loss / len(batches["train"])
                 expected_loss = (expected - reference_target).square().mean() / len(
                     batches["train"]
                 )
@@ -189,21 +209,32 @@ def run(
                     os.path.join(output, f"checkpoint-{step + 1}.pt"),
                 )
         after = {name: evaluate(name) for name in batches}
-        final = {
-            name: model(**batch).detach()
-            for name, rows in batches.items()
-            for batch, _ in rows[-1:]
-        }
+        with torch.no_grad():
+            final = {
+                name: tuple(value.detach().clone() for value in execute(model, batch, target))
+                for name, rows in batches.items()
+                for batch, target in rows[-1:]
+            }
         bound = model.export(os.path.join(output, "export"))
+        if objective:
+            export_prediction(
+                bound,
+                os.path.join(output, "export", "prediction.onnx"),
+                objective["prediction"],
+                execution=ir.load(os.path.join(output, "export", "execution.onnx")),
+            )
         hashes = frozen_hashes(bound)
         if {name: hashes[name] for name in frozen} != frozen:
             raise AssertionError("Frozen UNet weights changed")
     with (
-        OnnxModule.load(os.path.join(output, "export"), session_factory=session) as restored,
+        OnnxModule.load(os.path.join(output, "export"), session_factory=factory) as restored,
         torch.no_grad(),
     ):
         for name, rows in batches.items():
-            torch.testing.assert_close(restored(**rows[-1][0]), final[name], rtol=0, atol=0)
+            for actual, expected in zip(
+                execute(restored, *rows[-1]), final[name], strict=True
+            ):
+                torch.testing.assert_close(actual, expected, rtol=0, atol=0)
     for row in os.scandir(os.path.join(output, "export")):
         if row.name.endswith(".onnx"):
             onnx.checker.check_model(row.path, full_check=True)
@@ -211,6 +242,7 @@ def run(
         model=source["model"],
         revision=source["revision"],
         source_identity=interface["identity"],
+        objective=objective,
         adapter_mapping=source["adapter_mapping"],
         steps=steps,
         resumed_step=start,
@@ -248,6 +280,7 @@ def main():
     parser.add_argument("--encoded-dir", required=True)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--mlx-library")
+    parser.add_argument("--objective-export")
     parser.add_argument(
         "--steps",
         type=int,
@@ -265,6 +298,7 @@ def main():
         library=args.mlx_library,
         resume=args.resume,
         checkpoint_every=args.checkpoint_every,
+        objective_export=args.objective_export,
     )
     print(json.dumps({key: report[key] for key in ("steps", "loss_before", "loss_after")}))
 

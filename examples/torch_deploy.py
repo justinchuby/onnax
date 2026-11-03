@@ -75,7 +75,7 @@ def prepare_header(bundle, output, *, fused_attention=False, broadcast_adjoints=
         raise ValueError("Regenerated derivative names differ from the saved interface")
     values = {value.name: value for value in result.graph.outputs}
     result.graph.outputs.clear()
-    result.graph.outputs.extend(values[name] for name in interface["gradients"].values())
+    result.graph.outputs.extend(values[value.name] for value in old.graph.outputs)
     if fused_attention:
         result = fuse_attention_vjp(result)
     if broadcast_adjoints:

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "source_files": {
+    "src/onnax/torch/_module.py": "448eaa6177b6ce9fff71570a892166dfde165484354a90df463ff96a2b840890",
+    "examples/diffusion/objective.py": "0179df693686def17371f1987e855f98837b45d35b3d51d0e0740983dcf15f82",
+    "examples/diffusion/benchmark_unet.py": "eb3e66beb4e96506b14e0c769fbe9c17730c41300b12fedc1601f5d684c95268",
+    "examples/diffusion/train_images.py": "c5a8773a317c9efe01225fbb484aae534f574ff7ad249748abbcc6096a53e362",
+    "examples/diffusion/replay_images.py": "6b60b4a119c8a4ede0793d45cce50cc5cabbf5bf18286dbecfc78663f8702cfb",
+    "examples/huggingface/trainer.py": "85b8064a272c48d1cff6275f2350d6c95a8f8ce971f52602d8872ded7a87c45d"
+  },
+  "objective": {
+    "version": 1,
+    "base_identity": "19a71566b8b236ba41e31b6d91e93a5cc79f7e4cc6360ee03d39713e9ef02286",
+    "base_model_sha256": "c61715018a1e32d310354e4918ce431dc08ff0ebce988f96a103e68441217936",
+    "objective_identity": "4174f81d104f1d1250c260a0428c293c3b8d50d55a2f35698ac9496eca771b57",
+    "loss": "training.loss",
+    "target": "training.target",
+    "prediction": "noise_pred",
+    "reduction": "mean_squared_error"
+  },
+  "protocol": {
+    "warmup": 10,
+    "samples": 100,
+    "phase_samples": 10,
+    "learning_rate": 0,
+    "cache_limit_bytes": 536870912,
+    "dtype": "float32"
+  },
+  "loss_max_absolute_error_to_two_call_path": 7.450580596923828e-09,
+  "predictions_and_all_72_gradients_bitwise_equal_to_two_call_path": true,
+  "inference_export": "Adapters bound into cached optimized execution graph; prediction-only view retains its initializer layouts."
+}

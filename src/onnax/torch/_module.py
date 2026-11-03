@@ -117,13 +117,18 @@ def _validate(name: str, value: torch.Tensor, spec: dict) -> None:
 class _Function(torch.autograd.Function):
     @staticmethod
     def forward(ctx, module, *values):
+        return _Function._forward(ctx, module, values, eager=False)
+
+    @staticmethod
+    def _forward(ctx, module, values, *, eager):
+        ctx.eager = eager
         ctx.module = module
         ctx.set_materialize_grads(False)
         count = len(module.data_names)
         data, params = values[:count], values[count:]
         # Version checks cover parameters and differentiable caller inputs. Other
         # data buffers are snapshotted so a loader can reuse them after forward.
-        ctx.save_for_backward(*params, *(v for v in data if v.requires_grad))
+        saved = [*params, *(v for v in data if v.requires_grad)]
         ctx.feeds = {
             name: value.detach().contiguous().numpy().copy()
             for name, value in zip(module.data_names, data, strict=True)
@@ -138,7 +143,20 @@ class _Function(torch.autograd.Function):
                 )
             ),
         }
-        arrays = module._run(0, module.output_names, feeds)
+        if eager:
+            loss_name = module.output_names[0]
+            feeds[module._seeds[loss_name]] = np.array(
+                1, dtype=ir.DataType(module._output_specs[loss_name]["dtype"]).numpy()
+            )
+            arrays = module._run(
+                1, [*module.output_names, *module.gradient_names.values()], feeds
+            )
+            # Own cached derivatives independently of runtime outputs and callers.
+            ctx.gradient_offset = len(saved)
+            saved.extend(torch.from_numpy(array.copy()) for array in arrays[1:])
+            arrays = arrays[:1]
+        else:
+            arrays = module._run(0, module.output_names, feeds)
         # Identity/view outputs must not expose saved backward inputs or aliases
         # invisible to PyTorch storage/version tracking. Keep ordinary owned
         # runtime outputs as zero-copy NumPy views.
@@ -156,6 +174,9 @@ class _Function(torch.autograd.Function):
             name: (array.shape, array.dtype)
             for name, array in zip(module.output_names, arrays, strict=True)
         }
+        if eager:
+            ctx.feeds.clear()
+        ctx.save_for_backward(*saved)
         outputs = tuple(torch.from_numpy(array) for array in arrays)
         for name, value in zip(module.output_names, outputs, strict=True):
             _validate(name, value, module._output_specs[name])
@@ -199,11 +220,21 @@ class _Function(torch.autograd.Function):
             for i, name in enumerate(names, 1)
             if ctx.needs_input_grad[i] and name in module.gradient_names
         ]
-        arrays = (
-            module._run(1, [module.gradient_names[name] for name in wanted], feeds)
-            if wanted
-            else []
-        )
+        if ctx.eager:
+            seed = feeds[module._seeds[module.output_names[0]]]
+            cached = dict(
+                zip(module.gradient_names, saved[ctx.gradient_offset :], strict=True)
+            )
+            arrays = [
+                np.asarray(cached[name].numpy() * seed, dtype=cached[name].numpy().dtype)
+                for name in wanted
+            ]
+        else:
+            arrays = (
+                module._run(1, [module.gradient_names[name] for name in wanted], feeds)
+                if wanted
+                else []
+            )
         gradients = dict(zip(wanted, arrays, strict=True))
         for name, array in gradients.items():
             _validate(name, torch.from_numpy(array), module._input_specs[name])
@@ -216,6 +247,28 @@ class _Function(torch.autograd.Function):
         )
 
 
+class _EagerFunction(_Function):
+    @staticmethod
+    def forward(ctx, module, *values):
+        return _Function._forward(ctx, module, values, eager=True)
+
+
+def _eager_mode(source, specification, enabled=False):
+    if not isinstance(enabled, bool):
+        raise TypeError("eager_gradients must be a bool")
+    if enabled and (
+        len(source.graph.outputs) != 1
+        or source.graph.outputs[0].dtype not in _FLOATS
+        or source.graph.outputs[0].shape is None
+        or len(source.graph.outputs[0].shape) != 0
+        or not (specification["parameters"] or specification["input_gradients"])
+    ):
+        raise ValueError(
+            "Eager gradients require one scalar FLOAT/DOUBLE objective and gradient inputs"
+        )
+    return enabled
+
+
 class OnnxModule(torch.nn.Module):
     """Own ONNX parameters and connect reusable forward/VJP sessions to autograd.
 
@@ -224,6 +277,8 @@ class OnnxModule(torch.nn.Module):
     default. One selected output returns a Tensor; multiple outputs return a tuple.
     A supplied session factory receives an owned ONNX file path, including external
     tensor payloads. The module owns sessions and files until ``close()``.
+    For a scalar objective, ``eager_gradients=True`` computes unit-cotangent
+    derivatives with the loss; backward scales the cached gradients.
     """
 
     _onnax_identity: torch.Tensor
@@ -237,8 +292,12 @@ class OnnxModule(torch.nn.Module):
         input_gradients: Sequence[str] | None = None,
         session_factory: SessionFactory | None = None,
         optimize: Callable[[ir.Model], ir.Model] | None = None,
+        eager_gradients: bool = False,
     ) -> None:
         super().__init__()
+        if not isinstance(eager_gradients, bool):
+            raise TypeError("eager_gradients must be a bool")
+        self._eager_gradients = eager_gradients
         self._closed = False
         self._sessions: list[Session] = []
         self._directory = tempfile.TemporaryDirectory(prefix="onnax-torch-")
@@ -252,7 +311,13 @@ class OnnxModule(torch.nn.Module):
 
     def _build(self, model, parameters, outputs, input_gradients, session_factory, optimize):
         source, initial, specification, identity, gradient_inputs, float_outputs = (
-            self._prepare(model, parameters, outputs, input_gradients)
+            self._prepare(
+                model,
+                parameters,
+                outputs,
+                input_gradients,
+                eager_gradients=self._eager_gradients,
+            )
         )
         selected = specification["outputs"]
         backward = None
@@ -267,7 +332,14 @@ class OnnxModule(torch.nn.Module):
             )
             by_name = {v.name: v for v in backward.graph.outputs}
             backward.graph.outputs.clear()
-            backward.graph.outputs.extend(by_name[n] for n in gradients.values())
+            backward.graph.outputs.extend(
+                by_name[n]
+                for n in (
+                    [*selected, *gradients.values()]
+                    if self._eager_gradients
+                    else gradients.values()
+                )
+            )
         execution = source.clone()
         if optimize is not None:
             execution = optimize(execution)
@@ -277,7 +349,12 @@ class OnnxModule(torch.nn.Module):
         common.RemoveUnusedNodesPass()(execution)
         save_model(execution, self._directory.name, "execution", reuse=self._directory.name)
         if backward is not None:
-            if [v.name for v in backward.graph.outputs] != list(gradients.values()):
+            expected = (
+                [*selected, *gradients.values()]
+                if self._eager_gradients
+                else list(gradients.values())
+            )
+            if [v.name for v in backward.graph.outputs] != expected:
                 raise ValueError("Optimization must preserve gradient output names and order")
             common.RemoveUnusedNodesPass()(backward)
             backward.graph.metadata_props["onnax.torch.source_identity"] = identity
@@ -297,7 +374,7 @@ class OnnxModule(torch.nn.Module):
             session_factory or _ort_session,
         )
 
-    def _prepare(self, model, parameters, outputs, input_gradients):
+    def _prepare(self, model, parameters, outputs, input_gradients, *, eager_gradients=False):
         source = _as_model(model)
         source.graph.name = source.graph.name or "onnax_torch"
         values = ir.convenience.create_value_mapping(source.graph)
@@ -359,6 +436,7 @@ class OnnxModule(torch.nn.Module):
             "outputs": selected,
             "input_gradients": differentiable,
         }
+        _eager_mode(source, specification, eager_gradients)
         save_model(source, self._directory.name, "model")
         identity = source_identity(self._directory.name, specification)
         source = ir.load(os.path.join(self._directory.name, "model.onnx"))
@@ -387,6 +465,14 @@ class OnnxModule(torch.nn.Module):
         for stem in ("execution", "derivative") if gradients else ("execution",):
             model = ir.load(os.path.join(self._directory.name, stem + ".onnx"))
             allowed = set(self._input_specs) | set(seeds.values())
+            if stem == "derivative" and self._eager_gradients:
+                if [v.name for v in model.graph.outputs] != [
+                    *self.output_names,
+                    *gradients.values(),
+                ]:
+                    raise ValueError(
+                        "Eager derivative must return its scalar objective and gradients"
+                    )
             names = [v.name for v in model.graph.inputs]
             if not set(names) <= allowed:
                 raise ValueError("Execution graph introduced unknown inputs")
@@ -396,6 +482,9 @@ class OnnxModule(torch.nn.Module):
     def _configure_parameters(
         self, source, initial, specification, identity, seeds, gradients
     ):
+        self._eager_gradients = _eager_mode(
+            source, specification, getattr(self, "_eager_gradients", False)
+        )
         self.parameter_names = tuple(specification["parameters"])
         self.output_names = tuple(specification["outputs"])
         self.input_gradient_names = tuple(specification["input_gradients"])
@@ -446,7 +535,15 @@ class OnnxModule(torch.nn.Module):
                 raise ValueError(f"Enable input_gradients for differentiable input {name!r}")
         for name, value in zip(self.parameter_names, self.trainable, strict=True):
             _validate(name, value, self._input_specs[name])
-        outputs = _Function.apply(self, *(inputs[n] for n in self.data_names), *self.trainable)
+        values = [*(inputs[n] for n in self.data_names), *self.trainable]
+        function = (
+            _EagerFunction
+            if self._eager_gradients
+            and torch.is_grad_enabled()
+            and any(v.requires_grad for v in values)
+            else _Function
+        )
+        outputs = function.apply(self, *values)
         return outputs[0] if len(self.output_names) == 1 else outputs
 
     def parameters_by_name(self) -> dict[str, torch.nn.Parameter]:
@@ -515,6 +612,7 @@ class OnnxModule(torch.nn.Module):
             json.dump(
                 {
                     "version": 1,
+                    **({"eager_gradients": True} if self._eager_gradients else {}),
                     "identity": self._identity,
                     "specification": self._specification,
                     "inputs": self._input_specs,
@@ -553,6 +651,7 @@ class OnnxModule(torch.nn.Module):
             raise ValueError("Bundle source identity mismatch")
         module = cls.__new__(cls)
         torch.nn.Module.__init__(module)
+        module._eager_gradients = interface.get("eager_gradients", False)
         module._closed = False
         module._sessions = []
         module._directory = tempfile.TemporaryDirectory(prefix="onnax-torch-")

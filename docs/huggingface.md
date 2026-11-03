@@ -18,8 +18,25 @@ This separation also supports caller-defined losses, scaled upstream gradients
 and gradient accumulation. The bridge snapshots data inputs for backward and
 uses PyTorch saved tensors to detect intervening parameter updates. CPU FP32
 NumPy/Torch exchange lives at this boundary; the exported graphs have no
-PyTorch dependency. Differentiating through the boundary a second time is
-currently unsupported.
+PyTorch dependency. Generate higher-order derivatives with onnax before constructing the
+PyTorch boundary.
+
+## Joint scalar-objective execution
+
+```sh
+uv run python -m examples.huggingface.trainer \
+  --output-dir trainer_joint --eager-gradients
+```
+
+This variant adds MSE to the ONNX model and selects its scalar loss with
+`OnnxModule(..., eager_gradients=True)`. A differentiable forward computes loss
+and adapter gradients together. PyTorch backward applies Trainer's upstream
+weight; Trainer owns AdamW, accumulation, scheduling and checkpoints. The same
+200-update and fresh-process recovery checks run for both schedules.
+
+The joint export contains `prediction.onnx` for inference without labels.
+`forward.onnx` is the scalar objective with its target input; the cached VJP and
+parameter mappings remain available for training.
 
 ## Recovery and export
 

@@ -394,8 +394,14 @@ with its prediction target and external scheduler.
    Broadcast fusion reduces diagnostic execution spans from 1172 to 8 and
    materialized output bytes from 4.27 GB to 3.72 MB. Native compiled tests
    cover Qwen3, Qwen3.5 and Phi3 adapter gradients, updates and re-export.
-   Next, expose forward residuals to the reverse path and measure saved-value
-   handoff against whole-graph replay on the same frozen exports.
+   Scalar-objective execution now removes the separate forward replay through
+   `OnnxModule(..., eager_gradients=True)`: 0.474 s, 4.32 GB MLX peak allocation
+   and 5.40 GB process peak, with 20 real-image updates and fresh-process recovery.
+   Trainer also completes its 200-step recovery workflow through this schedule.
+   Next, profile remaining MLX compute costs on this joint graph. Arbitrary
+   vector-cotangent workloads use saved-value planning: the UNet study finds
+   1.75 GB of logical saved outputs, including 0.95 GB needed only for shape;
+   compress those boundaries before evaluating full activation handoff.
 3. **Saved-value fusion contracts.** Use the qualified decoder and denoiser to
    choose which attention statistics, normalization statistics and recurrent
    boundaries to expose. Compare saved and regenerated values with the same

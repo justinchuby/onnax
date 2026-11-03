@@ -148,7 +148,7 @@ regression, MLP and Qwen qualification.
 The matched M1 Max workload uses FP32, one 512-pixel image encoded as 64² latents,
 fixed adapters and external AdamW. Each run has 10 warmups and 100 measured
 steps; separate ten-sample phase profiles record forward, backward and updates.
-MLX uses eager execution except for the compiled broadcast-adjoint row. All
+MLX uses eager execution except for rows labeled compiled. All
 use a 512 MiB idle cache and a 64 MiB attention score budget. ORT graph optimization and CPU fallback are disabled. MPS uses its
 default allocator. Process peak includes bundle/model loading, session setup,
 warmup and execution.
@@ -161,7 +161,8 @@ warmup and execution.
 | Host shape programs | 0.745 / 0.770 s | 4.32 GB | 5.24 GB |
 | Direct convolution padding | 0.696 / 0.713 s | 4.32 GB | 5.32 GB |
 | Broadcast adjoints, eager | 0.669 / 0.688 s | 4.33 GB | 5.31 GB |
-| Broadcast adjoints, compiled | **0.651 / 0.661 s** | **4.31 GB** | **5.37 GB** |
+| Broadcast adjoints, compiled | 0.651 / 0.661 s | 4.31 GB | 5.37 GB |
+| Joint scalar objective, compiled | **0.474 / 0.482 s** | **4.32 GB** | **5.40 GB** |
 | PyTorch MPS eager | 0.320 / 0.323 s | — | 7.39 GB |
 | PyTorch MPS checkpointed | 0.436 / 0.441 s | — | 5.82 GB |
 
@@ -198,6 +199,11 @@ reduce 1172 subgraph executions to 8 and recorded materialized output bytes
 from 4.27 GB to 3.72 MB. Use `--broadcast-adjoints` with
 [MLX EP support](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/111)
 and `ONNXRUNTIME_EP_MLX_NO_COMPILE=0`.
+
+For a scalar ONNX loss, [joint objective execution](torch.md) schedules the loss
+and its gradients in one call. The UNet example measures 0.474/0.482 s with the
+same workload and native binary. Prediction and every adapter gradient match
+the two-call route bitwise; the MSE reduction differs by 7.5e-9.
 
 (m1-max-measurements)=
 

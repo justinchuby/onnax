@@ -40,10 +40,18 @@ a Hugging Face dataset instead.
 Use the pretrained export created by the first tutorial:
 
 ```sh
+python -m examples.diffusion.objective --training-run /tmp/unet-pretrained \
+  --output-dir /tmp/unet-objective
 python -m examples.diffusion.train_images --training-run /tmp/unet-pretrained \
+  --objective-export /tmp/unet-objective \
   --encoded-dir /tmp/unet-images --steps 20 --checkpoint-every 10 \
   --output-dir /tmp/unet-photo-training
 ```
+
+The objective export composes MSE with the frozen source and enables
+`OnnxModule(..., eager_gradients=True)`. Each differentiable forward executes loss
+and gradients together; PyTorch backward applies the accumulation weight. Reuse
+this export for training, timing and recovery.
 
 The example starts from seeded A and zero B, so its first prediction uses the
 pretrained base. It accumulates two microbatches of one image each, dividing each
@@ -54,13 +62,14 @@ normalizations propagate activation gradients to those adapters.
 An independent Diffusers model on MPS checks predictions, loss, every adapter
 gradient and each update. The recorded 20-update run reduces training loss
 `0.1163 → 0.0950` and held-out loss `0.1105 → 0.1096`. The
-[training report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/training.json)
+[training report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/joint-objective-training.json)
 includes the input manifest and per-update diagnostics.
 
 Resume in a new process, using the total target update count:
 
 ```sh
 python -m examples.diffusion.train_images --training-run /tmp/unet-pretrained \
+  --objective-export /tmp/unet-objective \
   --encoded-dir /tmp/unet-images --steps 20 \
   --resume /tmp/unet-photo-training/checkpoint-10.pt \
   --output-dir /tmp/unet-photo-resumed
@@ -72,29 +81,32 @@ python -m examples.diffusion.replay_images --first /tmp/unet-photo-training \
 The replay checks parameters, AdamW, step, source identity, encoded data and every
 exported file. It then loads both bundles and compares prediction, loss and all
 72 gradients byte for byte. Full ONNX checker validation covers both exports. The recorded replay verifies
-289 state tensors, nine exported file checksums, eight checked ONNX models and
-74 actual loaded prediction/loss/gradient tensors byte for byte.
+289 state tensors, ten exported file checksums, ten checked ONNX models and
+74 actual loaded prediction/loss/gradient tensors byte for byte. The final
+`export/prediction.onnx` binds adapters into the cached optimized forward graph;
+its standalone inference prediction also matches bitwise.
 
 ## Measure the execution boundary
 
-Prepare the fused derivative header once, then run each provider in a fresh
-process on the same cached image and adapter state:
+Prepare the scalar objective once, then run each provider in a fresh process
+on the same cached image and adapter state:
 
 ```sh
-python -m examples.torch_deploy --bundle /tmp/unet-pretrained/export \
-  --fused-attention --broadcast-adjoints --output /tmp/unet-attention-vjp.onnx
+python -m examples.diffusion.objective --training-run /tmp/unet-pretrained \
+  --output-dir /tmp/unet-objective
 python -m examples.diffusion.benchmark_unet --training-run /tmp/unet-pretrained \
   --batch /tmp/unet-images/example-0.pt --provider mps --output /tmp/unet-mps.json
 ONNXRUNTIME_EP_MLX_NO_COMPILE=0 python -m examples.diffusion.benchmark_unet \
   --training-run /tmp/unet-pretrained --batch /tmp/unet-images/example-0.pt \
-  --provider mlx --derivative-header /tmp/unet-attention-vjp.onnx \
+  --provider mlx --objective-export /tmp/unet-objective \
   --mlx-library /path/to/libonnxruntime_mlx_ep.dylib --output /tmp/unet-mlx.json
 python -m examples.diffusion.compare_unet --baseline /tmp/unet-mps.json \
   --candidate /tmp/unet-mlx.json --output /tmp/unet-comparison.json
 ```
 
-`--mlx-library` selects the measured development EP. The deployment manifest
-checks the source identity, frozen payloads and parameter/gradient mapping.
+`--mlx-library` selects the measured development EP. The objective manifest
+identifies the base graph, scalar loss, target and execution bundle. The
+`--derivative-header` route supports caller-defined external losses.
 The runtime uses a private snapshot; the source export stays reusable.
 The [attention deployment tutorial](attention-vjp.md) records the successive
 runtime/graph variants and source hashes. These FP32 runs use batch one and
@@ -118,20 +130,31 @@ Image encoding and initial input transfer are outside the timed steps.
 | MLX fused attention + host shapes | 0.745 s | 0.770 s | 4.88 GiB |
 | MLX + direct convolution padding | 0.696 s | 0.713 s | 4.95 GiB |
 | MLX + broadcast adjoints, eager | 0.669 s | 0.688 s | 4.94 GiB |
-| MLX + broadcast adjoints, compiled | **0.651 s** | **0.661 s** | **5.00 GiB** |
+| MLX + broadcast adjoints, compiled | 0.651 s | 0.661 s | 5.00 GiB |
+| MLX joint scalar objective | **0.474 s** | **0.482 s** | **5.03 GiB** |
 
 Broadcast fusion packages 245 runtime reductions as portable ONNX functions.
 With [MLX EP support](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/111),
 the same-binary compiled comparison changes step median from 0.959 s to 0.651 s
 and process peak from 6.66 GiB to 5.00 GiB. All 74 captures match bitwise.
 Diagnostic subgraph executions fall from 1172 to 8, with recorded materialized
-output bytes changing from 4.27 GB to 3.72 MB. The compiled route spends about
+output bytes changing from 4.27 GB to 3.72 MB. The compiled two-call route spends about
 0.156 s in forward and 0.495 s in loss/backward.
 
 The [matched reports](https://github.com/justinchuby/onnax/tree/main/examples/diffusion/reports/real-images-m1max)
 retain the graph/runtime variants, binary hashes and numerical comparisons.
-Next, shared forward values can replace the forward replay inside reverse
-execution; the same workload will measure that handoff.
+Joint scalar-objective execution removes the separate forward replay: median/P95
+becomes 0.474/0.482 s, with 4.32 GB MLX peak allocation and 5.40 GB process peak.
+Prediction and all 72 gradients match the two-call route bitwise; loss differs by
+7.5e-9. Phase profiles record 0.468 s for the joint run, 0.001 s for autograd
+handoff and 0.002 s for AdamW. The report labels those phases explicitly.
+The diagnostic prediction output leaves the public module's loss and all 72
+weighted gradients bitwise unchanged.
+
+Saved-value handoff remains the execution route for arbitrary vector cotangents.
+The current UNet boundary study finds 1.75 GB of logical saved outputs, including
+0.95 GB used only for shapes. Compress those boundaries before measuring an
+activation-handoff plan.
 Footprint and RSS cover the isolated process, including construction, warmup,
 runtime and allocator caches. The raw MLX route caps its reusable cache at
 512 MiB; MPS uses its default allocator. A worker guard limits physical footprint
