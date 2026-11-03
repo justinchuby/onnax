@@ -43,6 +43,9 @@ def session(graph, *, profile_prefix=None, target_nodes=None):
     if not any(device.ep_name == "MLXExecutionProvider" for device in ort.get_ep_devices()):
         onnxruntime_ep_mlx.register_execution_provider_library()
     options = ort.SessionOptions()
+    # Decoder blocks own separate sessions; their host arenas would each retain
+    # large temporary outputs. MLX maintains the reusable device buffer cache.
+    options.enable_cpu_mem_arena = False
     options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
     options.intra_op_num_threads = 1
     options.inter_op_num_threads = 1

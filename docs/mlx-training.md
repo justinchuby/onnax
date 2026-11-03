@@ -244,3 +244,37 @@ uv run --no-sync python -m examples.lora.mlx_benchmark \
 uv run --no-sync python -m examples.lora.mlx_benchmark \
   --profile large --mode numpy_adam --output large_cpu.json
 ```
+
+### Host allocation across decoder blocks
+
+The shared MLX session factory sets `enable_cpu_mem_arena=False`. Each
+checkpointed decoder block owns an ORT session. Keeping a separate CPU
+arena for every session retains large host temporaries after backward;
+MLX already maintains its own reusable device buffer cache.
+
+For a Qwen3.5-0.8B FP32 batch of 4,032 tokens on M1 Max, disabling
+the host arenas reduced the cold forward/backward process peak from
+25.82 GB to 8.37 GB. MLX active memory after backward stayed at 3.08 GB
+in both runs. The [measurement records](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/qwen35-cpu-arena-m1max)
+include the separate four-update Trainer run and frozen-weight audit.
+A matched 2,048-token batch produces byte-identical loss and all 60 adapter
+gradients with the arena on and off. Fresh-process checkpoint recovery
+also reproduces the final parameters, optimizer state and exported outputs.
+
+To inspect both allocators, replay a saved token batch in a fresh process:
+
+```bash
+python -m examples.huggingface.allocator_probe \
+  --export decoder_export --batch tokens.npz \
+  --library /absolute/path/libonnxruntime_mlx_ep.dylib \
+  --output no_arena.json
+```
+
+The batch contains `input_ids`, `attention_mask`, `position_ids`, and
+`labels` as int64 arrays. Add `--cpu-arena` in a second process to compare
+ORT arena retention. Each run saves loss and all adapter gradients in
+`<output>.npz`, plus per-session execution times and memory observations in
+`<output>.progress.json`. Compare the saved gradients alongside memory.
+The measurement covers one cold forward/backward and host exchange;
+process peak includes model construction. Use the training benchmark for
+steady-state throughput.

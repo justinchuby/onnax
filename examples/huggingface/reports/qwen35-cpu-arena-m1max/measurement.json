@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "hardware": "Apple M1 Max, 32 GiB",
+  "precision": "FP32",
+  "sequence_length": 4032,
+  "cpu_fallback": false,
+  "ort_graph_optimizer": false,
+  "compile_disabled": false,
+  "mlx_cache_limit_bytes": 536870912,
+  "library_sha256": "c6b1ced8bafacb337182ee20f341203cddad6a9dea9adb62c9e5765b69611f36",
+  "measurement_scope": "Independent processes; one cold forward/backward with host exchange and per-session observations. Kernel lifetime peak includes model construction. SFT is a separate four-update Trainer run.",
+  "gradient_parity": {
+    "sequence_length": 2048,
+    "adapter_gradient_tensors": 60,
+    "loss_bitwise_equal": true,
+    "all_gradients_bitwise_equal": true
+  },
+  "reports": [
+    "arena-enabled-cold-pair.json",
+    "arena-disabled-cold-pair.json",
+    "arena-disabled-sft.json",
+    "arena-on-2048.json",
+    "arena-off-2048.json",
+    "arena-disabled-resume.json",
+    "recovery.json",
+    "frozen-audit.json",
+    "sft-guard.json",
+    "resume-guard.json"
+  ]
+}
