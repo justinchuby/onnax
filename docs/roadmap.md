@@ -384,7 +384,10 @@ with its prediction target and external scheduler.
    with the external VAE/CLIP, completes 20 accumulated updates and validates
    fresh-process recovery at 64×64 latent resolution. Matched measurements
    identify reverse execution as the next target: raw MLX 1.073 s/step versus
-   MPS eager 0.320 s and checkpointed MPS 0.436 s. Profile attention products,
+   MPS eager 0.320 s and checkpointed MPS 0.436 s. Row-indexed pivots and
+   fused attention now reach 0.827 s with 4.32 GB MLX peak allocation. A larger
+   GEMM budget measures 0.808 s with 4.99 GB. Next, remove shape-derived host
+   synchronization in broadcast pullbacks, then profile attention products,
    convolution products and replay before selecting an optimization. Default
    compilation also needs a buffer-lifetime study: its cold numerical checks
    pass, while the 100-step qualification reaches an observed 17.55 GiB and
