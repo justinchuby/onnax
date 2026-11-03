@@ -1,0 +1,50 @@
+{
+  "scope": "One warmup and three timed steps per diagnostic, including setup events. Copy-out counters record materialized output bytes, not a device bandwidth measurement.",
+  "traces": [
+    {
+      "trace_sha256": "5af6219884be1cd20405735c4210422da0ba712d0d9868778472f9ff539f0535",
+      "local_path": "/tmp/onnax-unet-host-shapes-trace.json",
+      "subgraph_execution_spans": 8,
+      "summary": {
+        "claimed_nodes": 10723,
+        "total_nodes": 10723,
+        "claim_pct": "100.0",
+        "fused_subgraphs": 3,
+        "path_decode": 0,
+        "path_prefill": 0,
+        "path_general": 0,
+        "path_eager": 8,
+        "cache_hit": 0,
+        "cache_miss": 0,
+        "cache_retrace": 0,
+        "managed_wrap_bytes": 10139057,
+        "managed_wrap_aligned": 193,
+        "delta_copyout_bytes": 0,
+        "full_copyout_bytes": 3715072
+      }
+    },
+    {
+      "trace_sha256": "2e331ca8b5c405064a1ba51cf37edf3718fff74608d1da176ecc639555a864a2",
+      "local_path": "/tmp/onnax-unet-conv-padding-default-trace.json",
+      "subgraph_execution_spans": 1172,
+      "summary": {
+        "claimed_nodes": 10723,
+        "total_nodes": 10723,
+        "claim_pct": "100.0",
+        "fused_subgraphs": 585,
+        "path_decode": 0,
+        "path_prefill": 0,
+        "path_general": 8,
+        "path_eager": 1164,
+        "cache_hit": 6,
+        "cache_miss": 2,
+        "cache_retrace": 0,
+        "managed_wrap_bytes": 4683170802,
+        "managed_wrap_aligned": 344,
+        "delta_copyout_bytes": 0,
+        "full_copyout_bytes": 4274358304
+      }
+    }
+  ],
+  "next_target": "Shape-aware broadcast-adjoint fusion: preserve a portable ONNX function body and specialize native reduction axes by runtime tensor shapes to reduce compiled partition boundaries."
+}

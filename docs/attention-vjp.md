@@ -40,55 +40,6 @@ For a `[1, 8, 4096, 4096]` score tensor, the previous pivot construction used a
 both with vectors of 32,768 entries. The probability and score-gradient matrices
 remain part of the portable computation.
 
-A matched 512-pixel UNet LoRA run on M1 Max measured 10 warmup steps and
-100 training steps in FP32. Row indexing reduced median step time from 1.073 s
-to 0.981 s and P95 from 1.098 s to 1.001 s. MLX peak allocation fell from
-6.08 GB to 5.41 GB; whole-process lifetime peak physical footprint fell from
-6.50 GB to 5.99 GB. Prediction, loss and all 72 adapter gradients matched
-bitwise. Both ONNX runs used eager MLX execution, a 512 MiB cache, disabled ORT
-optimization and disabled CPU fallback. The native indexed route uses
-[MLX EP symbolic ScatterND support](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/107).
-The [measurement report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-indexed-pivots.json)
-records the binary hash, versions and component timings.
-
-Fusing all 18 attention pullbacks in the same UNet workload reduces median/P95
-step time to 0.827/0.848 s. MLX peak allocation is 4.32 GB and whole-process
-lifetime peak physical footprint is 5.28 GB. All 72 adapter gradients agree with
-independent PyTorch MPS at `rtol=1e-4, atol=1e-6`; maximum absolute gradient error
-is 6.4e-9. The matched MPS median is 0.320 s. The fused ONNX profile spends
-0.168 s in forward and 0.663 s in loss/backward.
-The [fused report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-fused-attention.json)
-records the same 10-warmup/100-step protocol, with a 64 MiB per-score GEMM budget.
-
-Raising the per-score GEMM budget to 1 GiB measured 0.808/0.832 s median/P95
-with 4.99 GB MLX peak allocation and 5.48 GB whole-process physical peak. This
-run uses the same model, data, precision, optimizer and 100-step protocol. Its
-[report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-fused-attention-gemm.json)
-records the explicit budget. The 64 MiB default gives lower peak allocation.
-
-## Shape programs in the pullback
-
-For fixed parameter shapes, onnax emits constant broadcast-reduction axes even
-when output extents are dynamic. Symbolic target shapes use runtime axes.
-[MLX EP shape-program execution](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/109)
-keeps small shape-derived integer and Boolean operations on the MLX CPU stream,
-so reduction axes reach their host consumer without a GPU round trip.
-`ONNXRUNTIME_EP_MLX_GPU_SHAPE_OPS=1` selects the previous route for comparison.
-
-With the same fused UNet graph and 64 MiB attention budget, 100 measured steps
-reach 0.745/0.770 s median/P95, versus 0.827/0.848 s before this runtime change.
-MLX peak allocation stays at 4.32 GB; whole-process physical peak is 5.24 GB.
-Prediction, loss and all 72 adapter gradients match bitwise. The
-[report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-host-shapes.json)
-records the binary hash, memory counters and component timings.
-
-A same-binary ablation with GPU shape operations measured 0.839/0.854 s
-median/P95; all 74 captured tensors match the host-shape route bitwise. The
-[ablation report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-host-shapes-gpu-ablation.json)
-records the explicit execution switch. Diagnostic traces reduce aggregate
-translation/synchronization spans from 715 ms to 244 ms across the same probe,
-including setup. Further profiling focuses on convolution layouts and replay.
-
 ## Build the execution graph
 
 Generate derivatives first, then apply deployment fusion before constant folding
@@ -113,6 +64,22 @@ The contract covers FP32 Q/K/V with head dimensions from 8 through 256 in steps
 of 8, including UNet dimensions 40, 80 and 160;
 rank-three/rank-four layouts; MHA/GQA/MQA; boolean/additive masks; and top-left
 causality. Unsupported configurations retain their portable derivative graph.
+
+## Prepare a saved Torch bundle
+
+Generate a deployment header from a flat `OnnxModule` export:
+
+```sh
+python -m examples.torch_deploy --bundle /tmp/unet-pretrained/export \
+  --fused-attention --output /tmp/unet-attention-vjp.onnx
+```
+
+The header and its JSON manifest reuse the bundle's existing frozen payloads,
+matched by dtype, shape and SHA256. Input, seed and gradient names stay unchanged.
+The tool runs full ONNX checker validation using private file snapshots. The
+[image benchmark](diffusion-images.md) loads it with `--derivative-header`,
+checks its source/payload identity and installs it in the runtime's private bundle.
+The qualified UNet header is about 2 MB and reuses 149 initializers.
 
 ## Select the memory policy
 
@@ -144,6 +111,57 @@ match Transformers gradients and three independent optimizer updates. FP32/BF16
 100-step training, fresh-process recovery and complete exported-model checking
 cover the training workflow. The [public Torch bridge](torch.md) also has
 regression, MLP and Qwen qualification.
+
+## UNet measurements
+
+The matched M1 Max workload uses FP32, one 512-pixel image encoded as 64² latents,
+fixed adapters and external AdamW. Each run has 10 warmups and 100 measured
+steps; separate ten-sample phase profiles record forward, backward and updates.
+MLX rows use eager execution, a 512 MiB idle cache and a 64 MiB attention score
+budget. ORT graph optimization and CPU fallback are disabled. MPS uses its
+default allocator. Process peak includes bundle/model loading, session setup,
+warmup and execution.
+
+| Route | Median / P95 | MLX peak allocation | Process peak |
+| --- | ---: | ---: | ---: |
+| Raw MLX | 1.073 / 1.098 s | 6.08 GB | 6.50 GB |
+| Row-indexed pivots | 0.981 / 1.001 s | 5.41 GB | 5.99 GB |
+| Fused attention | 0.827 / 0.848 s | 4.32 GB | 5.28 GB |
+| Host shape programs | 0.745 / 0.770 s | 4.32 GB | 5.24 GB |
+| Direct convolution padding | **0.696 / 0.713 s** | **4.32 GB** | **5.32 GB** |
+| PyTorch MPS eager | 0.320 / 0.323 s | — | 7.39 GB |
+| PyTorch MPS checkpointed | 0.436 / 0.441 s | — | 5.82 GB |
+
+All variants pass the prediction/loss/72-adapter-gradient comparison with
+independent PyTorch MPS at `rtol=1e-4, atol=1e-6`. The
+[reports](https://github.com/justinchuby/onnax/tree/main/examples/diffusion/reports/real-images-m1max)
+record model/data/state hashes, native binaries, versions and measurement scope.
+
+For fixed target shapes, broadcast pullbacks use constant reduction axes even
+when source extents are dynamic. [MLX host shape programs](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/109)
+execute small shape-derived integer/Boolean operations on the CPU stream.
+A same-binary ablation with `ONNXRUNTIME_EP_MLX_GPU_SHAPE_OPS=1` measures
+0.839/0.854 s versus 0.745/0.770 s, with bitwise matching captures.
+Diagnostic translation/synchronization spans fall from 715 ms to 244 ms
+across the same probe, including setup.
+
+UNet's reverse graph has 46 frozen-weight `ConvTranspose` nodes.
+[Direct nonnegative padding](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/110)
+computes the requested extent directly: a 16×16 output previously used an
+18×18 intermediate followed by cropping. Its captures match the preceding
+runtime bitwise. A separate frozen-layout-cache prototype measures
+0.705/0.723 s and retains 737 MB more weights, raising active/peak allocation
+to 2.23/5.06 GB. Direct padding is the selected implementation.
+
+Before host-shape optimization, raising the attention score budget to 1 GiB
+measures 0.808/0.832 s with 4.99 GB peak allocation. The reports retain this
+workspace trial alongside the lower-memory 64 MiB default.
+
+Default compilation completes 100 steps at 0.963/0.990 s and 7.16 GB process
+peak. Matching diagnostic probes show 8 versus 1172 subgraph executions and
+3.72 MB versus 4.27 GB recorded copy-out bytes. For this UNet, select
+`ONNXRUNTIME_EP_MLX_NO_COMPILE=1`. The next execution target is shape-aware
+broadcast-adjoint fusion across these partition boundaries.
 
 (m1-max-measurements)=
 

@@ -77,22 +77,29 @@ exported file. It then loads both bundles and compares prediction, loss and all
 
 ## Measure the execution boundary
 
-Run each provider in a fresh process on the same cached image and adapter state:
+Prepare the fused derivative header once, then run each provider in a fresh
+process on the same cached image and adapter state:
 
 ```sh
+python -m examples.torch_deploy --bundle /tmp/unet-pretrained/export \
+  --fused-attention --output /tmp/unet-attention-vjp.onnx
 python -m examples.diffusion.benchmark_unet --training-run /tmp/unet-pretrained \
   --batch /tmp/unet-images/example-0.pt --provider mps --output /tmp/unet-mps.json
-python -m examples.diffusion.benchmark_unet --training-run /tmp/unet-pretrained \
-  --batch /tmp/unet-images/example-0.pt --provider mlx --output /tmp/unet-mlx.json
+ONNXRUNTIME_EP_MLX_NO_COMPILE=1 python -m examples.diffusion.benchmark_unet \
+  --training-run /tmp/unet-pretrained --batch /tmp/unet-images/example-0.pt \
+  --provider mlx --derivative-header /tmp/unet-attention-vjp.onnx \
+  --mlx-library /path/to/libonnxruntime_mlx_ep.dylib --output /tmp/unet-mlx.json
 python -m examples.diffusion.compare_unet --baseline /tmp/unet-mps.json \
   --candidate /tmp/unet-mlx.json --output /tmp/unet-comparison.json
 ```
 
-`--mlx-library` selects a development EP. The measured run uses MLX EP #106
-(`a6bc1ad…`), FP32, batch one and 64² latents. ORT graph optimization and CPU
-fallback are disabled. PyTorch uses eager Diffusers SDPA; `--checkpoint` enables
-its gradient-checkpointed route. `ONNXRUNTIME_EP_MLX_NO_COMPILE=1` selects the raw
-MLX execution baseline. The reports retain the runtime flags and library hash.
+`--mlx-library` selects the measured development EP. The deployment manifest
+checks the source identity, frozen payloads and parameter/gradient mapping.
+The runtime uses a private snapshot; the source export stays reusable.
+The [attention deployment tutorial](attention-vjp.md) records the successive
+runtime/graph variants and source hashes. These FP32 runs use batch one and
+64² latents, with ORT graph optimization and CPU fallback disabled. PyTorch uses
+Diffusers SDPA; `--checkpoint` selects its gradient-checkpointed route.
 
 Each measurement performs ten warmups and one hundred natural full training
 steps. AdamW uses learning rate zero to hold adapter values fixed while updating
@@ -108,20 +115,19 @@ Image encoding and initial input transfer are outside the timed steps.
 | PyTorch MPS eager | 0.320 s | 0.323 s | 6.88 GiB |
 | PyTorch MPS checkpointed | 0.436 s | 0.441 s | 5.42 GiB |
 | MLX raw execution | 1.073 s | 1.098 s | 6.05 GiB |
+| MLX fused attention + host shapes | 0.745 s | 0.770 s | 4.88 GiB |
+| MLX + direct convolution padding | **0.696 s** | **0.713 s** | **4.95 GiB** |
 
-Default MLX compilation settings passed the cold-call checks for all 74 outputs.
-The two 100-step attempts stopped at the disk-reserve guard during qualification,
-with observed footprint up to 17.55 GiB. Their
-[guard report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/default-compilation-guard.json)
-records the resource conditions. Compiler buffer lifetimes join reverse execution
-as the next profiling target.
+The current default-compilation variant completes 100 steps at 0.963/0.990 s
+and 6.67 GiB process peak. The earlier raw-graph attempts reached 17.55 GiB
+before their disk-reserve guard stopped them. The
+[matched reports](https://github.com/justinchuby/onnax/tree/main/examples/diffusion/reports/real-images-m1max)
+retain both versions and all 74 captured-output comparisons. The selected eager
+route spends about 0.165 s in forward and 0.534 s in loss/backward.
 
-The [matched reports](https://github.com/justinchuby/onnax/tree/main/examples/diffusion/reports/real-images-m1max)
-include the 74 captured-output comparisons: prediction, scalar loss and all
-adapter gradients. Raw MLX's derivative run accounts for about 0.903 seconds;
-its forward takes about 0.166 seconds. This makes reverse execution the next
-performance target. Attention-head widths 40/80/160, convolution products and
-whole-UNet replay will be profiled independently.
+Compilation currently splits the graph into many small native executions;
+shape-aware broadcast-adjoint fusion is the next target. Shared forward values
+and replay remain part of the memory/time planning work.
 
 Footprint and RSS cover the isolated process, including construction, warmup,
 runtime and allocator caches. The raw MLX route caps its reusable cache at
