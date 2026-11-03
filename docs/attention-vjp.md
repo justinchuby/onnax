@@ -60,6 +60,12 @@ is 6.4e-9. The matched MPS median is 0.320 s. The fused ONNX profile spends
 The [fused report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-fused-attention.json)
 records the same 10-warmup/100-step protocol, with a 64 MiB per-score GEMM budget.
 
+Raising the per-score GEMM budget to 1 GiB measured 0.808/0.832 s median/P95
+with 4.99 GB MLX peak allocation and 5.48 GB whole-process physical peak. This
+run uses the same model, data, precision, optimizer and 100-step protocol. Its
+[report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-fused-attention-gemm.json)
+records the explicit budget. The 64 MiB default gives lower peak allocation.
+
 ## Build the execution graph
 
 Generate derivatives first, then apply deployment fusion before constant folding
