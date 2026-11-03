@@ -21,6 +21,7 @@ from examples.diffusion.unet_reference import make_reference
 from examples.diffusion.unet_train import training_batch
 from examples.huggingface.block_runtime import MlxMemory, arrays_record, digest
 from examples.process_memory import physical_footprint
+from examples.torch_deploy import install_header, read_header
 from onnax.torch import OnnxModule
 
 
@@ -86,6 +87,7 @@ def measure(
     samples=100,
     component_samples=10,
     checkpoint=False,
+    derivative_header=None,
 ):
     """Time natural full steps; collect synchronized phase profiles separately."""
     if provider not in ("mlx", "mps") or samples < 1 or warmup < 0 or component_samples < 0:
@@ -94,6 +96,8 @@ def measure(
         )
     if provider != "mps" and checkpoint:
         raise ValueError("Gradient checkpointing selects the MPS reference route")
+    if provider != "mlx" and derivative_header:
+        raise ValueError("Derivative deployment headers require provider=mlx")
     if provider == "mps" and library:
         raise ValueError("An MLX library requires provider=mlx")
     if provider == "mps" and os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "0") != "0":
@@ -104,6 +108,7 @@ def measure(
     os.makedirs(os.path.dirname(os.path.abspath(output)), exist_ok=True)
     torch.set_num_threads(1)
     source, interface, initial = load_state(directory)
+    deployment = read_header(derivative_header, interface) if derivative_header else None
     encoded = torch.load(batch_file, weights_only=True, map_location="cpu")
     path = hf_hub_download(MODEL_ID, "scheduler/scheduler_config.json", revision=REVISION)
     with open(path, encoding="utf-8") as stream:
@@ -127,8 +132,10 @@ def measure(
 
         class TimedSession:
             def __init__(self, path):
-                self.session = session(path)
                 self.name = os.path.basename(path)
+                if deployment is not None:
+                    path = install_header(path, deployment)
+                self.session = session(path)
 
             def run(self, names, feeds):
                 start = time.perf_counter()
@@ -258,6 +265,7 @@ def measure(
         )
         report = dict(
             provider=provider,
+            deployment=deployment.manifest if deployment else None,
             model=MODEL_ID,
             revision=REVISION,
             export_identity=interface["identity"],
@@ -331,6 +339,7 @@ def main():
     parser.add_argument("--batch", required=True)
     parser.add_argument("--provider", choices=("mlx", "mps"), required=True)
     parser.add_argument("--mlx-library")
+    parser.add_argument("--derivative-header")
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--samples", type=int, default=100)
     parser.add_argument("--component-samples", type=int, default=10)
@@ -343,6 +352,7 @@ def main():
         provider=args.provider,
         output=args.output,
         library=args.mlx_library,
+        derivative_header=args.derivative_header,
         warmup=args.warmup,
         samples=args.samples,
         component_samples=args.component_samples,
