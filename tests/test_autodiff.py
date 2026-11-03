@@ -928,3 +928,27 @@ def test_gemm_pullback_only_constructs_requested_products(
     np.testing.assert_array_equal(
         actual, np.array(4.0) if selected == "c" else np.full((2, 2), 2.0)
     )
+
+
+@pytest.mark.parametrize("bias_shape", [[], [1], [3], [1, 3]])
+def test_fixed_target_broadcast_gradient_with_dynamic_source(bias_shape):
+    x = _value("x", ["batch", 3], dtype=ir.DataType.FLOAT)
+    bias = _value("bias", bias_shape, dtype=ir.DataType.FLOAT)
+    tape = ir.tape.Tape()
+    model = _model([x, bias], tape, [tape.op("Mul", [x, bias])])
+    result = VjpPass(inputs=["bias"])(model).model
+    assert not any(node.op_type == "NonZero" for node in result.graph)
+    executor = runtime_session(result)
+    for batch in (2, 0, 1, 5, 2):
+        values = np.arange(batch * 3, dtype=np.float32).reshape(batch, 3)
+        seed = np.ones_like(values)
+        feeds = {
+            "x": values,
+            "bias": np.ones(bias_shape, np.float32),
+            result.graph.inputs[-1].name: seed,
+        }
+        actual = executor.run(None, feeds)[-1]
+        expected = values.sum(axis=0, keepdims=len(bias_shape) == 2)
+        if not bias_shape or bias_shape == [1]:
+            expected = values.sum().reshape(bias_shape)
+        np.testing.assert_array_equal(actual, expected)

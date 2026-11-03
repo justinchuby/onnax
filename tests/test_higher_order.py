@@ -562,3 +562,26 @@ def test_overwrite_scatter_jvp_preserves_single_write_semantics(inputs, explicit
     )
     expected[1] = np.float32(0.7) if "updates" in inputs else np.float32(0)
     np.testing.assert_array_equal(actual[-1], expected)
+
+
+def test_fixed_target_broadcast_hvp_with_dynamic_batch():
+    x = _value("x", ["batch", 3], dtype=ir.DataType.FLOAT)
+    bias = _value("bias", [3], dtype=ir.DataType.FLOAT)
+    tape = ir.tape.Tape()
+    product = tape.op("Mul", [x, bias])
+    loss = tape.op("ReduceSum", [tape.op("Mul", [product, product])], {"keepdims": 0})
+    gradient = GradPass(inputs=["bias"])(_model([x, bias], tape, [loss])).model
+    result = JvpPass(inputs=["bias"])(gradient).model
+    executor = runtime_session(result)
+    direction = np.array([0.1, 0.2, 0.3], np.float32)
+    for batch in (3, 0, 1, 3):
+        values = np.arange(batch * 3, dtype=np.float32).reshape(batch, 3) / 10
+        feeds = {
+            "x": values,
+            "bias": np.ones(3, np.float32),
+            result.graph.inputs[-1].name: direction,
+        }
+        expected = 2 * np.sum(values * values, axis=0) * direction
+        np.testing.assert_allclose(
+            executor.run(None, feeds)[-1], expected, rtol=1e-4, atol=1e-6
+        )
