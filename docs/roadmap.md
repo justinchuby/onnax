@@ -413,11 +413,17 @@ and an external scheduler.
    exactly after resume. The reusable graph contracts are exposed as
    `onnax.FuseAttentionVJPPass` and `onnax.FuseBroadcastAdjointsPass`. Offline
    BF16/FP16 UNet projection tests now cover three external updates, FP32
-   gradients/moments and exact reload. Next, measure this policy on cached
-   real-image latents with complete-step timing and checkpoint recovery. Arbitrary
-   vector-cotangent workloads use saved-value planning: the UNet study finds
-   1.75 GB of logical saved outputs, including 0.95 GB needed only for shape;
-   compress those boundaries before evaluating full activation handoff.
+   gradients/moments and exact reload. Real-image BF16 diagnostic training now
+   completes 20 updates and exact fresh-process recovery: training loss falls
+   0.11624 to 0.09502. Matched FP16 complete-step medians are 384 ms on MLX and
+   348 ms on MPS, with process peaks of 5.18 GB and 8.49 GB. Compiled-cache reuse
+   is stable; next, profile Metal kernels. Arbitrary vector-cotangent workloads
+   use saved-value planning: the real UNet now validates compact shape vectors
+   with fused pullbacks. They reduce retained boundary arrays from 1.47 GB to
+   744 MB and paired execution from 607 ms to 508 ms, with all 72 gradients
+   aligned. This uses `FuseBroadcastAdjointsPass(shape_inputs=True)` and a native
+   `SumToShape_v2` contract. Next, integrate the qualified saved-boundary policy
+   with general external-autograd execution and checkpoint planning.
 3. **Saved-value fusion contracts.** Use the qualified decoder and denoiser to
    choose which attention statistics, normalization statistics and recurrent
    boundaries to expose. Compare saved and regenerated values with the same

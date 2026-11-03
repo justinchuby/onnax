@@ -114,6 +114,21 @@ deployed = onnax.FuseBroadcastAdjointsPass()(derivative).model
 deployed = optimizer.optimize(deployed, inline=False)
 ```
 
+For saved-activation execution, expose the target dimensions explicitly:
+
+```python
+deployed = onnax.FuseBroadcastAdjointsPass(shape_inputs=True)(derivative).model
+```
+
+This emits `Shape(Reference)` followed by
+`pkg.onnax::SumToShape_v2(Gradient, TargetShape)`. `TargetShape` is a one-dimensional
+INT64 vector of nonnegative dimensions. Its length is the target rank; an empty
+vector denotes a scalar. The broadcasting and empty-tensor rules match v1.
+The visible `Shape` dependency lets saved-value planning retain a small dimension
+vector in place of a full activation. The function body remains ordinary ONNX.
+MLX specializes both the gradient shape and the target dimension values, so one
+session can execute different broadcast reductions correctly.
+
 The pass returns `onnx_ir.passes.PassResult`, whose `model` is an independent
 IR model and `modified` indicates whether any regions were packaged. It also
 composes with `onnx_ir.passes.PassManager`. Inline local functions with

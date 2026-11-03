@@ -281,3 +281,35 @@ records half-precision gradient deviations and continues the updates. Its report
 is marked `qualification: diagnostic`; the default `strict` mode enforces the
 existing gradient checks. Both modes require finite FP32 gradients and retain the
 prediction, loss, parameter, frozen-weight and export/load checks.
+
+## Save compact shapes for vector pullbacks
+
+A vector output receives its cotangent after forward execution. Splitting the
+VJP saves the forward values needed by backward. Many broadcast reductions use
+an activation only to recover its dimensions. The compact `SumToShape_v2`
+contract exposes that dependency, so the saved boundary carries an INT64 shape
+vector.
+
+The real-image experiment combines this policy with native attention and
+broadcast pullbacks:
+
+```bash
+python -m examples.diffusion.saved_shapes \
+  --training-run pretrained-run --batch encoded-images/example-0.pt \
+  --output-dir compact-saved-values --fused-pullbacks --save-shapes \
+  --shape-vector-adjoints --warmup 10 --samples 100 \
+  --mlx-library /absolute/path/libonnxruntime_mlx_ep.dylib
+```
+
+For the reference-tensor measurement, omit `--shape-vector-adjoints` and choose a
+new output directory. Each worker checks the source bundle, all exported ONNX
+graphs and all parameter gradients against whole-VJP execution. Reports include
+the shape plan, actual saved-array bytes and forward/backward timings with host
+exchange. Parameters and cotangents remain fixed during these measurements;
+external loss computation and optimizer updates sit outside the timed calls.
+
+The [M1 Max records](https://github.com/justinchuby/onnax/tree/main/examples/diffusion/reports/saved-shapes-m1max)
+measure 1.47 GB versus 744 MB of retained boundary arrays and paired medians of
+607 ms versus 508 ms. Both schedules validate all 72 adapter gradients. The
+compact contract uses `onnax.FuseBroadcastAdjointsPass(shape_inputs=True)`;
+its standard ONNX function body also executes through ordinary ONNX runtimes.
