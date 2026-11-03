@@ -199,7 +199,8 @@ def test_shape_vector_saved_block_qualifies_captured_gradients(recorded):
     assert result["gradient_checks"] == result["final_gradient_checks"]
 
 
-def test_attention_deployment_compares_captured_block_gradients(recorded):
+@pytest.mark.parametrize("recompute_attention", [False, True])
+def test_attention_deployment_compares_captured_block_gradients(recorded, recompute_attention):
     from examples.huggingface.block_recompute import measure as measure_split
 
     bundle, captures, _ = recorded
@@ -218,6 +219,7 @@ def test_attention_deployment_compares_captured_block_gradients(recorded):
                 factory=session,
                 checkpoint=True,
                 attention_vjp=True,
+                recompute_attention=recompute_attention,
                 warmup=0,
                 samples=1,
             )
@@ -229,6 +231,7 @@ def test_attention_deployment_compares_captured_block_gradients(recorded):
         factory=session,
         checkpoint=True,
         attention_vjp=True,
+        recompute_attention=recompute_attention,
         warmup=0,
         samples=1,
     )

@@ -48,7 +48,7 @@ def test_portable_function(d, rank, mask_type, selected, recompute, causal):
     assert len(optimized.functions) == 1
     assert next(iter(optimized.functions))[0] == "pkg.onnax"
     assert len(optimized.graph) < len(derivative.graph)
-    version = 2 if recompute and not causal and mask_type is None and 32 <= d <= 64 else 1
+    version = 2 if recompute and 32 <= d <= 256 else 1
     calls = [n for n in optimized.graph if n.op_type.startswith(f"AttentionVJP_v{version}_")]
     assert len(calls) == 1
     assert len(calls[0].inputs) == (5 if version == 2 else 6)

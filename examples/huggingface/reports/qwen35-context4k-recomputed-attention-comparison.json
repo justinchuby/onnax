@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "block": "decoder_3_4",
+  "same_library_sha256": "c6b1ced8bafacb337182ee20f341203cddad6a9dea9adb62c9e5765b69611f36",
+  "same_bundle_identity": "684aaefb43b19c36b413661d93120f71971b29425736a57239cc1770844ef076",
+  "same_inputs": true,
+  "warmup": 10,
+  "samples": 100,
+  "control_pair_seconds": {
+    "median": 0.21828012500191107,
+    "p95": 0.22126955441199242
+  },
+  "candidate_pair_seconds": {
+    "median": 0.21766899951035157,
+    "p95": 0.22203233956242913
+  },
+  "candidate_to_control_median_ratio": 0.9972002696463814,
+  "gradients_checked": 5,
+  "maximum_control_gradient_error": 1.0870280675590038e-08,
+  "maximum_candidate_gradient_error": 1.3969838619232178e-09,
+  "reference_rtol": 0.0001,
+  "reference_atol": 1e-06,
+  "control_score_budget_bytes": 1073741824,
+  "candidate_policy": "MLX fused VJP; independent of legacy dense workspace budget",
+  "control_allocator_peak_bytes": 2492478472,
+  "candidate_allocator_peak_bytes": 2500572270,
+  "control_process_physical_peak_bytes": 4555591640,
+  "candidate_process_physical_peak_bytes": 4524347184,
+  "scope": "Paired checkpoint block forward/backward; no optimizer or full-model throughput; process peak includes construction"
+}

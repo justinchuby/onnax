@@ -38,6 +38,7 @@ def measure(
     checkpoint=False,
     save_shapes=False,
     attention_vjp=False,
+    recompute_attention=False,
     factory,
     memory=None,
     warmup=10,
@@ -46,6 +47,7 @@ def measure(
     """Time paired forward/backward calls, retaining residual arrays between them."""
     if warmup < 0 or samples < 1:
         raise ValueError("Expected warmup >= 0 and samples >= 1")
+    attention_vjp = attention_vjp or recompute_attention
     recompute = tuple(recompute)
     if checkpoint and (recompute or save_shapes):
         raise ValueError(
@@ -65,11 +67,12 @@ def measure(
             backward = onnax.vjp(
                 source, inputs=row["active_inputs"], outputs=row["active_outputs"]
             )
-            backward = fuse_attention_vjp(backward)
+            backward = fuse_attention_vjp(backward, recompute=recompute_attention)
             calls = [
                 node.op_type
                 for node in backward.graph
-                if node.domain == "pkg.onnax" and node.op_type.startswith("AttentionVJP_v1_")
+                if node.domain == "pkg.onnax"
+                and node.op_type.startswith(("AttentionVJP_v1_", "AttentionVJP_v2_"))
             ]
             if not calls:
                 raise ValueError("No eligible attention pullback in the selected block")
@@ -101,6 +104,7 @@ def measure(
         backward = optimize_training_graph(backward)
         plan["strategy"] = "selective" if recompute else "saved"
     plan["attention_vjp_calls"] = calls if attention_vjp else []
+    plan["recomputed_attention"] = recompute_attention
     live_inputs = {
         value.name
         for value in backward.graph.inputs
@@ -245,6 +249,7 @@ def main():
     strategies.add_argument("--checkpoint", action="store_true")
     parser.add_argument("--save-shapes", action="store_true")
     parser.add_argument("--attention-vjp", action="store_true")
+    parser.add_argument("--recompute-attention", action="store_true")
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
     parser.add_argument("--library")
     parser.add_argument("--warmup", type=int, default=10)
@@ -272,6 +277,7 @@ def main():
         checkpoint=args.checkpoint,
         save_shapes=args.save_shapes,
         attention_vjp=args.attention_vjp,
+        recompute_attention=args.recompute_attention,
         factory=session,
         memory=memory,
         warmup=args.warmup,
