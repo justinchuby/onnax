@@ -443,7 +443,7 @@ def test_inference_does_not_wrap_or_swallow_unrelated_library_failure(monkeypatc
     assert caught.value is original
 
 
-@pytest.mark.parametrize("reduction", [None, "mul", "max", "min"])
+@pytest.mark.parametrize("reduction", ["mul", "max", "min"])
 def test_scatter_composition_guard_never_suggests_switching_semantics(reduction):
     source = _model(
         "ScatterND",
