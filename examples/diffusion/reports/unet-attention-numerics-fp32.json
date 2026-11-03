@@ -1,0 +1,32 @@
+{
+  "onnx_default": {
+    "max_abs": 7.212162017822266e-06,
+    "l2": 4.955078475177288e-05,
+    "reference_l2": 21.1384220123291,
+    "pointwise_failures": 3
+  },
+  "onnx_math": {
+    "max_abs": 7.510185241699219e-06,
+    "l2": 5.125673851580359e-05,
+    "reference_l2": 21.13842010498047,
+    "pointwise_failures": 4
+  },
+  "onnx_classic": {
+    "max_abs": 7.748603820800781e-06,
+    "l2": 4.901926877209917e-05,
+    "reference_l2": 21.13842010498047,
+    "pointwise_failures": 3
+  },
+  "torch_default_math": {
+    "max_abs": 5.4836273193359375e-06,
+    "l2": 4.121528399991803e-05,
+    "reference_l2": 21.13842010498047,
+    "pointwise_failures": 2
+  },
+  "torch_default_classic": {
+    "max_abs": 5.9604644775390625e-06,
+    "l2": 4.08564847020898e-05,
+    "reference_l2": 21.13842010498047,
+    "pointwise_failures": 4
+  }
+}

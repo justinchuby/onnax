@@ -374,10 +374,15 @@ with its prediction target and external scheduler.
    parameters, repeated backward and exported-module recovery. Scope exchange
    temporaries to each block invocation. Logical retained bytes follow the VJP's
    input contract.
-2. **Pretrained Diffusers denoiser.** Use Mobius for both the offline test model
-   and pretrained weight path. Keep the scheduler external, align its prediction
-   target with Diffusers, and qualify adapter gradients, updates, export and
-   recovery before measuring MLX execution.
+2. **Pretrained Diffusers denoiser qualification.** The shared Mobius UNet path
+   loads pinned Tiny-SD weights and injects source-named q/v adapters. The
+   [diffusion tutorial](diffusion.md) covers Diffusers scheduler targets, all adapter
+   gradients, external updates, export and new-process recovery. CPU FP32
+   qualification records 100 offline updates and three pretrained updates on
+   synthetic latents. Native MLX dynamic-batch update and reload tests also pass; the pretrained
+   16×16-latent export completes three additional native updates with all adapter
+   gradients aligned. Next, measure MLX execution and application-encoded image
+   latents at the model's 64×64 latent resolution.
 3. **Saved-value fusion contracts.** Use the qualified decoder and denoiser to
    choose which attention statistics, normalization statistics and recurrent
    boundaries to expose. Compare saved and regenerated values with the same
