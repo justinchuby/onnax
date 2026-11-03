@@ -351,10 +351,18 @@ Whole-block replay retains the lowest process and allocator peaks for this case.
 Qualify full-decoder updates and recovery before selecting a new execution
 policy. See the {ref}`block-local measurements <complete-context-block-replay>`.
 
-The next attention deployment target is Qwen3.5's 256-wide heads. The existing
-attention-VJP packaging pass accepts widths 16, 32, 64 and 128, so this block
-currently uses the portable pullback. Extend and measure that fusion contract
-against the captured 4k inputs, then validate full-decoder training and recovery.
+The attention deployment contract now covers Qwen3.5's 256-wide heads. A
+rank-aware upstream-gradient boundary lets MLX claim the function directly;
+eight-row K/V tiles fit in 20 KiB of threadgroup memory. Matched 4k block
+measurements record 329 ms / 3.97 GiB for the original graph, 376 ms / 1.74 GiB
+for tiled execution, and 260 ms / 2.54 GiB for the 1 GiB-score-budget GEMM route.
+The saved-task deployment CLI preserves parameter mappings and exports across
+Qwen3, Qwen3.5 and Phi-3. The selected GEMM policy completes four additional 4k updates: training loss
+2.11727 → 1.90056, validation 2.43249 → 2.43000 and peak process footprint
+8.33 GiB. Fresh-process recovery reproduces parameters, Adam/scheduler, PEFT and
+loaded loss/gradient/inference outputs exactly; 3935 frozen tensor records remain
+unchanged. The next workload milestone is a small pretrained Diffusers denoiser
+with its prediction target and external scheduler.
 
 ```{toctree}
 :hidden:

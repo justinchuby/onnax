@@ -37,6 +37,7 @@ def measure(
     recompute=(),
     checkpoint=False,
     save_shapes=False,
+    attention_vjp=False,
     factory,
     memory=None,
     warmup=10,
@@ -50,12 +51,32 @@ def measure(
         raise ValueError(
             "Whole checkpoint replay and saved-value edits are mutually exclusive"
         )
+    if attention_vjp and not checkpoint:
+        raise ValueError("Attention deployment qualification requires whole checkpoint replay")
     record, block, feeds, expected = load_case(directory, captures, name)
     row = record["blocks"][block["index"]]
     source = ir.load(os.path.join(directory, f"block_{block['index']}_forward.onnx"))
     if checkpoint:
         forward = source.clone()
         backward = ir.load(os.path.join(directory, block["model"]))
+        if attention_vjp:
+            from examples.huggingface.attention_vjp import fuse_attention_vjp
+
+            backward = onnax.vjp(
+                source, inputs=row["active_inputs"], outputs=row["active_outputs"]
+            )
+            backward = fuse_attention_vjp(backward)
+            calls = [
+                node.op_type
+                for node in backward.graph
+                if node.domain == "pkg.onnax" and node.op_type.startswith("AttentionVJP_v1_")
+            ]
+            if not calls:
+                raise ValueError("No eligible attention pullback in the selected block")
+            values = {value.name: value for value in backward.graph.outputs}
+            backward.graph.outputs.clear()
+            backward.graph.outputs.extend(values[key] for key in row["gradients"])
+            backward = optimize_training_graph(backward)
         residuals = ()
         plan = {
             "version": 1,
@@ -79,6 +100,7 @@ def measure(
         )
         backward = optimize_training_graph(backward)
         plan["strategy"] = "selective" if recompute else "saved"
+    plan["attention_vjp_calls"] = calls if attention_vjp else []
     live_inputs = {
         value.name
         for value in backward.graph.inputs
@@ -222,6 +244,7 @@ def main():
     strategies.add_argument("--recompute", nargs="+", default=[])
     strategies.add_argument("--checkpoint", action="store_true")
     parser.add_argument("--save-shapes", action="store_true")
+    parser.add_argument("--attention-vjp", action="store_true")
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
     parser.add_argument("--library")
     parser.add_argument("--warmup", type=int, default=10)
@@ -248,6 +271,7 @@ def main():
         recompute=args.recompute,
         checkpoint=args.checkpoint,
         save_shapes=args.save_shapes,
+        attention_vjp=args.attention_vjp,
         factory=session,
         memory=memory,
         warmup=args.warmup,
@@ -259,6 +283,15 @@ def main():
         ort_graph_optimization="disabled",
         library_sha256=None if args.library is None else digest(args.library),
         platform=platform.platform(),
+        runtime_environment={
+            key: os.environ.get(key)
+            for key in (
+                "ONNXRUNTIME_EP_MLX_NO_COMPILE",
+                "ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES",
+                "ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES",
+                "ONNXRUNTIME_EP_MLX_TRACE",
+            )
+        },
         versions={
             key: version(key)
             for key in ("onnx", "onnx-ir", "onnxscript", "onnxruntime", "numpy")
@@ -271,6 +304,7 @@ def main():
                 os.path.join(os.path.dirname(__file__), "recomputation.py"),
                 os.path.join(os.path.dirname(__file__), "shape_residuals.py"),
                 os.path.join(os.path.dirname(__file__), "optimization.py"),
+                os.path.join(os.path.dirname(__file__), "attention_vjp.py"),
             )
         },
     )

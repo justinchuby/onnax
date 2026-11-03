@@ -1,0 +1,351 @@
+{
+  "version": 1,
+  "trace_sha256": "a226208c607b489c88c58805de3704e2c765dc850410be93000c6068181ec316",
+  "native_dispatch_events": [
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 803798607242,
+      "dur": 175,
+      "pid": 32484,
+      "tid": 0,
+      "args": {
+        "node_id": 234,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax tiled attention VJP",
+        "kernel_variant": "onnax tiled attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 803799240933,
+      "dur": 182,
+      "pid": 32484,
+      "tid": 0,
+      "args": {
+        "node_id": 234,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax tiled attention VJP",
+        "kernel_variant": "onnax tiled attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    }
+  ],
+  "capability": [
+    {
+      "name": "mlx.getcapability",
+      "cat": "ep.claim",
+      "ph": "i",
+      "ts": 803798311572,
+      "pid": 32484,
+      "tid": 0,
+      "s": "t",
+      "args": {
+        "claimed": 69,
+        "total": 69,
+        "unclaimed": 0,
+        "fused_subgraphs": 1
+      }
+    },
+    {
+      "name": "mlx.getcapability",
+      "cat": "ep.claim",
+      "ph": "i",
+      "ts": 803798312406,
+      "pid": 32484,
+      "tid": 0,
+      "s": "t",
+      "args": {
+        "claimed": 69,
+        "total": 69,
+        "unclaimed": 0,
+        "fused_subgraphs": 1
+      }
+    },
+    {
+      "name": "mlx.getcapability",
+      "cat": "ep.claim",
+      "ph": "i",
+      "ts": 803798399263,
+      "pid": 32484,
+      "tid": 0,
+      "s": "t",
+      "args": {
+        "claimed": 411,
+        "total": 411,
+        "unclaimed": 0,
+        "fused_subgraphs": 1
+      }
+    },
+    {
+      "name": "mlx.getcapability",
+      "cat": "ep.claim",
+      "ph": "i",
+      "ts": 803798403161,
+      "pid": 32484,
+      "tid": 0,
+      "s": "t",
+      "args": {
+        "claimed": 411,
+        "total": 411,
+        "unclaimed": 0,
+        "fused_subgraphs": 1
+      }
+    }
+  ],
+  "full_decoder_gemm_dispatch_events": [
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805255003133,
+      "dur": 66,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 199,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805255128365,
+      "dur": 42,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 199,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805255247877,
+      "dur": 36,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 199,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805255366161,
+      "dur": 39,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 199,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805255484687,
+      "dur": 34,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 199,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805255603792,
+      "dur": 36,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 234,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805282769474,
+      "dur": 37,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 199,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805282907517,
+      "dur": 35,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 199,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805283045314,
+      "dur": 34,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 199,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805283186363,
+      "dur": 34,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 199,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805283326046,
+      "dur": 35,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 199,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    },
+    {
+      "name": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+      "cat": "op.fast",
+      "ph": "X",
+      "ts": 805283472526,
+      "dur": 32,
+      "pid": 34567,
+      "tid": 0,
+      "args": {
+        "node_id": 234,
+        "node": "node_AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5_0",
+        "device": "metal",
+        "op_type": "AttentionVJP_v1_r3_q8_k2_d256_s3d800000_c1_o012_m2_6aead7413b8cbae5",
+        "domain": "pkg.onnax",
+        "optimized": true,
+        "kernel": "onnax GEMM attention VJP",
+        "kernel_variant": "onnax GEMM attention VJP",
+        "kernel_variant_reason": "MLX handler selected fused fast path"
+      }
+    }
+  ],
+  "full_decoder_trace_sha256": "6d20e3ebcc7660d8b6ec82a44bd2b2f6f8204e7fd331cec1e8e8b9c56d58237b"
+}

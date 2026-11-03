@@ -17,9 +17,11 @@ from examples.huggingface.decoder_sft import OnnxDecoder
 from examples.huggingface.replay import _equal_tree, _output_digest
 
 
-def tensor_manifest(directory):
+def tensor_manifest(directory, *, exclude_initializers=()):
+    """Hash named tensors, optionally omitting bound top-level parameters."""
     directory = Path(directory)
     result, hashed = {}, {}
+    excluded = set(exclude_initializers)
 
     def tensor_record(tensor):
         if isinstance(tensor, ir.ExternalTensor):
@@ -43,8 +45,10 @@ def tensor_manifest(directory):
             digest = hashlib.sha256(tensor.tobytes()).hexdigest()
         return {"dtype": str(tensor.dtype), "shape": list(tensor.shape), "sha256": digest}
 
-    def visit(graph, scope):
+    def visit(graph, scope, *, root=False):
         for value in graph.initializers.values():
+            if root and value.name in excluded:
+                continue
             result[scope + "/initializer/" + value.name] = tensor_record(value.const_value)
         for node in graph:
             for name, attribute in node.attributes.items():
@@ -70,7 +74,7 @@ def tensor_manifest(directory):
 
     for path in sorted(directory.glob("*.onnx")):
         model = ir.load(path)
-        visit(model.graph, path.name)
+        visit(model.graph, path.name, root=True)
         for key, function in model.functions.items():
             visit(function.graph, path.name + "/function/" + str(key))
     return result

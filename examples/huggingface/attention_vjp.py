@@ -37,7 +37,7 @@ def fuse_attention_vjp(model):
         inputs = [values[name] for name in spec["inputs"]]
         if len(set(inputs)) != len(inputs):
             continue
-        q, _, v, _, _ = inputs
+        q, _, v, y, g = inputs
         rank, hq, hk = spec["rank"], spec["hq"], spec["hk"]
         attrs = spec["attributes"]
         if q.shape is None or v.shape is None or q.dtype != ir.DataType.FLOAT:
@@ -47,7 +47,7 @@ def fuse_attention_vjp(model):
             continue
         if rank == 3:
             d //= hq
-        if d not in (16, 32, 64, 128) or v.shape[-1] != (d * hk if rank == 3 else d):
+        if d not in (16, 32, 64, 128, 256) or v.shape[-1] != (d * hk if rank == 3 else d):
             continue
         if attrs.get("softcap", 0) != 0 or attrs.get("softmax_precision", 1) != 1:
             continue
@@ -74,6 +74,29 @@ def fuse_attention_vjp(model):
             for value in produced
         ):
             continue
+        # The pullback seed has the primal output's layout. Dynamic reshape
+        # paths can leave its inferred type absent; keep this function boundary
+        # typed so a native EP can claim it without expanding the portable body.
+        expected_shape = y.shape if y.shape is not None else q.shape
+        if g.dtype is not None and g.dtype != q.dtype:
+            continue
+        if g.shape is not None and (
+            len(g.shape) != len(expected_shape)
+            or any(
+                isinstance(a, int) and isinstance(b, int) and a != b
+                for a, b in zip(g.shape, expected_shape, strict=True)
+            )
+        ):
+            continue
+        g.type = ir.TensorType(q.dtype)
+        g.shape = ir.Shape(
+            expected_shape
+            if g.shape is None
+            else [
+                b if isinstance(b, int) else a
+                for a, b in zip(g.shape, expected_shape, strict=True)
+            ]
+        )
         if mask is None:
             name = "attention_vjp_mask"
             while name in values:

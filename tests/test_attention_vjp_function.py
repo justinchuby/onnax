@@ -13,14 +13,15 @@ import onnax
 from examples.huggingface.attention_vjp import fuse_attention_vjp
 
 
+@pytest.mark.parametrize("d", [16, 256])
 @pytest.mark.parametrize("rank", [3, 4])
 @pytest.mark.parametrize("mask_type", [None, "bool", "float"])
 @pytest.mark.parametrize("selected", [["q"], ["k", "v"], ["q", "k", "v"]])
-def test_portable_function(rank, mask_type, selected):
+def test_portable_function(d, rank, mask_type, selected):
     rng = np.random.default_rng(42)
 
     def shape(h, s):
-        return (2, h, s, 16) if rank == 4 else (2, s, h * 16)
+        return (2, h, s, d) if rank == 4 else (2, s, h * d)
 
     feeds = {
         name: rng.normal(0, 0.2, shape(h, s)).astype(np.float32)
@@ -123,3 +124,58 @@ def test_singleton_additive_mask_has_zero_product(transform):
     RemoveUnusedNodesPass()(product)
     actual = runtime_session(product).run(None, feeds)[0]
     np.testing.assert_allclose(actual, np.zeros_like(actual), rtol=0, atol=1e-6)
+
+
+def test_untyped_internal_pullback_seed_keeps_native_boundary():
+    import json
+
+    rng = np.random.default_rng(9)
+    feeds = {
+        name: rng.normal(0, 0.2, (1, 2, 3, 256)).astype(np.float32) for name in ("q", "k", "v")
+    }
+    source = _model_for("Attention", feeds)
+    output = source.graph.outputs[0]
+    tape = ir.tape.Tape()
+    gain = tape.initializer(ir.tensor(np.float32(2), name="gain"))
+    scaled = tape.op("Mul", [output, gain])
+    scaled.name = "scaled"
+    scaled.dtype = ir.DataType.FLOAT
+    scaled.shape = ir.Shape([1, 2, 3, 256])
+    source.graph.extend(tape.nodes)
+    source.graph.register_initializer(gain)
+    source.graph.outputs.clear()
+    source.graph.outputs.append(scaled)
+    derivative = onnax.vjp(source, inputs=["q", "k", "v"])
+    descriptor = next(
+        json.loads(node.metadata_props["onnax.attention_vjp.interface"])
+        for node in derivative.graph
+        if "onnax.attention_vjp.interface" in node.metadata_props
+    )
+    value = ir.convenience.create_value_mapping(derivative.graph)[descriptor["inputs"][4]]
+    assert value.producer() is not None
+    value.type = value.shape = None
+    before = ir.to_proto(derivative).SerializeToString()
+    fused = fuse_attention_vjp(derivative)
+    call = next(node for node in fused.graph if node.domain == "pkg.onnax")
+    assert call.inputs[4].dtype == ir.DataType.FLOAT
+    assert list(call.inputs[4].shape) == [1, 2, 3, 256]
+    assert ir.to_proto(derivative).SerializeToString() == before
+    feeds[derivative.graph.inputs[-1].name] = rng.normal(size=(1, 2, 3, 256)).astype(
+        np.float32
+    )
+    for actual, expected in zip(
+        runtime_session(fused).run(None, feeds),
+        runtime_session(derivative).run(None, feeds),
+        strict=True,
+    ):
+        np.testing.assert_allclose(actual, expected, rtol=1e-4, atol=1e-6)
+
+
+def test_conflicting_seed_metadata_does_not_add_a_partial_function():
+    feeds = {name: np.ones((1, 2, 3, 256), np.float32) for name in ("q", "k", "v")}
+    derivative = onnax.vjp(_model_for("Attention", feeds))
+    derivative.graph.inputs[-1].shape = ir.Shape([1, 2, 3, 512])
+    before = ir.to_proto(derivative).SerializeToString()
+    result = fuse_attention_vjp(derivative)
+    assert not result.functions
+    assert ir.to_proto(result).SerializeToString() == before
