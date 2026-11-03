@@ -1,0 +1,428 @@
+{
+  "model": "segmind/tiny-sd",
+  "revision": "3d25de3e8d5aacf94ce91176f204e6d11d120315",
+  "latent_shape": [
+    1,
+    4,
+    64,
+    64
+  ],
+  "conditioning_shape": [
+    1,
+    77,
+    768
+  ],
+  "captured_tensors": 74,
+  "checks": {
+    "prediction": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "loss": {
+      "max_absolute_error": 7.450580596923828e-09,
+      "relative_l2_error": 6.409265028428615e-08,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    }
+  },
+  "baseline": {
+    "path": "/tmp/onnax-unet-broadcast-qualified.json",
+    "report_sha256": "a01618f7b1fdf34d56b2b28b7a2da191e415e973b315462ab5671602e7df3d0d",
+    "capture_sha256": "d93024a49d52eecdbcd237bf5e320355685f91e22b85e35be127489d57bcde7b",
+    "provider": "mlx",
+    "full_step_seconds": {
+      "median": 0.6511379585135728,
+      "p95": 0.6606875514436978,
+      "samples": 100
+    },
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 2356710232,
+      "lifetime_peak_bytes": 5368548184,
+      "current_resident_bytes": 1983774720,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_process_rss_bytes": 3244244992
+  },
+  "candidate": {
+    "path": "/tmp/onnax-unet-joint-final-measured.json",
+    "report_sha256": "a25c9ac9ace80793d7898200d38b95d82b1d049f6ad399000e989a6fabc0b129",
+    "capture_sha256": "7f77563c663ad921fdcf6f1d263114b93b84515b831ec51c1e78212c410ad6ef",
+    "provider": "mlx",
+    "full_step_seconds": {
+      "median": 0.4738817290053703,
+      "p95": 0.4824621459119953,
+      "samples": 100
+    },
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 2354858816,
+      "lifetime_peak_bytes": 5404265280,
+      "current_resident_bytes": 1994571776,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_process_rss_bytes": 3253682176
+  },
+  "candidate_to_baseline_median_ratio": 0.7277746947623118,
+  "memory_scope": "Isolated whole-process lifetime peak, including construction and runtime allocator caches; cache policies are recorded in source reports"
+}

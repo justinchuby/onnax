@@ -16,6 +16,7 @@ import torch
 from diffusers import DDPMScheduler
 from huggingface_hub import hf_hub_download
 
+from examples.diffusion.objective import DiagnosticSessions, read_objective
 from examples.diffusion.unet import MODEL_ID, REVISION, pretrained
 from examples.diffusion.unet_reference import make_reference
 from examples.diffusion.unet_train import training_batch
@@ -88,6 +89,7 @@ def measure(
     component_samples=10,
     checkpoint=False,
     derivative_header=None,
+    objective_export=None,
 ):
     """Time natural full steps; collect synchronized phase profiles separately."""
     if provider not in ("mlx", "mps") or samples < 1 or warmup < 0 or component_samples < 0:
@@ -96,6 +98,10 @@ def measure(
         )
     if provider != "mps" and checkpoint:
         raise ValueError("Gradient checkpointing selects the MPS reference route")
+    if objective_export and (provider != "mlx" or derivative_header):
+        raise ValueError(
+            "Objective exports select the MLX route without a derivative override"
+        )
     if provider != "mlx" and derivative_header:
         raise ValueError("Derivative deployment headers require provider=mlx")
     if provider == "mps" and library:
@@ -109,6 +115,9 @@ def measure(
     torch.set_num_threads(1)
     source, interface, initial = load_state(directory)
     deployment = read_header(derivative_header, interface) if derivative_header else None
+    objective = None
+    if objective_export:
+        objective = read_objective(objective_export, interface)
     encoded = torch.load(batch_file, weights_only=True, map_location="cpu")
     path = hf_hub_download(MODEL_ID, "scheduler/scheduler_config.json", revision=REVISION)
     with open(path, encoding="utf-8") as stream:
@@ -130,12 +139,14 @@ def measure(
             register_library(library)
             native_memory = MlxMemory(library)
 
+        diagnostics = DiagnosticSessions(session, objective) if objective else None
+
         class TimedSession:
             def __init__(self, path):
                 self.name = os.path.basename(path)
                 if deployment is not None:
                     path = install_header(path, deployment)
-                self.session = session(path)
+                self.session = diagnostics(path) if diagnostics else session(path)
 
             def run(self, names, feeds):
                 start = time.perf_counter()
@@ -144,9 +155,17 @@ def measure(
                 return result
 
         model = OnnxModule.load(
-            os.path.join(directory, "export"), session_factory=TimedSession
+            objective_export or os.path.join(directory, "export"), session_factory=TimedSession
         )
+        if objective is not None and (
+            not model._eager_gradients or model._identity != objective["objective_identity"]
+        ):
+            model.close()
+            raise ValueError("Objective execution interface differs from its manifest")
         params = model.parameters_by_name()
+        if arrays_record(model.arrays()) != arrays_record(initial):
+            model.close()
+            raise ValueError("Objective adapter values differ from the benchmark source")
         predict = model
 
         def synchronize():
@@ -174,11 +193,16 @@ def measure(
     def step(*, phases=False):
         start = time.perf_counter()
         update.zero_grad(set_to_none=True)
-        prediction = predict(**batch)
+        if objective is not None:
+            loss = predict(**batch, **{objective["target"]: target})
+            prediction = torch.from_numpy(diagnostics.prediction)
+        else:
+            prediction = predict(**batch)
         if phases:
             synchronize()
         forward = time.perf_counter()
-        loss = (prediction - target).square().mean()
+        if objective is None:
+            loss = (prediction - target).square().mean()
         loss.backward()
         if phases:
             synchronize()
@@ -266,6 +290,20 @@ def measure(
         report = dict(
             provider=provider,
             deployment=deployment.manifest if deployment else None,
+            objective=objective,
+            phase_labels=(
+                {
+                    "forward": "joint loss/gradient execution",
+                    "loss_backward": "autograd handoff",
+                    "optimizer": "external update",
+                }
+                if objective
+                else {
+                    "forward": "forward execution",
+                    "loss_backward": "loss and VJP",
+                    "optimizer": "external update",
+                }
+            ),
             model=MODEL_ID,
             revision=REVISION,
             export_identity=interface["identity"],
@@ -340,6 +378,7 @@ def main():
     parser.add_argument("--provider", choices=("mlx", "mps"), required=True)
     parser.add_argument("--mlx-library")
     parser.add_argument("--derivative-header")
+    parser.add_argument("--objective-export")
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--samples", type=int, default=100)
     parser.add_argument("--component-samples", type=int, default=10)
@@ -353,6 +392,7 @@ def main():
         output=args.output,
         library=args.mlx_library,
         derivative_header=args.derivative_header,
+        objective_export=args.objective_export,
         warmup=args.warmup,
         samples=args.samples,
         component_samples=args.component_samples,

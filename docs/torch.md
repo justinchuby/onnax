@@ -50,6 +50,44 @@ The ONNX backward computes \(\bar\theta=J_\theta^T\bar y\) and, when requested,
 \(\bar x=J_x^T\bar y\). PyTorch then accumulates these gradients and updates
 \(\theta\). This supports losses computed outside ONNX and multiple ONNX outputs.
 
+## Compute a scalar objective and its gradients together
+
+Put the loss in ONNX and select its scalar output with `eager_gradients=True`:
+
+```python
+with OnnxModule(
+    "loss.onnx",
+    {"lora.A": initial_a, "lora.B": initial_b},
+    outputs=["loss"],
+    input_gradients=(),
+    eager_gradients=True,
+) as model:
+    optimizer = torch.optim.AdamW(model.parameters(), lr=0.003)
+    for features, targets in batches:
+        optimizer.zero_grad()
+        loss = model(features=features, target=targets)
+        loss.backward()
+        optimizer.step()
+```
+
+One ONNX call returns the loss and its unit-cotangent derivatives. For an outer
+scalar objective $F(L)$, PyTorch backward returns
+$\frac{dF}{dL}\nabla_\theta L$ from the cached derivatives. Weighted losses and
+gradient accumulation follow the ordinary autograd chain rule. The selected
+output must be a scalar FLOAT or DOUBLE tensor.
+
+PyTorch saved tensors own the cached gradients: ordinary backward releases them,
+while `retain_graph=True` keeps them available for another backward. Each
+outstanding forward stores the selected parameter and data gradients. Parameter
+and differentiable-input version checks remain active. `torch.no_grad()` uses the
+forward session. The execution option is preserved by export/load; the same
+scalar source keeps its parameter-checkpoint identity across both schedules.
+
+The [Trainer example](huggingface.md) validates 200 updates and fresh-process
+recovery. The [image tutorial](diffusion-images.md) pairs this option with compiled
+MLX execution. Loss scaling inside ONNX uses the ordinary VJP schedule, which
+supplies the upstream cotangent before derivative execution.
+
 ## Compose with other PyTorch layers
 
 Floating data inputs propagate gradients by default. A frozen ONNX block can sit

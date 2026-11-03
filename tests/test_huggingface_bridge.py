@@ -40,8 +40,9 @@ def test_bridge_upstream_accumulation_and_snapshot():
         np.testing.assert_allclose(p.grad, 5 * expected[2][n], rtol=1e-4, atol=1e-6)
 
 
-def test_trainer_complete_training_and_fresh_process_resume(tmp_path):
-    report = run(str(tmp_path))
+@pytest.mark.parametrize("eager_gradients", [False, True])
+def test_trainer_complete_training_and_fresh_process_resume(tmp_path, eager_gradients):
+    report = run(str(tmp_path), eager_gradients=eager_gradients)
     assert report["checkpoint_replay"]
 
 
