@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "native_base": "41619103b49937f46667d307669d1a3f1fc4d41b",
+  "production_source_sha256": {
+    "rust/src/mlx.rs": "a5df1766c24d94192a9819825107f0431133ffda35fa04b5102794b9491578c0",
+    "rust/src/ops/attention_vjp.rs": "f08be3ebb11c286b4e8d2126846f96fd60e179a328e8f91c539b545f94c73f8d",
+    "rust/src/ops/attention_vjp/native.rs": "ce2e6745ec8970a0c996be428ff1345c6c04132a1c02fc4d1c1fde4d923a11e5",
+    "rust/src/registry.rs": "e6a2c304a760dccdb7b76eb6edb5229044cbc0f0a9b1d3046df99c193d52fb3c"
+  },
+  "source_hash_scope": "Production source before cfg(test) sections; unit tests added after runtime build",
+  "library_sha256": "85e626c1b687e767b7a70e52a780c77d9ce3dba94e8785c1d598b522c7858075",
+  "control": "mlx-recomputed-attention-control.json",
+  "candidate": "mlx-recomputed-attention.json",
+  "comparison": "recomputed-attention-comparison.json",
+  "training": "recomputed-attention-training.json",
+  "recovery": "recomputed-attention-recovery.json",
+  "native_reviewed_head": "9ac6ebb2e9a80aaf8a0b1c96d2f225a86566a53a",
+  "native_pr": "https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/113"
+}

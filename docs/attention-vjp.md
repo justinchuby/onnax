@@ -319,3 +319,30 @@ from update two reproduces update four byte for byte, including 62 state tensors
 Adam, scheduler and PEFT weights. Loaded loss, all 60 adapter gradients and inference
 outputs agree on the recorded eight-token replay. The checker validates 114 ONNX
 models; 3935 frozen tensor records remain unchanged throughout training.
+
+(recomputed-pullbacks)=
+
+## Recomputed pullbacks
+
+`fuse_attention_vjp(model, recompute=True)` emits `AttentionVJP_v2_*` for
+unmasked, noncausal FP32 heads with widths 32 through 64, in multiples of eight.
+The five inputs are Q, K, V, G and an unused mask placeholder. The ordinary ONNX
+body recomputes Y from Q/K/V before applying the pullback. This makes the function
+self-contained and lets [MLX EP](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/113)
+use its fused SDPA forward/backward implementation.
+Rank-three and rank-four layouts, grouped query heads, dynamic batch/sequence
+lengths and selected Q/K/V gradient outputs use the same interface.
+
+The v1 function keeps its supplied-Y contract. Other attention forms continue to
+use that saved-output implementation. Both versions contain portable ONNX bodies.
+
+Prepare an existing Torch bundle with the recomputed functions:
+
+```sh
+python -m examples.torch_deploy --bundle export --output attention.onnx \
+  --recompute-attention --broadcast-adjoints
+```
+
+For the real-image UNet workflow, pass `--recompute-attention` to
+`examples.diffusion.objective`. The resulting bundle uses the usual
+`OnnxModule.load` and external optimizer interfaces.

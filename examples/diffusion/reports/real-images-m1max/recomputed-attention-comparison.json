@@ -1,0 +1,428 @@
+{
+  "model": "segmind/tiny-sd",
+  "revision": "3d25de3e8d5aacf94ce91176f204e6d11d120315",
+  "latent_shape": [
+    1,
+    4,
+    64,
+    64
+  ],
+  "conditioning_shape": [
+    1,
+    77,
+    768
+  ],
+  "captured_tensors": 74,
+  "checks": {
+    "prediction": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "loss": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 3.728928277269006e-11,
+      "relative_l2_error": 1.3060373872760735e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 5.820766091346741e-11,
+      "relative_l2_error": 1.5652567756714456e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 1.0186340659856796e-10,
+      "relative_l2_error": 1.3399492157453742e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 2.2009771782904863e-10,
+      "relative_l2_error": 2.128032904033459e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 3.524291969370097e-12,
+      "relative_l2_error": 2.1958098019653606e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 5.5933924159035087e-11,
+      "relative_l2_error": 3.385295195014858e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 2.0372681319713593e-10,
+      "relative_l2_error": 1.0112723234290675e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 3.7834979593753815e-10,
+      "relative_l2_error": 2.0222052539609307e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 1.5404566511278972e-11,
+      "relative_l2_error": 1.912941521412957e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 2.8194335754960775e-11,
+      "relative_l2_error": 1.865800219971458e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 2.4010660126805305e-10,
+      "relative_l2_error": 2.805220697717889e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 8.822098607197404e-11,
+      "relative_l2_error": 1.8496357647404675e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 1.546140993013978e-11,
+      "relative_l2_error": 3.3765846410120864e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 4.8203219193965197e-11,
+      "relative_l2_error": 3.705341332955889e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 9.422365110367537e-10,
+      "relative_l2_error": 9.457312291516205e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 5.20230969414115e-10,
+      "relative_l2_error": 2.0700862296129044e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 5.6843418860808015e-12,
+      "relative_l2_error": 2.338671734340088e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 2.0691004465334117e-11,
+      "relative_l2_error": 2.403922596967153e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 9.458744898438454e-11,
+      "relative_l2_error": 1.7157602087409192e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 5.184119800105691e-11,
+      "relative_l2_error": 1.9101819564052855e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 1.7280399333685637e-11,
+      "relative_l2_error": 6.170640070516148e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 2.637534635141492e-11,
+      "relative_l2_error": 2.576450628521226e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 2.444721758365631e-09,
+      "relative_l2_error": 3.2224523117984624e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 3.310560714453459e-10,
+      "relative_l2_error": 1.981729636208348e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 9.777068044058979e-12,
+      "relative_l2_error": 2.158727578209172e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 1.7053025658242404e-11,
+      "relative_l2_error": 1.9251075364408872e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 1.8189894035458565e-11,
+      "relative_l2_error": 1.9623988816728484e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 4.729372449219227e-11,
+      "relative_l2_error": 1.6873840778933596e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 8.185452315956354e-12,
+      "relative_l2_error": 1.6640729825221212e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 4.18367562815547e-11,
+      "relative_l2_error": 2.4017685681932687e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 3.092281986027956e-10,
+      "relative_l2_error": 4.276592279218442e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 2.0372681319713593e-10,
+      "relative_l2_error": 1.772578793448551e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 6.139089236967266e-12,
+      "relative_l2_error": 1.7427724049655762e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 1.9667822925839573e-11,
+      "relative_l2_error": 1.698482082362372e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 1.0504663805477321e-10,
+      "relative_l2_error": 2.1216682467229686e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 7.09405867382884e-11,
+      "relative_l2_error": 1.5784936671184912e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 3.865352482534945e-12,
+      "relative_l2_error": 1.327703320346694e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 2.1827872842550278e-11,
+      "relative_l2_error": 8.7758742138309e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 1.0913936421275139e-09,
+      "relative_l2_error": 5.7600436041106065e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 2.2919266484677792e-10,
+      "relative_l2_error": 1.9167417196444684e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 1.77351466845721e-11,
+      "relative_l2_error": 2.175330710143687e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 4.320099833421409e-11,
+      "relative_l2_error": 1.9462899965103967e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 6.548361852765083e-11,
+      "relative_l2_error": 1.828486494302003e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 1.2369127944111824e-10,
+      "relative_l2_error": 1.91789718008894e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 2.0747847884194925e-12,
+      "relative_l2_error": 2.411632395674712e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 1.3415046851150692e-11,
+      "relative_l2_error": 2.60551621255436e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 2.255546860396862e-10,
+      "relative_l2_error": 8.352762351235463e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 3.1468516681343317e-10,
+      "relative_l2_error": 2.345892998493086e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 4.0472514228895307e-11,
+      "relative_l2_error": 2.1557001031799683e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 4.001776687800884e-11,
+      "relative_l2_error": 1.6348382173498261e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 2.837623469531536e-10,
+      "relative_l2_error": 3.167599622653782e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 1.6007106751203537e-10,
+      "relative_l2_error": 1.8451431701120616e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 2.9842794901924208e-12,
+      "relative_l2_error": 2.0463948324371998e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 1.864464138634503e-11,
+      "relative_l2_error": 2.7081310066854864e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 2.6193447411060333e-10,
+      "relative_l2_error": 1.7494621109038072e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 3.183231456205249e-10,
+      "relative_l2_error": 2.375522793157748e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 2.205524651799351e-11,
+      "relative_l2_error": 1.64949409269597e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 5.411493475548923e-11,
+      "relative_l2_error": 2.2385289974234486e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 3.346940502524376e-10,
+      "relative_l2_error": 2.467316925163735e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 3.637978807091713e-10,
+      "relative_l2_error": 2.4491962954799174e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 1.6484591469634324e-11,
+      "relative_l2_error": 2.7087062974402825e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 7.275957614183426e-11,
+      "relative_l2_error": 2.4369908712890806e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 4.94765117764473e-10,
+      "relative_l2_error": 6.326076452098938e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 2.6921043172478676e-10,
+      "relative_l2_error": 3.19793827556587e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 1.2732925824820995e-10,
+      "relative_l2_error": 2.427845746031411e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 5.866240826435387e-11,
+      "relative_l2_error": 3.19927602840862e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 8.731149137020111e-10,
+      "relative_l2_error": 8.170404748534523e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 4.0745362639427185e-10,
+      "relative_l2_error": 1.4393752827172138e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 5.4569682106375694e-12,
+      "relative_l2_error": 3.035132202937826e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 2.7284841053187847e-11,
+      "relative_l2_error": 4.7645216576615996e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 1.0186340659856796e-10,
+      "relative_l2_error": 8.942900608574037e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 2.764863893389702e-10,
+      "relative_l2_error": 1.577450415403222e-06,
+      "pointwise_tolerance_failures": 0
+    }
+  },
+  "baseline": {
+    "path": "/tmp/onnax-unet-native-vjp-control.json",
+    "report_sha256": "5bf6f44dd2f1e9f13f500e9364104503e23e54841114819ff8088a276e29af3d",
+    "capture_sha256": "fa71e2079423285fc9cee8fdea6e1b005872d678a147d2f695e22a25a726b609",
+    "provider": "mlx",
+    "full_step_seconds": {
+      "median": 0.46520764601882547,
+      "p95": 0.4720855357882101,
+      "samples": 100
+    },
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 2447674440,
+      "lifetime_peak_bytes": 5209066568,
+      "current_resident_bytes": 1985691648,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_process_rss_bytes": 3242573824
+  },
+  "candidate": {
+    "path": "/tmp/onnax-unet-native-vjp-measured.json",
+    "report_sha256": "6d6e550eb701842ec9aa9a19b24ec4a4996dad3a56604e0494c2b433bb178b6a",
+    "capture_sha256": "9cc48fa61267d7536c09903074aaaa97b3b650587bb054530ca144cb9f53465d",
+    "provider": "mlx",
+    "full_step_seconds": {
+      "median": 0.372103187488392,
+      "p95": 0.38160224609891885,
+      "samples": 100
+    },
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 2408057856,
+      "lifetime_peak_bytes": 5113400344,
+      "current_resident_bytes": 2001780736,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_process_rss_bytes": 3254272000
+  },
+  "candidate_to_baseline_median_ratio": 0.7998647285202491,
+  "memory_scope": "Isolated whole-process lifetime peak, including construction and runtime allocator caches; cache policies are recorded in source reports"
+}
