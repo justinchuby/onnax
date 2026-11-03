@@ -49,11 +49,12 @@ def weights(width=3):
     }
 
 
-def test_multio_output_gradients_and_external_updates(tmp_path):
+@pytest.mark.parametrize("save_activations", [False, True])
+def test_multio_output_gradients_and_external_updates(tmp_path, save_activations):
     source = graph()
     before = ir.to_proto(source).SerializeToString()
     reference = torch.nn.Parameter(weights()["block.weight"].clone())
-    with OnnxModule(source, weights()) as model:
+    with OnnxModule(source, weights(), save_activations=save_activations) as model:
         actual_optimizer = torch.optim.AdamW(model.parameters(), lr=0.01, weight_decay=0)
         expected_optimizer = torch.optim.AdamW([reference], lr=0.01, weight_decay=0)
         for step in range(6):
@@ -348,3 +349,92 @@ def test_bundle_shape_manifest_is_checked(tmp_path):
     path.write_text(json.dumps(interface))
     with pytest.raises(ValueError, match="shapes or dtypes"):
         OnnxModule.load(tmp_path / "bundle")
+
+
+@pytest.mark.parametrize("target", ["input", "parameter", "output"])
+def test_saved_activation_version_checks(target):
+    with OnnxModule(graph(), weights(), outputs=["hidden"], save_activations=True) as model:
+        x = torch.ones(2, 3, requires_grad=True)
+        y = model(features=x)
+        mutated = {"input": x, "parameter": model.trainable[0], "output": y}[target]
+        with torch.no_grad():
+            mutated.add_(1)
+        with pytest.raises(RuntimeError, match="modified by an inplace operation"):
+            y.sum().backward()
+
+
+def test_saved_activation_outstanding_forwards_and_retained_graph():
+    with OnnxModule(graph(), weights(), outputs=["hidden"], save_activations=True) as model:
+        x = torch.ones(2, 3, requires_grad=True)
+        z = torch.full((3, 3), 0.2, requires_grad=True)
+        a, b = model(features=x), model(features=z)
+        a.sum().backward(retain_graph=True)
+        first = model.trainable[0].grad.clone()
+        a.sum().backward()
+        torch.testing.assert_close(model.trainable[0].grad, 2 * first)
+        b.sum().backward()
+        expected = weights()["block.weight"].clone().requires_grad_()
+        (
+            2 * torch.tanh(x.detach() @ expected).sum()
+            + torch.tanh(z.detach() @ expected).sum()
+        ).backward()
+        torch.testing.assert_close(model.trainable[0].grad, expected.grad)
+
+
+def test_saved_and_eager_modes_are_exclusive():
+    with pytest.raises(ValueError, match="Choose"):
+        OnnxModule(graph(), weights(), eager_gradients=True, save_activations=True)
+
+
+def test_saved_activations_with_onnxscript_and_checkpoint_exchange(tmp_path):
+    from onnxscript import optimizer
+
+    with (
+        OnnxModule(graph(), weights(), outputs=["hidden"]) as default,
+        OnnxModule(
+            graph(),
+            weights(),
+            outputs=["hidden"],
+            save_activations=True,
+            optimize=optimizer.optimize,
+        ) as saved,
+    ):
+        saved.load_state_dict(default.state_dict())
+        x = torch.ones(2, 3)
+        a, b = default(features=x), saved(features=x)
+        a.square().sum().backward()
+        b.square().sum().backward()
+        torch.testing.assert_close(saved.trainable[0].grad, default.trainable[0].grad)
+        saved.export(tmp_path / "saved")
+        with OnnxModule.load(tmp_path / "saved") as restored:
+            restored(features=x).square().sum().backward()
+            torch.testing.assert_close(restored.trainable[0].grad, saved.trainable[0].grad)
+            default.load_state_dict(restored.state_dict())
+
+
+def test_saved_activation_bundle_rejects_missing_mapping(tmp_path):
+    from onnax.torch._serialization import file_digest
+
+    with OnnxModule(graph(), weights(), save_activations=True) as model:
+        model.export(tmp_path / "saved")
+    derivative_path = tmp_path / "saved/derivative.onnx"
+    derivative = ir.load(derivative_path)
+    derivative.graph.metadata_props["onnax.torch.saved_values"] = '["missing"]'
+    ir.save(derivative, derivative_path)
+    interface_path = tmp_path / "saved/interface.json"
+    interface = json.loads(interface_path.read_text())
+    interface["files"]["derivative.onnx"] = file_digest(derivative_path)
+    interface_path.write_text(json.dumps(interface))
+    with pytest.raises(ValueError, match=r"activation interface|shape or dtype"):
+        OnnxModule.load(tmp_path / "saved")
+
+
+def test_saved_activation_bundle_rejects_disabled_mode(tmp_path):
+    with OnnxModule(graph(), weights(), save_activations=True) as model:
+        model.export(tmp_path / "saved")
+    path = tmp_path / "saved/interface.json"
+    interface = json.loads(path.read_text())
+    interface.pop("save_activations")
+    path.write_text(json.dumps(interface))
+    with pytest.raises(ValueError, match="requires save_activations"):
+        OnnxModule.load(tmp_path / "saved")

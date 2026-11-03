@@ -15,7 +15,8 @@ from examples.huggingface.validation import add_reference_adapters
 from onnax.torch import OnnxModule
 
 
-def test_public_module_qwen_updates_and_export(tmp_path):
+@pytest.mark.parametrize("save_activations", [False, True])
+def test_public_module_qwen_updates_and_export(tmp_path, save_activations):
     torch.set_num_threads(1)
     task, reference = prepare()
     reference = add_reference_adapters(reference, task)
@@ -32,7 +33,9 @@ def test_public_module_qwen_updates_and_export(tmp_path):
     frozen = {
         n: p.detach().clone() for n, p in reference.named_parameters() if not p.requires_grad
     }
-    with OnnxModule(source, params, outputs=["logits"]) as model:
+    with OnnxModule(
+        source, params, outputs=["logits"], save_activations=save_activations
+    ) as model:
         optimizer = torch.optim.AdamW(model.parameters(), lr=0.003, weight_decay=0)
         target_optimizer = torch.optim.AdamW(
             [p for p in reference.parameters() if p.requires_grad], lr=0.003, weight_decay=0

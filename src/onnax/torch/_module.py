@@ -120,8 +120,9 @@ class _Function(torch.autograd.Function):
         return _Function._forward(ctx, module, values, eager=False)
 
     @staticmethod
-    def _forward(ctx, module, values, *, eager):
+    def _forward(ctx, module, values, *, eager, save_activations=False):
         ctx.eager = eager
+        ctx.saved_names = module._saved_names if save_activations else ()
         ctx.module = module
         ctx.set_materialize_grads(False)
         count = len(module.data_names)
@@ -156,7 +157,8 @@ class _Function(torch.autograd.Function):
             saved.extend(torch.from_numpy(array.copy()) for array in arrays[1:])
             arrays = arrays[:1]
         else:
-            arrays = module._run(0, module.output_names, feeds)
+            names = list(dict.fromkeys((*module.output_names, *ctx.saved_names)))
+            arrays = module._run(0, names, feeds)
         # Identity/view outputs must not expose saved backward inputs or aliases
         # invisible to PyTorch storage/version tracking. Keep ordinary owned
         # runtime outputs as zero-copy NumPy views.
@@ -170,14 +172,25 @@ class _Function(torch.autograd.Function):
             value.copy() if alias else value
             for value, alias in zip(arrays, aliases, strict=True)
         ]
+        if not eager:
+            tensors = dict(zip(names, (torch.from_numpy(a) for a in arrays), strict=True))
+            ctx.residual_offset = len(saved)
+            saved.extend(tensors[name] for name in ctx.saved_names)
+            arrays = arrays[: len(module.output_names)]
+            outputs = tuple(tensors[name] for name in module.output_names)
+        else:
+            outputs = tuple(torch.from_numpy(array) for array in arrays)
         ctx.output_info = {
             name: (array.shape, array.dtype)
             for name, array in zip(module.output_names, arrays, strict=True)
         }
         if eager:
             ctx.feeds.clear()
+        elif save_activations:
+            ctx.feeds = {n: a for n, a in ctx.feeds.items() if n in module._session_inputs[1]}
+        if save_activations:
+            saved.extend(outputs)
         ctx.save_for_backward(*saved)
-        outputs = tuple(torch.from_numpy(array) for array in arrays)
         for name, value in zip(module.output_names, outputs, strict=True):
             _validate(name, value, module._output_specs[name])
         nondifferentiable = [
@@ -206,6 +219,15 @@ class _Function(torch.autograd.Function):
                 )
             ),
         }
+        if ctx.saved_names:
+            feeds.update(
+                (name, value.detach().numpy())
+                for name, value in zip(
+                    ctx.saved_names,
+                    saved[ctx.residual_offset : ctx.residual_offset + len(ctx.saved_names)],
+                    strict=True,
+                )
+            )
         for name, value in zip(module.output_names, upstream, strict=True):
             if name in module._seeds:
                 shape, dtype = ctx.output_info[name]
@@ -253,6 +275,12 @@ class _EagerFunction(_Function):
         return _Function._forward(ctx, module, values, eager=True)
 
 
+class _SavedFunction(_Function):
+    @staticmethod
+    def forward(ctx, module, *values):
+        return _Function._forward(ctx, module, values, eager=False, save_activations=True)
+
+
 def _eager_mode(source, specification, enabled=False):
     if not isinstance(enabled, bool):
         raise TypeError("eager_gradients must be a bool")
@@ -279,6 +307,8 @@ class OnnxModule(torch.nn.Module):
     tensor payloads. The module owns sessions and files until ``close()``.
     For a scalar objective, ``eager_gradients=True`` computes unit-cotangent
     derivatives with the loss; backward scales the cached gradients.
+    ``save_activations=True`` splits forward and backward at a saved-tensor
+    boundary, retaining intermediates instead of repeating the forward graph.
     """
 
     _onnax_identity: torch.Tensor
@@ -293,10 +323,17 @@ class OnnxModule(torch.nn.Module):
         session_factory: SessionFactory | None = None,
         optimize: Callable[[ir.Model], ir.Model] | None = None,
         eager_gradients: bool = False,
+        save_activations: bool = False,
     ) -> None:
         super().__init__()
         if not isinstance(eager_gradients, bool):
             raise TypeError("eager_gradients must be a bool")
+        if not isinstance(save_activations, bool):
+            raise TypeError("save_activations must be a bool")
+        if eager_gradients and save_activations:
+            raise ValueError("Choose eager_gradients or save_activations")
+        self._save_activations = save_activations
+        self._saved_names = ()
         self._eager_gradients = eager_gradients
         self._closed = False
         self._sessions: list[Session] = []
@@ -320,6 +357,7 @@ class OnnxModule(torch.nn.Module):
             )
         )
         selected = specification["outputs"]
+        execution = source.clone()
         backward = None
         seeds: dict[str, str] = {}
         gradients: dict[str, str] = {}
@@ -330,21 +368,38 @@ class OnnxModule(torch.nn.Module):
             gradients = dict(
                 zip(gradient_inputs, interface["derivative_outputs"], strict=True)
             )
-            by_name = {v.name: v for v in backward.graph.outputs}
-            backward.graph.outputs.clear()
-            backward.graph.outputs.extend(
-                by_name[n]
-                for n in (
-                    [*selected, *gradients.values()]
-                    if self._eager_gradients
-                    else gradients.values()
+            if self._save_activations:
+                from onnax._residuals import split_vjp
+                from onnax._saved_shapes import compress
+
+                backward = onnax.FuseAttentionVJPPass(recompute=True)(backward).model
+                backward = onnax.FuseBroadcastAdjointsPass(shape_inputs=True)(backward).model
+                execution, backward, names = split_vjp(source, backward, optimize_layout=True)
+                execution, backward, names, _ = compress(
+                    execution, backward, names, outputs=selected
                 )
-            )
-        execution = source.clone()
+                self._saved_names = tuple(names)
+                by_name = {v.name: v for v in execution.graph.outputs}
+                execution.graph.outputs.clear()
+                execution.graph.outputs.extend(
+                    by_name[n] for n in dict.fromkeys((*selected, *names))
+                )
+            else:
+                by_name = {v.name: v for v in backward.graph.outputs}
+                backward.graph.outputs.clear()
+                backward.graph.outputs.extend(
+                    by_name[n]
+                    for n in (
+                        [*selected, *gradients.values()]
+                        if self._eager_gradients
+                        else gradients.values()
+                    )
+                )
         if optimize is not None:
             execution = optimize(execution)
             backward = optimize(backward) if backward is not None else None
-        if [v.name for v in execution.graph.outputs] != selected:
+        expected_execution = list(dict.fromkeys((*selected, *self._saved_names)))
+        if [v.name for v in execution.graph.outputs] != expected_execution:
             raise ValueError("Optimization must preserve selected output names and order")
         common.RemoveUnusedNodesPass()(execution)
         save_model(execution, self._directory.name, "execution", reuse=self._directory.name)
@@ -357,6 +412,10 @@ class OnnxModule(torch.nn.Module):
             if [v.name for v in backward.graph.outputs] != expected:
                 raise ValueError("Optimization must preserve gradient output names and order")
             common.RemoveUnusedNodesPass()(backward)
+            if self._save_activations:
+                backward.graph.metadata_props["onnax.torch.saved_values"] = json.dumps(
+                    list(self._saved_names)
+                )
             backward.graph.metadata_props["onnax.torch.source_identity"] = identity
             backward.graph.metadata_props["onnax.torch.interface"] = json.dumps(
                 {"seeds": seeds, "gradients": gradients}
@@ -461,10 +520,14 @@ class OnnxModule(torch.nn.Module):
             )
         elif seeds or gradients:
             raise ValueError("Unexpected derivative interface for a forward-only module")
+        self._saved_names = getattr(self, "_saved_names", ())
+        self._validate_saved_interface()
         self._session_inputs = []
         for stem in ("execution", "derivative") if gradients else ("execution",):
             model = ir.load(os.path.join(self._directory.name, stem + ".onnx"))
             allowed = set(self._input_specs) | set(seeds.values())
+            if stem == "derivative":
+                allowed.update(self._saved_names)
             if stem == "derivative" and self._eager_gradients:
                 if [v.name for v in model.graph.outputs] != [
                     *self.output_names,
@@ -478,6 +541,43 @@ class OnnxModule(torch.nn.Module):
                 raise ValueError("Execution graph introduced unknown inputs")
             self._session_inputs.append(names)
             self._sessions.append(factory(os.path.join(self._directory.name, stem + ".onnx")))
+
+    def _validate_saved_interface(self):
+        if not getattr(self, "_save_activations", False):
+            if self.gradient_names:
+                backward = ir.load(os.path.join(self._directory.name, "derivative.onnx"))
+                if "onnax.torch.saved_values" in backward.graph.metadata_props:
+                    raise ValueError("Saved derivative requires save_activations")
+            return
+        if self._eager_gradients:
+            raise ValueError("Choose eager_gradients or save_activations")
+        if not self.gradient_names:
+            self._saved_names = ()
+            return
+        forward = ir.load(os.path.join(self._directory.name, "execution.onnx"))
+        backward = ir.load(os.path.join(self._directory.name, "derivative.onnx"))
+        names = json.loads(
+            backward.graph.metadata_props.get("onnax.torch.saved_values", "null")
+        )
+        if (
+            not isinstance(names, list)
+            or any(not isinstance(n, str) or not n for n in names)
+            or len(set(names)) != len(names)
+            or set(names) & set(self._input_specs)
+        ):
+            raise ValueError("Invalid saved-activation interface")
+        outputs = {v.name: v for v in forward.graph.outputs}
+        inputs = {v.name: v for v in backward.graph.inputs}
+        if list(outputs) != list(dict.fromkeys((*self.output_names, *names))):
+            raise ValueError("Saved forward outputs differ from the activation interface")
+        for name in names:
+            if (
+                name not in outputs
+                or name not in inputs
+                or _spec(outputs[name]) != _spec(inputs[name])
+            ):
+                raise ValueError("Saved activation shape or dtype mismatch")
+        self._saved_names = tuple(names)
 
     def _configure_parameters(
         self, source, initial, specification, identity, seeds, gradients
@@ -543,6 +643,13 @@ class OnnxModule(torch.nn.Module):
             and any(v.requires_grad for v in values)
             else _Function
         )
+        if (
+            getattr(self, "_save_activations", False)
+            and self.gradient_names
+            and torch.is_grad_enabled()
+            and any(v.requires_grad for v in values)
+        ):
+            function = _SavedFunction
         outputs = function.apply(self, *values)
         return outputs[0] if len(self.output_names) == 1 else outputs
 
@@ -613,6 +720,11 @@ class OnnxModule(torch.nn.Module):
                 {
                     "version": 1,
                     **({"eager_gradients": True} if self._eager_gradients else {}),
+                    **(
+                        {"save_activations": True}
+                        if getattr(self, "_save_activations", False)
+                        else {}
+                    ),
                     "identity": self._identity,
                     "specification": self._specification,
                     "inputs": self._input_specs,
@@ -652,6 +764,10 @@ class OnnxModule(torch.nn.Module):
         module = cls.__new__(cls)
         torch.nn.Module.__init__(module)
         module._eager_gradients = interface.get("eager_gradients", False)
+        module._save_activations = interface.get("save_activations", False)
+        if not isinstance(module._save_activations, bool):
+            raise TypeError("save_activations must be a bool")
+        module._saved_names = ()
         module._closed = False
         module._sessions = []
         module._directory = tempfile.TemporaryDirectory(prefix="onnax-torch-")
