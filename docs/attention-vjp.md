@@ -51,6 +51,21 @@ optimization and disabled CPU fallback. The native indexed route uses
 The [measurement report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-indexed-pivots.json)
 records the binary hash, versions and component timings.
 
+Fusing all 18 attention pullbacks in the same UNet workload reduces median/P95
+step time to 0.827/0.848 s. MLX peak allocation is 4.32 GB and whole-process
+lifetime peak physical footprint is 5.28 GB. All 72 adapter gradients agree with
+independent PyTorch MPS at `rtol=1e-4, atol=1e-6`; maximum absolute gradient error
+is 6.4e-9. The matched MPS median is 0.320 s. The fused ONNX profile spends
+0.168 s in forward and 0.663 s in loss/backward.
+The [fused report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-fused-attention.json)
+records the same 10-warmup/100-step protocol, with a 64 MiB per-score GEMM budget.
+
+Raising the per-score GEMM budget to 1 GiB measured 0.808/0.832 s median/P95
+with 4.99 GB MLX peak allocation and 5.48 GB whole-process physical peak. This
+run uses the same model, data, precision, optimizer and 100-step protocol. Its
+[report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-fused-attention-gemm.json)
+records the explicit budget. The 64 MiB default gives lower peak allocation.
+
 ## Build the execution graph
 
 Generate derivatives first, then apply deployment fusion before constant folding
@@ -63,7 +78,7 @@ from examples.huggingface.attention_vjp import fuse_attention_vjp
 
 pullback = onnax.vjp(model, inputs=parameter_names, outputs=output_names)
 execution = fuse_attention_vjp(pullback)
-optimizer.fold_constants(execution)
+execution = optimizer.optimize(execution, inline=False)
 ```
 
 The pass uses derivative-region annotations and checks every region boundary.
@@ -71,7 +86,8 @@ It preserves input, output and gradient names. The source derivative graph stays
 available for further transformations. Each generated function records its
 geometry and fallback-body digest in its name.
 
-The first contract covers FP32 Q/K/V with head dimensions 16, 32, 64, 128 and 256;
+The contract covers FP32 Q/K/V with head dimensions from 8 through 256 in steps
+of 8, including UNet dimensions 40, 80 and 160;
 rank-three/rank-four layouts; MHA/GQA/MQA; boolean/additive masks; and top-left
 causality. Unsupported configurations retain their portable derivative graph.
 

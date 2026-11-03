@@ -284,6 +284,7 @@ def measure(
                 for name in (
                     "ONNXRUNTIME_EP_MLX_NO_COMPILE",
                     "ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES",
+                    "ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES",
                     "PYTORCH_ENABLE_MPS_FALLBACK",
                     "PYTORCH_MPS_FAST_MATH",
                 )

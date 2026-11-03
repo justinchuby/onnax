@@ -47,7 +47,7 @@ def fuse_attention_vjp(model):
             continue
         if rank == 3:
             d //= hq
-        if d not in (16, 32, 64, 128, 256) or v.shape[-1] != (d * hk if rank == 3 else d):
+        if (not 8 <= d <= 256 or d % 8 != 0) or v.shape[-1] != (d * hk if rank == 3 else d):
             continue
         if attrs.get("softcap", 0) != 0 or attrs.get("softmax_precision", 1) != 1:
             continue
