@@ -1,0 +1,428 @@
+{
+  "model": "segmind/tiny-sd",
+  "revision": "3d25de3e8d5aacf94ce91176f204e6d11d120315",
+  "latent_shape": [
+    1,
+    4,
+    64,
+    64
+  ],
+  "conditioning_shape": [
+    1,
+    77,
+    768
+  ],
+  "captured_tensors": 74,
+  "checks": {
+    "prediction": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "loss": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    }
+  },
+  "baseline": {
+    "path": "/tmp/onnax-unet-host-shapes-gpu-ablation.json",
+    "report_sha256": "19927e6c623836caed9e54b0f4f18fba0c78ef75cc6ac388287bc260ba5514c8",
+    "capture_sha256": "d93024a49d52eecdbcd237bf5e320355685f91e22b85e35be127489d57bcde7b",
+    "provider": "mlx",
+    "full_step_seconds": {
+      "median": 0.8386260624392889,
+      "p95": 0.8541095725609921,
+      "samples": 100
+    },
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 2540931856,
+      "lifetime_peak_bytes": 5281663760,
+      "current_resident_bytes": 1950875648,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_process_rss_bytes": 3276718080
+  },
+  "candidate": {
+    "path": "/tmp/onnax-unet-host-shapes-measured.json",
+    "report_sha256": "a2e03ee12538ed1edeba27d33708132ef75c59587af9d729bf1ea47136d39676",
+    "capture_sha256": "d93024a49d52eecdbcd237bf5e320355685f91e22b85e35be127489d57bcde7b",
+    "provider": "mlx",
+    "full_step_seconds": {
+      "median": 0.7446266040205956,
+      "p95": 0.7700617503141984,
+      "samples": 100
+    },
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 2629962584,
+      "lifetime_peak_bytes": 5244226392,
+      "current_resident_bytes": 1995456512,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_process_rss_bytes": 3275898880
+  },
+  "candidate_to_baseline_median_ratio": 0.887912548120339,
+  "memory_scope": "Isolated whole-process lifetime peak, including construction and runtime allocator caches; cache policies are recorded in source reports"
+}

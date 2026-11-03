@@ -82,6 +82,13 @@ Prediction, loss and all 72 adapter gradients match bitwise. The
 [report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-host-shapes.json)
 records the binary hash, memory counters and component timings.
 
+A same-binary ablation with GPU shape operations measured 0.839/0.854 s
+median/P95; all 74 captured tensors match the host-shape route bitwise. The
+[ablation report](https://github.com/justinchuby/onnax/blob/main/examples/diffusion/reports/real-images-m1max/mlx-host-shapes-gpu-ablation.json)
+records the explicit execution switch. Diagnostic traces reduce aggregate
+translation/synchronization spans from 715 ms to 244 ms across the same probe,
+including setup. Further profiling focuses on convolution layouts and replay.
+
 ## Build the execution graph
 
 Generate derivatives first, then apply deployment fusion before constant folding
