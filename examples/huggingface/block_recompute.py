@@ -27,6 +27,7 @@ from examples.huggingface.recomputation import describe_replay
 from examples.huggingface.residuals import split_vjp
 from examples.huggingface.serialization import save_graph
 from examples.process_memory import physical_footprint
+from onnax import _recomputation, _residuals, _saved_shapes
 
 
 def measure(
@@ -311,6 +312,9 @@ def main():
                 os.path.join(os.path.dirname(__file__), "shape_residuals.py"),
                 os.path.join(os.path.dirname(__file__), "optimization.py"),
                 os.path.join(os.path.dirname(__file__), "attention_vjp.py"),
+                _recomputation.__file__,
+                _residuals.__file__,
+                _saved_shapes.__file__,
             )
         },
     )
