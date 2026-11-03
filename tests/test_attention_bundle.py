@@ -35,7 +35,10 @@ def runtime_factory(request):
 
 
 @pytest.mark.parametrize("family", ["qwen3", "qwen35", "phi3"])
-def test_deployed_decoder_gradients_updates_and_reexport(tmp_path, family, runtime_factory):
+@pytest.mark.parametrize("broadcast_adjoints", [False, True])
+def test_deployed_decoder_gradients_updates_and_reexport(
+    tmp_path, family, runtime_factory, broadcast_adjoints
+):
     torch.set_num_threads(1)
     original, reference = prepare(
         family, head_chunk_size=3, fused_ops=True, session_factory=session
@@ -47,7 +50,9 @@ def test_deployed_decoder_gradients_updates_and_reexport(tmp_path, family, runti
         for path in source.rglob("*")
         if path.is_file()
     }
-    report = deploy(source, tmp_path / "deployed")
+    report = deploy(source, tmp_path / "deployed", broadcast_adjoints=broadcast_adjoints)
+    if broadcast_adjoints:
+        assert sum(row["broadcast_adjoint_calls"] for row in report["blocks"]) > 0
     assert report["blocks"] and report["models_checked"] == len(report["blocks"])
     assert before == {
         str(path.relative_to(source)): digest(path)

@@ -18,6 +18,7 @@ from onnx_ir.passes.common import RemoveUnusedNodesPass
 from onnxscript import optimizer
 
 import onnax
+from examples.broadcast_adjoint import fuse_broadcast_adjoints
 from examples.huggingface.attention_vjp import fuse_attention_vjp
 from onnax._file_snapshot import copy_file
 from onnax.torch._module import source_identity
@@ -43,7 +44,7 @@ def _tensors(message):
                 yield from _tensors(child)
 
 
-def prepare_header(bundle, output, *, fused_attention=False):
+def prepare_header(bundle, output, *, fused_attention=False, broadcast_adjoints=False):
     """Regenerate derivatives, match immutable payloads, and write a header plus manifest."""
     started = time.perf_counter()
     bundle, output = Path(bundle), Path(output)
@@ -77,6 +78,8 @@ def prepare_header(bundle, output, *, fused_attention=False):
     result.graph.outputs.extend(values[name] for name in interface["gradients"].values())
     if fused_attention:
         result = fuse_attention_vjp(result)
+    if broadcast_adjoints:
+        result = fuse_broadcast_adjoints(result)
     result = optimizer.optimize(result, inline=False)
     RemoveUnusedNodesPass()(result)
     calls = sum(
@@ -143,6 +146,10 @@ def prepare_header(bundle, output, *, fused_attention=False):
         header_sha256=hashlib.sha256(data).hexdigest(),
         header_bytes=len(data),
         fused_attention_calls=calls,
+        broadcast_adjoint_calls=sum(
+            node.domain == "pkg.onnax" and node.op_type == "SumToShape_v1"
+            for node in result.graph
+        ),
         reused_initializers=reused,
         generation_seconds=time.perf_counter() - started,
     )
@@ -218,10 +225,16 @@ def main():
     parser.add_argument("--bundle", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--fused-attention", action="store_true")
+    parser.add_argument("--broadcast-adjoints", action="store_true")
     args = parser.parse_args()
     print(
         json.dumps(
-            prepare_header(args.bundle, args.output, fused_attention=args.fused_attention)
+            prepare_header(
+                args.bundle,
+                args.output,
+                fused_attention=args.fused_attention,
+                broadcast_adjoints=args.broadcast_adjoints,
+            )
         )
     )
 

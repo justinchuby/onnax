@@ -81,6 +81,37 @@ The tool runs full ONNX checker validation using private file snapshots. The
 checks its source/payload identity and installs it in the runtime's private bundle.
 The qualified UNet header is about 2 MB and reuses 149 initializers.
 
+## Package dynamic broadcast adjoints
+
+Broadcasting repeats a tensor along leading or singleton dimensions. Its adjoint
+sums along those dimensions: for a target shape $r$, the returned gradient is
+$\operatorname{reshape}(\operatorname{sum}_{\text{broadcast axes}} G, r)$.
+
+The deployment tool can package these reductions alongside Attention VJP:
+
+```sh
+python -m examples.torch_deploy --bundle /tmp/unet-pretrained/export \
+  --fused-attention --broadcast-adjoints --output /tmp/unet-training-vjp.onnx
+```
+
+`pkg.onnax::SumToShape_v1(Gradient, Reference)` uses the reference's shape and
+returns a tensor of that shape with the gradient's dtype. Reference values are
+unused. The portable function discovers axes using ordinary ONNX operators;
+MLX specializes the reduction using both live tensor shapes. This covers leading
+axes, runtime singleton dimensions, scalars and empty tensors. The deployment
+manifest records the number of packaged calls.
+
+Apply `examples.broadcast_adjoint.fuse_broadcast_adjoints` immediately after
+differentiation and Attention fusion, before ONNXScript optimization. It matches
+the complete generated function body and keeps shared or edited regions intact.
+Inline local functions with `onnx_ir.passes.common.InlinePass` before applying
+further derivative transforms.
+
+Checkpointed decoder exports accept the same option through
+`python -m examples.huggingface.attention_bundle --export SOURCE --output DEST
+--broadcast-adjoints`. Offline tests cover Qwen3, Qwen3.5 and Phi3 predictions,
+all adapter gradients, three optimizer updates, loading and re-export.
+
 ## Select the memory policy
 
 The Qwen example pipeline enables this pass with `ONNAX_TILED_ATTENTION=1`.
@@ -117,8 +148,8 @@ regression, MLP and Qwen qualification.
 The matched M1 Max workload uses FP32, one 512-pixel image encoded as 64² latents,
 fixed adapters and external AdamW. Each run has 10 warmups and 100 measured
 steps; separate ten-sample phase profiles record forward, backward and updates.
-MLX rows use eager execution, a 512 MiB idle cache and a 64 MiB attention score
-budget. ORT graph optimization and CPU fallback are disabled. MPS uses its
+MLX uses eager execution except for the compiled broadcast-adjoint row. All
+use a 512 MiB idle cache and a 64 MiB attention score budget. ORT graph optimization and CPU fallback are disabled. MPS uses its
 default allocator. Process peak includes bundle/model loading, session setup,
 warmup and execution.
 
@@ -128,7 +159,9 @@ warmup and execution.
 | Row-indexed pivots | 0.981 / 1.001 s | 5.41 GB | 5.99 GB |
 | Fused attention | 0.827 / 0.848 s | 4.32 GB | 5.28 GB |
 | Host shape programs | 0.745 / 0.770 s | 4.32 GB | 5.24 GB |
-| Direct convolution padding | **0.696 / 0.713 s** | **4.32 GB** | **5.32 GB** |
+| Direct convolution padding | 0.696 / 0.713 s | 4.32 GB | 5.32 GB |
+| Broadcast adjoints, eager | 0.669 / 0.688 s | 4.33 GB | 5.31 GB |
+| Broadcast adjoints, compiled | **0.651 / 0.661 s** | **4.31 GB** | **5.37 GB** |
 | PyTorch MPS eager | 0.320 / 0.323 s | — | 7.39 GB |
 | PyTorch MPS checkpointed | 0.436 / 0.441 s | — | 5.82 GB |
 
@@ -157,11 +190,14 @@ Before host-shape optimization, raising the attention score budget to 1 GiB
 measures 0.808/0.832 s with 4.99 GB peak allocation. The reports retain this
 workspace trial alongside the lower-memory 64 MiB default.
 
-Default compilation completes 100 steps at 0.963/0.990 s and 7.16 GB process
-peak. Matching diagnostic probes show 8 versus 1172 subgraph executions and
-3.72 MB versus 4.27 GB recorded copy-out bytes. For this UNet, select
-`ONNXRUNTIME_EP_MLX_NO_COMPILE=1`. The next execution target is shape-aware
-broadcast-adjoint fusion across these partition boundaries.
+Before broadcast-adjoint fusion, default compilation measures 0.963/0.990 s
+and 7.16 GB process peak. A same-binary control measures 0.959/0.984 s; packaging
+245 broadcast adjoints reaches 0.651/0.661 s, with process peak changing from
+7.15 GB to 5.37 GB. All 74 captures match bitwise. Matching diagnostic probes
+reduce 1172 subgraph executions to 8 and recorded materialized output bytes
+from 4.27 GB to 3.72 MB. Use `--broadcast-adjoints` with
+[MLX EP support](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/111)
+and `ONNXRUNTIME_EP_MLX_NO_COMPILE=0`.
 
 (m1-max-measurements)=
 
