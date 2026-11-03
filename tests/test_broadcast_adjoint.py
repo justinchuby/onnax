@@ -13,7 +13,6 @@ from onnx_ir.passes.common import InlinePass
 from onnxscript import optimizer
 
 import onnax
-from examples.broadcast_adjoint import fuse_broadcast_adjoints
 
 
 def _model(dtype=ir.DataType.FLOAT):
@@ -67,12 +66,15 @@ def _expected(gradient, shape):
 def test_portable_runtime_shapes_and_products(dtype, shapes):
     model = _model(dtype)
     before = ir.to_proto(model).SerializeToString()
-    fused = fuse_broadcast_adjoints(model)
+    result = onnax.FuseBroadcastAdjointsPass()(model)
+    assert result.modified
+    fused = result.model
+    assert not onnax.FuseBroadcastAdjointsPass()(fused).modified
     assert len(fused.graph) == 1
     assert len(fused.functions) == 1
     assert ir.to_proto(model).SerializeToString() == before
     assert (
-        ir.to_proto(fuse_broadcast_adjoints(fused)).SerializeToString()
+        ir.to_proto(onnax.FuseBroadcastAdjointsPass()(fused).model).SerializeToString()
         == ir.to_proto(fused).SerializeToString()
     )
     # Give checker known ranks while preserving runtime extents.
@@ -103,7 +105,7 @@ def test_modified_region_is_not_native_contract():
     reduction = next(node for node in model.graph if node.op_type == "ReduceSum")
     reduction.attributes["keepdims"] = ir.AttrInt64("keepdims", 0)
     before = ir.to_proto(model).SerializeToString()
-    fused = fuse_broadcast_adjoints(model)
+    fused = onnax.FuseBroadcastAdjointsPass()(model).model
     assert ir.to_proto(fused).SerializeToString() == before
 
 
@@ -111,7 +113,10 @@ def test_shared_intermediate_keeps_portable_region():
     model = _model()
     model.graph.outputs.append(next(iter(model.graph)).outputs[0])
     before = ir.to_proto(model).SerializeToString()
-    assert ir.to_proto(fuse_broadcast_adjoints(model)).SerializeToString() == before
+    assert (
+        ir.to_proto(onnax.FuseBroadcastAdjointsPass()(model).model).SerializeToString()
+        == before
+    )
 
 
 def test_fused_nonlinear_vjp_and_second_directional_product():
@@ -125,7 +130,7 @@ def test_fused_nonlinear_vjp_and_second_directional_product():
         ir_version=10,
     )
     baseline = onnax.vjp(model)
-    fused = fuse_broadcast_adjoints(baseline)
+    fused = onnax.FuseBroadcastAdjointsPass()(baseline).model
     assert sum(n.op_type == "SumToShape_v1" for n in fused.graph) == 2
     # Equal symbolic names still allow independent singleton broadcast extents.
     feeds = {
@@ -162,7 +167,7 @@ def test_connected_regions_share_one_function():
     output.type = ir.TensorType(ir.DataType.FLOAT)
     graph.outputs.append(output)
     model = ir.Model(graph, ir_version=10)
-    fused = fuse_broadcast_adjoints(model)
+    fused = onnax.FuseBroadcastAdjointsPass()(model).model
     assert len(fused.graph) == 2
     assert len(fused.functions) == 1
     feeds = {
@@ -171,3 +176,41 @@ def test_connected_regions_share_one_function():
         "scalar": np.array(0, np.float32),
     }
     np.testing.assert_array_equal(_run(fused, feeds)[0], np.array(15, np.float32))
+
+
+def test_public_pass_manager_and_example_compatibility():
+    from examples.broadcast_adjoint import fuse_broadcast_adjoints
+
+    model = _model()
+    before = ir.to_proto(model).SerializeToString()
+    result = ir.passes.PassManager([onnax.FuseBroadcastAdjointsPass()])(model)
+    assert result.modified
+    assert (
+        ir.to_proto(result.model).SerializeToString()
+        == ir.to_proto(fuse_broadcast_adjoints(model)).SerializeToString()
+    )
+    assert ir.to_proto(model).SerializeToString() == before
+
+
+def test_incompatible_existing_function_preserves_source():
+    model = _model()
+    packaged = onnax.FuseBroadcastAdjointsPass()(model).model
+    function = next(iter(packaged.functions.values()))
+    reduction = next(node for node in function.graph if node.op_type == "ReduceSum")
+    reduction.attributes["keepdims"] = ir.AttrInt64("keepdims", 0)
+    model.functions[function.identifier()] = function
+    before = ir.to_proto(model).SerializeToString()
+    with pytest.raises(ValueError, match=r"incompatible.*SumToShape"):
+        onnax.FuseBroadcastAdjointsPass()(model)
+    assert ir.to_proto(model).SerializeToString() == before
+
+
+def test_unannotated_model_returns_independent_unchanged_result():
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=[2])
+    model = ir.Model(ir.Graph([x], [x], nodes=[], opset_imports={"": 18}), ir_version=10)
+    before = ir.to_proto(model).SerializeToString()
+    result = onnax.FuseBroadcastAdjointsPass()(model)
+    assert not result.modified
+    assert result.model is not model
+    assert result.model.graph.inputs[0] is not x
+    assert ir.to_proto(result.model).SerializeToString() == before

@@ -18,8 +18,8 @@ from onnx_ir.passes.common import RemoveUnusedNodesPass
 from onnxscript import optimizer
 
 import onnax
-from examples.broadcast_adjoint import fuse_broadcast_adjoints
 from examples.huggingface.attention_vjp import fuse_attention_vjp
+from onnax import FuseBroadcastAdjointsPass
 from onnax._file_snapshot import copy_file
 from onnax.torch._module import source_identity
 from onnax.torch._serialization import file_digest
@@ -87,7 +87,7 @@ def prepare_header(
     if fused_attention:
         result = fuse_attention_vjp(result, recompute=recompute_attention)
     if broadcast_adjoints:
-        result = fuse_broadcast_adjoints(result)
+        result = FuseBroadcastAdjointsPass()(result).model
     result = optimizer.optimize(result, inline=False)
     RemoveUnusedNodesPass()(result)
     calls = sum(
