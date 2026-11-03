@@ -11,8 +11,7 @@ import onnx
 import onnx_ir as ir
 from onnxscript import optimizer
 
-from examples.huggingface.attention_vjp import fuse_attention_vjp
-from onnax import FuseBroadcastAdjointsPass
+from onnax import FuseAttentionVJPPass, FuseBroadcastAdjointsPass
 from onnax.torch import OnnxModule
 from onnax.torch._serialization import file_digest
 
@@ -49,7 +48,7 @@ def prepare(training_run, destination, *, recompute_attention=False):
     source.graph.outputs.append(loss)
 
     def optimize(model):
-        attention = fuse_attention_vjp(model, recompute=recompute_attention)
+        attention = FuseAttentionVJPPass(recompute=recompute_attention)(model).model
         return optimizer.optimize(FuseBroadcastAdjointsPass()(attention).model, inline=False)
 
     with OnnxModule(

@@ -48,14 +48,14 @@ or activation splitting:
 ```python
 import onnax
 from onnxscript import optimizer
-from examples.huggingface.attention_vjp import fuse_attention_vjp
 
 pullback = onnax.vjp(model, inputs=parameter_names, outputs=output_names)
-execution = fuse_attention_vjp(pullback)
+execution = onnax.FuseAttentionVJPPass()(pullback).model
 execution = optimizer.optimize(execution, inline=False)
 ```
 
-The pass uses derivative-region annotations and checks every region boundary.
+The pass matches complete generated derivative bodies, including attributes and
+constants, and checks every region boundary.
 It preserves input, output and gradient names. The source derivative graph stays
 available for further transformations. Each generated function records its
 geometry and fallback-body digest in its name.
@@ -336,7 +336,7 @@ models; 3935 frozen tensor records remain unchanged throughout training.
 
 ## Recomputed pullbacks
 
-`fuse_attention_vjp(model, recompute=True)` emits `AttentionVJP_v2_*` for
+`onnax.FuseAttentionVJPPass(recompute=True)(model).model` emits `AttentionVJP_v2_*` for
 FP32 heads with widths 32 through 256, in multiples of eight.
 The five inputs are Q, K, V, G and Mask. Mask carries a boolean or additive mask;
 unmasked functions ignore its placeholder value. The ordinary ONNX

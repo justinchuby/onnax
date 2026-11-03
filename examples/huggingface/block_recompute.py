@@ -62,12 +62,12 @@ def measure(
         forward = source.clone()
         backward = ir.load(os.path.join(directory, block["model"]))
         if attention_vjp:
-            from examples.huggingface.attention_vjp import fuse_attention_vjp
+            from onnax import FuseAttentionVJPPass
 
             backward = onnax.vjp(
                 source, inputs=row["active_inputs"], outputs=row["active_outputs"]
             )
-            backward = fuse_attention_vjp(backward, recompute=recompute_attention)
+            backward = FuseAttentionVJPPass(recompute=recompute_attention)(backward).model
             calls = [
                 node.op_type
                 for node in backward.graph
