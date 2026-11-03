@@ -52,3 +52,26 @@ with tempfile.TemporaryDirectory() as directory:
         torch.testing.assert_close(restored(x=torch.ones(3, 2)), value, rtol=0, atol=0)
         restored(x=torch.ones(3, 2)).sum().backward()
 print("Installed checkpoint module: backward, export and reload passed")
+
+saved_source = source.clone()
+projection = saved_source.graph.outputs[0]
+activation = ir.val("activation", dtype=ir.DataType.FLOAT, shape=["batch", 1])
+saved_source.graph.append(ir.node("Tanh", [projection], outputs=[activation]))
+saved_source.graph.outputs.clear()
+saved_source.graph.outputs.append(activation)
+with tempfile.TemporaryDirectory() as directory:
+    with OnnxModule(
+        saved_source, {"weight": np.full((2, 1), 0.1, np.float32)}, save_activations=True
+    ) as model:
+        values = torch.ones(3, 2, requires_grad=True)
+        actual = model(x=values)
+        actual.square().mean().backward()
+        weight = model.trainable[0].detach().clone().requires_grad_()
+        reference = torch.tanh(values.detach() @ weight)
+        reference.square().mean().backward()
+        torch.testing.assert_close(model.trainable[0].grad, weight.grad)
+        model.export(Path(directory) / "saved")
+    with OnnxModule.load(Path(directory) / "saved") as restored:
+        restored(x=values.detach()).square().mean().backward()
+        torch.testing.assert_close(restored.trainable[0].grad, weight.grad)
+print("Installed saved-activation module: gradients, export and reload passed")

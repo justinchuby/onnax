@@ -30,7 +30,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-torch = ["torch>=2.6", "onnxruntime>=1.29"]
+torch = ["torch>=2.6", "onnxruntime>=1.29", "onnxscript>=0.7"]
 
 [project.urls]
 Source = "https://github.com/justinchuby/onnax"
