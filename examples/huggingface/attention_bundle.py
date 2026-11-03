@@ -26,7 +26,7 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def deploy(source, destination, *, broadcast_adjoints=False):
+def deploy(source, destination, *, broadcast_adjoints=False, recompute_attention=False):
     """Create a private decoder bundle with unchanged parameter interfaces."""
     source, destination = Path(source), Path(destination)
     if os.path.lexists(destination):
@@ -61,14 +61,14 @@ def deploy(source, destination, *, broadcast_adjoints=False):
                 joint = onnax.vjp(
                     forward, inputs=row["active_inputs"], outputs=row["active_outputs"]
                 )
-                joint = fuse_attention_vjp(joint)
+                joint = fuse_attention_vjp(joint, recompute=recompute_attention)
                 if broadcast_adjoints:
                     joint = fuse_broadcast_adjoints(joint)
                 calls = [
                     node.op_type
                     for node in joint.graph
                     if node.domain == "pkg.onnax"
-                    and node.op_type.startswith("AttentionVJP_v1_")
+                    and node.op_type.startswith(("AttentionVJP_v1_", "AttentionVJP_v2_"))
                 ]
                 if not calls:
                     continue
@@ -120,8 +120,14 @@ def main():
     parser.add_argument("--export", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--broadcast-adjoints", action="store_true")
+    parser.add_argument("--recompute-attention", action="store_true")
     args = parser.parse_args()
-    result = deploy(args.export, args.output, broadcast_adjoints=args.broadcast_adjoints)
+    result = deploy(
+        args.export,
+        args.output,
+        broadcast_adjoints=args.broadcast_adjoints,
+        recompute_attention=args.recompute_attention,
+    )
     print(json.dumps(result))
 
 

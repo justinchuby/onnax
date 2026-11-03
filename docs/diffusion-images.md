@@ -133,7 +133,8 @@ Image encoding and initial input transfer are outside the timed steps.
 | MLX + broadcast adjoints, compiled | 0.651 s | 0.661 s | 5.00 GiB |
 | MLX joint scalar objective | 0.474 s | 0.482 s | 5.03 GiB |
 | MLX + padded forward attention | 0.464 s | 0.472 s | 4.63 GiB |
-| MLX + recomputed fused pullback | **0.372 s** | **0.382 s** | **4.76 GiB** |
+| MLX + recomputed fused pullback (6 calls) | 0.372 s | 0.382 s | 4.76 GiB |
+| MLX + generalized pullback (18 calls) | **0.377 s** | **0.388 s** | **4.73 GiB** |
 
 Broadcast fusion packages 245 runtime reductions as portable ONNX functions.
 With [MLX EP support](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/111),
@@ -160,7 +161,11 @@ and 5.11 GB whole-process peak. The same-binary saved-output control measures
 0.465/0.472 s and 5.21 GB process peak. Prediction, loss and all 72 adapter gradients
 pass the existing comparison gates. Twenty accumulated updates and a fresh-process
 checkpoint recovery also pass: all 289 state tensors, ten exported file hashes
-and 74 loaded execution tensors match bitwise. Export this schedule with:
+and 74 loaded execution tensors match bitwise. The generalized head/mask route packages all 18 attention pullbacks and measures
+0.377/0.388 s, with 3.95 GB MLX peak and 5.08 GB process peak. Its 20-update
+run and fresh-process recovery reproduce all 289 state tensors and 74 execution
+outputs bitwise.
+Export this schedule with:
 
 ```sh
 python -m examples.diffusion.objective --training-run run \

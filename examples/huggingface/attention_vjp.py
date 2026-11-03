@@ -20,7 +20,7 @@ def fuse_attention_vjp(model, *, recompute=False):
 
     Apply immediately after VJP generation, before folding or residual splitting.
     The runtime can implement this function contract with a tiled kernel.
-    With recompute=True, eligible unmasked, noncausal 32-64-wide heads use a
+    With recompute=True, eligible FP32 heads from 32 through 256 use a
     v2 body that recomputes its primal output from Q/K/V
     and omits Y from the interface, enabling fused forward/backward kernels.
     """
@@ -116,9 +116,7 @@ def fuse_attention_vjp(model, *, recompute=False):
         for index, value in enumerate(body.inputs):
             value.name = ("Q", "K", "V", "Y", "G", "Mask")[index]
             value.const_value = None
-        use_recompute = (
-            recompute and kind == 0 and not attrs.get("is_causal", 0) and 32 <= d <= 64
-        )
+        use_recompute = recompute and 32 <= d <= 256
         if use_recompute:
             query, key, value, primal, _seed, formal_mask = body.inputs
             recomputed = ir.val("recomputed_Y", type=primal.type, shape=primal.shape)

@@ -3,8 +3,10 @@
 """Deployed pullbacks train, load and re-export through the common task bridge."""
 # ruff: file-ignore[module-import-not-at-top-of-file] - Optional training dependencies.
 
+import copy
 import json
 import os
+from dataclasses import replace
 
 import pytest
 
@@ -34,12 +36,26 @@ def runtime_factory(request):
     return mlx_session
 
 
+@pytest.mark.parametrize("recompute_attention", [False, True])
 @pytest.mark.parametrize("family", ["qwen3", "qwen35", "phi3"])
 @pytest.mark.parametrize("broadcast_adjoints", [False, True])
 def test_deployed_decoder_gradients_updates_and_reexport(
-    tmp_path, family, runtime_factory, broadcast_adjoints
+    tmp_path, family, runtime_factory, broadcast_adjoints, recompute_attention, monkeypatch
 ):
     torch.set_num_threads(1)
+    if recompute_attention:
+        from examples.huggingface.decoder_families import FAMILIES, reference_model
+
+        entry = FAMILIES[family]
+        config = copy.deepcopy(reference_model(family).config)
+        config.hidden_size = 128
+        config.intermediate_size = 256
+        config.head_dim = 32
+        torch.manual_seed(20261103)
+        enlarged = entry.reference_type(config).eval()
+        monkeypatch.setitem(
+            FAMILIES, family, replace(entry, reference_factory=lambda: copy.deepcopy(enlarged))
+        )
     original, reference = prepare(
         family, head_chunk_size=3, fused_ops=True, session_factory=session
     )
@@ -50,7 +66,18 @@ def test_deployed_decoder_gradients_updates_and_reexport(
         for path in source.rglob("*")
         if path.is_file()
     }
-    report = deploy(source, tmp_path / "deployed", broadcast_adjoints=broadcast_adjoints)
+    report = deploy(
+        source,
+        tmp_path / "deployed",
+        broadcast_adjoints=broadcast_adjoints,
+        recompute_attention=recompute_attention,
+    )
+    if recompute_attention:
+        assert any(
+            name.startswith("AttentionVJP_v2_")
+            for row in report["blocks"]
+            for name in row["calls"]
+        )
     if broadcast_adjoints:
         assert sum(row["broadcast_adjoint_calls"] for row in report["blocks"]) > 0
     assert report["blocks"] and report["models_checked"] == len(report["blocks"])
@@ -115,7 +142,8 @@ def test_deployed_decoder_gradients_updates_and_reexport(
                 restored(**data).loss, deployed(**data).loss, rtol=0, atol=0
             )
             assert any(
-                node.domain == "pkg.onnax" and node.op_type.startswith("AttentionVJP_v1_")
+                node.domain == "pkg.onnax"
+                and node.op_type.startswith(("AttentionVJP_v1_", "AttentionVJP_v2_"))
                 for execution in restored.onnx.executions
                 if execution.derivative is not None
                 for node in execution.derivative.graph

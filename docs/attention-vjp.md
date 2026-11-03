@@ -325,8 +325,9 @@ models; 3935 frozen tensor records remain unchanged throughout training.
 ## Recomputed pullbacks
 
 `fuse_attention_vjp(model, recompute=True)` emits `AttentionVJP_v2_*` for
-unmasked, noncausal FP32 heads with widths 32 through 64, in multiples of eight.
-The five inputs are Q, K, V, G and an unused mask placeholder. The ordinary ONNX
+FP32 heads with widths 32 through 256, in multiples of eight.
+The five inputs are Q, K, V, G and Mask. Mask carries a boolean or additive mask;
+unmasked functions ignore its placeholder value. The ordinary ONNX
 body recomputes Y from Q/K/V before applying the pullback. This makes the function
 self-contained and lets [MLX EP](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/113)
 use its fused SDPA forward/backward implementation.
@@ -346,3 +347,40 @@ python -m examples.torch_deploy --bundle export --output attention.onnx \
 For the real-image UNet workflow, pass `--recompute-attention` to
 `examples.diffusion.objective`. The resulting bundle uses the usual
 `OnnxModule.load` and external optimizer interfaces.
+
+
+## Causal and padding masks
+
+The [MLX EP implementation](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/114)
+executes this extended contract.
+
+Recomputed decoder pullbacks preserve ONNX's upper-left causal relation,
+$j \le i$, including unequal query/key lengths. For equal lengths without an
+external mask, the runtime uses MLX's causal mode. Other geometries combine an
+explicit upper-left mask with the supplied boolean or additive mask.
+
+A fully masked row has zero output and contributes no Q/K/V gradient. The runtime
+first gives such rows a finite softmax input, then selects zero output. This
+keeps the fused backward free of `0 * NaN` while preserving the row's zero
+contribution. Singleton masks, short key tails, changing mask values within a
+compiled shape, dynamic sequences and selected gradient outputs have independent
+NumPy gradient coverage.
+
+Prepare a decoder task with these functions:
+
+```sh
+python -m examples.huggingface.attention_bundle --export qwen_run/export \
+  --output qwen_recomputed --recompute-attention --broadcast-adjoints
+```
+
+Qwen3, Qwen3.5 and Phi3 tests compare three AdamW updates, all adapter gradients,
+loss and re-exported execution with Transformers. Their recomputed cases use
+32-wide heads and assert that v2 functions execute.
+
+A Qwen3.5 4032-token attention block with 256-wide heads measures 217.67/222.03 ms
+paired median/P95. The same-binary GEMM control, with a 1 GiB score budget,
+measures 218.28/221.27 ms. All five captured gradients pass the existing gates;
+the maximum error is 1.40e-9. These timings cover one checkpoint block's forward
+and backward calls. The [candidate report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen35-context4k-recomputed-attention.json)
+and [comparison](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/qwen35-context4k-recomputed-attention-comparison.json)
+record input identities, runtime hashes and memory scope.

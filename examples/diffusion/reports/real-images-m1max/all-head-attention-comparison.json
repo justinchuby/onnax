@@ -1,0 +1,428 @@
+{
+  "model": "segmind/tiny-sd",
+  "revision": "3d25de3e8d5aacf94ce91176f204e6d11d120315",
+  "latent_shape": [
+    1,
+    4,
+    64,
+    64
+  ],
+  "conditioning_shape": [
+    1,
+    77,
+    768
+  ],
+  "captured_tensors": 74,
+  "checks": {
+    "prediction": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "loss": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 4.001776687800884e-11,
+      "relative_l2_error": 1.1549610021599405e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 3.637978807091713e-11,
+      "relative_l2_error": 1.2025058286534235e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 1.673470251262188e-10,
+      "relative_l2_error": 1.931790344808127e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 2.219167072325945e-10,
+      "relative_l2_error": 1.7142393925184077e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 5.059064278611913e-12,
+      "relative_l2_error": 2.40301552552926e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 6.070877134334296e-11,
+      "relative_l2_error": 4.8514201996911475e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 2.9831426218152046e-10,
+      "relative_l2_error": 1.7910904912766272e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.0.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 3.41970007866621e-10,
+      "relative_l2_error": 1.6447939658208227e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 1.8189894035458565e-11,
+      "relative_l2_error": 1.845085088411088e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 2.546585164964199e-11,
+      "relative_l2_error": 2.0300921697578943e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 5.820766091346741e-11,
+      "relative_l2_error": 8.409418656758195e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 9.094947017729282e-11,
+      "relative_l2_error": 1.7121487190875899e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 6.366462912410498e-12,
+      "relative_l2_error": 2.136067317594249e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 2.4556356947869062e-11,
+      "relative_l2_error": 1.765991055848044e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 1.6007106751203537e-10,
+      "relative_l2_error": 1.1492174593369286e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.1.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 5.238689482212067e-10,
+      "relative_l2_error": 1.8766747457759499e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 3.467448550509289e-12,
+      "relative_l2_error": 2.124966293415012e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 2.091837814077735e-11,
+      "relative_l2_error": 2.346031542730105e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 3.456079866737127e-11,
+      "relative_l2_error": 9.661333656583858e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 5.184119800105691e-11,
+      "relative_l2_error": 1.645935011452511e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 3.772271384150372e-11,
+      "relative_l2_error": 8.084434512893133e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 4.7350567911053076e-11,
+      "relative_l2_error": 4.467667675945847e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 4.0745362639427185e-10,
+      "relative_l2_error": 3.5885096236255023e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "down_blocks.2.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 3.8562575355172157e-10,
+      "relative_l2_error": 1.6350146029270708e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 5.4569682106375694e-12,
+      "relative_l2_error": 1.2952346078798743e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 1.4097167877480388e-11,
+      "relative_l2_error": 1.5938774860720742e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 3.728928277269006e-11,
+      "relative_l2_error": 1.808203673852061e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 3.637978807091713e-11,
+      "relative_l2_error": 1.3841394629060834e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 8.640199666842818e-12,
+      "relative_l2_error": 1.290146080969669e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 4.9112713895738125e-11,
+      "relative_l2_error": 1.7403371899540397e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 8.221832104027271e-10,
+      "relative_l2_error": 1.0834275105777875e-05,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 1.8189894035458565e-10,
+      "relative_l2_error": 1.5269561825746825e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 4.320099833421409e-12,
+      "relative_l2_error": 1.4504808503528757e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 1.546140993013978e-11,
+      "relative_l2_error": 1.4003785484385344e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 1.77351466845721e-11,
+      "relative_l2_error": 6.641620774931176e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 5.638867150992155e-11,
+      "relative_l2_error": 1.1995400807237486e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 3.410605131648481e-12,
+      "relative_l2_error": 1.3003898992495456e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 1.0913936421275139e-11,
+      "relative_l2_error": 6.925192208922274e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 2.764863893389702e-10,
+      "relative_l2_error": 1.137641338474686e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.0.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 1.9826984498649836e-10,
+      "relative_l2_error": 1.5642990638401833e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 1.0459189070388675e-11,
+      "relative_l2_error": 1.8140803682466544e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 2.4556356947869062e-11,
+      "relative_l2_error": 1.7718453639460863e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 5.820766091346741e-11,
+      "relative_l2_error": 1.2280463682445113e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 5.820766091346741e-11,
+      "relative_l2_error": 1.065054432113446e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 2.9558577807620168e-12,
+      "relative_l2_error": 1.856753025616634e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 1.5234036254696548e-11,
+      "relative_l2_error": 4.067673473743619e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 3.346940502524376e-10,
+      "relative_l2_error": 1.6672275807021433e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 9.094947017729282e-11,
+      "relative_l2_error": 1.5918001565448597e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 7.73070496506989e-12,
+      "relative_l2_error": 5.675842911777022e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 1.8189894035458565e-11,
+      "relative_l2_error": 7.380572871601101e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 2.1827872842550278e-11,
+      "relative_l2_error": 2.731627890964877e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 2.546585164964199e-11,
+      "relative_l2_error": 4.3278368552721026e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 9.094947017729282e-13,
+      "relative_l2_error": 1.0499150907672653e-06,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 6.821210263296962e-12,
+      "relative_l2_error": 8.001951670231123e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 8.731149137020111e-11,
+      "relative_l2_error": 3.5986910057807343e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.1.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 8.003553375601768e-11,
+      "relative_l2_error": 5.708087941216059e-07,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.0.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn1.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_q.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_q.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_v.lora.A": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    },
+    "up_blocks.2.attentions.1.attn2.to_v.lora.B": {
+      "max_absolute_error": 0.0,
+      "relative_l2_error": 0.0,
+      "pointwise_tolerance_failures": 0
+    }
+  },
+  "baseline": {
+    "path": "/tmp/onnax-unet-masked-vjp-regression.json",
+    "report_sha256": "b0bd3d94c2c5ba9b2b521b02a9400eb9d0d6132ad8599476b8bbde7f143d7445",
+    "capture_sha256": "9cc48fa61267d7536c09903074aaaa97b3b650587bb054530ca144cb9f53465d",
+    "provider": "mlx",
+    "full_step_seconds": {
+      "median": 0.3723828960210085,
+      "p95": 0.37990680210641586,
+      "samples": 100
+    },
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 2485062752,
+      "lifetime_peak_bytes": 5178870880,
+      "current_resident_bytes": 1997635584,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_process_rss_bytes": 3250896896
+  },
+  "candidate": {
+    "path": "/tmp/onnax-unet-all-head-vjp-measured.json",
+    "report_sha256": "cca1e84358276aca38f39234565d8c321dac3e75e46547727721a053e48449d9",
+    "capture_sha256": "061be503071dfcf7182315e469acbd051659220696e5137adb00e613eb7359c5",
+    "provider": "mlx",
+    "full_step_seconds": {
+      "median": 0.377386333537288,
+      "p95": 0.3879684270650614,
+      "samples": 100
+    },
+    "physical_footprint": {
+      "available": true,
+      "current_bytes": 2393230288,
+      "lifetime_peak_bytes": 5082696656,
+      "current_resident_bytes": 1993523200,
+      "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+    },
+    "peak_process_rss_bytes": 3247915008
+  },
+  "candidate_to_baseline_median_ratio": 1.0134362710257165,
+  "memory_scope": "Isolated whole-process lifetime peak, including construction and runtime allocator caches; cache policies are recorded in source reports"
+}

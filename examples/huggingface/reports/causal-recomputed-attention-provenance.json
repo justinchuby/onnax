@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "native_reviewed_head": "d7b4ef54bfdc9ac2f3e019d948f77b5c9109c545",
+  "native_pr": "https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/114",
+  "native_production_source_sha256": {
+    "rust/src/ops/attention_vjp.rs": "940a5275ca71c34d484d64346a1726632029d15cc0d8db5e3c06fd21df292b80",
+    "rust/src/ops/attention_vjp/native.rs": "e70bc44088b15ba7766d95c9155f02c7e4be8814009e583d59f86ceb669b57cc"
+  },
+  "library_sha256": "c6b1ced8bafacb337182ee20f341203cddad6a9dea9adb62c9e5765b69611f36",
+  "mlx_version": "0.32.4",
+  "mlx_dylib_sha256": "119d45ec9efbf726e4761c118e9d65d5224ddeb1082ad8f521b4601c68f5a03e",
+  "mlxc_dylib_sha256": "e439256facb869ff64b1283989508586bca65c18d95bc741feef316d48a1b48c",
+  "decoder_task_cases": 26,
+  "native_pullback_cases": 680,
+  "portable_and_deployment_cases": 694,
+  "source_scope": "Native production source before cfg(test); runtime built before unit-test-only additions",
+  "qwen_comparison": "qwen35-context4k-recomputed-attention-comparison.json"
+}

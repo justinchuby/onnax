@@ -402,8 +402,11 @@ with its prediction target and external scheduler.
    functions then enable MLX's fused pullback: 0.372 s, 3.98 GB MLX peak and
    5.11 GB process peak. The ordinary ONNX bodies define both saved-output and
    recomputed-output contracts explicitly. Continuous and resumed
-   20-step runs have byte-identical state and export tensors. Next, broaden fused
-   attention by measured precision/mask needs. Arbitrary
+   20-step runs have byte-identical state and export tensors. Causal and masked
+   pullbacks now cover 32-256-wide heads, with three decoder-family update tests
+   and a 4032-token Qwen3.5 block qualification. The generalized UNet route
+   packages all 18 pullbacks at 0.377 s with 3.95 GB MLX peak. Next, qualify full 4k Trainer
+   recovery through this schedule and evaluate BF16 compute/FP32 accumulation. Arbitrary
    vector-cotangent workloads use saved-value planning: the UNet study finds
    1.75 GB of logical saved outputs, including 0.95 GB needed only for shape;
    compress those boundaries before evaluating full activation handoff.
