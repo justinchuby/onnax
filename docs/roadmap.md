@@ -405,8 +405,12 @@ with its prediction target and external scheduler.
    20-step runs have byte-identical state and export tensors. Causal and masked
    pullbacks now cover 32-256-wide heads, with three decoder-family update tests
    and a 4032-token Qwen3.5 block qualification. The generalized UNet route
-   packages all 18 pullbacks at 0.377 s with 3.95 GB MLX peak. Next, qualify full 4k Trainer
-   recovery through this schedule and evaluate BF16 compute/FP32 accumulation. Arbitrary
+   packages all 18 pullbacks at 0.377 s with 3.95 GB MLX peak. Full 4k Trainer
+   training and fresh-process recovery now pass through this schedule. Disabling
+   per-session CPU arenas reduces the cold full-model forward/backward peak
+   from 25.82 GB to 8.37 GB; the four-update training run peaks at 9.98 GB.
+   All 60 exported adapter gradients and checkpoint optimizer states reproduce
+   exactly after resume. Next, evaluate BF16 compute/FP32 accumulation. Arbitrary
    vector-cotangent workloads use saved-value planning: the UNet study finds
    1.75 GB of logical saved outputs, including 0.95 GB needed only for shape;
    compress those boundaries before evaluating full activation handoff.
