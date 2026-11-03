@@ -170,7 +170,7 @@ def main() -> None:
     )
     saved_joint = vjp(saved_model, inputs=["saved_x"])
     saved_forward, saved_backward, saved_names = split_vjp(
-        saved_model, saved_joint, optimize_layout=True
+        saved_model, saved_joint
     )
     saved_forward, saved_backward, saved_names, _ = compress(
         saved_forward, saved_backward, saved_names, outputs=["saved_y"]
