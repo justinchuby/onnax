@@ -11,6 +11,9 @@ import torch
 import onnax
 from examples.huggingface.validation import TorchLora
 from examples.lora.bf16_rules import DOMAIN, OP, matmul_function
+from examples.torch_precision import BFloat16Product as _Product
+from examples.torch_precision import Float16Product as _FP16Product
+from onnax._inference import _infer_shapes
 
 
 def precision_projections(model, *, precision="bf16"):
@@ -24,7 +27,7 @@ def precision_projections(model, *, precision="bf16"):
     if precision not in ("bf16", "fp16"):
         raise ValueError("Expected bf16 or fp16 projection precision")
     suffix = "FP16" if precision == "fp16" else "BF16"
-    result = model.clone()
+    result = _infer_shapes(model, context="half projection preparation")
     from examples.lora.nf4 import DOMAIN as NF4_DOMAIN
 
     if any(
@@ -116,35 +119,6 @@ def precision_projections(model, *, precision="bf16"):
 def bf16_projections(model):
     """Apply Half-precision projections with FP32 adjoints."""
     return precision_projections(model, precision="bf16")
-
-
-class _Product(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, a, b):
-        qa, qb = a.to(torch.bfloat16), b.to(torch.bfloat16)
-        if any(ctx.needs_input_grad):
-            ctx.save_for_backward(qa.float(), qb.float())
-        return (qa @ qb).float()
-
-    @staticmethod
-    def backward(ctx, gradient):
-        a, b = ctx.saved_tensors
-        da = gradient @ b.T if ctx.needs_input_grad[0] else None
-        db = (
-            a.reshape(-1, a.shape[-1]).T @ gradient.reshape(-1, b.shape[-1])
-            if ctx.needs_input_grad[1]
-            else None
-        )
-        return da, db
-
-
-class _FP16Product(_Product):
-    @staticmethod
-    def forward(ctx, a, b):
-        qa, qb = a.to(torch.float16), b.to(torch.float16)
-        if any(ctx.needs_input_grad):
-            ctx.save_for_backward(qa.float(), qb.float())
-        return (qa @ qb).float()
 
 
 def reference_projections(reference, *, precision="bf16"):

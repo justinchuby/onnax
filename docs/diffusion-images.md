@@ -198,3 +198,50 @@ needed to demonstrate recovery, with their source revision and input manifest.
 model's logical file sizes. APFS private COW snapshots can share its frozen-weight
 blocks. Select full-export milestones and retain lightweight intermediate
 checkpoints/reports between them.
+
+## Qualify half-precision projections
+
+The offline UNet workflow also tests BF16 and FP16 matrix projections. Convolution,
+attention, normalization, loss, adapter parameters, gradients and Adam moments
+remain FP32. Forward projection operands and results use the selected half format.
+For rounded operands $Q_p(A)$ and $Q_p(B)$, the example defines the FP32 surrogate
+pullback
+
+$$
+\bar A = G Q_p(B)^T,\qquad \bar B = Q_p(A)^T G.
+$$
+
+The shared Torch reference in `examples.torch_precision` implements this same
+policy. `precision_projections` prepares symbolic shapes before lowering, so it
+accepts the original Mobius UNet graph. Its global derivative registrations are
+loaded with the example module.
+
+```python
+from examples.huggingface.mixed_precision import precision_projections
+
+half_graph = precision_projections(graph, precision="bf16")
+```
+
+The offline regression executes three external AdamW updates and checks all adapter
+gradients, FP32 moments, unchanged frozen weights and exact export/load execution.
+Shared-input products and pullbacks use `rtol=1e-4, atol=1e-6`. Whole-path prediction,
+combined-gradient and parameter comparisons use one compute-format epsilon on the
+tensor norm, with an absolute floor of $10^{-6}$; scalar loss keeps the FP32
+comparison tolerance. Both independent training losses must decrease.
+
+The [M1 Max audit records](https://github.com/justinchuby/onnax/tree/main/examples/diffusion/reports/precision-tiny-m1max)
+explain how small FP32 path differences cross half-format rounding boundaries.
+On this trace, MLX reproduces all 116 shared-input BF16 products bit for bit.
+For FP16, 87 products match bit for bit and the remaining products differ by
+at most one FP16 ULP.
+The CLI traces all 116 tiny-UNet projections and optionally replays identical
+operands through MLX:
+
+```bash
+uv run --no-sync python -m examples.diffusion.precision_audit \
+  --precision bf16 --library /absolute/path/libonnxruntime_mlx_ep.dylib \
+  --output bf16-projections.json
+```
+
+The next workload measurement applies this policy to the cached 512-pixel images,
+including complete-step timing, process/device memory and checkpoint recovery.

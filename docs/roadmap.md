@@ -238,10 +238,10 @@ the same Trainer/TRL/PEFT path and public checkpoint module. The pinned
 Qwen3.5-0.8B FP32 run now completes 30 updates, exact checkpoint recovery and
 PEFT weight exchange. The [shared-activation VJP audit](shared-activation-vjp)
 checks local decoder gradients at common activations and loss cotangents.
-Next are longer-sequence MLX training and a small pretrained Diffusers denoiser
-with its declared prediction target. Diffusers supplies the noise schedule and sampling loop;
-text encoders, VAE execution and datasets remain external. MLX measurements will
-separate execution, host exchange and updates, then guide recurrent backward
+The longer-context MLX studies and pretrained Diffusers denoiser qualification
+appear below. Diffusers supplies the noise schedule and sampling loop;
+text encoders, VAE execution and datasets remain external. MLX reports separate
+execution, host exchange and updates. Allocator traces guide recurrent backward
 fusion and state recomputation. Portable derivative functions use `pkg.onnax`
 when extracted from the generated tensor graph.
 
@@ -297,7 +297,7 @@ runtime measurement, training and checkpoint qualification.
 Shape-specific MatMul/Gemm forms and shared low-rank products follow measured
 costs in these workloads. Graph generation continues to prune inactive derivative
 branches while propagating activation gradients through frozen weights. A small
-pretrained Diffusers denoiser remains the next model-family milestone.
+pretrained Diffusers denoiser supplies a second end-to-end model family for these contracts.
 
 The [first saved-value study](vjp-memory.md) connects split VJPs with the liveness
 analyzer on exported Qwen3.5 blocks. It reports complete local tensor peaks for
@@ -363,8 +363,8 @@ Qwen3, Qwen3.5 and Phi-3. The selected GEMM policy completes four additional 4k 
 2.11727 → 1.90056, validation 2.43249 → 2.43000 and peak process footprint
 8.33 GiB. Fresh-process recovery reproduces parameters, Adam/scheduler, PEFT and
 loaded loss/gradient/inference outputs exactly; 3935 frozen tensor records remain
-unchanged. The next workload milestone is a small pretrained Diffusers denoiser
-with its prediction target and external scheduler.
+unchanged. The pretrained Diffusers denoiser below adds a noise-prediction target
+and an external scheduler.
 
 ### Training handoff delivery status
 
@@ -410,7 +410,11 @@ with its prediction target and external scheduler.
    per-session CPU arenas reduces the cold full-model forward/backward peak
    from 25.82 GB to 8.37 GB; the four-update training run peaks at 9.98 GB.
    All 60 exported adapter gradients and checkpoint optimizer states reproduce
-   exactly after resume. Next, evaluate BF16 compute/FP32 accumulation. Arbitrary
+   exactly after resume. The reusable graph contracts are exposed as
+   `onnax.FuseAttentionVJPPass` and `onnax.FuseBroadcastAdjointsPass`. Offline
+   BF16/FP16 UNet projection tests now cover three external updates, FP32
+   gradients/moments and exact reload. Next, measure this policy on cached
+   real-image latents with complete-step timing and checkpoint recovery. Arbitrary
    vector-cotangent workloads use saved-value planning: the UNet study finds
    1.75 GB of logical saved outputs, including 0.95 GB needed only for shape;
    compress those boundaries before evaluating full activation handoff.

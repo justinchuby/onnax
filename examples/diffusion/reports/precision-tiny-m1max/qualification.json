@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "hardware": "Apple M1 Max, 32 GiB",
+  "base_commit": "143777655d50a1321e89d0a6911c891219267380",
+  "source_sha256": {
+    "examples/torch_precision.py": "70947b260c68ed5c17c0ae869c83194a0c0afba32e9edab1b19ec579d4f13a53",
+    "examples/diffusion/unet_reference.py": "3a70120fdab435e09da877bf9557d6c14a526ed024e6a5992607c9a475c89725",
+    "examples/huggingface/mixed_precision.py": "4fdce3e2936c6f9717c70a5b2bb4bf10d0e1f2c9b3199506121f511c45507314",
+    "examples/diffusion/precision_audit.py": "02d0a9ed940da1b2c8fef5f675a4512854a17a353afac413a1b2813b4aa2c15f",
+    "tests/test_diffusion_precision.py": "dd4306072d378b6eb2cf86ba876f2d22e094e3f7eb1fc0a3aa444a6eb7199082"
+  },
+  "versions": {
+    "numpy": "2.4.6",
+    "torch": "2.15.0",
+    "diffusers": "0.42.1",
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnxscript": "0.7.2",
+    "onnxruntime": "1.31.1",
+    "mlx": "0.32.4",
+    "mobius-onnx": "0.1.0"
+  },
+  "runtime_environment": {
+    "ONNXRUNTIME_EP_MLX_NO_COMPILE": "0",
+    "ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES": "536870912"
+  },
+  "scope": "Offline seeded UNet projection qualification; shared operand matrix replay and independent three-update trajectories",
+  "comparison_policy": {
+    "shared_input_product_and_adjoint": {
+      "rtol": 0.0001,
+      "atol": 1e-06
+    },
+    "whole_path_tensor_norm": {
+      "bf16_relative": 0.0078125,
+      "fp16_relative": 0.0009765625,
+      "absolute_floor": 1e-06
+    },
+    "scalar_loss": {
+      "rtol": 0.0001,
+      "atol": 1e-06
+    },
+    "export_reload": "bitwise"
+  },
+  "reports": [
+    "bf16-projections.json",
+    "fp16-projections.json",
+    "bf16-three-update-summary.json",
+    "bf16-three-update-comparisons.json"
+  ]
+}
