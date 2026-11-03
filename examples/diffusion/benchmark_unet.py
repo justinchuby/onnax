@@ -90,6 +90,7 @@ def measure(
     checkpoint=False,
     derivative_header=None,
     objective_export=None,
+    projection_precision=None,
 ):
     """Time natural full steps; collect synchronized phase profiles separately."""
     if provider not in ("mlx", "mps") or samples < 1 or warmup < 0 or component_samples < 0:
@@ -118,6 +119,15 @@ def measure(
     objective = None
     if objective_export:
         objective = read_objective(objective_export, interface)
+    selected_precision = objective.get("projection_precision", "fp32") if objective else "fp32"
+    if projection_precision is not None:
+        if projection_precision not in ("fp32", "bf16", "fp16"):
+            raise ValueError("Select fp32, bf16 or fp16 projection precision")
+        if objective and projection_precision != selected_precision:
+            raise ValueError("Requested precision differs from objective export")
+        selected_precision = projection_precision
+    if provider == "mlx" and selected_precision != "fp32" and objective is None:
+        raise ValueError("Half-precision MLX measurements require an objective export")
     encoded = torch.load(batch_file, weights_only=True, map_location="cpu")
     path = hf_hub_download(MODEL_ID, "scheduler/scheduler_config.json", revision=REVISION)
     with open(path, encoding="utf-8") as stream:
@@ -173,7 +183,12 @@ def measure(
     else:
         config, weights, _ = pretrained()
         model, params = make_reference(
-            config, weights, initial, source["adapter_mapping"], device="mps"
+            config,
+            weights,
+            initial,
+            source["adapter_mapping"],
+            device="mps",
+            precision=selected_precision,
         )
         del weights
         if checkpoint:
@@ -310,6 +325,7 @@ def measure(
             adapter_state=arrays_record(initial),
             data=arrays_recorded,
             dtype="float32",
+            projection_precision=selected_precision,
             latent_shape=list(encoded["clean"].shape),
             conditioning_shape=list(encoded["conditioning"].shape),
             warmup=warmup,
@@ -379,6 +395,7 @@ def main():
     parser.add_argument("--mlx-library")
     parser.add_argument("--derivative-header")
     parser.add_argument("--objective-export")
+    parser.add_argument("--projection-precision", choices=["fp32", "bf16", "fp16"])
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--samples", type=int, default=100)
     parser.add_argument("--component-samples", type=int, default=10)
@@ -393,6 +410,7 @@ def main():
         library=args.mlx_library,
         derivative_header=args.derivative_header,
         objective_export=args.objective_export,
+        projection_precision=args.projection_precision,
         warmup=args.warmup,
         samples=args.samples,
         component_samples=args.component_samples,

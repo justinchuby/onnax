@@ -138,7 +138,12 @@ def test_half_projection_gradients_updates_and_reload(tmp_path, native, precisio
 
 @pytest.mark.parametrize("native", [False, True])
 @pytest.mark.parametrize("precision", ["bf16", "fp16"])
-def test_shared_projection_inputs_keep_fp32_adjoint_contract(native, precision):
+@pytest.mark.parametrize("device", ["cpu", "mps"])
+def test_shared_projection_inputs_keep_fp32_adjoint_contract(native, precision, device):
+    if device == "mps" and (
+        os.environ.get("ONNAX_TEST_MLX_EP") != "1" or not torch.backends.mps.is_available()
+    ):
+        pytest.skip("MPS comparison requires native opt-in and Apple GPU")
     if native and os.environ.get("ONNAX_TEST_MLX_EP") != "1":
         pytest.skip("Native MLX opt-in")
 
@@ -174,8 +179,10 @@ def test_shared_projection_inputs_keep_fp32_adjoint_contract(native, precision):
     left = torch.randn(5, 7, requires_grad=True)
     right = torch.randn(7, 3, requires_grad=True)
     g = torch.randn(5, 3)
-    expected = projection_product(precision).apply(left, right)
-    (expected * g).sum().backward()
+    expected_left = left.detach().to(device).requires_grad_()
+    expected_right = right.detach().to(device).requires_grad_()
+    expected = projection_product(precision).apply(expected_left, expected_right)
+    (expected * g.to(device)).sum().backward()
     actual = factory(derivative).run(
         None,
         {
@@ -185,6 +192,10 @@ def test_shared_projection_inputs_keep_fp32_adjoint_contract(native, precision):
         },
     )
     for value, reference in zip(
-        actual, (expected.detach(), left.grad, right.grad), strict=True
+        actual,
+        (expected.detach(), expected_left.grad, expected_right.grad),
+        strict=True,
     ):
-        torch.testing.assert_close(torch.from_numpy(value), reference, rtol=1e-4, atol=1e-6)
+        torch.testing.assert_close(
+            torch.from_numpy(value), reference.cpu(), rtol=1e-4, atol=1e-6
+        )

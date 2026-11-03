@@ -16,8 +16,17 @@ from onnax.torch import OnnxModule
 from onnax.torch._serialization import file_digest
 
 
-def prepare(training_run, destination, *, recompute_attention=False):
+def prepare(
+    training_run,
+    destination,
+    *,
+    recompute_attention=False,
+    projection_precision="fp32",
+    session_factory=None,
+):
     """Compose MSE with a qualified source; export independently loadable sessions."""
+    if projection_precision not in ("fp32", "bf16", "fp16"):
+        raise ValueError("Select fp32, bf16 or fp16 projection precision")
     if os.path.lexists(destination):
         raise FileExistsError(destination)
     from examples.diffusion.benchmark_unet import load_state
@@ -30,6 +39,10 @@ def prepare(training_run, destination, *, recompute_attention=False):
         ):
             raise ValueError(f"Source bundle integrity mismatch: {name!r}")
     source = ir.load(os.path.join(training_run, "export", "model.onnx"))
+    if projection_precision != "fp32":
+        from examples.huggingface.mixed_precision import precision_projections
+
+        source = precision_projections(source, precision=projection_precision)
     names = ir.convenience.create_value_mapping(source.graph)
     if {"training.target", "training.loss"} & names.keys():
         raise ValueError("The source uses reserved objective names")
@@ -52,7 +65,12 @@ def prepare(training_run, destination, *, recompute_attention=False):
         return optimizer.optimize(FuseBroadcastAdjointsPass()(attention).model, inline=False)
 
     with OnnxModule(
-        source, initial, input_gradients=[], eager_gradients=True, optimize=optimize
+        source,
+        initial,
+        input_gradients=[],
+        eager_gradients=True,
+        optimize=optimize,
+        session_factory=session_factory,
     ) as module:
         module.export(destination)
         record = dict(
@@ -64,6 +82,7 @@ def prepare(training_run, destination, *, recompute_attention=False):
             target=target.name,
             prediction=prediction.name,
             reduction="mean_squared_error",
+            projection_precision=projection_precision,
         )
         with open(
             os.path.join(destination, "objective.json"), "w", encoding="utf-8"
@@ -82,7 +101,30 @@ def read_objective(directory, source_interface):
         or record["reduction"] != "mean_squared_error"
     ):
         raise ValueError("Objective belongs to a different source workload")
+    source = ir.load(os.path.join(directory, "model.onnx"))
+    policy = json.loads(source.metadata_props.get("onnax.example.precision", "null"))
+    if policy is not None and not isinstance(policy, dict):
+        raise ValueError("Objective projection precision metadata must be an object")
+    actual = (
+        "fp32"
+        if policy is None
+        else {"bfloat16": "bf16", "float16": "fp16"}.get(policy.get("projection_compute"))
+    )
+    if actual is None or record.get("projection_precision", "fp32") != actual:
+        raise ValueError("Objective projection precision differs from its source model")
     return record
+
+
+def validate_checkpoint_objective(state, source_interface, objective=None):
+    """Bind new checkpoints to their loss graph and retain legacy FP32 recovery."""
+    expected = (
+        source_interface["identity"] if objective is None else objective["objective_identity"]
+    )
+    if "objective_identity" in state:
+        if state["objective_identity"] != expected:
+            raise ValueError("Checkpoint belongs to a different training objective")
+    elif objective is not None and objective.get("projection_precision", "fp32") != "fp32":
+        raise ValueError("Mixed-precision recovery requires a checkpoint objective identity")
 
 
 def export_prediction(model, destination, name, *, execution=None):
@@ -154,13 +196,25 @@ def main():
     parser.add_argument("--training-run", required=True)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--recompute-attention", action="store_true")
+    parser.add_argument("--mlx-library")
+    parser.add_argument(
+        "--projection-precision", choices=["fp32", "bf16", "fp16"], default="fp32"
+    )
     args = parser.parse_args()
+    factory = None
+    if args.mlx_library:
+        from examples.lora.mlx_runtime import register_library, session
+
+        register_library(args.mlx_library)
+        factory = session
     print(
         json.dumps(
             prepare(
                 args.training_run,
                 args.output_dir,
                 recompute_attention=args.recompute_attention,
+                projection_precision=args.projection_precision,
+                session_factory=factory,
             )
         )
     )
