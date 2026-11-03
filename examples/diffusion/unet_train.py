@@ -24,12 +24,12 @@ from examples.diffusion.unet_reference import make_reference
 from onnax.torch import OnnxModule
 
 
-def compare_prediction(actual, expected):
+def compare_prediction(actual, expected, *, rtol=1e-4):
     """Record FP32 prediction error and check the complete tensor's norm."""
     difference = actual.detach() - expected.detach()
     error = float(torch.linalg.vector_norm(difference))
     reference = float(torch.linalg.vector_norm(expected.detach()))
-    if not math.isfinite(error) or error > 1e-6 + 1e-4 * reference:
+    if not math.isfinite(error) or error > 1e-6 + rtol * reference:
         raise AssertionError("UNet prediction norm differs from Diffusers")
     return dict(
         max_absolute_error=float(difference.abs().max()),

@@ -1,0 +1,27 @@
+{
+  "step": 20,
+  "state_tensors_byte_identical": 289,
+  "checkpoint_keys_verified": [
+    "model",
+    "optimizer",
+    "step",
+    "data",
+    "source_identity"
+  ],
+  "export_interfaces_identical": true,
+  "exported_file_checksums_identical": 10,
+  "eager_gradients": true,
+  "frozen_inference_max_absolute_error": 0.0,
+  "full_checker_models": 10,
+  "loaded_tensors_byte_identical": 74,
+  "provider": "mlx",
+  "cpu_fallback": false,
+  "ort_graph_optimizer": false,
+  "latent_shape": [
+    1,
+    4,
+    64,
+    64
+  ],
+  "encoded_data_verified": true
+}

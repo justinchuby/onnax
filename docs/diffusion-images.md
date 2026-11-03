@@ -243,5 +243,41 @@ uv run --no-sync python -m examples.diffusion.precision_audit \
   --output bf16-projections.json
 ```
 
-The next workload measurement applies this policy to the cached 512-pixel images,
-including complete-step timing, process/device memory and checkpoint recovery.
+For cached 512-pixel images, export a scalar objective with the same projection
+policy, then pass that export to training and benchmarking:
+
+```bash
+python -m examples.diffusion.objective \
+  --training-run pretrained-run --output-dir bf16-objective \
+  --projection-precision bf16 --recompute-attention \
+  --mlx-library /absolute/path/libonnxruntime_mlx_ep.dylib
+python -m examples.diffusion.train_images \
+  --training-run pretrained-run --encoded-dir encoded-images \
+  --objective-export bf16-objective --output-dir bf16-training \
+  --mlx-library /absolute/path/libonnxruntime_mlx_ep.dylib
+```
+
+The objective and checkpoint identities bind the projection policy to the saved
+parameters. Each path computes its MSE in FP32. The cross-path loss check uses the
+observed prediction difference: if its RMS is $d$ and the reference MSE is $L$,
+then the MSE difference is bounded by $2\sqrt{L}d+d^2$.
+
+When a gradient comparison stops training, `gradient-mismatch.json` and
+`gradient-mismatch.pt` preserve the adapter parameters and gradients. Replay both
+implementations at the same saved parameter point to separate computation
+variation from accumulated optimizer trajectories:
+
+```bash
+python -m examples.diffusion.replay_gradients \
+  --training-run pretrained-run --encoded-dir encoded-images \
+  --objective-export bf16-objective --diagnostics-dir bf16-training \
+  --parameter-point actual --output shared-point.json \
+  --mlx-library /absolute/path/libonnxruntime_mlx_ep.dylib
+```
+
+Use `--parameter-point reference` to repeat at the Torch parameter point.
+For training characterization, `train_images --gradient-validation report`
+records half-precision gradient deviations and continues the updates. Its report
+is marked `qualification: diagnostic`; the default `strict` mode enforces the
+existing gradient checks. Both modes require finite FP32 gradients and retain the
+prediction, loss, parameter, frozen-weight and export/load checks.

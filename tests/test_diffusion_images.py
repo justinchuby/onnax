@@ -181,3 +181,25 @@ def test_benchmark_requires_new_output_path(tmp_path):
     path.write_text("already recorded")
     with pytest.raises(FileExistsError, match="new benchmark output"):
         measure("unused", "unused", provider="mps", output=str(path), warmup=0, samples=1)
+
+
+def test_mse_validation_tracks_observed_prediction_difference():
+    from examples.diffusion.train_images import validate_mse_loss
+
+    target = torch.zeros(2)
+    reference = torch.ones(2)
+    actual = torch.full((2,), 1.001)
+    loss = (actual - target).square().mean()
+    result = validate_mse_loss(loss, actual, torch.tensor(1.0), reference, target)
+    assert result["absolute_loss_difference"] <= result["mse_difference_bound"] + 1e-6
+    with pytest.raises(AssertionError):
+        validate_mse_loss(torch.tensor(0.5), actual, torch.tensor(1.0), reference, target)
+
+
+def test_mse_prediction_bound_is_tight_for_aligned_residuals():
+    from examples.diffusion.precision_policy import mse_difference_bound
+
+    assert mse_difference_bound(4.0, 0.5) == pytest.approx(2.25)
+    assert pytest.approx(mse_difference_bound(4.0, 0.5)) == (2.0 + 0.5) ** 2 - 2.0**2
+    with pytest.raises(ValueError, match="nonnegative"):
+        mse_difference_bound(-1.0, 0.5)

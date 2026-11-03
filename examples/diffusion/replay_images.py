@@ -11,7 +11,7 @@ import torch
 from diffusers import DDPMScheduler
 from huggingface_hub import hf_hub_download
 
-from examples.diffusion.objective import DiagnosticSessions
+from examples.diffusion.objective import DiagnosticSessions, validate_checkpoint_objective
 from examples.diffusion.train_images import encoded_data
 from examples.diffusion.unet import MODEL_ID, REVISION
 from examples.diffusion.unet_train import training_batch
@@ -60,7 +60,13 @@ def verify(first, resumed, encoded_directory, *, step=20, provider="mlx", librar
     objectives = []
     for root in (first, resumed):
         with open(os.path.join(root, "report.json"), encoding="utf-8") as stream:
-            objectives.append(json.load(stream).get("objective"))
+            value = json.load(stream).get("objective")
+            if value is not None:
+                value = {
+                    **value,
+                    "projection_precision": value.get("projection_precision", "fp32"),
+                }
+            objectives.append(value)
     _equal_tree(*objectives)
     objective = objectives[0]
     interfaces = []
@@ -103,6 +109,12 @@ def verify(first, resumed, encoded_directory, *, step=20, provider="mlx", librar
         with OnnxModule.load(
             os.path.join(root, "export"), session_factory=diagnostics or factory
         ) as model:
+            state = states[0] if root == first else states[1]
+            validate_checkpoint_objective(
+                state, {"identity": state["source_identity"]}, objective
+            )
+            if objective and model._identity != objective["objective_identity"]:
+                raise ValueError("Exported model differs from checkpoint objective")
             if objective:
                 loss = model(**batch, **{objective["target"]: target})
                 prediction = torch.from_numpy(diagnostics.prediction)

@@ -4,9 +4,11 @@
 
 import argparse
 import json
+import math
 
 import numpy as np
 
+from examples.diffusion.precision_policy import projection_norm_rtol
 from examples.huggingface.block_runtime import digest
 
 
@@ -16,6 +18,10 @@ def compare(baseline, candidate):
         left = json.load(stream)
     with open(candidate, encoding="utf-8") as stream:
         right = json.load(stream)
+    precision = left.get("projection_precision", "fp32")
+    if precision != right.get("projection_precision", "fp32"):
+        raise ValueError("Benchmark workload differs: projection_precision")
+    tolerance = projection_norm_rtol(precision)
     for key in (
         "model",
         "revision",
@@ -41,6 +47,7 @@ def compare(baseline, candidate):
         ):
             raise ValueError("Incomplete benchmark sample count")
     checks = {}
+    gradient_error_squared = gradient_norm_squared = 0.0
     with np.load(baseline + ".npz") as expected, np.load(candidate + ".npz") as actual:
         required = {"loss", "prediction", *left["adapter_state"]}
         if set(expected.files) != required or set(actual.files) != required:
@@ -64,9 +71,14 @@ def compare(baseline, candidate):
             error = a - b
             norm = float(np.linalg.norm(error))
             reference = float(np.linalg.norm(b))
-            if norm > 1e-6 + 1e-4 * reference:
-                raise AssertionError(f"Tensor norm mismatch: {name}")
-            if name != "prediction":
+            if name in left["adapter_state"]:
+                gradient_error_squared += norm**2
+                gradient_norm_squared += reference**2
+            if precision == "fp32" or name in ("prediction", "loss"):
+                budget = 1e-4 if name == "loss" else tolerance
+                if norm > 1e-6 + budget * reference:
+                    raise AssertionError(f"Tensor norm mismatch: {name}")
+            if name == "loss" or (precision == "fp32" and name != "prediction"):
                 np.testing.assert_allclose(a, b, rtol=1e-4, atol=1e-6, err_msg=name)
             checks[name] = dict(
                 max_absolute_error=float(np.abs(error).max()),
@@ -75,7 +87,16 @@ def compare(baseline, candidate):
                     (np.abs(error) > 1e-6 + 1e-4 * np.abs(b)).sum()
                 ),
             )
+    gradient_error = math.sqrt(gradient_error_squared)
+    gradient_norm = math.sqrt(gradient_norm_squared)
+    if precision != "fp32" and gradient_error > 1e-6 + tolerance * gradient_norm:
+        raise AssertionError("Combined gradient norm mismatch")
     return dict(
+        projection_precision=precision,
+        combined_gradient_error=gradient_error,
+        combined_gradient_reference_norm=gradient_norm,
+        norm_rtol=tolerance,
+        pointwise_diagnostic_rtol=1e-4,
         model=left["model"],
         revision=left["revision"],
         latent_shape=left["latent_shape"],

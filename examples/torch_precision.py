@@ -5,20 +5,35 @@
 import torch
 
 
+def _save_needed_operands(ctx, a, b):
+    if any(ctx.needs_input_grad):
+        ctx.save_for_backward(
+            *[
+                value.float()
+                for value, needed in (
+                    (a, ctx.needs_input_grad[1]),
+                    (b, ctx.needs_input_grad[0]),
+                )
+                if needed
+            ]
+        )
+
+
 class BFloat16Product(torch.autograd.Function):
     @staticmethod
     def forward(ctx, a, b):
         qa, qb = a.to(torch.bfloat16), b.to(torch.bfloat16)
-        if any(ctx.needs_input_grad):
-            ctx.save_for_backward(qa.float(), qb.float())
+        _save_needed_operands(ctx, qa, qb)
         return (qa @ qb).float()
 
     @staticmethod
     def backward(ctx, gradient):
-        a, b = ctx.saved_tensors
+        saved = iter(ctx.saved_tensors)
+        a = next(saved) if ctx.needs_input_grad[1] else None
+        b = next(saved) if ctx.needs_input_grad[0] else None
         da = gradient @ b.T if ctx.needs_input_grad[0] else None
         db = (
-            a.reshape(-1, a.shape[-1]).T @ gradient.reshape(-1, b.shape[-1])
+            a.reshape(-1, a.shape[-1]).T @ gradient.reshape(-1, gradient.shape[-1])
             if ctx.needs_input_grad[1]
             else None
         )
@@ -29,8 +44,7 @@ class Float16Product(BFloat16Product):
     @staticmethod
     def forward(ctx, a, b):
         qa, qb = a.to(torch.float16), b.to(torch.float16)
-        if any(ctx.needs_input_grad):
-            ctx.save_for_backward(qa.float(), qb.float())
+        _save_needed_operands(ctx, qa, qb)
         return (qa @ qb).float()
 
 
