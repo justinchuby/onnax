@@ -1,0 +1,54 @@
+{
+  "precision": "bf16",
+  "comparison_scope": "Independent full-path trajectories, original FP32 tolerance differences recorded",
+  "comparisons": 294,
+  "steps": [
+    {
+      "step": 1,
+      "prediction_relative_l2": 0.0002377036918065422,
+      "loss": {
+        "shape": [],
+        "max_abs": 4.5299530029296875e-06,
+        "relative_l2": 4.466410302551108e-06,
+        "cosine": 1.0,
+        "actual_scalar": 1.014222264289856,
+        "reference_scalar": 1.0142267942428589
+      },
+      "max_gradient_relative_l2": 0.0016054459612789753,
+      "min_gradient_cosine": 0.9999987229414371,
+      "max_parameter_relative_l2": 0.00026260100472806234
+    },
+    {
+      "step": 2,
+      "prediction_relative_l2": 0.0007590030157753882,
+      "loss": {
+        "shape": [],
+        "max_abs": 2.8133392333984375e-05,
+        "relative_l2": 2.77484257177583e-05,
+        "cosine": 1.0,
+        "actual_scalar": 1.0139015913009644,
+        "reference_scalar": 1.0138734579086304
+      },
+      "max_gradient_relative_l2": 0.003500743685292774,
+      "min_gradient_cosine": 0.9999941938552812,
+      "max_parameter_relative_l2": 0.0005613568413990046
+    },
+    {
+      "step": 3,
+      "prediction_relative_l2": 0.0008127322130541486,
+      "loss": {
+        "shape": [],
+        "max_abs": 7.748603820800781e-06,
+        "relative_l2": 7.646504676837538e-06,
+        "cosine": 1.0,
+        "actual_scalar": 1.0133601427078247,
+        "reference_scalar": 1.013352394104004
+      },
+      "max_gradient_relative_l2": 0.00514604917021074,
+      "min_gradient_cosine": 0.9999870370624874,
+      "max_parameter_relative_l2": 0.0007483035294825255
+    }
+  ],
+  "exact_export_reload": true,
+  "frozen_weights_unchanged": true
+}

@@ -1,0 +1,4163 @@
+{
+  "precision": "bf16",
+  "comparison_scope": "Independent full-path trajectories, original FP32 tolerance differences recorded",
+  "comparisons": 294,
+  "steps": [
+    {
+      "step": 1,
+      "prediction_relative_l2": 0.0002377036918065422,
+      "loss": {
+        "shape": [],
+        "max_abs": 4.5299530029296875e-06,
+        "relative_l2": 4.466410302551108e-06,
+        "cosine": 1.0,
+        "actual_scalar": 1.014222264289856,
+        "reference_scalar": 1.0142267942428589
+      },
+      "max_gradient_relative_l2": 0.0016054459612789753,
+      "min_gradient_cosine": 0.9999987229414371,
+      "max_parameter_relative_l2": 0.00026260100472806234
+    },
+    {
+      "step": 2,
+      "prediction_relative_l2": 0.0007590030157753882,
+      "loss": {
+        "shape": [],
+        "max_abs": 2.8133392333984375e-05,
+        "relative_l2": 2.77484257177583e-05,
+        "cosine": 1.0,
+        "actual_scalar": 1.0139015913009644,
+        "reference_scalar": 1.0138734579086304
+      },
+      "max_gradient_relative_l2": 0.003500743685292774,
+      "min_gradient_cosine": 0.9999941938552812,
+      "max_parameter_relative_l2": 0.0005613568413990046
+    },
+    {
+      "step": 3,
+      "prediction_relative_l2": 0.0008127322130541486,
+      "loss": {
+        "shape": [],
+        "max_abs": 7.748603820800781e-06,
+        "relative_l2": 7.646504676837538e-06,
+        "cosine": 1.0,
+        "actual_scalar": 1.0133601427078247,
+        "reference_scalar": 1.013352394104004
+      },
+      "max_gradient_relative_l2": 0.00514604917021074,
+      "min_gradient_cosine": 0.9999870370624874,
+      "max_parameter_relative_l2": 0.0007483035294825255
+    }
+  ],
+  "exact_export_reload": true,
+  "frozen_weights_unchanged": true,
+  "rows": [
+    {
+      "shape": [
+        1,
+        4,
+        8,
+        12
+      ],
+      "max_abs": 0.0003715232014656067,
+      "relative_l2": 0.0002377036918065422,
+      "cosine": 0.9999999717493611,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "prediction"
+    },
+    {
+      "shape": [],
+      "max_abs": 4.5299530029296875e-06,
+      "relative_l2": 4.466410302551108e-06,
+      "cosine": 1.0,
+      "actual_scalar": 1.014222264289856,
+      "reference_scalar": 1.0142267942428589,
+      "step": 1,
+      "kind": "loss"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 8.343704394064844e-09,
+      "relative_l2": 0.00023019964895717697,
+      "cosine": 0.99999997618709,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.686203177087009e-08,
+      "relative_l2": 0.00023558485181660288,
+      "cosine": 0.999999980950521,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.412707544863224e-08,
+      "relative_l2": 0.00020382797616911932,
+      "cosine": 0.9999999871191807,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.5916961021721363e-08,
+      "relative_l2": 0.00024572331996545245,
+      "cosine": 0.9999999803222566,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.2809550753445365e-08,
+      "relative_l2": 0.00025191768452791536,
+      "cosine": 0.9999999721894294,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.2510099622886628e-08,
+      "relative_l2": 0.0002443629940204935,
+      "cosine": 0.9999999707191982,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 4.530011210590601e-08,
+      "relative_l2": 0.0001769135275937876,
+      "cosine": 0.9999999861079911,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 5.557376425713301e-08,
+      "relative_l2": 0.00019301545759493725,
+      "cosine": 0.9999999827809167,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 3.655713953776285e-09,
+      "relative_l2": 0.0002508319106224542,
+      "cosine": 0.9999999693390986,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 5.897163646295667e-09,
+      "relative_l2": 0.00018587211711838418,
+      "cosine": 0.9999999879237277,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 3.515378921292722e-08,
+      "relative_l2": 0.00019214400687281487,
+      "cosine": 0.9999999856071311,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 3.1504896469414234e-08,
+      "relative_l2": 0.00022634688830903366,
+      "cosine": 0.9999999840292487,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 8.145434549078345e-09,
+      "relative_l2": 0.000266121069902557,
+      "cosine": 0.9999999650927747,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.3348547983914614e-08,
+      "relative_l2": 0.00023650939929907136,
+      "cosine": 0.9999999876604854,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 5.12300175614655e-08,
+      "relative_l2": 0.0002643534629262864,
+      "cosine": 0.9999999662408532,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 3.453169483691454e-08,
+      "relative_l2": 0.0002412270861504414,
+      "cosine": 0.9999999783450478,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 8.592905942350626e-09,
+      "relative_l2": 0.00033504013313113973,
+      "cosine": 0.9999999498585833,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 7.695234671700746e-09,
+      "relative_l2": 0.00030284888699619387,
+      "cosine": 0.9999999569400696,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 3.7536665331572294e-08,
+      "relative_l2": 0.0002949236771097617,
+      "cosine": 0.9999999879674392,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 3.997411113232374e-08,
+      "relative_l2": 0.000217079054796989,
+      "cosine": 0.999999984613541,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 6.452864909078926e-09,
+      "relative_l2": 0.00021495219450305437,
+      "cosine": 0.9999999795884574,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 7.719791028648615e-09,
+      "relative_l2": 0.00021740896672208705,
+      "cosine": 0.9999999800208547,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 4.676985554397106e-08,
+      "relative_l2": 0.00046967743865626224,
+      "cosine": 0.9999999258395885,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 4.373703177407151e-08,
+      "relative_l2": 0.00020372131785382732,
+      "cosine": 0.9999999828057025,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 9.102222975343466e-09,
+      "relative_l2": 0.00020510732487773783,
+      "cosine": 0.9999999795328368,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.1041265679523349e-08,
+      "relative_l2": 0.00019768859421057176,
+      "cosine": 0.9999999805147494,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 5.164474714547396e-08,
+      "relative_l2": 0.00032418021170269664,
+      "cosine": 0.9999999905798094,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.9765942599624395e-08,
+      "relative_l2": 0.00023720472181722839,
+      "cosine": 0.999999985855433,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.4342276699608192e-08,
+      "relative_l2": 0.000272972551169605,
+      "cosine": 0.9999999652386588,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.03253875952214e-08,
+      "relative_l2": 0.00021674340569488527,
+      "cosine": 0.999999977506647,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 4.457251634448767e-08,
+      "relative_l2": 0.0002782786944867107,
+      "cosine": 0.9999999771749865,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 4.4264197640586644e-08,
+      "relative_l2": 0.00024122513548791504,
+      "cosine": 0.999999981863637,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 5.2677933126688e-09,
+      "relative_l2": 0.0001631768403132173,
+      "cosine": 0.9999999868238872,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 6.9139787228778005e-09,
+      "relative_l2": 0.00023573159787747928,
+      "cosine": 0.9999999729459613,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 6.76955096423626e-08,
+      "relative_l2": 6.74099920056141e-05,
+      "cosine": 0.9999999985835996,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 4.755565896630287e-08,
+      "relative_l2": 0.00012596580155136894,
+      "cosine": 0.9999999922107391,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.3046246749581769e-08,
+      "relative_l2": 0.00027144253301474036,
+      "cosine": 0.9999999649493438,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 7.475762231479166e-09,
+      "relative_l2": 0.0001376398058459544,
+      "cosine": 0.9999999918855922,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 7.491325959563255e-08,
+      "relative_l2": 0.000129078385099256,
+      "cosine": 0.9999999959136354,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 7.025664672255516e-08,
+      "relative_l2": 0.00019281262808726302,
+      "cosine": 0.9999999815215256,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.8033355192746967e-08,
+      "relative_l2": 0.0006296973390066771,
+      "cosine": 0.9999998025213173,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 4.1602106648497283e-08,
+      "relative_l2": 0.0005333949801910705,
+      "cosine": 0.999999857851462,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 9.499490261077881e-08,
+      "relative_l2": 0.00021236236015670352,
+      "cosine": 0.9999999779279166,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.1904921848326921e-07,
+      "relative_l2": 0.00021617753568966172,
+      "cosine": 0.9999999781486827,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.3467797543853521e-07,
+      "relative_l2": 0.0016054459612789753,
+      "cosine": 0.9999987229414371,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.849883458111435e-07,
+      "relative_l2": 0.0015038449221908552,
+      "cosine": 0.9999990061231097,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.7182901501655579e-07,
+      "relative_l2": 0.00025822716845411376,
+      "cosine": 0.999999967701718,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.101005520671606e-07,
+      "relative_l2": 0.00034894306830047107,
+      "cosine": 0.9999999397353772,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 9.499490261077881e-07,
+      "relative_l2": 1.47417102619417e-05,
+      "cosine": 0.9999999998922157,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 9.5367431640625e-07,
+      "relative_l2": 1.575392738700689e-05,
+      "cosine": 0.9999999998770637,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.921318471431732e-06,
+      "relative_l2": 1.895299749201692e-05,
+      "cosine": 0.9999999998210065,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 3.3546239137649536e-06,
+      "relative_l2": 2.4167596051846115e-05,
+      "cosine": 0.9999999997099326,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.0507723093032837e-06,
+      "relative_l2": 2.122985401708088e-05,
+      "cosine": 0.9999999997789073,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 7.562339305877686e-07,
+      "relative_l2": 1.2049119845105268e-05,
+      "cosine": 0.9999999999274217,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.0989606380462646e-06,
+      "relative_l2": 1.5027189892241653e-05,
+      "cosine": 0.9999999998951605,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.3560056686401367e-06,
+      "relative_l2": 1.927679481053582e-05,
+      "cosine": 0.9999999998147071,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 9.220093488693237e-07,
+      "relative_l2": 1.0932777504594883e-05,
+      "cosine": 0.9999999999402523,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 6.705522537231445e-07,
+      "relative_l2": 1.1522326465577234e-05,
+      "cosine": 0.9999999999338142,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 3.7439167499542236e-06,
+      "relative_l2": 3.6757090040647085e-05,
+      "cosine": 0.999999999329459,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 5.3496332839131355e-06,
+      "relative_l2": 4.2302940039855286e-05,
+      "cosine": 0.9999999991054649,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.1604279279708862e-06,
+      "relative_l2": 1.8049932049634158e-05,
+      "cosine": 0.9999999998372064,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.494772732257843e-06,
+      "relative_l2": 2.0327650097441117e-05,
+      "cosine": 0.9999999997938082,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.8542632460594177e-06,
+      "relative_l2": 2.645773692030548e-05,
+      "cosine": 0.9999999996567568,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.652406692504883e-06,
+      "relative_l2": 2.0419409177492926e-05,
+      "cosine": 0.999999999792302,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.960666850209236e-06,
+      "relative_l2": 1.4949601863839805e-05,
+      "cosine": 0.9999999998885428,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 9.10833477973938e-07,
+      "relative_l2": 1.3658088170064346e-05,
+      "cosine": 0.9999999999068835,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 9.797513484954834e-07,
+      "relative_l2": 1.1810271570604258e-05,
+      "cosine": 0.9999999999302588,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 3.978610038757324e-06,
+      "relative_l2": 3.2864648825478244e-05,
+      "cosine": 0.9999999994625133,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 9.685754776000977e-07,
+      "relative_l2": 1.3468710878545115e-05,
+      "cosine": 0.9999999999109183,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 9.164214134216309e-07,
+      "relative_l2": 1.2923278507289374e-05,
+      "cosine": 0.9999999999200608,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 6.545335054397583e-06,
+      "relative_l2": 5.5138146942063016e-05,
+      "cosine": 0.9999999984894373,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.1865980923175812e-05,
+      "relative_l2": 7.51000467567014e-05,
+      "cosine": 0.9999999971893403,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.6260892152786255e-06,
+      "relative_l2": 2.1765194820420093e-05,
+      "cosine": 0.9999999997713133,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.564621925354004e-06,
+      "relative_l2": 1.761401733331573e-05,
+      "cosine": 0.9999999998539804,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.3546086847782135e-06,
+      "relative_l2": 1.8513766038979158e-05,
+      "cosine": 0.9999999998288688,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 3.441236913204193e-06,
+      "relative_l2": 2.4707830827921217e-05,
+      "cosine": 0.9999999996947725,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 2.8796494007110596e-06,
+      "relative_l2": 2.7377531654614002e-05,
+      "cosine": 0.9999999996299751,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.5834888219833374e-06,
+      "relative_l2": 1.9730703565776273e-05,
+      "cosine": 0.9999999998064347,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 3.7280842661857605e-06,
+      "relative_l2": 3.0328447037197036e-05,
+      "cosine": 0.9999999995425026,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 4.950910806655884e-06,
+      "relative_l2": 3.362255057690001e-05,
+      "cosine": 0.9999999994348036,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 9.592622518539429e-07,
+      "relative_l2": 1.2924756464994117e-05,
+      "cosine": 0.9999999999197707,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.1147931218147278e-06,
+      "relative_l2": 1.6568176649677306e-05,
+      "cosine": 0.9999999998647827,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 7.666647434234619e-06,
+      "relative_l2": 6.180658165634516e-05,
+      "cosine": 0.9999999981115623,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 7.80448317527771e-07,
+      "relative_l2": 1.1043800134385552e-05,
+      "cosine": 0.9999999999390591,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.8908252716064453e-06,
+      "relative_l2": 3.9197002379701746e-05,
+      "cosine": 0.9999999992537542,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.008862793445587e-06,
+      "relative_l2": 2.1925193349579807e-05,
+      "cosine": 0.9999999997596829,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 3.889203071594238e-06,
+      "relative_l2": 2.6996099576334636e-05,
+      "cosine": 0.9999999996530428,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 5.7104043662548065e-06,
+      "relative_l2": 4.6943349529016286e-05,
+      "cosine": 0.9999999989324192,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 4.9211084842681885e-06,
+      "relative_l2": 5.8966371886164954e-05,
+      "cosine": 0.9999999982700396,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.5294721126556396e-06,
+      "relative_l2": 2.9411888037860085e-05,
+      "cosine": 0.9999999996045177,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.221670001745224e-06,
+      "relative_l2": 2.388635039246342e-05,
+      "cosine": 0.9999999997147443,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 7.355585694313049e-06,
+      "relative_l2": 8.562622147567265e-05,
+      "cosine": 0.9999999963393226,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.508680336177349e-05,
+      "relative_l2": 0.00026260100472806234,
+      "cosine": 0.9999999660441242,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.4942681193351746e-05,
+      "relative_l2": 0.00019880142502684358,
+      "cosine": 0.9999999805897797,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 3.1525269150733948e-06,
+      "relative_l2": 2.542043093460101e-05,
+      "cosine": 0.9999999996810346,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.1451542377471924e-05,
+      "relative_l2": 9.473454436192615e-05,
+      "cosine": 0.9999999955830361,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 1,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        1,
+        4,
+        8,
+        12
+      ],
+      "max_abs": 0.0007919073104858398,
+      "relative_l2": 0.0007590030157753882,
+      "cosine": 0.9999997120001405,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "prediction"
+    },
+    {
+      "shape": [],
+      "max_abs": 2.8133392333984375e-05,
+      "relative_l2": 2.77484257177583e-05,
+      "cosine": 1.0,
+      "actual_scalar": 1.0139015913009644,
+      "reference_scalar": 1.0138734579086304,
+      "step": 2,
+      "kind": "loss"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 3.3387550502084196e-08,
+      "relative_l2": 0.0009509087362479867,
+      "cosine": 0.9999996466828549,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 5.810943548567593e-08,
+      "relative_l2": 0.0009474375780606854,
+      "cosine": 0.9999996273765968,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 9.072891771211289e-08,
+      "relative_l2": 0.0006872094906627892,
+      "cosine": 0.9999997686125632,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.1725023796316236e-07,
+      "relative_l2": 0.0011669620686460057,
+      "cosine": 0.9999993192237004,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 5.142055670148693e-08,
+      "relative_l2": 0.0009645439852571042,
+      "cosine": 0.9999995879866683,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.381822585244663e-07,
+      "relative_l2": 0.0016398355072357194,
+      "cosine": 0.9999986799961341,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.9356957636773586e-07,
+      "relative_l2": 0.0005721854174002127,
+      "cosine": 0.999999913035035,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 5.797774065285921e-07,
+      "relative_l2": 0.0011703438070368045,
+      "cosine": 0.9999994038679249,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 3.180139174219221e-08,
+      "relative_l2": 0.002055669938384277,
+      "cosine": 0.9999980347037154,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 7.445851224474609e-08,
+      "relative_l2": 0.0015804324249461422,
+      "cosine": 0.9999992765363329,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 3.2453681342303753e-07,
+      "relative_l2": 0.0009768469564481713,
+      "cosine": 0.9999998300285663,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.435990609228611e-07,
+      "relative_l2": 0.0014142002075004968,
+      "cosine": 0.9999990586695988,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 4.9893515097210184e-08,
+      "relative_l2": 0.0014823264667843466,
+      "cosine": 0.9999989527483313,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.3556746125686914e-07,
+      "relative_l2": 0.0015843116600160244,
+      "cosine": 0.9999991890173467,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 4.321555024944246e-07,
+      "relative_l2": 0.0030192115271560046,
+      "cosine": 0.9999960999167342,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.4907058104872704e-07,
+      "relative_l2": 0.0019598237509676794,
+      "cosine": 0.9999981763472167,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 4.02878868044354e-08,
+      "relative_l2": 0.002130090022301342,
+      "cosine": 0.9999981364039799,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 4.552748578134924e-08,
+      "relative_l2": 0.002099443838366437,
+      "cosine": 0.9999978146688967,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 5.740184860769659e-08,
+      "relative_l2": 0.0003988288238513346,
+      "cosine": 0.9999999507607753,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.2232052288018167e-07,
+      "relative_l2": 0.0013785053111715555,
+      "cosine": 0.9999990730622548,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 7.532266010912281e-08,
+      "relative_l2": 0.001802573711408202,
+      "cosine": 0.9999984507939549,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.5063778846524656e-07,
+      "relative_l2": 0.0028234355135965204,
+      "cosine": 0.999996791041353,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.3867247616872191e-07,
+      "relative_l2": 0.0011241783593606185,
+      "cosine": 0.9999995256288282,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 3.34075593855232e-07,
+      "relative_l2": 0.0014615448818242223,
+      "cosine": 0.9999990121132619,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.2108102964702994e-07,
+      "relative_l2": 0.002304362085947113,
+      "cosine": 0.9999974704149392,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.1120391718577594e-07,
+      "relative_l2": 0.0022721103907788003,
+      "cosine": 0.9999974250026333,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 2.1088180801598355e-07,
+      "relative_l2": 0.001785235297311422,
+      "cosine": 0.9999984597546832,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.297474566148594e-07,
+      "relative_l2": 0.001879257134240829,
+      "cosine": 0.9999982383987955,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.6595367924310267e-07,
+      "relative_l2": 0.0024662931787613088,
+      "cosine": 0.9999970018478256,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.0671723177656531e-07,
+      "relative_l2": 0.002302049020018231,
+      "cosine": 0.9999973506157686,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 3.268360160291195e-07,
+      "relative_l2": 0.0017805831349465575,
+      "cosine": 0.9999984205344007,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 3.6910023482050747e-07,
+      "relative_l2": 0.0015411786956385579,
+      "cosine": 0.9999988724452821,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 6.962090992601588e-08,
+      "relative_l2": 0.0018326788406466399,
+      "cosine": 0.9999985924032725,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.3479439076036215e-07,
+      "relative_l2": 0.003500743685292774,
+      "cosine": 0.9999941938552812,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 7.08969309926033e-07,
+      "relative_l2": 0.0005629221105024237,
+      "cosine": 0.9999999490195498,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 4.801040631718934e-07,
+      "relative_l2": 0.0009758569841854037,
+      "cosine": 0.9999995370433803,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.7976162780541927e-07,
+      "relative_l2": 0.0027228976490506255,
+      "cosine": 0.9999962929074397,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.0226525521138683e-07,
+      "relative_l2": 0.0031301723733281324,
+      "cosine": 0.9999955236260961,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 5.636538844555616e-07,
+      "relative_l2": 0.0010579160433984475,
+      "cosine": 0.9999998392332065,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 4.4318585423752666e-07,
+      "relative_l2": 0.0015842077919308829,
+      "cosine": 0.9999987678688305,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 6.855134415673092e-08,
+      "relative_l2": 0.0017338028741042057,
+      "cosine": 0.999998536453225,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.061869963654317e-07,
+      "relative_l2": 0.002819949425446737,
+      "cosine": 0.9999962211769419,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.69457814283669e-07,
+      "relative_l2": 0.000861603054880421,
+      "cosine": 0.9999996297546885,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 7.478156476281583e-07,
+      "relative_l2": 0.0015794245096650973,
+      "cosine": 0.9999987552347726,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.829275445037638e-07,
+      "relative_l2": 0.00266392221447105,
+      "cosine": 0.9999965728059735,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 6.979098543524742e-07,
+      "relative_l2": 0.0034832473475794427,
+      "cosine": 0.9999951442793913,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 7.996350177563727e-07,
+      "relative_l2": 0.0011412363963820968,
+      "cosine": 0.999999363610455,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 7.566413842141628e-07,
+      "relative_l2": 0.001055513730318628,
+      "cosine": 0.9999995111422041,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.6188790798187256e-06,
+      "relative_l2": 4.034853950357752e-05,
+      "cosine": 0.9999999992050952,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 4.70038503408432e-06,
+      "relative_l2": 5.759928510846656e-05,
+      "cosine": 0.9999999983481681,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 8.093193173408508e-06,
+      "relative_l2": 5.742083349256764e-05,
+      "cosine": 0.9999999983595794,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.0423362255096436e-05,
+      "relative_l2": 7.684488891108169e-05,
+      "cosine": 0.9999999970483546,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 3.428664058446884e-06,
+      "relative_l2": 4.846322820830155e-05,
+      "cosine": 0.9999999988259909,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.4940276741981506e-05,
+      "relative_l2": 0.00010364396920594618,
+      "cosine": 0.9999999947690605,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 6.549060344696045e-06,
+      "relative_l2": 4.283342494935513e-05,
+      "cosine": 0.9999999991104757,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.2217089533805847e-05,
+      "relative_l2": 0.00010554237179053709,
+      "cosine": 0.9999999945074832,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 2.884306013584137e-06,
+      "relative_l2": 4.9548352741121415e-05,
+      "cosine": 0.9999999987752279,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 5.27501106262207e-06,
+      "relative_l2": 5.127644526982413e-05,
+      "cosine": 0.9999999987016579,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 5.467794835567474e-06,
+      "relative_l2": 0.0001015516615472298,
+      "cosine": 0.9999999948650786,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.364201307296753e-05,
+      "relative_l2": 0.00011443016195773062,
+      "cosine": 0.9999999935494581,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 4.917965270578861e-06,
+      "relative_l2": 6.133048635300713e-05,
+      "cosine": 0.9999999981361678,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 4.47593629360199e-06,
+      "relative_l2": 6.960732706569656e-05,
+      "cosine": 0.9999999975840851,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.1693686246871948e-05,
+      "relative_l2": 0.0002156731129683134,
+      "cosine": 0.9999999770997512,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 8.571892976760864e-06,
+      "relative_l2": 8.948241485665858e-05,
+      "cosine": 0.9999999959976512,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 3.234017640352249e-06,
+      "relative_l2": 4.6212945275854124e-05,
+      "cosine": 0.9999999989332518,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 4.991423338651657e-06,
+      "relative_l2": 5.779158354539637e-05,
+      "cosine": 0.9999999983355631,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 7.1320682764053345e-06,
+      "relative_l2": 5.428690594013323e-05,
+      "cosine": 0.9999999985290842,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.2899359464645386e-05,
+      "relative_l2": 0.00022418171658827437,
+      "cosine": 0.9999999750017836,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.304037868976593e-05,
+      "relative_l2": 9.183751773030594e-05,
+      "cosine": 0.9999999957841039,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 6.056390702724457e-06,
+      "relative_l2": 7.617546193369873e-05,
+      "cosine": 0.9999999970988702,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 6.798654794692993e-06,
+      "relative_l2": 7.256236485449696e-05,
+      "cosine": 0.9999999973676946,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.5396235287189484e-05,
+      "relative_l2": 0.00016764949432009787,
+      "cosine": 0.9999999859493424,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 9.689480066299438e-06,
+      "relative_l2": 0.00013154002950834098,
+      "cosine": 0.9999999914887402,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.452956348657608e-05,
+      "relative_l2": 0.0001255349526044558,
+      "cosine": 0.9999999924505107,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.5064142644405365e-05,
+      "relative_l2": 0.00015488630940936246,
+      "cosine": 0.9999999880057695,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.4262273907661438e-05,
+      "relative_l2": 0.00014982960170650787,
+      "cosine": 0.9999999887849671,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 9.49762761592865e-06,
+      "relative_l2": 0.00011183570116679963,
+      "cosine": 0.9999999937468576,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 7.854774594306946e-06,
+      "relative_l2": 8.869694799803568e-05,
+      "cosine": 0.9999999960668143,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.1874944902956486e-05,
+      "relative_l2": 0.00011072268957374609,
+      "cosine": 0.9999999939003572,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.0844320058822632e-05,
+      "relative_l2": 0.0001367723875358603,
+      "cosine": 0.9999999908141238,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 6.9374218583106995e-06,
+      "relative_l2": 8.579782608490052e-05,
+      "cosine": 0.9999999963300431,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.3329088687896729e-05,
+      "relative_l2": 0.00013757161075390837,
+      "cosine": 0.9999999905443572,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.9079074263572693e-05,
+      "relative_l2": 0.00018300667322398124,
+      "cosine": 0.9999999832573618,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 6.891787052154541e-06,
+      "relative_l2": 7.727182223510032e-05,
+      "cosine": 0.9999999970251607,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.4667748473584652e-05,
+      "relative_l2": 0.00017483684881076247,
+      "cosine": 0.999999984730825,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.4262815713882446e-05,
+      "relative_l2": 0.00020559754178235836,
+      "cosine": 0.9999999793171587,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 6.413087248802185e-06,
+      "relative_l2": 6.589870336343641e-05,
+      "cosine": 0.9999999978467023,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 4.01386059820652e-05,
+      "relative_l2": 0.00028467640092854344,
+      "cosine": 0.9999999595397632,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 9.952113032341003e-06,
+      "relative_l2": 0.00011947912207379446,
+      "cosine": 0.9999999928624009,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.15223990380764e-05,
+      "relative_l2": 0.00016902165629600395,
+      "cosine": 0.999999985896453,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 7.175374776124954e-06,
+      "relative_l2": 5.681114380613969e-05,
+      "cosine": 0.9999999984322915,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 3.390153869986534e-05,
+      "relative_l2": 0.00030721992813340625,
+      "cosine": 0.9999999528093217,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 7.7828299254179e-05,
+      "relative_l2": 0.0005613568413990046,
+      "cosine": 0.9999998425776505,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 4.960596561431885e-05,
+      "relative_l2": 0.0004134026094331702,
+      "cosine": 0.9999999153023054,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.936592161655426e-05,
+      "relative_l2": 0.00022012984476975928,
+      "cosine": 0.9999999757731336,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.2602657079696655e-05,
+      "relative_l2": 0.00012817324962019166,
+      "cosine": 0.999999991878869,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 2,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        1,
+        4,
+        8,
+        12
+      ],
+      "max_abs": 0.0009291768074035645,
+      "relative_l2": 0.0008127322130541486,
+      "cosine": 0.9999996727077233,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "prediction"
+    },
+    {
+      "shape": [],
+      "max_abs": 7.748603820800781e-06,
+      "relative_l2": 7.646504676837538e-06,
+      "cosine": 1.0,
+      "actual_scalar": 1.0133601427078247,
+      "reference_scalar": 1.013352394104004,
+      "step": 3,
+      "kind": "loss"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 4.55456756753847e-08,
+      "relative_l2": 0.0013021475702827507,
+      "cosine": 0.9999992745370015,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 5.7093984651146457e-08,
+      "relative_l2": 0.0011881934729558793,
+      "cosine": 0.9999992969080128,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.6203011909965426e-07,
+      "relative_l2": 0.0010122096926820933,
+      "cosine": 0.9999994916455337,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.786720531526953e-07,
+      "relative_l2": 0.0012773983693937807,
+      "cosine": 0.9999991909446027,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 7.938615453895181e-08,
+      "relative_l2": 0.0018605551671795966,
+      "cosine": 0.9999990254213925,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 9.647192200645804e-08,
+      "relative_l2": 0.001735822009475346,
+      "cosine": 0.9999993818809478,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.1903466656804085e-07,
+      "relative_l2": 0.0003056636209925521,
+      "cosine": 0.9999999848778067,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 4.1979365050792694e-07,
+      "relative_l2": 0.0009821671764245552,
+      "cosine": 0.9999995200276761,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 3.1471813599637244e-08,
+      "relative_l2": 0.0015483007329566523,
+      "cosine": 0.9999988223158762,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 5.749097908847034e-08,
+      "relative_l2": 0.001498015212098506,
+      "cosine": 0.999998948616007,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 4.820540198124945e-07,
+      "relative_l2": 0.001584931941113332,
+      "cosine": 0.999999066162781,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.982924343086779e-07,
+      "relative_l2": 0.0014675808766458959,
+      "cosine": 0.9999989344209276,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 5.443234840640798e-08,
+      "relative_l2": 0.001708325230103802,
+      "cosine": 0.9999985409044738,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 7.526341505581513e-08,
+      "relative_l2": 0.0012978730271326845,
+      "cosine": 0.9999991600222032,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.5785190043970942e-07,
+      "relative_l2": 0.000810761226877925,
+      "cosine": 0.9999996826450461,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 8.997303666546941e-07,
+      "relative_l2": 0.004419770133883599,
+      "cosine": 0.9999910986507251,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 6.233949534362182e-08,
+      "relative_l2": 0.0031013847511445285,
+      "cosine": 0.9999952933265438,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 7.070320862112567e-08,
+      "relative_l2": 0.0025324132900601854,
+      "cosine": 0.9999969443905391,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 2.223096089437604e-07,
+      "relative_l2": 0.000732624218776114,
+      "cosine": 0.9999997955058675,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 3.9295991882681847e-07,
+      "relative_l2": 0.001544369299327808,
+      "cosine": 0.9999988807952664,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 8.541883289581165e-08,
+      "relative_l2": 0.002125658143719872,
+      "cosine": 0.9999977645756603,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.8217724573332816e-07,
+      "relative_l2": 0.003257791389418357,
+      "cosine": 0.9999948630969905,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 3.381173883099109e-07,
+      "relative_l2": 0.0016557817179210703,
+      "cosine": 0.9999987691898181,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 5.545516614802182e-07,
+      "relative_l2": 0.0016524656707990785,
+      "cosine": 0.9999986380159414,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 3.4491404221626e-07,
+      "relative_l2": 0.0039086153302206605,
+      "cosine": 0.9999925856045019,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.1449432097142562e-07,
+      "relative_l2": 0.0034380644856388666,
+      "cosine": 0.9999946287574758,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 4.3655745685100555e-07,
+      "relative_l2": 0.0022796708873345376,
+      "cosine": 0.9999990087541546,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 3.33719071932137e-07,
+      "relative_l2": 0.002717269129500078,
+      "cosine": 0.9999976965543902,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 2.1611231204587966e-07,
+      "relative_l2": 0.0026866361937203814,
+      "cosine": 0.9999966828152963,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 7.795651981723495e-07,
+      "relative_l2": 0.00514604917021074,
+      "cosine": 0.9999870370624874,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.877197064459324e-07,
+      "relative_l2": 0.0007409653394576757,
+      "cosine": 0.9999997640904297,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 5.725087248720229e-07,
+      "relative_l2": 0.0019788937234597958,
+      "cosine": 0.9999980586605964,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.1532938515301794e-07,
+      "relative_l2": 0.0019754911209179113,
+      "cosine": 0.9999981191895344,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.018888724502176e-07,
+      "relative_l2": 0.0031168766621376427,
+      "cosine": 0.9999962932685502,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 5.601905286312103e-07,
+      "relative_l2": 0.00041673703725785493,
+      "cosine": 0.9999999162517661,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 4.4256739784032106e-07,
+      "relative_l2": 0.0008957866135072417,
+      "cosine": 0.9999996075982049,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.0854804461123422e-07,
+      "relative_l2": 0.0036043314464678003,
+      "cosine": 0.9999937324198023,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 8.760252967476845e-08,
+      "relative_l2": 0.0018393029106669064,
+      "cosine": 0.9999984700642753,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 5.746842361986637e-07,
+      "relative_l2": 0.0009790392855932788,
+      "cosine": 0.9999995258392547,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 7.325434125959873e-07,
+      "relative_l2": 0.0014127618164719523,
+      "cosine": 0.9999990147819845,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.1501106200739741e-07,
+      "relative_l2": 0.002198738733257826,
+      "cosine": 0.9999984519045925,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.8434366211295128e-07,
+      "relative_l2": 0.002443962379997931,
+      "cosine": 0.9999977878158769,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 3.5523908081813715e-07,
+      "relative_l2": 0.0013973593873660127,
+      "cosine": 0.9999994916905152,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 8.203205652534962e-07,
+      "relative_l2": 0.0009518049526476654,
+      "cosine": 0.9999998460128672,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.1561936591751873e-07,
+      "relative_l2": 0.002295904587871851,
+      "cosine": 0.9999976113329466,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.8172507882118225e-07,
+      "relative_l2": 0.0018668744768951218,
+      "cosine": 0.9999982585264887,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 5.685142241418362e-07,
+      "relative_l2": 0.0007560186976710029,
+      "cosine": 0.9999997968343447,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 9.740642781252973e-07,
+      "relative_l2": 0.0013006978782873603,
+      "cosine": 0.9999993440912756,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "gradient",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 3.0873343348503113e-06,
+      "relative_l2": 5.127595029374184e-05,
+      "cosine": 0.9999999987025656,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 7.449649274349213e-06,
+      "relative_l2": 0.00010008693665559811,
+      "cosine": 0.9999999949913658,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.1655502021312714e-05,
+      "relative_l2": 0.00010335676599256761,
+      "cosine": 0.9999999946624684,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.998990774154663e-05,
+      "relative_l2": 0.00014134322140875642,
+      "cosine": 0.9999999900110997,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 6.109476089477539e-06,
+      "relative_l2": 6.529914244024723e-05,
+      "cosine": 0.9999999979952785,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.1832063794136047e-05,
+      "relative_l2": 0.00015669011663121612,
+      "cosine": 0.9999999883330144,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 5.446374416351318e-06,
+      "relative_l2": 4.5949989345361125e-05,
+      "cosine": 0.9999999989501343,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.3571232557296753e-05,
+      "relative_l2": 0.00015111943222497542,
+      "cosine": 0.9999999887281559,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 5.0961971282958984e-06,
+      "relative_l2": 7.963386124507318e-05,
+      "cosine": 0.9999999968442488,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 8.111819624900818e-06,
+      "relative_l2": 8.906484628047885e-05,
+      "cosine": 0.9999999960668816,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 6.7176297307014465e-06,
+      "relative_l2": 0.00013575975132318067,
+      "cosine": 0.9999999908890073,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.917461097240448e-05,
+      "relative_l2": 0.000224152156426131,
+      "cosine": 0.9999999754268929,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 6.515532732009888e-06,
+      "relative_l2": 0.00010751876235861662,
+      "cosine": 0.9999999942718192,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 7.598660886287689e-06,
+      "relative_l2": 0.00010961361889049645,
+      "cosine": 0.9999999940067014,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.5246449038386345e-05,
+      "relative_l2": 0.00029557578866060494,
+      "cosine": 0.9999999568218684,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.3299286365509033e-05,
+      "relative_l2": 0.00013278140774679038,
+      "cosine": 0.9999999911925825,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "down_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 7.506459951400757e-06,
+      "relative_l2": 0.00010462842501857153,
+      "cosine": 0.9999999945302478,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 7.699243724346161e-06,
+      "relative_l2": 0.00010322892742918466,
+      "cosine": 0.9999999947039684,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.8710270524024963e-05,
+      "relative_l2": 0.00012498549151060637,
+      "cosine": 0.99999999220193,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 4.100799560546875e-05,
+      "relative_l2": 0.0004317519460205285,
+      "cosine": 0.9999999070860095,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.4944002032279968e-05,
+      "relative_l2": 0.0001273130542427718,
+      "cosine": 0.9999999919464675,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.3384036719799042e-05,
+      "relative_l2": 0.00017175033931756659,
+      "cosine": 0.9999999854210949,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.3714656233787537e-05,
+      "relative_l2": 0.00011593203649597973,
+      "cosine": 0.9999999932953046,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 4.999525845050812e-05,
+      "relative_l2": 0.00030628517614509157,
+      "cosine": 0.9999999531407736,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.846812665462494e-05,
+      "relative_l2": 0.0002479586845631113,
+      "cosine": 0.999999969380892,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 1.9269995391368866e-05,
+      "relative_l2": 0.00020473581165551293,
+      "cosine": 0.9999999796262602,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 2.0670704543590546e-05,
+      "relative_l2": 0.0002569145642508608,
+      "cosine": 0.9999999670725682,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.520647831261158e-05,
+      "relative_l2": 0.00022517615502554893,
+      "cosine": 0.9999999747174987,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        32,
+        4
+      ],
+      "max_abs": 1.7873942852020264e-05,
+      "relative_l2": 0.00018800529978138888,
+      "cosine": 0.9999999823339872,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 2.0728446543216705e-05,
+      "relative_l2": 0.00018143852201790345,
+      "cosine": 0.9999999835406849,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 1.6272300854325294e-05,
+      "relative_l2": 0.00014996125646382595,
+      "cosine": 0.999999988818884,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        32
+      ],
+      "max_abs": 3.2451003789901733e-05,
+      "relative_l2": 0.00028237619300272446,
+      "cosine": 0.9999999606152418,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.0.attentions.1.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 9.05897468328476e-06,
+      "relative_l2": 0.00012475038670172264,
+      "cosine": 0.9999999922188564,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 2.7466565370559692e-05,
+      "relative_l2": 0.00025279479195584187,
+      "cosine": 0.999999968110961,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.7824193239212036e-05,
+      "relative_l2": 0.0002873591394088321,
+      "cosine": 0.999999958753467,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.5074387192726135e-05,
+      "relative_l2": 0.0001529604384548387,
+      "cosine": 0.99999998830159,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 2.4503562599420547e-05,
+      "relative_l2": 0.00030193797709067254,
+      "cosine": 0.9999999544183911,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 4.056096076965332e-05,
+      "relative_l2": 0.0003442045943120609,
+      "cosine": 0.9999999422690381,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 8.605420589447021e-06,
+      "relative_l2": 9.771455887106844e-05,
+      "cosine": 0.9999999953888108,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 8.715596050024033e-05,
+      "relative_l2": 0.0006181236734773568,
+      "cosine": 0.9999998091835063,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.0.attn2.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.588091254234314e-05,
+      "relative_l2": 0.0001737740995065477,
+      "cosine": 0.9999999849014759,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 3.276718780398369e-05,
+      "relative_l2": 0.0002466427618365413,
+      "cosine": 0.99999996973606,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_q.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 1.1596828699111938e-05,
+      "relative_l2": 0.00014103657289032276,
+      "cosine": 0.9999999900589841,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 4.8069749027490616e-05,
+      "relative_l2": 0.0004067242931919028,
+      "cosine": 0.9999999173203167,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn1.to_v.lora.B"
+    },
+    {
+      "shape": [
+        16,
+        4
+      ],
+      "max_abs": 0.0001080869697034359,
+      "relative_l2": 0.0007483035294825255,
+      "cosine": 0.9999997201391706,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 7.807370275259018e-05,
+      "relative_l2": 0.0006018635321322832,
+      "cosine": 0.9999998207306952,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_q.lora.B"
+    },
+    {
+      "shape": [
+        24,
+        4
+      ],
+      "max_abs": 3.321375697851181e-05,
+      "relative_l2": 0.0003574972103365151,
+      "cosine": 0.9999999360991451,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.A"
+    },
+    {
+      "shape": [
+        4,
+        16
+      ],
+      "max_abs": 1.7480924725532532e-05,
+      "relative_l2": 0.0001925265236532468,
+      "cosine": 0.9999999814803696,
+      "actual_scalar": null,
+      "reference_scalar": null,
+      "step": 3,
+      "kind": "parameter",
+      "name": "up_blocks.1.attentions.1.attn2.to_v.lora.B"
+    }
+  ]
+}
