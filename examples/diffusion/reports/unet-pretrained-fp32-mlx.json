@@ -1,0 +1,59 @@
+{
+  "provider": "mlx",
+  "cpu_fallback": false,
+  "ort_graph_optimizer": false,
+  "library_sha256": "a6bc1ad34d68739bbd8e417e00c662479ede313b98cf6b503c05a2ea5bda28bd",
+  "latent_shape": [
+    1,
+    4,
+    16,
+    16
+  ],
+  "elapsed_including_load_and_reference_seconds": 20.209015249973163,
+  "steps": [
+    {
+      "step": 1,
+      "loss": 0.11729186773300171,
+      "maximum_gradient_error": 8.032657206058502e-09,
+      "maximum_relative_parameter_l2_error": 7.265984755850863e-06,
+      "prediction": {
+        "max_absolute_error": 2.384185791015625e-06,
+        "absolute_l2_error": 1.9738918126677163e-05,
+        "reference_l2_norm": 29.46605110168457,
+        "pointwise_tolerance_failures": 0
+      }
+    },
+    {
+      "step": 2,
+      "loss": 0.11081363260746002,
+      "maximum_gradient_error": 6.00994098931551e-09,
+      "maximum_relative_parameter_l2_error": 9.205765390812865e-06,
+      "prediction": {
+        "max_absolute_error": 4.0531158447265625e-06,
+        "absolute_l2_error": 1.9384180632187054e-05,
+        "reference_l2_norm": 29.663848876953125,
+        "pointwise_tolerance_failures": 0
+      }
+    },
+    {
+      "step": 3,
+      "loss": 0.10809075087308884,
+      "maximum_gradient_error": 5.122274160385132e-09,
+      "maximum_relative_parameter_l2_error": 1.022145404760352e-05,
+      "prediction": {
+        "max_absolute_error": 3.337860107421875e-06,
+        "absolute_l2_error": 1.869497100415174e-05,
+        "reference_l2_norm": 29.338685989379883,
+        "pointwise_tolerance_failures": 0
+      }
+    }
+  ],
+  "model": "segmind/tiny-sd",
+  "revision": "3d25de3e8d5aacf94ce91176f204e6d11d120315",
+  "versions": {
+    "torch": "2.15.0",
+    "onnxruntime": "1.31.1",
+    "diffusers": "0.42.1",
+    "mobius-onnx": "0.1.0"
+  }
+}

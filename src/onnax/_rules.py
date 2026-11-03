@@ -132,6 +132,8 @@ def _load_builtin_rules() -> _RuleSet:
                 "_attention",
                 "_rotary",
                 "_causal_conv",
+                "_convolution",
+                "_image",
                 "_linear_attention",
             ),
         ),

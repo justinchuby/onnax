@@ -58,6 +58,7 @@ authoring = [
     "ndonnx>=0.23.0",
     "onnxscript>=0.7",
 ]
+diffusion = [{ include-group = "huggingface" }, "diffusers==0.42.1"]
 huggingface = [
     "accelerate==1.15.0",
     "datasets==5.1.0",
