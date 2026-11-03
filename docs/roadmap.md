@@ -245,6 +245,7 @@ separate execution, host exchange and updates, then guide recurrent backward
 fusion and state recomputation. Portable derivative functions use `pkg.onnax`
 when extracted from the generated tensor graph.
 
+(training-graph-memory-priorities)=
 ## Training graph and memory priorities
 
 The [ORT Training design handoff](ort-training-handoff.md) identifies the next
@@ -283,10 +284,11 @@ runtime measurement, training and checkpoint qualification.
    execution-boundary comparisons. The shared replay CLI checks exports,
    optimizer state and same-route loss/gradient/inference results. Extend
    context length alongside measured block-local recomputation.
-5. **Choose selective recomputation from measured peaks.** Record retained
-   values, replay subgraphs, invocation counts and release points. Start with one
-   decoder block, then extend to multi-layer Qwen and diffusion. Preserve shared
-   edges, skip connections, dynamic shapes and deterministic replay state.
+5. **Delivered: explicit block-local replay plans.** Saved-value reports record
+   retained values, producer slices, invocation counts and release points. The
+   complete 4032-token Qwen3.5 study compares saved activations, MLP replay and
+   whole-block replay. Shape-only boundaries replace 425 MiB with 384 bytes;
+   whole-block replay remains the measured lowest-memory policy.
 6. **Pair fusion contracts with saved values and prompt release.** Establish
    saved-value/dtype conventions for normalization, attention and recurrence.
    Check VJP/JVP and supported higher-order composition; use allocator traces to
@@ -308,7 +310,7 @@ that path to complete 3.6k–4k-token QA examples with exported-graph training a
 fresh-process recovery.
 
 (block-local-recomputation)=
-### Next delivery: measured block-local recomputation
+### Block-local recomputation qualification
 
 Use the [ORT Training handoff](ort-training-handoff.md) to connect the existing
 saved-value analysis, checkpoint executor and native memory counters:
@@ -363,6 +365,27 @@ Qwen3, Qwen3.5 and Phi-3. The selected GEMM policy completes four additional 4k 
 loaded loss/gradient/inference outputs exactly; 3935 frozen tensor records remain
 unchanged. The next workload milestone is a small pretrained Diffusers denoiser
 with its prediction target and external scheduler.
+
+### Next deliveries from the training handoff
+
+1. **Release activations unused by checkpoint VJPs.** Remove unused derivative
+   inputs and save only the remaining inputs in autograd. Check actual object
+   lifetimes before the next block executes, including skip connections, shared
+   parameters, repeated backward and exported-module recovery. Scope exchange
+   temporaries to each block invocation. Logical retained bytes follow the VJP's
+   input contract.
+2. **Pretrained Diffusers denoiser.** Use Mobius for both the offline test model
+   and pretrained weight path. Keep the scheduler external, align its prediction
+   target with Diffusers, and qualify adapter gradients, updates, export and
+   recovery before measuring MLX execution.
+3. **Saved-value fusion contracts.** Use the qualified decoder and denoiser to
+   choose which attention statistics, normalization statistics and recurrent
+   boundaries to expose. Compare saved and regenerated values with the same
+   precision and workload; check supported derivative compositions.
+4. **Measured execution planning.** Combine saved-value lifetimes, native
+   allocator peaks and replay costs into candidate selection. Continue to record
+   explicit plans so callers can inspect the chosen memory/time tradeoff.
+
 
 ```{toctree}
 :hidden:
