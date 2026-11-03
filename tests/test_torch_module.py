@@ -445,7 +445,7 @@ def test_saved_runtime_arrays_are_released_after_backward():
 
     from onnax.torch._module import _ort_session
 
-    references = {}
+    references, snapshots = {}, {}
 
     def factory(path):
         runtime = _ort_session(path)
@@ -454,6 +454,7 @@ def test_saved_runtime_arrays_are_released_after_backward():
             def run(self, names, feeds):
                 arrays = runtime.run(names, feeds)
                 if path.endswith("execution.onnx"):
+                    snapshots["features"] = weakref.ref(feeds["features"])
                     references.update(
                         (name, weakref.ref(array))
                         for name, array in zip(names, arrays, strict=True)
@@ -469,9 +470,11 @@ def test_saved_runtime_arrays_are_released_after_backward():
         hidden = [ref for name, ref in references.items() if name != "sum"]
         assert hidden and all(ref() is not None for ref in hidden)
         assert not loss.grad_fn.feeds
+        assert snapshots["features"]() is not None
         loss.backward(retain_graph=True)
         assert all(ref() is not None for ref in hidden)
         model.zero_grad()
         loss.backward()
         assert all(ref() is None for ref in hidden)
+        assert snapshots["features"]() is None
         assert loss.item() > 0
