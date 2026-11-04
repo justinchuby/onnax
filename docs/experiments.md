@@ -37,6 +37,7 @@ records the execution boundary, precision and validation used for its comparison
 | --- | --- |
 | How does 4K ONNX training compare with PyTorch MPS? | [Current Qwen performance](current-4k-performance) |
 | How much does compiling the output head save? | [Head layout and session policy](selective-head-compilation) |
+| How do fused recurrent scans change Qwen3.5 execution? | [Full-model 4K measurement](qwen35-state-scan-performance) |
 | Where do fused attention pullbacks help? | [Native pullback measurements](m1-max-measurements) |
 
 ```{toctree}

@@ -1,0 +1,74 @@
+{
+  "model": "Qwen/Qwen3.5-0.8B",
+  "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "machine": "Apple M1 Max, 32 GiB unified memory",
+  "onnax_source": "3754d1362b6559bece23bf10af4aa58a57db84a8",
+  "driver_source": "fa333d7f203f9e3d758ebf6a315f34ecd034b627",
+  "runtime_source": {
+    "parent": "c135ae525d6459359e8a72d090bd7ab7a378d2ff",
+    "fused": "043f1def965fab6b67dea16e692b71951b7331cf"
+  },
+  "runtime_source_note": "Raw native_source records the benchmark driver checkout; runtime_source here identifies each library. Fused merge has the exact reviewed tree fa333d7.",
+  "precision": "FP32 frozen base, adapters, loss and gradients",
+  "decoder_layers": 24,
+  "linear_layers": 18,
+  "full_attention_layers": 6,
+  "adapter_tensors": 60,
+  "adapter_bytes": 2703360,
+  "sequence": 4032,
+  "valid_shifted_targets": 4031,
+  "batch": 1,
+  "data": "Repeated benchmark text: ONNX models learn from examples. Low-rank adapters update a small set of parameters.",
+  "checkpoint_layers": 1,
+  "head": {
+    "layout": "vocab_hidden",
+    "rows": 128,
+    "compile": false,
+    "source": "original exported gradient graph"
+  },
+  "allocator_limit_bytes": 21474836480,
+  "allocator_cache_bytes": 536870912,
+  "process_guard_bytes": 25769803776,
+  "disk_reserve_bytes": 5368709120,
+  "ordering": "parent then fused, fresh process per library",
+  "scope": "forward, mean shifted-token loss and all adapter gradients; fixed parameters",
+  "optimizer": "outside measurement; parameters fixed",
+  "gradient_tolerance": {
+    "rtol": 0.0001,
+    "atol": 1e-06
+  },
+  "source_task_sha256": "4f11c5a6e895ea0decc35ebd6e5565d1735ac7d6304506d1348c2c45ace06e73",
+  "gradient_snapshots": {
+    "parent": "0607764ea3a36eb76c1f8a642a4ea472e2eb840016430b60a22a7ae567a7432c",
+    "fused": "f36cc6e979d6cfabda62c19c8b06d572fb839020f9df0ac229bff35c9f996c5d"
+  },
+  "components": {
+    "parent": {
+      "head_and_forward_wrapper_seconds": {
+        "median": 2.23440983297769,
+        "p95": 2.274083440727554
+      },
+      "targets_per_second": 191.71174049595712
+    },
+    "fused": {
+      "head_and_forward_wrapper_seconds": {
+        "median": 3.6360596875310875,
+        "p95": 3.723037468432449
+      },
+      "targets_per_second": 311.9587150256741
+    }
+  },
+  "versions": {
+    "numpy": "2.4.6",
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnxscript": "0.7.2",
+    "onnxruntime": "1.31.1",
+    "mlx": "0.32.4",
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "mobius-onnx": "0.1.0"
+  },
+  "mlx_c": "Homebrew0.7.0_1",
+  "losses_bitwise_equal": true
+}
