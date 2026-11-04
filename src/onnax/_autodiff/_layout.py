@@ -305,14 +305,34 @@ def pad_vjp(
     """Invert constant padding/cropping and sum the padded-value cotangent."""
     if node.attributes.get_string("mode", "constant") != "constant":
         raise NotImplementedError("VJP Pad requires mode='constant'")
-    data = ctx.tape.op(
-        "Pad",
-        [gs[0], ctx.op("Neg", _input(node, 1)), ctx.scalar(_input(node), 0), *node.inputs[3:]],
-        {"mode": "constant"},
-    )
-    contributions = {0: data} if 0 in indices else {}
+    contributions = {}
+    if 0 in indices:
+        contributions[0] = ctx.tape.op(
+            "Pad",
+            [
+                gs[0],
+                ctx.op("Neg", _input(node, 1)),
+                ctx.scalar(_input(node), 0),
+                *node.inputs[3:],
+            ],
+            {"mode": "constant"},
+        )
     if 2 in indices:
-        total = ctx.op("ReduceSum", gs[0], keepdims=0)
-        inside = ctx.op("ReduceSum", data, keepdims=0)
-        contributions[2] = ctx.op("Sub", total, inside)
+        inside = ctx.tape.op(
+            "Pad",
+            [
+                ctx.like(_input(node), 1),
+                _input(node, 1),
+                ctx.scalar(_input(node), 0),
+                *node.inputs[3:],
+            ],
+            {"mode": "constant"},
+        )
+        outside = ctx.op(
+            "Where",
+            ctx.op("Cast", inside, to=ir.DataType.BOOL),
+            ctx.scalar(_input(node), 0),
+            gs[0],
+        )
+        contributions[2] = ctx.op("ReduceSum", outside, keepdims=0)
     return contributions
