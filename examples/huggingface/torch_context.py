@@ -1,6 +1,6 @@
 # Copyright (c) 2026 onnax contributors
 # SPDX-License-Identifier: MIT
-"""PyTorch Qwen checkpoint and bounded output-head benchmark paths."""
+"""PyTorch decoder checkpoint and bounded output-head benchmark paths."""
 
 import torch
 from torch.utils.checkpoint import checkpoint
@@ -22,13 +22,16 @@ class _DecoderGroup(torch.nn.Module):
         return execute(hidden_states)
 
 
-def checkpoint_qwen(model, group_size):
-    """Group the pinned Qwen decoder while preserving its Transformers forward."""
+def checkpoint_decoder(model, group_size):
+    """Checkpoint decoder layers while preserving their Transformers mask dispatch."""
     if isinstance(group_size, bool) or not isinstance(group_size, int) or group_size < 1:
         raise ValueError("Expected a positive decoder group size")
-    if any(kind != "full_attention" for kind in model.config.layer_types):
-        raise ValueError("The Qwen benchmark groups require full-attention decoder layers")
     layers = list(model.model.layers)
+    kinds = getattr(model.config, "layer_types", ())
+    if group_size > 1 and (
+        len(kinds) != len(layers) or any(kind != "full_attention" for kind in kinds)
+    ):
+        raise ValueError("Use one-layer checkpoints for hybrid or unspecified decoder layouts")
     if any(isinstance(layer, _DecoderGroup) for layer in layers):
         raise ValueError("Decoder groups have already been installed")
     model.model.layers = torch.nn.ModuleList(

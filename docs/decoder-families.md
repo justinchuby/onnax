@@ -466,6 +466,25 @@ python -m examples.huggingface.decoder_head_comparison \
 The comparison checks workload settings, runtime versions, source hashes and
 finite numerical outputs before summarizing timing and process RSS.
 
+### PyTorch checkpoint control
+
+Use the corresponding Transformers model and adapter values for a checkpointed
+reference. Install the adapters before wrapping its decoder layers:
+
+```python
+from examples.huggingface.torch_context import checkpoint_decoder, chunked_token_loss
+
+reference = checkpoint_decoder(reference, 1)
+loss = chunked_token_loss(reference, batch, labels, chunk_size=128)
+loss.backward()
+```
+
+One-layer checkpoints preserve the decoder count and Transformers' per-layer
+mask selection. This covers Qwen3.5's recurrent/full-attention layout, Qwen3 and
+Phi-3. Recomputation remains active in evaluation mode when gradients are
+enabled, matching the deterministic training reference. Groups larger than one
+use models whose decoder layout is explicitly full attention.
+
 ### Bounded-head measurement
 
 The 64-token tiny Qwen3.5 comparison uses 32 supervised targets, FP32, batch one,

@@ -166,9 +166,9 @@ def measure(
 
             model = reference_projections(model, precision=projection_precision)
         if checkpoint_layers:
-            from examples.huggingface.torch_context import checkpoint_qwen
+            from examples.huggingface.torch_context import checkpoint_decoder
 
-            model = checkpoint_qwen(model, checkpoint_layers)
+            model = checkpoint_decoder(model, checkpoint_layers)
         model.to(torch_device)
     else:
         from examples.lora.train import session as cpu_session
