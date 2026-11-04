@@ -169,3 +169,9 @@ copies. The source graph and stable parameter interface are preserved.
 Use [`CheckpointedModule`](checkpointing.md) with named intermediate boundaries
 to retain boundary tensors and recompute block-local activations in backward.
 It shares the parameter, session-factory and external-optimizer conventions above.
+
+The [real UNet qualification report](https://github.com/justinchuby/onnax/tree/main/examples/diffusion/reports/saved-shapes-m1max)
+checks this saved-activation path against a whole-VJP at the same image inputs
+and adapter values. Predictions and all 72 FP32 adapter gradients align within
+`rtol=1e-4, atol=1e-6`; the saved boundary contains 744 MB of arrays. The report
+includes a CLI for repeating the comparison with existing workload artifacts.
