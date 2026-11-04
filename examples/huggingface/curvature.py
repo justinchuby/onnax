@@ -88,7 +88,9 @@ def causal_ggn(model, parameters, *, output="logits", optimize=True):
         bindings[value.name] = value
     labels = ir.val(fresh("labels"), dtype=ir.DataType.INT64, shape=list(logits.shape)[:2])
     result.graph.inputs.append(labels)
-    for derivative in (forward, backward):
+    result.graph.opset_imports[DOMAIN] = 1
+
+    def call(derivative, stem, arguments):
         for identifier, function in derivative.functions.items():
             existing = result.functions.get(identifier)
             if existing is not None and ir.serde.serialize_function(
@@ -96,9 +98,6 @@ def causal_ggn(model, parameters, *, output="logits", optimize=True):
             ) != ir.serde.serialize_function(function):
                 raise ValueError(f"Conflicting local function: {identifier}")
             result.functions[identifier] = function
-    result.graph.opset_imports[DOMAIN] = 1
-
-    def call(derivative, stem, arguments):
         name, index = stem, 0
         while (DOMAIN, name, "") in result.functions:
             index += 1
