@@ -641,6 +641,33 @@ relative L2 difference is 1.99%; none meets the FP32 allclose threshold. The
 curves. [Raw timing, gradient diagnostics and drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max/pretrained-qwen35/benchmark64)
 include per-sample timings and process-memory observations.
 
+### BF16/NF4 at 4K context
+
+The same pinned export completes the paired 4,032-token workload with 4,031
+prediction targets per sample, batch one, checkpoint group one and head chunk
+128. Each independent process runs ten warmups and 100 measured samples.
+
+| Backend | Median | P95 | Peak process physical memory |
+| --- | ---: | ---: | ---: |
+| ONNX / MLX EP | 10.788 s | 12.337 s | 7.76 GiB |
+| PyTorch MPS / SDPA | 12.749 s | 12.827 s | 10.99 GiB |
+
+The measured throughput ratio is 1.18×. Timing covers forward, shifted mean
+loss, all adapter gradients and output exchange; optimizer updates are external.
+Memory includes model construction and runtime. The reference holds decoded
+NF4 values in FP32; ONNX retains the packed base. Both use BF16 projection
+compute and FP32 adapters/adjoints.
+
+Input and adapter hashes match. Token losses are 0.0622500 and 0.0624421.
+Across all 60 gradients, median relative L2 difference is 1.35% and minimum
+cosine similarity is 0.999418; none meets the FP32 allclose threshold. The
+native timing's first and last 25-sample medians are 11.670 s and 10.677 s;
+all samples contribute to the table's median and P95.
+
+[Raw samples, gradient diagnostics, process observations and drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max/pretrained-qwen35/benchmark4k)
+retain source and artifact hashes. The next execution comparison profiles
+repeated activation casts and frozen projection conversions in both runtimes.
+
 ### Bounded-head measurement
 
 The 64-token tiny Qwen3.5 comparison uses 32 supervised targets, FP32, batch one,

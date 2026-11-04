@@ -1,0 +1,65 @@
+"""Verify a completed pair and retain every named gradient diagnostic."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import numpy as np
+
+parser = argparse.ArgumentParser()
+parser.add_argument('directory', type=Path)
+args = parser.parse_args()
+root = args.directory
+status = json.loads((root/'status.json').read_text())
+assert status['phase'] == 'complete', status
+mps = json.loads((root/'mps.json').read_text())
+native = json.loads((root/'native.json').read_text())
+for key in ('input_sha256', 'adapter_sha256'):
+    assert mps[key] == native[key], key
+assert mps['input_shape'] == native['input_shape']
+assert native['parameters_unchanged']
+assert mps['warmup'] == native['warmup_steps'] == 10
+assert len(mps['samples']) == len(native['samples']) == 100
+assert mps['mps_cpu_fallback'] is False
+assert mps['effective_tokens'] == native['prediction_targets_per_step']
+rows = {}
+with np.load(root/'mps.json.npz', allow_pickle=False) as a, np.load(root/'native.npz', allow_pickle=False) as b:
+    assert set(a.files) == set(b.files) | {'loss'}
+    assert len(b.files) == mps['gradient_count'] == 60
+    for name in b.files:
+        actual, expected = b[name].astype(np.float64), a[name].astype(np.float64)
+        assert actual.shape == expected.shape
+        assert np.isfinite(actual).all() and np.isfinite(expected).all()
+        error = actual - expected
+        denominator = np.linalg.norm(expected)
+        product = np.linalg.norm(actual) * denominator
+        rows[name] = {
+            'max_abs':float(np.max(np.abs(error))),
+            'relative_l2':float(np.linalg.norm(error)/denominator) if denominator else None,
+            'cosine':float(np.vdot(actual,expected)/product) if product else None,
+            'fp32_allclose':bool(np.allclose(actual,expected,rtol=1e-4,atol=1e-6)),
+        }
+a = mps['timings']['total_seconds']
+b = native['summary']['gradient_step_seconds']
+report = {
+    'scope':'4032 tokens, batch1, BF16 projections, NF4 frozen decoder, FP32 adapters/adjoints; head128; checkpoint1; fixed parameters; forward/loss/backward plus output exchange;10warmup100samples',
+    'input_sha256':mps['input_sha256'], 'adapter_sha256':mps['adapter_sha256'],
+    'mps_seconds':a, 'native_seconds':b, 'native_throughput_ratio':a['median']/b['median'],
+    'mps_loss':mps['losses'][0], 'native_loss':native['samples'][0]['loss'],
+    'gradient_count':len(rows), 'gradients':rows,
+    'gradient_summary':{
+        'fp32_allclose_count':sum(r['fp32_allclose'] for r in rows.values()),
+        'median_relative_l2':float(np.median([r['relative_l2'] for r in rows.values() if r['relative_l2'] is not None])),
+        'min_cosine':min(r['cosine'] for r in rows.values() if r['cosine'] is not None),
+    },
+    'reference_storage':mps['frozen_weight_storage'],
+}
+for name in ('mps','native'):
+    guard = json.loads((root/(name+'-guard')/'execution.json').read_text())
+    assert guard['status']=='complete' and guard['returncode']==0
+    report[name+'_peak_physical_bytes'] = max(o['peak_bytes'] for o in guard['observations'])
+report['artifact_sha256'] = {
+    str(path.relative_to(root)):hashlib.sha256(path.read_bytes()).hexdigest()
+    for path in [root/'mps.json',root/'native.json',root/'mps.json.npz',root/'native.npz',root/'mps-guard'/'execution.json',root/'native-guard'/'execution.json']
+}
+(root/'comparison.json').write_text(json.dumps(report,indent=2,allow_nan=False)+'\n')
+print(json.dumps({k:v for k,v in report.items() if k!='gradients'},indent=2))
