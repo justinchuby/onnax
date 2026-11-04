@@ -1,0 +1,84 @@
+{
+  "command": [
+    "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+    "-m",
+    "examples.huggingface.decoder_sft",
+    "--audit-only",
+    "--audit-steps",
+    "6",
+    "--family",
+    "qwen35",
+    "--projection-precision",
+    "bf16",
+    "--fused-ops",
+    "--provider",
+    "mlx",
+    "--library",
+    "/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib",
+    "--output-dir",
+    "/tmp/onnax-canonical-bf16-family-audits/qwen35-nf4",
+    "--nf4"
+  ],
+  "cwd": "/private/tmp/onnax-decoder-canonical-primal",
+  "status": "complete",
+  "physical_memory_budget_bytes": 25769803776,
+  "minimum_free_disk_bytes": 5368709120,
+  "observations": [
+    {
+      "utc": "2026-11-04T14:29:58.683485+00:00",
+      "current_bytes": 180344,
+      "peak_bytes": 295032,
+      "free_disk_bytes": 17141149696
+    },
+    {
+      "utc": "2026-11-04T14:29:59.687847+00:00",
+      "current_bytes": 211895088,
+      "peak_bytes": 211895088,
+      "free_disk_bytes": 17141096448
+    },
+    {
+      "utc": "2026-11-04T14:30:00.689451+00:00",
+      "current_bytes": 270533496,
+      "peak_bytes": 270533496,
+      "free_disk_bytes": 17140928512
+    },
+    {
+      "utc": "2026-11-04T14:30:01.700081+00:00",
+      "current_bytes": 382125112,
+      "peak_bytes": 382125112,
+      "free_disk_bytes": 17140928512
+    },
+    {
+      "utc": "2026-11-04T14:30:02.710883+00:00",
+      "current_bytes": 468288832,
+      "peak_bytes": 468288832,
+      "free_disk_bytes": 17140854784
+    },
+    {
+      "utc": "2026-11-04T14:30:03.721726+00:00",
+      "current_bytes": 513918296,
+      "peak_bytes": 513918296,
+      "free_disk_bytes": 17139011584
+    },
+    {
+      "utc": "2026-11-04T14:30:04.732434+00:00",
+      "current_bytes": 555124272,
+      "peak_bytes": 555124272,
+      "free_disk_bytes": 17136807936
+    },
+    {
+      "utc": "2026-11-04T14:30:05.743220+00:00",
+      "current_bytes": 590399048,
+      "peak_bytes": 590399048,
+      "free_disk_bytes": 17134530560
+    }
+  ],
+  "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+  "observation_errors": 0,
+  "temporary_directory": "/tmp/onnax-canonical-bf16-family-audits/qwen35-nf4-guard/worker-tmp-6lj0abzt",
+  "pid": 4320,
+  "started": "2026-11-04T14:29:58.682684+00:00",
+  "returncode": 0,
+  "finished": "2026-11-04T14:30:06.754538+00:00",
+  "temporary_files_removed": true
+}

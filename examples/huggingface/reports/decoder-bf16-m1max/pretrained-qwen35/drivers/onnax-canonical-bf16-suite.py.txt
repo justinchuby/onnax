@@ -1,0 +1,18 @@
+import hashlib,json,os,subprocess,sys
+from pathlib import Path
+source=Path('/tmp/onnax-decoder-canonical-primal');python=sys.executable
+family=Path('/tmp/onnax-canonical-bf16-family-audits');real=Path('/tmp/onnax-qwen35-real-bf16-canonical-30');assert not family.exists() and not real.exists()
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();assert head.startswith('39d18f7')
+files=['examples/huggingface/decoder_sft.py','examples/huggingface/decoder_families.py','examples/huggingface/optimization.py','examples/huggingface/mixed_precision.py','examples/huggingface/chunked_loss.py','examples/huggingface/decoder_head.py','examples/huggingface/validation.py','examples/huggingface/peft_adapter.py','examples/lora/bf16_rules.py']
+hashes={p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in files}
+original=Path('/tmp/onnax-bf16-audit-qualification.py').read_text().replace("'/tmp/onnax-decoder-bf16-audits'",repr(str(family))).replace("files=['examples/", "files=['examples/huggingface/optimization.py','examples/")
+script=Path('/tmp/onnax-canonical-bf16-family-audits.py');script.write_text(original)
+state=Path('/tmp/onnax-canonical-bf16-suite-status.json');state.write_text(json.dumps({'phase':'family_audits','source':head}))
+result=subprocess.run([python,str(script)],env=os.environ.copy())
+assert result.returncode==0,result.returncode
+real.mkdir();(real/'qualification.json').write_text(json.dumps({'source_commit':head,'source_sha256':hashes,'scope':'Qwen3.5-0.8B NF4/BF16 canonical frozen primal; same pinned model, data, 30updates, microbatch1 accum4,head128 seq64 as previous run','comparison':'Preceding run preserved at /tmp/onnax-qwen35-real-bf16-nf4-30; final checkpoint equality and portable inference will be checked independently','mlx_memory_limit_bytes':20*1024**3},indent=2)+'\n')
+command=[python,'/tmp/onnax-qwen35-real-bf16-nf4-worker.py','--family','qwen35','--real','--cache-dir','/tmp/onnax-qwen35-real-cache','--nf4','--projection-precision','bf16','--fused-ops','--head-chunk-size','128','--max-length','64','--steps','30','--provider','mlx','--library','/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib','--output-dir',str(real/'training')]
+state.write_text(json.dumps({'phase':'real_training','source':head}))
+with open(real/'driver.log','w') as log:result=subprocess.run([python,'-m','examples.huggingface.guard','--output-dir',str(real/'guard'),'--',*command],stdout=log,stderr=subprocess.STDOUT,env=os.environ.copy())
+for p,h in hashes.items():assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h,p
+state.write_text(json.dumps({'phase':'training_complete' if result.returncode==0 else 'real_training_failed','source':head,'returncode':result.returncode}));raise SystemExit(result.returncode)

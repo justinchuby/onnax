@@ -1,0 +1,3182 @@
+{
+  "phase": "complete",
+  "source_commit": "39d18f70ad4aacf21665c0bacafe93ca13bd59b6",
+  "driver_sha256": "dad3647e6c1c8316de3fc0d667575c03a11e7572a57c03b9a2f468d92d0e1ebf",
+  "device": "mps",
+  "policy": "BF16 projections; FP32 attention, normalization, parameters, adjoints and AdamW; dequantized NF4 reference base",
+  "steps": 30,
+  "initial_adapter_sha256": "e35b8de0ec34184c5ab8f04cbd6e527cad2e941d904984c4023ff85490395ced",
+  "data": {
+    "version": 3,
+    "train_lines": 160,
+    "validation_lines": 4,
+    "train_sha256": "8fb20f0b72a487d00f3ff5d695c6b2f38a009a6ffd9a606d2ba98b096ddd2fdf",
+    "validation_sha256": "e70e7809f4049bfcbf40d3c459bd8e100d7c3393a991444624d31376b0939fbe",
+    "tokenizer_sha256": "1bb37c16088f34c6562c2111421a9bcbb038263b429c097b3cf4c403fc97bb98",
+    "max_length": 64,
+    "pad_to_multiple_of": 64
+  },
+  "training_loss": [
+    5.359641075134277,
+    0.3021295666694641
+  ],
+  "validation_loss": [
+    6.137701034545898,
+    5.768248081207275
+  ],
+  "elapsed_seconds": 87.80960408400279,
+  "timing_scope": "Initial/final dataset evaluation and 30 Trainer updates, excludes preparation and frozen-weight hashing",
+  "frozen_weights_unchanged": true,
+  "matching_data_and_batch_target_counts": true,
+  "batches": [
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": true,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 13
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 10
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 12
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 16
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    },
+    {
+      "training": false,
+      "batch": 1,
+      "sequence": 64,
+      "valid_shifted_targets": 11
+    }
+  ],
+  "batch_sha256": [
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "bac353c8da227b4ba39ca0ff2fb1c17a31e9707d38331a903f2173c17aa002c3",
+    "a60e88fbe465ca74d697dd8e965becf80b3e20d1970eb640e3d842ce05c0317b",
+    "3f9128e06b045c9bb8fe70a4b049740e59d32efb6c102ca202b9a76269379657",
+    "ffe7316534f9f5456108ee9b3dec1ae892b9f01fb02210005fdbef3c01ede702",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "bac353c8da227b4ba39ca0ff2fb1c17a31e9707d38331a903f2173c17aa002c3",
+    "a60e88fbe465ca74d697dd8e965becf80b3e20d1970eb640e3d842ce05c0317b",
+    "3f9128e06b045c9bb8fe70a4b049740e59d32efb6c102ca202b9a76269379657",
+    "ffe7316534f9f5456108ee9b3dec1ae892b9f01fb02210005fdbef3c01ede702",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd",
+    "e9d23bf8b7c2b03db7ce3c05dc51de7a04af2740af49cd5de6bc127b63c2fb25",
+    "19a6a99834fb646e026513784ba48399ea19972507dccbae9a0e10a5e7e8edb1",
+    "599fcdceb883f764945985e1bcfd89bb60d51fd652caa86bc68460a459b7606a",
+    "d5a40fd5abbcab3753f28ca28d8c9d63e650ccd53beb634f4876b5f1b11a7a11",
+    "80c0f98e1873f702a27023d56de4a855731cb084ef221fb2f1bc7c3f07ccde8b",
+    "b556f4f0336b533968f6fa0bdeba02e3e71776312f49a75d301b7ac4e723c91c",
+    "749f3d47023c695aef86b93ba91f9b544dcf658f9e9b4e6bbe621bb34956970c",
+    "6576efab26bd69312aab2fa03a9e570cbb936bdc130fc9a568682332e576bf91",
+    "8fc0a2089810457a19a71c79f5961d6f99315a2093b095e550ff1f03c6ce9793",
+    "93d7e6a279fe42c3cf8f0c9687efcd18b8f5277723aa089252ae809c7b9bf0aa",
+    "2449a494a4f7dd70dafa8f5f1ee72b8737d4fea4ed44b6c75434548dcaebb97f",
+    "2a385977cc1becff34bafd9aa311effe0020857b1a45236ce9ed79f504c46120",
+    "333aba2ff265b7f5bcfeba728ae12772c4a8310eff9672e0db72031c4acca8a9",
+    "a8b82bb67be86f9946eea4cac35ea689cfe1b2a8c931019d2d3611d9936958f1",
+    "6c0f61f60707204a6401e60da747351b3ec88fada74efd383841ae425546d1da",
+    "2c8fa45fea881cfe085b5747b3d608cf5d0f2c524b100e60ff650b24d6991a2b",
+    "0e7255c6a1b875a423abfda31e1ca538bcb4fcf686fdbb5751344b69142073c4",
+    "0674aadf6517d4aa3e05c236adcda407d24c642d22c5cbd3c8c541584f1ffd14",
+    "96ab960e57cca6484c5da3aed1e910338c7ff740a088431987aadd0008605549",
+    "405983d82f7990f82cfd7968c66dc69f6487da0596eb7f046bca360f5dbadefd"
+  ],
+  "final_adapter_sha256": "dffa46d06c2cc1eead5886d2eb36611819f7e73ee3720b58894b0653c1787e85",
+  "reference_storage": "Frozen NF4 values dequantized into FP32 reference parameters",
+  "autocast": false,
+  "onnx_training_loss": [
+    5.355411529541016,
+    0.3001950979232788
+  ],
+  "onnx_validation_loss": [
+    6.140902042388916,
+    5.778957843780518
+  ]
+}

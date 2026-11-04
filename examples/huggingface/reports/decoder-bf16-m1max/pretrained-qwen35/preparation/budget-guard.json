@@ -1,0 +1,36 @@
+{
+  "command": [
+    "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+    "/tmp/onnax-packed-inference-worker.py",
+    "--source",
+    "/tmp/onnax-qwen35-real-bf16-canonical-30/training/export/execution/model.onnx",
+    "--output",
+    "/tmp/onnax-packed-inference-constant.json"
+  ],
+  "cwd": "/private/tmp/onnax-decoder-canonical-primal",
+  "status": "complete",
+  "physical_memory_budget_bytes": 25769803776,
+  "minimum_free_disk_bytes": 5368709120,
+  "observations": [
+    {
+      "utc": "2026-11-04T15:10:13.033186+00:00",
+      "current_bytes": 180344,
+      "peak_bytes": 295032,
+      "free_disk_bytes": 12028973056
+    },
+    {
+      "utc": "2026-11-04T15:10:14.043666+00:00",
+      "current_bytes": 121553520,
+      "peak_bytes": 121553520,
+      "free_disk_bytes": 12028678144
+    }
+  ],
+  "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+  "observation_errors": 0,
+  "temporary_directory": "/tmp/onnax-packed-inference-constant-guard/worker-tmp-nm32eyyw",
+  "pid": 7798,
+  "started": "2026-11-04T15:10:13.032285+00:00",
+  "returncode": 0,
+  "finished": "2026-11-04T15:10:15.054317+00:00",
+  "temporary_files_removed": true
+}

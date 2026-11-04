@@ -1,0 +1,7 @@
+import hashlib,json,runpy,sys
+from pathlib import Path
+from examples.huggingface.long_context import memory_limit
+library='/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib'
+assert hashlib.sha256(Path(library).read_bytes()).hexdigest()=='f6079553459908fa84a090201aaea90f71ccdfcb7700e0c090eb5c5a344efabc'
+api,previous=memory_limit(library,20*1024**3)
+runpy.run_module('examples.huggingface.decoder_sft',run_name='__main__')

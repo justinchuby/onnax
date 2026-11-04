@@ -1,0 +1,10 @@
+import json
+from pathlib import Path
+import numpy as np,torch
+from examples.huggingface.replay import verify
+from examples.huggingface.long_context import memory_limit
+root=Path('/tmp/onnax-qwen35-real-bf16-canonical-30');library='/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib';api,previous=memory_limit(library,20*1024**3);torch.set_num_threads(1)
+with np.load('/tmp/onnax-torch-decoder-real/inputs-64.npz',allow_pickle=False) as a:feeds={n:a[n].copy() for n in a.files if n!='labels'}
+result=verify(str(root/'training'),str(root/'resumed'),step=30,provider='mlx',library=library,feeds=feeds)
+assert result['checkpoint_bitwise_equal'] and result['optimizer_bitwise_equal'] and result['standalone_outputs_bitwise_equal'] and result['exported_gradient_tensors']==60
+(root/'resume-verification.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result),flush=True)

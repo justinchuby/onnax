@@ -176,7 +176,32 @@ with continuous training. The
 [raw reports and reproduction scripts](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max)
 include six family/quantization audits and both checkpoint recovery paths.
 
-Half-precision audits include a third Transformers run using FP32 arithmetic
+For pretrained Qwen3.5-0.8B, use `--real --steps 30 --head-chunk-size 128`,
+stop at `--stop 15`, and resume from `checkpoint-15`. The M1 Max run uses
+160 training sequences and 4 validation sequences from the fixed corpus,
+sequence length 64, microbatch 1 and four accumulation steps.
+
+| Workflow | Training loss | Validation loss |
+| --- | --- | --- |
+| onnax + MLX EP | 5.355 → 0.300 | 6.141 → 5.779 |
+| Transformers + PyTorch MPS | 5.360 → 0.302 | 6.138 → 5.768 |
+
+The reference uses byte-identical initial adapters and the same NF4 values.
+Step-15 recovery reproduces all 62 checkpoint tensors, optimizer state and
+60 adapter gradients byte for byte. Standalone inference matches training
+exactly; each export has 57 checked ONNX modules. On a separate 64-token
+audit batch, the median relative gradient difference from the BF16 reference
+is 2.19%; 48 of 60 tensors exceed the precision-effect gate. The
+[pretrained reports and drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max/pretrained-qwen35)
+retain all per-tensor comparisons, training results and recovery checks.
+
+A controlled build of the proposed
+[symbolic-data budget](https://github.com/onnx/onnx-shape-inference/pull/146)
+reduces one cold shape-inference call on this graph from 125.39 s to 0.61 s.
+The complete serialized inferred graphs are byte identical. The report records
+the two independent processes, package hashes and memory measurements.
+
+Tiny-model audits include a third Transformers run using FP32 arithmetic
 on the same frozen weight values. The L2 backend difference is checked against
 the measured reference precision effect plus the original FP32 comparison
 floor. Reports retain maximum differences and strict coordinate counts.

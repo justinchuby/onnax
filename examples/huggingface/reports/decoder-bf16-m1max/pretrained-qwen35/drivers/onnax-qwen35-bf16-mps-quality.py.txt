@@ -1,0 +1,61 @@
+import dataclasses,gc,hashlib,json,os,subprocess,time
+from pathlib import Path
+from types import MethodType
+import numpy as np,torch
+from datasets import Dataset
+from transformers.modeling_outputs import CausalLMOutput
+from trl import SFTConfig
+from examples.huggingface.decoder_families import reference_model
+from examples.huggingface.decoder_sft import task_tokenizer
+from examples.huggingface.nf4 import quantize_reference
+from examples.huggingface.sft import OnnxSFTTrainer,_DataIdentityCallback,_data_identity,_training_texts
+from examples.huggingface.torch_context import checkpoint_decoder,chunked_token_loss
+from examples.huggingface.mixed_precision import reference_projections
+from examples.huggingface.validation import add_reference_parameters
+from examples.huggingface.torch_decoder_benchmark import digest_arrays
+root=Path('/tmp/onnax-qwen35-real-bf16-mps-quality');root.mkdir(exist_ok=False)
+original=Path('/tmp/onnax-qwen35-real-bf16-canonical-30/training');task=json.loads((original/'export/task.json').read_text());onnx_report=json.loads((original/'report.json').read_text())
+torch.set_num_threads(1);torch.set_float32_matmul_precision('highest');assert torch.backends.mps.is_available();torch.mps.set_per_process_memory_fraction(0.7)
+source=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();helper_hash=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+report={'phase':'preparing','source_commit':source,'driver_sha256':helper_hash,'device':'mps','policy':'BF16 projections; FP32 attention, normalization, parameters, adjoints and AdamW; dequantized NF4 reference base','steps':30}
+def persist():
+ (root/'report.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:v for k,v in report.items() if k not in ['batches','batch_sha256']}),flush=True)
+persist()
+reference=reference_model('qwen35',real=True,cache_dir='/tmp/onnax-qwen35-real-cache');mapping=task['mapping'];quantize_reference(reference,mapping=mapping)
+arrays={}
+for index,row in enumerate(mapping):
+ linear=reference.get_submodule(row['module']);rank=row['rank'];rng=np.random.default_rng(20261102+2*index)
+ arrays[row['A']]=rng.normal(0,0.02,(linear.in_features,rank)).astype(np.float32);arrays[row['B']]=np.zeros((rank,linear.out_features),np.float32)
+reference=reference_projections(add_reference_parameters(reference,arrays,mapping),precision='bf16');report['initial_adapter_sha256']=digest_arrays(arrays)
+reference.to('mps');parameters={row[key]:getattr(reference.get_submodule(row['module']),key) for row in mapping for key in ['A','B']}
+frozen=[p for p in reference.parameters() if not p.requires_grad]
+def frozen_hashes():
+ return [hashlib.sha256(p.detach().cpu().contiguous().numpy().tobytes()).hexdigest() for p in frozen]
+before=frozen_hashes();reference=checkpoint_decoder(reference,1);reference.mode='chunked';reference.accepts_loss_kwargs=True;reference.config.use_cache=False
+
+def forward(self,input_ids,attention_mask=None,position_ids=None,labels=None,num_items_in_batch=None,use_cache=False,**kwargs):
+ assert not use_cache
+ if attention_mask is None:attention_mask=torch.ones_like(input_ids)
+ if position_ids is None:position_ids=(attention_mask.cumsum(-1)-1).clamp(min=0)
+ data={'input_ids':input_ids,'attention_mask':attention_mask,'position_ids':position_ids}
+ assert labels is not None
+ loss=chunked_token_loss(self,data,labels,128)
+ if num_items_in_batch is not None:
+  count=labels[:,1:].ne(-100).sum();denom=torch.as_tensor(num_items_in_batch,device=loss.device).clamp(min=1);loss=loss*count/denom
+ return CausalLMOutput(loss=loss)
+reference.forward=MethodType(forward,reference)
+train,validation=_training_texts();tok=task_tokenizer('qwen35',real=True,cache_dir='/tmp/onnax-qwen35-real-cache');identity=_data_identity(train,validation,tok,max_length=64,pad_to_multiple_of=64);assert identity==onnx_report['data']
+args=SFTConfig(output_dir=str(root/'trainer'),use_cpu=False,max_steps=30,per_device_train_batch_size=1,gradient_accumulation_steps=4,per_device_eval_batch_size=1,learning_rate=.003,optim='adamw_torch',adam_epsilon=1e-5,weight_decay=0,max_grad_norm=0,lr_scheduler_type='constant',prediction_loss_only=True,max_length=64,packing=False,pad_to_multiple_of=64,gradient_checkpointing=False,dataset_num_proc=None,report_to='none',logging_strategy='no',save_strategy='no',disable_tqdm=True,dataloader_pin_memory=False,seed=20261029,bf16=False,fp16=False)
+trainer=OnnxSFTTrainer(model=reference,args=args,processing_class=tok,train_dataset=Dataset.from_dict({'text':train}),eval_dataset=Dataset.from_dict({'text':validation}),callbacks=[_DataIdentityCallback(identity)]);assert trainer.args.device.type=='mps'
+batches=[];digests=[]
+def record(module,args,kwargs):
+ ids,labels=kwargs['input_ids'],kwargs.get('labels');batches.append({'training':module.training,'batch':ids.shape[0],'sequence':ids.shape[1],'valid_shifted_targets':int(labels[:,1:].ne(-100).sum()) if labels is not None else None})
+ digests.append(digest_arrays({n:v.detach().cpu().numpy() for n,v in kwargs.items() if n in ['input_ids','attention_mask','labels','position_ids']}))
+handle=reference.register_forward_pre_hook(record,with_kwargs=True)
+report.update(phase='training',data=identity);persist();torch.mps.synchronize();start=time.perf_counter()
+initial_train=trainer.evaluate(trainer.train_dataset)['eval_loss'];initial=trainer.evaluate()['eval_loss'];trainer.train();final=trainer.evaluate()['eval_loss'];final_train=trainer.evaluate(trainer.train_dataset)['eval_loss'];torch.mps.synchronize();elapsed=time.perf_counter()-start
+handle.remove();assert batches==onnx_report['batches'];assert final<initial and final_train<initial_train
+final_arrays={n:p.detach().cpu().numpy().copy() for n,p in parameters.items()};assert all(np.isfinite(a).all() and a.dtype==np.float32 for a in final_arrays.values());np.savez(root/'adapter.npz',**final_arrays)
+assert frozen_hashes()==before
+for item in trainer.optimizer.state.values():assert all(v.dtype==torch.float32 for v in item.values() if isinstance(v,torch.Tensor))
+report.update(phase='complete',training_loss=[initial_train,final_train],validation_loss=[initial,final],elapsed_seconds=elapsed,timing_scope='Initial/final dataset evaluation and 30 Trainer updates, excludes preparation and frozen-weight hashing',frozen_weights_unchanged=True,matching_data_and_batch_target_counts=True,batches=batches,batch_sha256=digests,final_adapter_sha256=digest_arrays(final_arrays),reference_storage='Frozen NF4 values dequantized into FP32 reference parameters',autocast=False,onnx_training_loss=onnx_report['training_loss'],onnx_validation_loss=onnx_report['validation_loss']);persist()
