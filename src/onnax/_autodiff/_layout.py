@@ -201,3 +201,138 @@ def pad_jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.
             "Pad", [value, _input(node, 1), fill, *node.inputs[3:]], dict(node.attributes)
         )
     ]
+
+
+@_builtin("vjp", frozenset(("ScatterND",)))
+def scatter_nd_vjp(
+    ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
+) -> dict[int, ir.Value]:
+    """Pull back additive scatter or replacement at unique index tuples."""
+    reduction = node.attributes.get_string("reduction", "none")
+    if reduction not in ("none", "add"):
+        raise NotImplementedError(
+            f"VJP ScatterND requires reduction='none' or reduction='add'; got reduction={reduction!r}. "
+            "Use a separate derivative for other reductions without changing semantics."
+        )
+    contributions = {}
+    if 0 in indices:
+        contributions[0] = (
+            gs[0]
+            if reduction == "add"
+            else ctx.op("ScatterND", gs[0], _input(node, 1), ctx.like(_input(node, 2)))
+        )
+    if 2 in indices:
+        contributions[2] = ctx.op("GatherND", gs[0], _input(node, 1))
+    return contributions
+
+
+@_builtin("vjp", frozenset(("Slice",)))
+def slice_vjp(
+    ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
+) -> dict[int, ir.Value]:
+    """Scatter a sliced cotangent back to its original element positions."""
+    x = _input(node)
+    rank = _rank(x)
+    if rank == 0:
+        return {0: gs[0]}
+    shape = ctx.op("Shape", x)
+    starts, ends = (ctx.op("Cast", _input(node, i), to=ir.DataType.INT64) for i in (1, 2))
+    axes = (
+        ctx.op("Cast", node.inputs[3], to=ir.DataType.INT64)
+        if len(node.inputs) > 3 and node.inputs[3] is not None
+        else ctx.op("Range", ctx.constant(0), ctx.op("Size", starts), ctx.constant(1))
+    )
+    axes = ctx.op("Mod", ctx.op("Add", axes, ctx.constant(rank)), ctx.constant(rank))
+    steps = (
+        ctx.op("Cast", node.inputs[4], to=ir.DataType.INT64)
+        if len(node.inputs) > 4 and node.inputs[4] is not None
+        else ctx.op(
+            "ConstantOfShape",
+            ctx.op("Shape", starts),
+            value=ir.tensor([1], dtype=ir.DataType.INT64),
+        )
+    )
+    padded_starts = ctx.op("Concat", starts, ctx.constant([0]), axis=0)
+    padded_steps = ctx.op("Concat", steps, ctx.constant([1]), axis=0)
+    positions, stride = ctx.constant(0), ctx.constant(1)
+    for axis in reversed(range(rank)):
+        dim = ctx.op("Gather", shape, ctx.constant(axis), axis=0)
+        # A sentinel match supplies the full axis for dimensions not sliced.
+        matches = ctx.op(
+            "Concat",
+            ctx.op("Equal", axes, ctx.constant(axis)),
+            ctx.constant([True], ir.DataType.BOOL),
+            axis=0,
+        )
+        slot = ctx.op(
+            "ArgMax", ctx.op("Cast", matches, to=ir.DataType.INT64), axis=0, keepdims=1
+        )
+        padded_ends = ctx.op(
+            "Concat", ends, ctx.op("Unsqueeze", dim, ctx.constant([0])), axis=0
+        )
+        coordinates = ctx.op("Range", ctx.constant(0), dim, ctx.constant(1))
+        coordinates = ctx.op(
+            "Slice",
+            coordinates,
+            ctx.op("Gather", padded_starts, slot, axis=0),
+            ctx.op("Gather", padded_ends, slot, axis=0),
+            ctx.constant([0]),
+            ctx.op("Gather", padded_steps, slot, axis=0),
+        )
+        broadcast_shape = [1] * rank
+        broadcast_shape[axis] = -1
+        positions = ctx.op(
+            "Add",
+            positions,
+            ctx.op("Mul", ctx.reshape(coordinates, ctx.constant(broadcast_shape)), stride),
+        )
+        stride = ctx.op("Mul", stride, dim)
+    sliced = positions
+    scattered = ctx.op(
+        "ScatterND",
+        ctx.reshape(ctx.like(x), ctx.constant([-1])),
+        ctx.reshape(sliced, ctx.constant([-1, 1])),
+        ctx.reshape(gs[0], ctx.constant([-1])),
+        reduction="add",
+    )
+    return {0: ctx.reshape(scattered, ctx.op("Shape", x))}
+
+
+@_builtin("vjp", frozenset(("Pad",)))
+def pad_vjp(
+    ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
+) -> dict[int, ir.Value]:
+    """Invert constant padding/cropping and sum the padded-value cotangent."""
+    if node.attributes.get_string("mode", "constant") != "constant":
+        raise NotImplementedError("VJP Pad requires mode='constant'")
+    contributions = {}
+    if 0 in indices:
+        contributions[0] = ctx.tape.op(
+            "Pad",
+            [
+                gs[0],
+                ctx.op("Neg", _input(node, 1)),
+                ctx.scalar(_input(node), 0),
+                *node.inputs[3:],
+            ],
+            {"mode": "constant"},
+        )
+    if 2 in indices:
+        inside = ctx.tape.op(
+            "Pad",
+            [
+                ctx.like(_input(node), 1),
+                _input(node, 1),
+                ctx.scalar(_input(node), 0),
+                *node.inputs[3:],
+            ],
+            {"mode": "constant"},
+        )
+        outside = ctx.op(
+            "Where",
+            ctx.op("Cast", inside, to=ir.DataType.BOOL),
+            ctx.scalar(_input(node), 0),
+            gs[0],
+        )
+        contributions[2] = ctx.op("ReduceSum", outside, keepdims=0)
+    return contributions

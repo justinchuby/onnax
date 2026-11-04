@@ -82,7 +82,7 @@ def _select(
 
 
 def _composition_defaults(
-    model: ir.Model, registry: _JvpRegistry[_Context] | _VjpRegistry[_Context]
+    model: ir.Model, registry: _JvpRegistry[_Context] | _VjpRegistry[_Context], *, mode: str
 ) -> tuple[Sequence[str] | None, Sequence[str] | None]:
     """Authorize a bounded composition, not arbitrary removal of the marker."""
     props = model.graph.metadata_props
@@ -96,17 +96,17 @@ def _composition_defaults(
             )
         return None, None
     message = (
-        "Higher-order differentiation supports only one JvpPass over a generated "
-        "GradPass or VjpPass model with versioned interface metadata. "
+        "Higher-order differentiation supports one JvpPass over GradPass/VjpPass "
+        "or one VjpPass over GradPass, with versioned interface metadata. "
         f"Requested {registry._kind} on graph {model.graph.name!r}, "
         f"marker={_argument_context(props.get(_MARKER, props.get('onnx_ir.autodiff')))}."
     )
     remedy = (
         "Regenerate from the original model with grad or vjp, preserve the generated "
-        "interface metadata, then apply jvp once. Do not remove markers to bypass "
+        "interface metadata, then apply a supported second-order transform. Do not remove markers to bypass "
         "unsupported compositions."
     )
-    if "onnx_ir.autodiff" in props or not isinstance(registry, _JvpRegistry):
+    if "onnx_ir.autodiff" in props:
         raise NotImplementedError(f"{message} {remedy}")
     try:
         info = json.loads(props.get(_INTERFACE, "null"))
@@ -127,9 +127,11 @@ def _composition_defaults(
     if info.get("modes") not in (["grad"], ["vjp"]):
         raise NotImplementedError(
             f"{message} Got modes={_argument_context(info.get('modes'))}; expected ['grad'] or ['vjp']. "
-            f"Forward-over-forward, reverse-over-forward/reverse and third derivatives "
+            f"Forward-over-forward, reverse-over-forward/VJP and third derivatives "
             f"are unsupported. {remedy}"
         )
+    if isinstance(registry, _VjpRegistry) and (mode != "VJP" or info["modes"] != ["grad"]):
+        raise NotImplementedError(f"{message} {remedy}")
     if props[_MARKER] != info["modes"][0]:
         raise NotImplementedError(
             f"{message} Interface modes={info['modes']!r} disagree with the marker. {remedy}"

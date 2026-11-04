@@ -37,6 +37,8 @@ def _hvp_check(model, feeds, inputs=None, *, rtol=3e-5, atol=3e-6, epsilon=1e-5)
     ]
     evaluator = _evaluator(hvp)
     ge = _evaluator(gradient)
+    pullback = VjpPass(inputs=inputs)(gradient).model
+    reverse_evaluator = _evaluator(pullback)
     products = []
     for direction in directions:
         seed_feeds = {
@@ -56,6 +58,17 @@ def _hvp_check(model, feeds, inputs=None, *, rtol=3e-5, atol=3e-6, epsilon=1e-5)
             assert h.shape == feeds[n].shape
             assert h.dtype == feeds[n].dtype
             np.testing.assert_allclose(h, (p - m) / (2 * epsilon), rtol=rtol, atol=atol)
+        reverse_feeds = {
+            value.name: seed
+            for value, seed in zip(
+                pullback.graph.inputs[len(gradient.graph.inputs) :], direction, strict=True
+            )
+        }
+        reverse = reverse_evaluator.run(None, {**feeds, **reverse_feeds})
+        for actual_reverse, expected_forward in zip(
+            reverse[len(gradient.graph.outputs) :], hs, strict=True
+        ):
+            np.testing.assert_allclose(actual_reverse, expected_forward, rtol=rtol, atol=atol)
         products.append(hs)
     lhs = sum(np.vdot(u, hv) for u, hv in zip(directions[0], products[1]))
     rhs = sum(np.vdot(v, hu) for v, hu in zip(directions[1], products[0]))
@@ -414,14 +427,16 @@ def test_reshape_expand_cast_and_where_hvp():
 
 @pytest.mark.parametrize("first", [JvpPass, VjpPass, GradPass])
 @pytest.mark.parametrize("second", [JvpPass, VjpPass, GradPass])
-def test_only_forward_over_reverse_is_authorized(first, second, tmp_path):
+def test_bounded_second_order_compositions_are_authorized(first, second, tmp_path):
     x = _value("x", [])
     tape = ir.tape.Tape()
     model = _model([x], tape, [tape.op("Exp", [x])])
     derivative = first()(model).model
     ir.save(derivative, tmp_path / "first.onnx")
     reloaded = ir.load(tmp_path / "first.onnx")
-    if first is not JvpPass and second is JvpPass:
+    if (first is not JvpPass and second is JvpPass) or (
+        first is GradPass and second is VjpPass
+    ):
         hvp = second()(reloaded).model
         ir.save(hvp, tmp_path / "second.onnx")
         for transform in (JvpPass(), VjpPass(), GradPass()):

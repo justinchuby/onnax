@@ -63,6 +63,29 @@ They return the same container type, with `GraphView` returning an independent
 `Graph`. Transforms preserve the source and retain its original outputs.
 See the [API reference](api.rst) for argument and return contracts.
 
+## Differentiate a gradient
+
+Apply `jvp` to a `grad` graph for Hessian-vector products. Applying `vjp` to
+that gradient graph computes transposed mixed products with respect to another
+input:
+
+```python
+gradient = onnax.grad(model, inputs=["parameters"], output="loss")
+pullback = onnax.vjp(gradient, inputs=["log_penalty"])
+```
+
+If $g=\nabla_\theta L(\theta,\rho)$, the new cotangent input $u$ produces
+$(\partial g/\partial\rho)^\mathsf{T}u$. This is the product needed to
+learn several regularization coefficients or training-example weights with
+implicit differentiation. The graph retains the loss and original gradients,
+then appends the mixed product. With several selected gradient outputs, each
+gets its own cotangent seed and their contributions add.
+
+Both compositions preserve their versioned interface through ONNX export and
+loading. Default selections differentiate original floating inputs and select
+only generated gradient outputs. Use explicit names to choose a parameter or
+hyperparameter subset.
+
 ## Optimize and extend
 
 Apply the [ONNXScript optimizer](optimize-a-deployment-copy)

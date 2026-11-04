@@ -202,6 +202,13 @@ def test_batching_a_derivative_preserves_composition_contract(mode, tmp_path):
                 _run(second, second_feeds, tmp_path / "hvp.onnx")[-1], expected
             )
             continue
+        if mode == "grad" and type(transform) is VjpPass:
+            second = transform(reloaded).model
+            second_feeds = {**feeds, second.graph.inputs[-1].name: np.ones_like(x)}
+            np.testing.assert_allclose(
+                _run(second, second_feeds, tmp_path / "reverse_hvp.onnx")[-1], expected
+            )
+            continue
         with pytest.raises(NotImplementedError, match="Higher-order"):
             transform(reloaded)
 

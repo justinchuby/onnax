@@ -517,16 +517,16 @@ def test_metadata_parse_and_version_errors_are_specific(bad, fragments):
 
 
 def test_reverse_over_reverse_error_reports_requested_mode_and_supported_composition():
-    source = grad(_model("Exp"))
+    source = vjp(_model("Exp"))
     with pytest.raises(NotImplementedError) as caught:
         vjp(source)
     _contains(
         caught.value,
         "Requested VJP",
-        "marker='grad'",
-        "only one JvpPass",
+        "marker='vjp'",
+        "one JvpPass",
         "original model",
-        "apply jvp once",
+        "supported second-order transform",
         "Do not remove markers",
     )
 
