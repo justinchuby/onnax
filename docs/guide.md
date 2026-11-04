@@ -55,7 +55,8 @@ parameter updates. The [LoRA tutorial](lora.md) runs this complete loop.
 JVP and VJP append explicit direction inputs. Use the generated input and output
 names when connecting graphs. `jvp(grad(model, ...), inputs=...)` produces an
 HVP; the [matrix-free fitting tutorial](fitting.md) shows how derivative products
-connect to an external solver.
+connect to an external solver. For a focused `vmap` example,
+[batch sensitivity directions](batched-sensitivity) at one shared input point.
 
 Functions accept `ir.Model`, `ir.Graph`, `ir.GraphView` and `onnx.ModelProto`.
 They return the same container type, with `GraphView` returning an independent
