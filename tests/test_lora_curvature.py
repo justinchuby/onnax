@@ -61,7 +61,7 @@ def test_external_gauss_newton_adapter_updates_and_reload(artifacts):
         }
     )
     (loss,) = runtime.run(["loss"], feeds)
-    assert float(loss) == fitting["train_loss"][1]
+    np.testing.assert_array_equal(loss, np.float32(fitting["train_loss"][1]))
 
 
 @pytest.mark.parametrize("steps", [-1, True, 1.5])

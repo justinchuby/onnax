@@ -177,10 +177,12 @@ def run(output_dir, *, fit_steps=12):
             direction = [
                 rng.normal(size=params[n].shape).astype(np.float32) for n in PARAMETERS
             ]
-            reference = reference_products(x[:batch], target[:batch], params, w, c, direction)
+            expected_products = reference_products(
+                x[:batch], target[:batch], params, w, c, direction
+            )
             for suffix in ("", ".optimized"):
                 actual = products(feeds, direction, suffix)
-                for got, wanted in zip(actual, reference, strict=True):
+                for got, wanted in zip(actual, expected_products, strict=True):
                     for a, b in zip(got, wanted, strict=True):
                         if not np.isfinite(a).all():
                             raise AssertionError("Nonfinite curvature product")
