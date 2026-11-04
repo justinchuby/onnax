@@ -77,3 +77,61 @@ def test_eager_head_frozen_weight_version_is_checked():
 def test_eager_head_requires_frozen_parameters():
     with pytest.raises(ValueError, match="frozen"):
         eager_head_sum(torch.nn.Linear(4, 7), torch.ones(1, 3, 4), torch.ones(1, 3).long(), 2)
+
+
+def test_eager_head_evaluation_has_no_gradient_graph():
+    head = torch.nn.Linear(4, 7).requires_grad_(False)
+    hidden = torch.randn(1, 4, 4, requires_grad=True)
+    labels = torch.tensor([[1, 2, -100, 4]])
+    expected = eager_head_sum(head, hidden, labels, 2).detach()
+    with torch.no_grad():
+        actual = eager_head_sum(head, hidden, labels, 2)
+    torch.testing.assert_close(actual, expected, rtol=1e-4, atol=1e-6)
+    assert not actual.requires_grad
+
+
+@pytest.mark.parametrize("precision", ["fp32", "bf16"])
+def test_eager_head_accumulates_variable_valid_token_counts(precision):
+    from types import SimpleNamespace
+
+    from examples.huggingface.torch_context import chunked_token_loss
+
+    class Body(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.projection = torch.nn.Linear(4, 6)
+
+        def forward(self, features, **kwargs):
+            return SimpleNamespace(last_hidden_state=self.projection(features))
+
+    torch.manual_seed(14)
+    body = Body()
+    head = torch.nn.Linear(6, 7).requires_grad_(False)
+    if precision == "bf16":
+        from examples.huggingface.mixed_precision import reference_projections
+
+        reference_projections(head)
+    reference_body, reference_head = copy.deepcopy(body), copy.deepcopy(head)
+    model = SimpleNamespace(model=body, lm_head=head)
+    batches = [
+        (torch.randn(1, 4, 4), torch.tensor([[1, 2, -100, 3]])),
+        (torch.randn(1, 5, 4), torch.tensor([[1, -100, 4, 2, 6]])),
+        (torch.randn(1, 3, 4), torch.full((1, 3), -100)),
+    ]
+    total = sum(int(labels[:, 1:].ne(-100).sum()) for _, labels in batches)
+    for features, labels in batches:
+        count = int(labels[:, 1:].ne(-100).sum())
+        loss = chunked_token_loss(
+            model, {"features": features}, labels, 2, head_policy="eager"
+        )
+        (loss * count / total).backward()
+        logits = reference_head(reference_body(features).last_hidden_state[:, :-1]).float()
+        expected = torch.nn.functional.cross_entropy(
+            logits.reshape(-1, 7),
+            labels[:, 1:].reshape(-1),
+            ignore_index=-100,
+            reduction="sum",
+        )
+        (expected / total).backward()
+    for actual, expected in zip(body.parameters(), reference_body.parameters(), strict=True):
+        torch.testing.assert_close(actual.grad, expected.grad, rtol=1e-4, atol=1e-6)

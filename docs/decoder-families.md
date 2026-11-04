@@ -608,8 +608,12 @@ Compare those arrays with the ONNX results before comparing throughput.
 Inputs are staged on the device before warmup. Device work is synchronized at
 timing boundaries, and gradients/loss return to CPU after each iteration.
 Parameters stay fixed; the timed scope is forward, loss and backward. The
-PyTorch head checkpoints each frozen projection and cross entropy chunk, so its
-backward recomputes logits. The ONNX head uses its exported loss/VJP schedule.
+PyTorch head defaults to `--head-policy eager`: it selects valid shifted tokens,
+computes native cross entropy and its hidden-state gradient per chunk, then
+saves that gradient for backward. This first-order schedule releases each
+chunk’s logits immediately. `--head-policy checkpoint` recomputes each frozen
+projection and cross entropy chunk during backward. The ONNX head uses its
+exported loss/VJP schedule. The measurements below record the checkpoint policy.
 The worker validates the adapter archive against the export manifest and
 records source identity; the Transformers base comes from the pinned checkpoint.
 For NF4 exports, the reference reconstructs each source projection’s NF4 blocks
