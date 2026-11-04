@@ -1,0 +1,125 @@
+{
+  "command": [
+    "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+    "-m",
+    "examples.huggingface.decoder_sft",
+    "--family",
+    "qwen35",
+    "--nf4",
+    "--projection-precision",
+    "bf16",
+    "--fused-ops",
+    "--head-chunk-size",
+    "16",
+    "--steps",
+    "100",
+    "--max-length",
+    "64",
+    "--provider",
+    "mlx",
+    "--library",
+    "/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib",
+    "--output-dir",
+    "/tmp/onnax-qwen35-bf16-nf4-cli100/resumed",
+    "--resume",
+    "/tmp/onnax-qwen35-bf16-nf4-cli100/interrupted/checkpoint-50"
+  ],
+  "cwd": "/private/tmp/onnax-decoder-bf16-delivery",
+  "status": "complete",
+  "physical_memory_budget_bytes": 25769803776,
+  "minimum_free_disk_bytes": 5368709120,
+  "observations": [
+    {
+      "utc": "2026-11-04T13:21:46.255543+00:00",
+      "current_bytes": 163960,
+      "peak_bytes": 295032,
+      "free_disk_bytes": 21629861888
+    },
+    {
+      "utc": "2026-11-04T13:21:47.260017+00:00",
+      "current_bytes": 221496112,
+      "peak_bytes": 221496112,
+      "free_disk_bytes": 21628788736
+    },
+    {
+      "utc": "2026-11-04T13:21:48.265184+00:00",
+      "current_bytes": 286852128,
+      "peak_bytes": 287474720,
+      "free_disk_bytes": 21628796928
+    },
+    {
+      "utc": "2026-11-04T13:21:49.275783+00:00",
+      "current_bytes": 399099080,
+      "peak_bytes": 399099080,
+      "free_disk_bytes": 21628776448
+    },
+    {
+      "utc": "2026-11-04T13:21:50.285019+00:00",
+      "current_bytes": 472204680,
+      "peak_bytes": 472204680,
+      "free_disk_bytes": 21628293120
+    },
+    {
+      "utc": "2026-11-04T13:21:51.293757+00:00",
+      "current_bytes": 518997432,
+      "peak_bytes": 518997432,
+      "free_disk_bytes": 21627338752
+    },
+    {
+      "utc": "2026-11-04T13:21:52.296525+00:00",
+      "current_bytes": 547882616,
+      "peak_bytes": 547882616,
+      "free_disk_bytes": 21626748928
+    },
+    {
+      "utc": "2026-11-04T13:21:53.307525+00:00",
+      "current_bytes": 547997304,
+      "peak_bytes": 547997304,
+      "free_disk_bytes": 21626621952
+    },
+    {
+      "utc": "2026-11-04T13:21:54.318259+00:00",
+      "current_bytes": 556435088,
+      "peak_bytes": 556435088,
+      "free_disk_bytes": 21626617856
+    },
+    {
+      "utc": "2026-11-04T13:21:55.328953+00:00",
+      "current_bytes": 556631696,
+      "peak_bytes": 556631696,
+      "free_disk_bytes": 21626601472
+    },
+    {
+      "utc": "2026-11-04T13:21:56.330441+00:00",
+      "current_bytes": 556533392,
+      "peak_bytes": 556631696,
+      "free_disk_bytes": 21626597376
+    },
+    {
+      "utc": "2026-11-04T13:21:57.341156+00:00",
+      "current_bytes": 556844688,
+      "peak_bytes": 556861072,
+      "free_disk_bytes": 21626589184
+    },
+    {
+      "utc": "2026-11-04T13:21:58.351866+00:00",
+      "current_bytes": 556680872,
+      "peak_bytes": 557008552,
+      "free_disk_bytes": 21626458112
+    },
+    {
+      "utc": "2026-11-04T13:21:59.362581+00:00",
+      "current_bytes": 559859344,
+      "peak_bytes": 567330448,
+      "free_disk_bytes": 21625524224
+    }
+  ],
+  "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+  "observation_errors": 0,
+  "temporary_directory": "/tmp/onnax-qwen35-bf16-nf4-cli100/resumed-guard/worker-tmp-zexf7pw9",
+  "pid": 98236,
+  "started": "2026-11-04T13:21:46.254883+00:00",
+  "returncode": 0,
+  "finished": "2026-11-04T13:22:00.373343+00:00",
+  "temporary_files_removed": true
+}

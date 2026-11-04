@@ -1,0 +1,13 @@
+W1104 05:59:57.763000 1719 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+{"phase": "source_identity", "source_commit": "d62873fad8d5a4479585c363604906edc80aa598"}
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:   0%|          | 1/320 [00:01<05:43,  1.08s/it]Loading weights: 100%|██████████| 320/320 [00:01<00:00, 295.45it/s]
+{"phase": "reference_gradients", "source_commit": "d62873fad8d5a4479585c363604906edc80aa598", "frozen_initializers": 524, "frozen_head_equal": true, "checked_onnx_modules": 57}
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+Traceback (most recent call last):
+  File "/tmp/onnax-qwen35-real-bf16-nf4-audit.py", line 50, in <module>
+    records={'logits':precision_comparison(predictions[valid],predicted[valid],baseline[valid]),'loss':precision_comparison(actual.loss,loss,baseline_loss),'gradients':{}}
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/onnax-decoder-bf16-delivery/examples/huggingface/validation.py", line 62, in precision_comparison
+    raise AssertionError(f"Backend error exceeds measured precision effect: {result}")
+AssertionError: Backend error exceeds measured precision effect: {'max_abs_error': 0.3447265625, 'l2_error': 128.4453582763672, 'reference_precision_max_abs': 0.21934127807617188, 'reference_precision_l2': 101.65776824951172, 'max_abs_reference_scale': 0.2222172780893743, 'l2_limit': 103.1400226354599, 'strict_violations': 12374567, 'rtol': 0.0001, 'atol': 1e-06, 'fp32_floor_l2': 1.4822543859481812, 'max_abs_within_reference_scale': False, 'comparison_policy': 'reference_precision_effect_l2'}

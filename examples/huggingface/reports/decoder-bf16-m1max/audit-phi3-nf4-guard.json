@@ -1,0 +1,72 @@
+{
+  "command": [
+    "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+    "-m",
+    "examples.huggingface.decoder_sft",
+    "--audit-only",
+    "--audit-steps",
+    "6",
+    "--family",
+    "phi3",
+    "--projection-precision",
+    "bf16",
+    "--fused-ops",
+    "--provider",
+    "mlx",
+    "--library",
+    "/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib",
+    "--output-dir",
+    "/tmp/onnax-decoder-bf16-audits/phi3-nf4",
+    "--nf4"
+  ],
+  "cwd": "/private/tmp/onnax-decoder-bf16-delivery",
+  "status": "complete",
+  "physical_memory_budget_bytes": 25769803776,
+  "minimum_free_disk_bytes": 5368709120,
+  "observations": [
+    {
+      "utc": "2026-11-04T13:40:11.572644+00:00",
+      "current_bytes": 163960,
+      "peak_bytes": 295032,
+      "free_disk_bytes": 21607657472
+    },
+    {
+      "utc": "2026-11-04T13:40:12.583042+00:00",
+      "current_bytes": 221184816,
+      "peak_bytes": 221184816,
+      "free_disk_bytes": 21607645184
+    },
+    {
+      "utc": "2026-11-04T13:40:13.593654+00:00",
+      "current_bytes": 291226632,
+      "peak_bytes": 292078600,
+      "free_disk_bytes": 21607587840
+    },
+    {
+      "utc": "2026-11-04T13:40:14.604232+00:00",
+      "current_bytes": 412730568,
+      "peak_bytes": 413304008,
+      "free_disk_bytes": 21607436288
+    },
+    {
+      "utc": "2026-11-04T13:40:15.614928+00:00",
+      "current_bytes": 490800472,
+      "peak_bytes": 490800472,
+      "free_disk_bytes": 21606752256
+    },
+    {
+      "utc": "2026-11-04T13:40:16.625592+00:00",
+      "current_bytes": 524142104,
+      "peak_bytes": 526566936,
+      "free_disk_bytes": 21606252544
+    }
+  ],
+  "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+  "observation_errors": 0,
+  "temporary_directory": "/tmp/onnax-decoder-bf16-audits/phi3-nf4-guard/worker-tmp-g2g5vrhw",
+  "pid": 99217,
+  "started": "2026-11-04T13:40:11.572033+00:00",
+  "returncode": 0,
+  "finished": "2026-11-04T13:40:17.636224+00:00",
+  "temporary_files_removed": true
+}

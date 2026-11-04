@@ -1,0 +1,65 @@
+{
+  "command": [
+    "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+    "-m",
+    "examples.huggingface.decoder_sft",
+    "--audit-only",
+    "--audit-steps",
+    "6",
+    "--family",
+    "qwen3",
+    "--projection-precision",
+    "bf16",
+    "--fused-ops",
+    "--provider",
+    "mlx",
+    "--library",
+    "/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib",
+    "--output-dir",
+    "/tmp/onnax-decoder-bf16-audits/qwen3-unquantized"
+  ],
+  "cwd": "/private/tmp/onnax-decoder-bf16-delivery",
+  "status": "complete",
+  "physical_memory_budget_bytes": 25769803776,
+  "minimum_free_disk_bytes": 5368709120,
+  "observations": [
+    {
+      "utc": "2026-11-04T13:40:17.703395+00:00",
+      "current_bytes": 180344,
+      "peak_bytes": 295032,
+      "free_disk_bytes": 21606252544
+    },
+    {
+      "utc": "2026-11-04T13:40:18.713829+00:00",
+      "current_bytes": 221299504,
+      "peak_bytes": 221299504,
+      "free_disk_bytes": 21606260736
+    },
+    {
+      "utc": "2026-11-04T13:40:19.724417+00:00",
+      "current_bytes": 293831688,
+      "peak_bytes": 293831688,
+      "free_disk_bytes": 21606227968
+    },
+    {
+      "utc": "2026-11-04T13:40:20.731004+00:00",
+      "current_bytes": 413041864,
+      "peak_bytes": 413041864,
+      "free_disk_bytes": 21606305792
+    },
+    {
+      "utc": "2026-11-04T13:40:21.741674+00:00",
+      "current_bytes": 491505128,
+      "peak_bytes": 491505128,
+      "free_disk_bytes": 21604659200
+    }
+  ],
+  "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+  "observation_errors": 0,
+  "temporary_directory": "/tmp/onnax-decoder-bf16-audits/qwen3-unquantized-guard/worker-tmp-45zzrt5n",
+  "pid": 99233,
+  "started": "2026-11-04T13:40:17.702715+00:00",
+  "returncode": 0,
+  "finished": "2026-11-04T13:40:22.752245+00:00",
+  "temporary_files_removed": true
+}

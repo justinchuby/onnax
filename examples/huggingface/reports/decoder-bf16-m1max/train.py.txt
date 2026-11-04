@@ -1,0 +1,19 @@
+import hashlib,json,os,subprocess,time
+from pathlib import Path
+root=Path('/tmp/onnax-qwen35-bf16-nf4-cli100');root.mkdir(exist_ok=False)
+python='/Users/justinc/Documents/GitHub/onnax/.venv/bin/python'
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+assert head=='94ba8f6e12e7fed86609ddabd6a33a79c488c3ae' and not subprocess.check_output(['git','status','--porcelain'],text=True).strip()
+paths=['examples/huggingface/decoder_sft.py','examples/huggingface/decoder_families.py','examples/huggingface/chunked_loss.py','examples/huggingface/decoder_head.py','examples/huggingface/mixed_precision.py','examples/lora/bf16_rules.py']
+hashes={p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths}
+env={**os.environ,'PYTHONPATH':'src:.','HF_HUB_OFFLINE':'1','HF_DATASETS_OFFLINE':'1','ONNXRUNTIME_EP_MLX_NO_COMPILE':'1','ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES':'536870912','ORT_DISABLE_TELEMETRY':'1'}
+for case,extra in [('continuous',[]),('interrupted',['--stop','50']),('resumed',['--resume',str(root/'interrupted'/'checkpoint-50')])]:
+ (root/'status.json').write_text(json.dumps({'phase':case,'source':head}))
+ command=[python,'-m','examples.huggingface.decoder_sft','--family','qwen35','--nf4','--projection-precision','bf16','--fused-ops','--head-chunk-size','16','--steps','100','--max-length','64','--provider','mlx','--library','/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib','--output-dir',str(root/case),*extra]
+ with open(root/(case+'.log'),'w') as log:
+  result=subprocess.run([python,'-m','examples.huggingface.guard','--output-dir',str(root/(case+'-guard')),'--',*command],env=env,stdout=log,stderr=subprocess.STDOUT)
+ if result.returncode:
+  (root/'status.json').write_text(json.dumps({'phase':'failed','case':case,'returncode':result.returncode}));raise SystemExit(result.returncode)
+for p,digest in hashes.items():assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==digest,p
+(root/'qualification.json').write_text(json.dumps({'source':head,'source_sha256':hashes,'scope':'CLI tiny4layerQwen35, NF4 frozen decoder, BF16 projections/head, FP32 parameters/gradients/AdamW, fused operations, head16, maxlen64,100steps, checkpoint50, freshprocessresume','commands':'Recorded in each guard execution.json'},indent=2)+'\n')
+(root/'status.json').write_text(json.dumps({'phase':'training_complete','next':'Independent checkpoint100/state/frozen/inference audit'}));print((root/'status.json').read_text(),flush=True)

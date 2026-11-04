@@ -121,13 +121,20 @@ def roundtrip(
     diagnose_rounding=False,
     stable_reference=False,
     adam_epsilon=1e-8,
+    precision_control=False,
 ):
     """Exchange through PEFT, compare gradients, then exchange one AdamW update."""
+    import copy
+
     import numpy as np
     from peft import PeftModel
 
+    from examples.huggingface.validation import precision_comparison
+
     export_adapter(model, directory)
     peft = PeftModel.from_pretrained(reference, directory, is_trainable=True).eval()
+    control = copy.deepcopy(peft) if precision_control else None
+    comparisons = {"gradients": {}, "updates": {}}
     precision = getattr(model, "projection_precision", "fp32")
     if precision != "fp32":
         from examples.huggingface.mixed_precision import reference_projections
@@ -145,6 +152,7 @@ def roundtrip(
         with torch.no_grad():
             actual.logits = model(**{k: v for k, v in batch.items() if k != "labels"}).logits
     expected = peft(**batch, use_cache=False)
+    baseline = None if control is None else control(**batch, use_cache=False)
     valid = batch["attention_mask"].bool()
     logits = actual.logits.detach()[valid].numpy()
     reference_logits = expected.logits.detach()[valid].numpy()
@@ -160,12 +168,20 @@ def roundtrip(
             np.abs(logits - reference_logits) > 1e-6 + 1e-4 * np.abs(reference_logits)
         )
     )
-    if not diagnose_rounding:
+    if control is not None:
+        comparisons["logits"] = precision_comparison(
+            actual.logits[valid], expected.logits[valid], baseline.logits[valid]
+        )
+        comparisons["loss"] = precision_comparison(actual.loss, expected.loss, baseline.loss)
+    elif not diagnose_rounding:
         np.testing.assert_allclose(logits, reference_logits, rtol=1e-4, atol=1e-6)
         np.testing.assert_allclose(actual_loss, reference_loss, rtol=1e-4, atol=1e-6)
     actual.loss.backward()
     expected.loss.backward()
+    if baseline is not None:
+        baseline.loss.backward()
     parameters = dict(peft.named_parameters())
+    control_parameters = {} if control is None else dict(control.named_parameters())
     gradient_failures = {}
     for row in model.mapping:
         for key in ("A", "B"):
@@ -184,7 +200,12 @@ def roundtrip(
                     "violations": int(np.count_nonzero(failed)),
                     "max_abs": float(np.max(delta)),
                 }
-            if not diagnose_rounding:
+            if control is not None:
+                name = f"base_model.model.{row['module']}.lora_{key}.default.weight"
+                comparisons["gradients"][row[key]] = precision_comparison(
+                    actual_gradient, expected_gradient, control_parameters[name].grad.T
+                )
+            elif not diagnose_rounding:
                 np.testing.assert_allclose(
                     actual_gradient, expected_gradient, rtol=1e-4, atol=1e-6
                 )
@@ -200,6 +221,24 @@ def roundtrip(
         weight_decay=0,
         eps=adam_epsilon,
     ).step()
+    if control is not None:
+        torch.optim.AdamW(
+            [p for p in control.parameters() if p.requires_grad],
+            lr=0.003,
+            weight_decay=0,
+            eps=adam_epsilon,
+        ).step()
+    control_arrays = (
+        {
+            row[key]: control_parameters[
+                f"base_model.model.{row['module']}.lora_{key}.default.weight"
+            ].T
+            for row in model.mapping
+            for key in ("A", "B")
+        }
+        if control is not None
+        else {}
+    )
     arrays = model.onnx.arrays()
     peft.save_pretrained(directory, save_embedding_layers=False)
     import_adapter(model, directory)
@@ -214,7 +253,11 @@ def roundtrip(
                 "violations": int(np.count_nonzero(failures)),
                 "max_abs": float(np.max(delta)),
             }
-        if not diagnose_rounding:
+        if control is not None:
+            comparisons["updates"][name] = precision_comparison(
+                arrays[name], value, control_arrays[name]
+            )
+        elif not diagnose_rounding:
             np.testing.assert_allclose(value, arrays[name], rtol=1e-4, atol=1e-6)
     result = {
         "adapter_tensors": len(arrays),
@@ -233,4 +276,10 @@ def roundtrip(
 
     if stable_reference:
         result["stable_reference_audit"] = stable
+    if control is not None:
+        result["precision_control"] = {
+            "passed": True,
+            "policy": "reference_precision_effect_l2",
+            **comparisons,
+        }
     return result

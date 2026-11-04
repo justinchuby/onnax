@@ -1,0 +1,330 @@
+{
+  "status": "complete",
+  "first_difference": {
+    "name": "v_model.layers.0.linear_attn.Neg_190",
+    "max_abs": 1.1920928955078125e-07,
+    "unequal": 5,
+    "op": "Neg",
+    "domain": "",
+    "inputs": [
+      "v_model.layers.0.linear_attn.Exp_189"
+    ]
+  },
+  "outputs": [
+    {
+      "name": "v_ConstantOfShape_3",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_ConstantOfShape_6",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.embed_tokens.Gather_109",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.input_layernorm.Add_147",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.input_layernorm.RMSNormalization_148",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.in_proj_qkv.MatMul_151",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "bf16.value_1",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "bf16.value_2",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "model.layers.0.linear_attn.in_proj_qkv.adapter.0.0.0",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "bf16.value_11",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "bf16.value_12",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "model.layers.0.linear_attn.in_proj_qkv.adapter.0.1.0",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "model.layers.0.linear_attn.in_proj_qkv.adapter.0.2.0",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "model.layers.0.linear_attn.in_proj_qkv.adapter.0.3.0",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "model.layers.0.linear_attn.in_proj_qkv.adapter.0.4.0",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.in_proj_z.MatMul_153",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.in_proj_b.MatMul_155",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.in_proj_a.MatMul_157",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Transpose_158",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.conv1d.Expand_162",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.conv1d.CausalConvWithState_163_0",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.conv1d.CausalConvWithState_163_1",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Transpose_164",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Split_166_0",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Split_166_1",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Split_166_2",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Reshape_172",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.ReduceSumSquare_173",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.CastLike_174",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Add_175",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Sqrt_176",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Div_177",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Reshape_178",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Reshape_179",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.ReduceSumSquare_180",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Add_182",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Sqrt_183",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Div_184",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Reshape_185",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Sigmoid_186",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Add_187",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Softplus_188",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Neg_190",
+      "max_abs": 1.1920928955078125e-07,
+      "unequal": 5
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Mul_191",
+      "max_abs": 4.76837158203125e-07,
+      "unequal": 299
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.LinearAttention_192_0",
+      "max_abs": 1.3969838619232178e-09,
+      "unequal": 9111
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.LinearAttention_192_1",
+      "max_abs": 1.4901161193847656e-08,
+      "unequal": 9255
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Reshape_194",
+      "max_abs": 1.3969838619232178e-09,
+      "unequal": 9111
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Reshape_195",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.norm.Cast_197",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.norm.RMSNormalization_198",
+      "max_abs": 9.5367431640625e-07,
+      "unequal": 9392
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.norm.Swish_200",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.norm.Mul_201",
+      "max_abs": 8.940696716308594e-08,
+      "unequal": 9145
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.Reshape_205",
+      "max_abs": 8.940696716308594e-08,
+      "unequal": 9145
+    },
+    {
+      "name": "v_model.layers.0.linear_attn.out_proj.MatMul_207",
+      "max_abs": 0.000244140625,
+      "unequal": 24
+    },
+    {
+      "name": "v_model.layers.0.Add_208",
+      "max_abs": 0.000244140625,
+      "unequal": 24
+    },
+    {
+      "name": "v_model.layers.0.post_attention_layernorm.Add_209",
+      "max_abs": 0.0,
+      "unequal": 0
+    },
+    {
+      "name": "v_model.layers.0.post_attention_layernorm.RMSNormalization_210",
+      "max_abs": 0.00631558895111084,
+      "unequal": 1022
+    },
+    {
+      "name": "v_model.layers.0.mlp.gate_proj.MatMul_212",
+      "max_abs": 0.0078125,
+      "unequal": 427
+    },
+    {
+      "name": "v_model.layers.0.mlp.Swish_213",
+      "max_abs": 0.003311455249786377,
+      "unequal": 427
+    },
+    {
+      "name": "v_model.layers.0.mlp.up_proj.MatMul_215",
+      "max_abs": 0.001953125,
+      "unequal": 619
+    },
+    {
+      "name": "v_model.layers.0.mlp.Mul_216",
+      "max_abs": 0.0011238902807235718,
+      "unequal": 980
+    },
+    {
+      "name": "v_model.layers.0.mlp.down_proj.MatMul_218",
+      "max_abs": 0.000244140625,
+      "unequal": 453
+    },
+    {
+      "name": "v_model.layers.0.Add_219",
+      "max_abs": 0.000244140625,
+      "unequal": 463
+    }
+  ]
+}

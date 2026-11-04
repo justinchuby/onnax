@@ -1,0 +1,337 @@
+{
+  "status": "complete",
+  "comparison": "Bound full forward graph versus exported per-block forward sessions, same inputs/adapters and backend",
+  "first_difference": {
+    "name": "v_model.layers.0.Add_219",
+    "shape": [
+      1,
+      64,
+      1024
+    ],
+    "unequal": 463,
+    "max_abs": 0.000244140625,
+    "relative_l2": 0.00015392867499031126
+  },
+  "boundaries": [
+    {
+      "name": "v_model.embed_tokens.Gather_109",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 0,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "name": "v_model.layers.0.Add_219",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 463,
+      "max_abs": 0.000244140625,
+      "relative_l2": 0.00015392867499031126
+    },
+    {
+      "name": "v_model.layers.1.Add_292",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 3376,
+      "max_abs": 0.0009765625,
+      "relative_l2": 0.0005393047467805445
+    },
+    {
+      "name": "v_model.layers.2.Add_365",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 4734,
+      "max_abs": 0.001953125,
+      "relative_l2": 0.0010242399293929338
+    },
+    {
+      "name": "v_model.rotary_emb.Where_130",
+      "shape": [
+        1,
+        64,
+        32
+      ],
+      "unequal": 0,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "name": "v_model.rotary_emb.Where_132",
+      "shape": [
+        1,
+        64,
+        32
+      ],
+      "unequal": 0,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "name": "v_model.Unsqueeze_146",
+      "shape": [
+        1,
+        1,
+        64,
+        64
+      ],
+      "unequal": 0,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "name": "v_model.layers.3.Add_402",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 4968,
+      "max_abs": 0.0029296875,
+      "relative_l2": 0.0015034122625365853
+    },
+    {
+      "name": "v_model.layers.4.Add_475",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 5011,
+      "max_abs": 0.0029296875,
+      "relative_l2": 0.0017882869578897953
+    },
+    {
+      "name": "v_model.layers.5.Add_548",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 5043,
+      "max_abs": 0.0029296875,
+      "relative_l2": 0.0018868152983486652
+    },
+    {
+      "name": "v_model.layers.6.Add_621",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 5073,
+      "max_abs": 0.0029296875,
+      "relative_l2": 0.0014434930635616183
+    },
+    {
+      "name": "v_model.layers.7.Add_658",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 5078,
+      "max_abs": 0.003173828125,
+      "relative_l2": 0.0019501958740875125
+    },
+    {
+      "name": "v_model.layers.8.Add_731",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 5824,
+      "max_abs": 0.00244140625,
+      "relative_l2": 0.002032350515946746
+    },
+    {
+      "name": "v_model.layers.9.Add_804",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 32615,
+      "max_abs": 0.0056304931640625,
+      "relative_l2": 0.0022365597542375326
+    },
+    {
+      "name": "v_model.layers.10.Add_877",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 42543,
+      "max_abs": 0.00311279296875,
+      "relative_l2": 0.0027531415689736605
+    },
+    {
+      "name": "v_model.layers.11.Add_914",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 44516,
+      "max_abs": 0.005218505859375,
+      "relative_l2": 0.004108738619834185
+    },
+    {
+      "name": "v_model.layers.12.Add_987",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 45117,
+      "max_abs": 0.005859375,
+      "relative_l2": 0.004266698379069567
+    },
+    {
+      "name": "v_model.layers.13.Add_1060",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 45817,
+      "max_abs": 0.00506591796875,
+      "relative_l2": 0.004375118296593428
+    },
+    {
+      "name": "v_model.layers.14.Add_1133",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 47635,
+      "max_abs": 0.006473541259765625,
+      "relative_l2": 0.003952958155423403
+    },
+    {
+      "name": "v_model.layers.15.Add_1170",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 53108,
+      "max_abs": 0.00726318359375,
+      "relative_l2": 0.0049421703442931175
+    },
+    {
+      "name": "v_model.layers.16.Add_1243",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 54465,
+      "max_abs": 0.011356353759765625,
+      "relative_l2": 0.0047940039075911045
+    },
+    {
+      "name": "v_model.layers.17.Add_1316",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 54763,
+      "max_abs": 0.009403228759765625,
+      "relative_l2": 0.0045496574603021145
+    },
+    {
+      "name": "v_model.layers.18.Add_1389",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 54923,
+      "max_abs": 0.015625,
+      "relative_l2": 0.004575152415782213
+    },
+    {
+      "name": "v_model.layers.19.Add_1426",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 55042,
+      "max_abs": 0.01593017578125,
+      "relative_l2": 0.0049275606870651245
+    },
+    {
+      "name": "v_model.layers.20.Add_1499",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 55099,
+      "max_abs": 0.01983642578125,
+      "relative_l2": 0.0049398778937757015
+    },
+    {
+      "name": "v_model.layers.21.Add_1572",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 55114,
+      "max_abs": 0.01601409912109375,
+      "relative_l2": 0.004894268698990345
+    },
+    {
+      "name": "v_model.layers.22.Add_1645",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 55165,
+      "max_abs": 0.02197265625,
+      "relative_l2": 0.005251586902886629
+    },
+    {
+      "name": "v_model.layers.23.Add_1682",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 55203,
+      "max_abs": 0.03631591796875,
+      "relative_l2": 0.00672856206074357
+    },
+    {
+      "name": "hidden_states",
+      "shape": [
+        1,
+        64,
+        1024
+      ],
+      "unequal": 55296,
+      "max_abs": 0.1886444091796875,
+      "relative_l2": 0.006574010010808706
+    }
+  ]
+}

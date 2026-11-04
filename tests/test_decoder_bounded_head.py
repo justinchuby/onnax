@@ -8,6 +8,7 @@ import json
 import os
 
 import numpy as np
+import onnx
 import pytest
 
 pytest.importorskip("mobius")
@@ -321,3 +322,161 @@ def test_native_compiled_head_with_eager_decoder(tmp_path, family, monkeypatch):
     assert calls[False] > 0 and calls[True] > 0
     assert report["reload"] and report["peft"]["gradient_check_passed"]
     assert report["peft"]["update_check_passed"]
+
+
+@pytest.mark.parametrize("provider", ["reference", "mlx"])
+@pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
+@pytest.mark.parametrize("nf4", [False, True])
+def test_bf16_family_updates_and_portable_export(tmp_path, family, nf4, provider):
+    precision = "bf16"
+    from onnx.reference import ReferenceEvaluator
+
+    from examples.huggingface.mixed_precision import reference_projections
+
+    def factory(path):
+        return ReferenceEvaluator(str(path))
+
+    if provider == "reference" and family == "qwen35":
+        pytest.skip("ONNX ReferenceEvaluator does not execute reverse Scan")
+    if provider == "mlx":
+        if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
+            pytest.skip("Native MLX opt-in")
+        from examples.lora.mlx_runtime import register_library, session
+
+        if path := os.environ.get("ONNAX_MLX_EP_LIBRARY"):
+            register_library(path)
+        factory = session
+
+    torch.set_num_threads(1)
+    model, reference = prepare(
+        family,
+        head_chunk_size=3,
+        session_factory=factory,
+        projection_precision=precision,
+        nf4=nf4,
+    )
+    try:
+        linears = sum(isinstance(module, torch.nn.Linear) for module in reference.modules())
+        assert model.config.onnax_precision["projection_products"] == linears + sum(
+            2 * len(row["pieces"]) for row in model.mapping
+        )
+        if nf4:
+            assert model.quantization["compute_dtype"] == "bfloat16"
+        with torch.no_grad():
+            for name, p in model.onnx.parameters_by_name().items():
+                if name.endswith(".B"):
+                    p.fill_(0.01)
+        reference = reference_projections(
+            add_reference_parameters(reference, model.onnx.arrays(), model.mapping),
+            precision=precision,
+        )
+        optimizers = [
+            torch.optim.AdamW(
+                [p for p in m.parameters() if p.requires_grad], lr=0.003, eps=1e-5
+            )
+            for m in (model, reference)
+        ]
+        frozen = {
+            n: p.detach().clone()
+            for n, p in reference.named_parameters()
+            if not p.requires_grad
+        }
+        data = batch()
+        for _ in range(3):
+            for optimizer in optimizers:
+                optimizer.zero_grad(set_to_none=True)
+            actual = model(**data)
+            expected = reference(
+                **{k: v for k, v in data.items() if k != "labels"}, use_cache=False
+            ).logits
+            expected_loss = token_loss(expected, data["labels"])
+            torch.testing.assert_close(actual.loss, expected_loss, rtol=1e-4, atol=1e-6)
+            actual.loss.backward()
+            expected_loss.backward()
+            for row in model.mapping:
+                target = reference.get_submodule(row["module"])
+                for key in ("A", "B"):
+                    p = model.onnx.parameters_by_name()[row[key]]
+                    assert p.dtype == p.grad.dtype == torch.float32
+                    torch.testing.assert_close(
+                        p.grad, getattr(target, key).grad, rtol=1e-4, atol=1e-6
+                    )
+            for optimizer in optimizers:
+                optimizer.step()
+                for state in optimizer.state.values():
+                    assert state["exp_avg"].dtype == state["exp_avg_sq"].dtype == torch.float32
+            for row in model.mapping:
+                target = reference.get_submodule(row["module"])
+                for key in ("A", "B"):
+                    torch.testing.assert_close(
+                        model.onnx.parameters_by_name()[row[key]],
+                        getattr(target, key),
+                        rtol=1e-4,
+                        atol=1e-6,
+                    )
+        assert all(
+            torch.equal(p, frozen[n])
+            for n, p in reference.named_parameters()
+            if not p.requires_grad
+        )
+        model.export(tmp_path / "export")
+        if not nf4:
+            from examples.huggingface.torch_decoder_benchmark import reference_from_export
+
+            with pytest.raises(ValueError, match="FP32 projection compute"):
+                reference_from_export(tmp_path / "export")
+        restored = OnnxDecoder.load(tmp_path / "export", session_factory=factory)
+        try:
+            assert restored.projection_precision == precision
+            for m in (model, restored):
+                m.zero_grad()
+                m(**data).loss.backward()
+            for name, p in model.onnx.parameters_by_name().items():
+                torch.testing.assert_close(
+                    p.grad, restored.onnx.parameters_by_name()[name].grad, rtol=0, atol=0
+                )
+            inputs = {k: v for k, v in data.items() if k != "labels"}
+            torch.testing.assert_close(
+                restored(**inputs).logits, model(**inputs).logits, rtol=0, atol=0
+            )
+            onnx.checker.check_model(
+                str(tmp_path / "export" / "execution" / "inference.onnx"), full_check=True
+            )
+        finally:
+            restored.close()
+    finally:
+        model.close()
+
+
+def test_precision_control_rejects_a_corrupted_adjoint():
+    from onnx.reference import ReferenceEvaluator
+
+    from examples.huggingface.chunked_loss import ChunkedHead
+    from examples.huggingface.validation import precision_comparison
+
+    def factory(path):
+        return ReferenceEvaluator(str(path))
+
+    weight = np.array([[1.00390625], [-1.00390625]], np.float32)
+    runtime = ChunkedHead(
+        weight,
+        weight_layout="vocab_hidden",
+        projection_precision="bf16",
+        session_factory=factory,
+    )
+    try:
+        _, actual = runtime.executor.run(
+            None, {"hidden": np.array([[0.25]], np.float32), "labels": np.array([0], np.int64)}
+        )
+
+        def derivative(w):
+            return np.array([[-2 * w / (1 + np.exp(0.5 * w))]], np.float32)
+
+        reference, control = derivative(1.0), derivative(float(weight[0, 0]))
+        report = precision_comparison(actual, reference, control)
+        assert report["reference_precision_max_abs"] > 0
+        assert report["strict_violations"] == 0
+        with pytest.raises(AssertionError, match="measured precision effect"):
+            precision_comparison(actual * np.float32(1.5), reference, control)
+    finally:
+        runtime.close()

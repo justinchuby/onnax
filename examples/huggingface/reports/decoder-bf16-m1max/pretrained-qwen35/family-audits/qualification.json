@@ -1,0 +1,14 @@
+{
+  "source_sha256": {
+    "examples/huggingface/optimization.py": "ed6c4055af90a29ff291994894939ee36d014d032e09ae1709ab8de3f3e7a9a4",
+    "examples/huggingface/decoder_sft.py": "65bcd7fe175dbaa42bcc3dc4bdc79bd6edcb630875876e87fdff47a6f1405a62",
+    "examples/huggingface/decoder_families.py": "dd26e1a879ea5cec6975165b97dc5fb6a9d95b69e9b01bab249f8391df0f3c3a",
+    "examples/huggingface/mixed_precision.py": "4469488918490e1afe11408e81ae72b8329d084e349626cfdd1e4e3f0fdcb914",
+    "examples/huggingface/validation.py": "241b47c2dfd929683c0015f04c73e417347935152d2ae65e594503dd2b331a18",
+    "examples/huggingface/peft_adapter.py": "28453cddb9e21b95f747604282a5ea31f67952d82576986b2af750d00a0695d9",
+    "examples/lora/bf16_rules.py": "4d6643e7bef361d77ed6f41877bddb0e6bf8ce3673746edba22bbe6507bac34a"
+  },
+  "cases": 6,
+  "steps": 6,
+  "scope": "Three independent paths: ONNX BF16, Transformers BF16, Transformers FP32 on identical frozen weights. L2 precision-effect gate; original coordinate and maximum differences retained. Includes PEFT roundtrip and fresh reload."
+}

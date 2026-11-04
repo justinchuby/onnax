@@ -1,0 +1,81 @@
+import copy,gc,hashlib,json
+from pathlib import Path
+import numpy as np,onnx,onnx_ir as ir,torch
+from safetensors.torch import load_file
+from examples.huggingface.decoder_families import prepare_graph
+from examples.huggingface.decoder_sft import OnnxDecoder
+from examples.huggingface.long_context import memory_limit
+from examples.huggingface.mixed_precision import reference_projections
+from examples.huggingface.sft import token_loss
+from examples.huggingface.validation import add_reference_parameters,precision_comparison
+from examples.lora.mlx_runtime import register_library,session
+root=Path('/tmp/onnax-qwen35-real-bf16-canonical-30');directory=root/'training/export';output=root/'audit-diagnostic.json'
+assert not output.exists()
+assert json.loads((root/'guard/execution.json').read_text())['status']=='complete'
+qualification=json.loads((root/'qualification.json').read_text())
+for name,h in qualification['source_sha256'].items():assert hashlib.sha256(Path(name).read_bytes()).hexdigest()==h,name
+library='/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib';register_library(library);api,previous=memory_limit(library,20*1024**3);torch.set_num_threads(1)
+report={'phase':'source_identity','source_commit':qualification['source_commit']}
+checks=[]
+def compare(*args):
+ try:
+  record=precision_comparison(*args);record['passed']=True
+ except AssertionError as error:
+  import ast
+  record=ast.literal_eval(str(error).split('effect: ',1)[1]);record['passed']=False
+ checks.append(record['passed']);return record
+def persist():output.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:v for k,v in report.items() if k not in ['comparisons','frozen_sha256']}),flush=True)
+persist()
+expected,_,mapping,reference=prepare_graph('qwen35',real=True,cache_dir='/tmp/onnax-qwen35-real-cache',preserve_fused=True,nf4=True,projection_precision='bf16')
+def digest(v):
+ a=v.const_value.numpy();return hashlib.sha256(str(a.dtype).encode()+str(a.shape).encode()+a.tobytes()).hexdigest()
+loaded=ir.load(directory/'execution/model.onnx');frozen={}
+for n,v in loaded.graph.initializers.items():
+ assert n in expected.graph.initializers,n
+ assert digest(v)==digest(expected.graph.initializers[n]),n
+ frozen[n]=digest(v)
+head=ir.load(directory/'execution/head_loss.onnx').graph.initializers['head.weight'].const_value.numpy()
+np.testing.assert_array_equal(head,reference.get_output_embeddings().weight.detach().numpy())
+report.update(frozen_sha256=frozen,frozen_initializers=len(frozen),frozen_head_equal=True)
+del expected,loaded,head;gc.collect()
+checked=0
+for file in (directory/'execution').glob('*.onnx'):onnx.checker.check_model(str(file),full_check=True);checked+=1
+report.update(phase='reference_gradients',checked_onnx_modules=checked);persist()
+model=OnnxDecoder.load(directory,session_factory=session)
+checkpoint=load_file(root/'training/checkpoint-30/model.safetensors');state=model.state_dict();assert state.keys()==checkpoint.keys()
+for n,tensor in state.items():assert torch.equal(tensor,checkpoint[n]),n
+optimizer=torch.load(root/'training/checkpoint-30/optimizer.pt',weights_only=True,map_location='cpu')
+for value in optimizer['state'].values():assert all(x.dtype==torch.float32 for x in value.values())
+report.update(checkpoint_tensor_arrays_byte_equal=len(checkpoint),optimizer_state_dtype='float32')
+prior=load_file('/tmp/onnax-qwen35-real-bf16-nf4-30/training/checkpoint-30/model.safetensors')
+assert prior.keys()==checkpoint.keys()
+trainable=[n for n in checkpoint if n.startswith('onnx.trainable.')]
+report.update(prior_trainable_tensors=len(trainable),prior_trainable_arrays_byte_equal=sum(torch.equal(prior[n],checkpoint[n]) for n in trainable),prior_head_identity_equal=torch.equal(prior['_head_identity'],checkpoint['_head_identity']),source_identity_equal=torch.equal(prior['onnx._onnax_identity'],checkpoint['onnx._onnax_identity']))
+
+reference=add_reference_parameters(reference,model.onnx.arrays(),model.mapping);control=copy.deepcopy(reference);reference=reference_projections(reference,precision='bf16')
+with np.load('/tmp/onnax-torch-decoder-real/inputs-64.npz',allow_pickle=False) as a:data={n:torch.from_numpy(a[n].copy()) for n in a.files}
+inputs={n:v for n,v in data.items() if n!='labels'};valid=data['attention_mask'].bool()
+try:
+ actual=model(**data);actual.loss.backward()
+ with torch.no_grad():predictions=model(**inputs).logits
+ predicted=reference(**inputs,use_cache=False).logits;loss=token_loss(predicted,data['labels']);loss.backward()
+ baseline=control(**inputs,use_cache=False).logits;baseline_loss=token_loss(baseline,data['labels']);baseline_loss.backward()
+ records={'logits':compare(predictions[valid],predicted[valid],baseline[valid]),'loss':compare(actual.loss,loss,baseline_loss),'gradients':{}}
+ for row in model.mapping:
+  for key in ['A','B']:
+   p=model.onnx.parameters_by_name()[row[key]]
+   assert p.dtype==p.grad.dtype==torch.float32 and torch.isfinite(p.grad).all()
+   records['gradients'][row[key]]=compare(p.grad,getattr(reference.get_submodule(row['module']),key).grad,getattr(control.get_submodule(row['module']),key).grad)
+ report.update(comparisons=records,gradient_arrays_checked=len(records['gradients']),losses={'onnx':float(actual.loss.detach()),'bf16_reference':float(loss.detach()),'fp32_control':float(baseline_loss.detach())})
+ report.update(phase='diagnostic_gradients',all_within_calibration=all(checks));persist()
+ snapshots={'onnx.logits':predictions.numpy(),'reference.logits':predicted.detach().numpy(),'fp32.logits':baseline.detach().numpy()}
+ for row in model.mapping:
+  for key in ['A','B']:
+   name=row[key];snapshots['onnx.'+name]=model.onnx.parameters_by_name()[name].grad.numpy();snapshots['reference.'+name]=getattr(reference.get_submodule(row['module']),key).grad.numpy();snapshots['fp32.'+name]=getattr(control.get_submodule(row['module']),key).grad.numpy()
+ np.savez(root/'audit-diagnostic-arrays.npz',**snapshots)
+ expected_logits=predictions.numpy().copy()
+finally:model.close()
+del model,reference,control,predicted,baseline,loss,baseline_loss;gc.collect()
+executor=session(str(directory/'execution/inference.onnx'));plain=executor.run(None,{n:v.numpy() for n,v in inputs.items()})[0]
+np.testing.assert_array_equal(plain,expected_logits)
+report.update(phase='diagnostic_complete',plain_inference_max_abs=float(np.max(np.abs(plain-expected_logits))),comparison_policy='reference_precision_effect_l2');persist()

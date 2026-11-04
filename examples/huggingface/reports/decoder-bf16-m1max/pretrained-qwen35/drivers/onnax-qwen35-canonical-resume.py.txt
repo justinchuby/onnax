@@ -1,0 +1,17 @@
+import json,os,subprocess,sys,time
+from pathlib import Path
+root=Path('/tmp/onnax-qwen35-real-bf16-canonical-30');state=root/'resume-status.json';python=sys.executable
+state.write_text(json.dumps({'phase':'awaiting_preparation_measurement'}))
+for attempt in range(240):
+ report=json.loads(Path('/tmp/onnax-packed-inference-pair/status.json').read_text())
+ if report['phase']=='complete':break
+ if report['phase']=='failed':raise SystemExit('Inspect failed preparation measurement before starting recovery')
+ time.sleep(30)
+else:raise SystemExit('Observation timeout; inspect existing preparation workers')
+command=[python,'/tmp/onnax-qwen35-real-bf16-nf4-worker.py','--family','qwen35','--real','--cache-dir','/tmp/onnax-qwen35-real-cache','--nf4','--projection-precision','bf16','--fused-ops','--head-chunk-size','128','--max-length','64','--steps','30','--resume',str(root/'training/checkpoint-15'),'--load-export',str(root/'training/export'),'--provider','mlx','--library','/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib','--output-dir',str(root/'resumed')]
+state.write_text(json.dumps({'phase':'resuming_step15'}))
+with open(root/'resume-driver.log','w') as log:result=subprocess.run([python,'-m','examples.huggingface.guard','--output-dir',str(root/'resume-guard'),'--',*command],stdout=log,stderr=subprocess.STDOUT,env=os.environ.copy())
+if result.returncode:state.write_text(json.dumps({'phase':'resume_failed','returncode':result.returncode}));raise SystemExit(result.returncode)
+state.write_text(json.dumps({'phase':'verifying_recovery'}))
+with open(root/'resume-verification-driver.log','w') as log:result=subprocess.run([python,'-m','examples.huggingface.guard','--output-dir',str(root/'resume-verification-guard'),'--',python,'/tmp/onnax-qwen35-canonical-resume-verify.py'],stdout=log,stderr=subprocess.STDOUT,env=os.environ.copy())
+state.write_text(json.dumps({'phase':'complete' if result.returncode==0 else 'verification_failed','returncode':result.returncode}));raise SystemExit(result.returncode)

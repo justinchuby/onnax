@@ -1,0 +1,17 @@
+{
+  "source_commit": "39d18f70ad4aacf21665c0bacafe93ca13bd59b6",
+  "source_sha256": {
+    "examples/huggingface/decoder_sft.py": "65bcd7fe175dbaa42bcc3dc4bdc79bd6edcb630875876e87fdff47a6f1405a62",
+    "examples/huggingface/decoder_families.py": "dd26e1a879ea5cec6975165b97dc5fb6a9d95b69e9b01bab249f8391df0f3c3a",
+    "examples/huggingface/optimization.py": "ed6c4055af90a29ff291994894939ee36d014d032e09ae1709ab8de3f3e7a9a4",
+    "examples/huggingface/mixed_precision.py": "4469488918490e1afe11408e81ae72b8329d084e349626cfdd1e4e3f0fdcb914",
+    "examples/huggingface/chunked_loss.py": "ac5c01d688e9af13fec488d7787ad7a4b8c466327425786414dbc94640aee328",
+    "examples/huggingface/decoder_head.py": "57192783d786387fe23f79ab306d63a4b1985cdf748c4a7bf723362ee41903ef",
+    "examples/huggingface/validation.py": "241b47c2dfd929683c0015f04c73e417347935152d2ae65e594503dd2b331a18",
+    "examples/huggingface/peft_adapter.py": "28453cddb9e21b95f747604282a5ea31f67952d82576986b2af750d00a0695d9",
+    "examples/lora/bf16_rules.py": "4d6643e7bef361d77ed6f41877bddb0e6bf8ce3673746edba22bbe6507bac34a"
+  },
+  "scope": "Qwen3.5-0.8B NF4/BF16 canonical frozen primal; same pinned model, data, 30updates, microbatch1 accum4,head128 seq64 as previous run",
+  "comparison": "Preceding run preserved at /tmp/onnax-qwen35-real-bf16-nf4-30; final checkpoint equality and portable inference will be checked independently",
+  "mlx_memory_limit_bytes": 21474836480
+}

@@ -67,7 +67,21 @@ def _inference(directory, head_model):
         return tape.op("Constant", [], {"value": ir.tensor(np.array(values, np.int64))})
 
     flat = tape.op("Reshape", [hidden, constant([-1, width])])
-    product = tape.op("Gemm", [flat, weight], {"transB": 1})
+    policy = json.loads(head_model.metadata_props.get("onnax.example.precision", "{}"))
+    precision = {"bfloat16": "bf16", "float16": "fp16"}.get(
+        policy.get("projection_compute"), "fp32"
+    )
+    if precision == "fp32":
+        product = tape.op("Gemm", [flat, weight], {"transB": 1})
+    else:
+        from examples.lora.bf16_rules import DOMAIN, matmul_function
+
+        function = matmul_function(
+            model.graph.opset_imports[""], precision=precision, weight_layout="vocab_hidden"
+        )
+        model.functions[function.identifier()] = function
+        model.graph.opset_imports[DOMAIN] = 1
+        product = tape.op(function.name, [flat, weight], domain=DOMAIN)
     prefix = tape.op("Slice", [tape.op("Shape", [hidden]), constant([0]), constant([2])])
     shape = tape.op("Concat", [prefix, constant([vocab])], {"axis": 0})
     logits = tape.op("Reshape", [product, shape])

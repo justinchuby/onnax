@@ -41,7 +41,7 @@ from examples.huggingface.sft import (
     token_loss,
     tokenizer,
 )
-from examples.huggingface.validation import add_reference_parameters
+from examples.huggingface.validation import add_reference_parameters, precision_comparison
 from onnax.torch import CheckpointedModule
 
 
@@ -60,11 +60,17 @@ class OnnxDecoder(PreTrainedModel):
         self.mapping = mapping
         self.family = family
         self.quantization = getattr(config, "onnax_quantization", None)
+        policy = getattr(config, "onnax_precision", {})
+        self.projection_precision = {"bfloat16": "bf16", "float16": "fp16"}.get(
+            policy.get("projection_compute"), "fp32"
+        )
         self.head = head
         self.mode = "chunked" if head is not None else "full"
         if head is not None:
             from examples.huggingface.decoder_head import identity
 
+            if head.projection_precision != self.projection_precision:
+                raise ValueError("Head and decoder projection precision differ")
             digest = identity(head)
             source = head.model.graph.initializers["head.weight"].const_value
             if head.weight_layout != "vocab_hidden" or list(source.shape) != [
@@ -201,6 +207,10 @@ def _check_head_identity(module, state_dict, prefix, *_args):
 
 
 def _validate_mapping(mapping, execution, config):
+    source = ir.load(os.path.join(execution._directory.name, "model.onnx"))
+    policy = json.loads(source.metadata_props.get("onnax.example.precision", "null"))
+    if policy != getattr(config, "onnax_precision", None):
+        raise ValueError("Decoder projection policy differs from its configuration")
     parameters = execution.parameters_by_name()
     names = [row[key] for row in mapping for key in ("A", "B")]
     if len(names) != len(set(names)) or set(names) != set(parameters):
@@ -248,6 +258,7 @@ def prepare(
     cache_dir=None,
     head_chunk_size=None,
     nf4=False,
+    projection_precision="fp32",
 ):
     if (
         isinstance(checkpoint_layers, bool)
@@ -259,7 +270,12 @@ def prepare(
     if head_session_factory is not None and head_chunk_size is None:
         raise ValueError("A head session factory requires head_chunk_size")
     graph, parameters, mapping, reference = prepare_graph(
-        family, preserve_fused=fused_ops, real=real, cache_dir=cache_dir, nf4=nf4
+        family,
+        preserve_fused=fused_ops,
+        real=real,
+        cache_dir=cache_dir,
+        nf4=nf4,
+        projection_precision=projection_precision,
     )
     if head_chunk_size is not None:
         from onnxscript import optimizer
@@ -296,6 +312,7 @@ def prepare(
                 projection.weight.detach().cpu().numpy(),
                 chunk_size=head_chunk_size,
                 weight_layout="vocab_hidden",
+                projection_precision=projection_precision,
                 session_factory=head_session_factory or session_factory or session,
             )
             resources.callback(head.close)
@@ -365,6 +382,7 @@ def audit(
     cache_dir=None,
     head_chunk_size=None,
     nf4=False,
+    projection_precision="fp32",
 ):
     """Compare native source modules, including nonzero-B derivatives and PEFT exchange."""
     model, reference = prepare(
@@ -376,11 +394,17 @@ def audit(
         cache_dir=cache_dir,
         head_chunk_size=head_chunk_size,
         nf4=nf4,
+        projection_precision=projection_precision,
     )
     audit_data = (
         text_batch(task_tokenizer(family, real=True, cache_dir=cache_dir)) if real else batch()
     )
     reference = add_reference_parameters(reference, model.onnx.arrays(), model.mapping)
+    control = copy.deepcopy(reference) if projection_precision != "fp32" else None
+    if projection_precision != "fp32":
+        from examples.huggingface.mixed_precision import reference_projections
+
+        reference = reference_projections(reference, precision=projection_precision)
     frozen = _frozen(reference.named_parameters())
     optimizers = [
         torch.optim.AdamW(
@@ -389,10 +413,11 @@ def audit(
             weight_decay=0,
             eps=adam_epsilon,
         )
-        for item in (model, reference)
+        for item in (model, reference, *([control] if control is not None else []))
     ]
     losses = []
     maximum_gradient_error = 0.0
+    comparisons = []
     try:
         for step in range(steps):
             for optimizer in optimizers:
@@ -406,6 +431,17 @@ def audit(
                 use_cache=False,
             ).logits
             loss = token_loss(logits, data["labels"])
+            control_logits = (
+                None
+                if control is None
+                else control(
+                    **{name: value for name, value in data.items() if name != "labels"},
+                    use_cache=False,
+                ).logits
+            )
+            control_loss = (
+                None if control is None else token_loss(control_logits, data["labels"])
+            )
             predictions = actual.logits
             if predictions is None:
                 with torch.no_grad():
@@ -413,16 +449,41 @@ def audit(
                         **{k: v for k, v in data.items() if k != "labels"}
                     ).logits
             valid = data["attention_mask"].bool()
-            torch.testing.assert_close(predictions[valid], logits[valid], rtol=1e-4, atol=1e-6)
-            torch.testing.assert_close(actual.loss, loss, rtol=1e-4, atol=1e-6)
+            record = {
+                "step": step,
+                "loss_values": {
+                    "onnx": float(actual.loss.detach()),
+                    "reference": float(loss.detach()),
+                    "fp32_control": None
+                    if control_loss is None
+                    else float(control_loss.detach()),
+                },
+                "logits": precision_comparison(
+                    predictions[valid],
+                    logits[valid],
+                    None if control is None else control_logits[valid],
+                ),
+                "loss": precision_comparison(actual.loss, loss, control_loss),
+                "gradients": {},
+                "parameters": {},
+            }
             actual.loss.backward()
             loss.backward()
+            if control_loss is not None:
+                control_loss.backward()
             parameters = model.onnx.parameters_by_name()
             for row in model.mapping:
                 target = reference.get_submodule(row["module"])
                 for key in ("A", "B"):
                     value, expected = parameters[row[key]], getattr(target, key)
-                    torch.testing.assert_close(value.grad, expected.grad, rtol=1e-4, atol=1e-6)
+                    baseline = (
+                        None
+                        if control is None
+                        else getattr(control.get_submodule(row["module"]), key)
+                    )
+                    record["gradients"][row[key]] = precision_comparison(
+                        value.grad, expected.grad, None if baseline is None else baseline.grad
+                    )
                     maximum_gradient_error = max(
                         maximum_gradient_error, float((value.grad - expected.grad).abs().max())
                     )
@@ -437,9 +498,15 @@ def audit(
             for row in model.mapping:
                 target = reference.get_submodule(row["module"])
                 for key in ("A", "B"):
-                    torch.testing.assert_close(
-                        parameters[row[key]], getattr(target, key), rtol=1e-4, atol=1e-6
+                    baseline = (
+                        None
+                        if control is None
+                        else getattr(control.get_submodule(row["module"]), key)
                     )
+                    record["parameters"][row[key]] = precision_comparison(
+                        parameters[row[key]], getattr(target, key), baseline
+                    )
+            comparisons.append(record)
             losses.append(float(actual.loss.detach()))
         assert frozen == _frozen(reference.named_parameters())
         model.export(os.path.join(directory, "export"))
@@ -472,6 +539,7 @@ def audit(
                 audit_data,
                 os.path.join(directory, "adapter"),
                 adam_epsilon=adam_epsilon,
+                precision_control=control is not None,
             )
         finally:
             with_checkpoint.close()
@@ -479,6 +547,11 @@ def audit(
             "family": family,
             "quantization": model.quantization,
             "independent_steps": steps,
+            "projection_precision": projection_precision,
+            "comparison_policy": "reference_precision_effect_l2"
+            if control is not None
+            else "fp32_allclose",
+            "comparisons": comparisons,
             "adam_epsilon": adam_epsilon,
             "losses": losses,
             "max_gradient_abs_error": maximum_gradient_error,
@@ -491,7 +564,15 @@ def audit(
         model.close()
 
 
-def _validate_task_source(config, family, real, head_chunk_size, nf4=False):
+def _validate_task_source(
+    config, family, real, head_chunk_size, nf4=False, projection_precision="fp32"
+):
+    previous = config.get("onnax_precision", {}).get("projection_compute", "float32")
+    if (
+        previous
+        != {"fp32": "float32", "bf16": "bfloat16", "fp16": "float16"}[projection_precision]
+    ):
+        raise ValueError("Checkpoint projection precision mismatch")
     if (config.get("onnax_quantization") is not None) != nf4:
         raise ValueError("Checkpoint quantization mode mismatch")
     if config["model_type"] != FAMILIES[family].config_type.model_type:
@@ -526,6 +607,7 @@ def run(
     cache_dir=None,
     head_chunk_size=None,
     nf4=False,
+    projection_precision="fp32",
     max_length=64,
     pad_to_multiple_of=None,
     train_file=None,
@@ -533,6 +615,8 @@ def run(
     load_export=None,
 ):
     """Let TRL own training, accumulation, optimizer and checkpoint policy."""
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 decoder projection precision")
     _validate_head_chunk_size(head_chunk_size)
     if head_session_factory is not None and head_chunk_size is None:
         raise ValueError("A head session factory requires head_chunk_size")
@@ -551,10 +635,14 @@ def run(
     if resume is not None:
         with open(os.path.join(resume, "config.json"), encoding="utf-8") as stream:
             previous_config = json.load(stream)
-        _validate_task_source(previous_config, family, real, head_chunk_size, nf4)
+        _validate_task_source(
+            previous_config, family, real, head_chunk_size, nf4, projection_precision
+        )
     if load_export is not None:
         with open(os.path.join(load_export, "config.json"), encoding="utf-8") as stream:
-            _validate_task_source(json.load(stream), family, real, head_chunk_size, nf4)
+            _validate_task_source(
+                json.load(stream), family, real, head_chunk_size, nf4, projection_precision
+            )
     os.makedirs(directory, exist_ok=True)
     train_texts, eval_texts = _training_texts(train_file, validation_file)
     tok = task_tokenizer(
@@ -581,6 +669,7 @@ def run(
             cache_dir=cache_dir,
             head_chunk_size=head_chunk_size,
             nf4=nf4,
+            projection_precision=projection_precision,
         )
         del reference
     else:
@@ -660,6 +749,7 @@ def run(
         return {
             "family": family,
             "quantization": model.quantization,
+            "projection_precision": model.projection_precision,
             "pretrained_source": getattr(model.config, "onnax_pretrained", None),
             "steps": trainer.state.global_step,
             "microbatch_size": trainer.args.per_device_train_batch_size,
@@ -695,15 +785,19 @@ def main():
     parser.add_argument("--audit-steps", type=int, default=6)
     parser.add_argument("--fused-ops", action="store_true")
     parser.add_argument("--nf4", action="store_true")
+    parser.add_argument("--projection-precision", choices=("fp32", "bf16"), default="fp32")
     parser.add_argument("--compile-head", action="store_true")
     parser.add_argument("--head-chunk-size", type=int)
     parser.add_argument("--max-length", type=int, default=64)
     parser.add_argument("--pad-to-multiple-of", type=int)
     parser.add_argument("--train-file")
     parser.add_argument("--validation-file")
-    parser.add_argument("--provider", choices=("cpu", "mlx"), default="cpu")
+    parser.add_argument("--provider", choices=("cpu", "mlx", "reference"), default="cpu")
     parser.add_argument("--library")
     parser.add_argument("--resume")
+    parser.add_argument(
+        "--stop", type=int, help="Save a checkpoint and stop at this training step"
+    )
     parser.add_argument("--load-export")
     parser.add_argument("--adam-epsilon", type=float, default=1e-5)
     args = parser.parse_args()
@@ -714,8 +808,11 @@ def main():
         or args.adam_epsilon <= 0
     ):
         parser.error("Require positive steps/epsilon and at least two audit steps")
+    if args.stop is not None and not 1 <= args.stop <= args.steps:
+        parser.error("--stop must select a step between one and --steps")
     if args.audit_only and (
-        args.max_length != 64
+        args.stop is not None
+        or args.max_length != 64
         or args.pad_to_multiple_of is not None
         or args.train_file
         or args.validation_file
@@ -731,6 +828,11 @@ def main():
         parser.error("--compile-head requires ONNXRUNTIME_EP_MLX_NO_COMPILE=0 or unset")
     torch.set_num_threads(1)
     factory = None
+    if args.provider == "reference":
+        from examples.huggingface.serialization import reference_session
+
+        factory = reference_session
+
     head_factory = None
     library_sha256 = None
     if args.provider == "mlx":
@@ -752,6 +854,7 @@ def main():
         "head_session_factory": head_factory,
         "fused_ops": args.fused_ops,
         "nf4": args.nf4,
+        "projection_precision": args.projection_precision,
         "adam_epsilon": args.adam_epsilon,
         "real": args.real,
         "cache_dir": args.cache_dir,
@@ -765,6 +868,7 @@ def main():
             family=args.family,
             steps=args.steps,
             resume=args.resume,
+            stop=args.stop,
             load_export=args.load_export,
             max_length=args.max_length,
             pad_to_multiple_of=args.pad_to_multiple_of,
@@ -801,7 +905,12 @@ def main():
         session_policy="eager_decoder_compiled_head"
         if args.compile_head
         else "runtime_default",
-        dtype="float32",
+        dtype={"fp32": "float32", "bf16": "bfloat16", "fp16": "float16"}[
+            args.projection_precision
+        ],
+        parameter_dtype="float32",
+        gradient_dtype="float32",
+        optimizer_state_dtype="float32",
         library_sha256=library_sha256,
         source_commit=source_commit,
         working_tree_dirty=working_tree_dirty,

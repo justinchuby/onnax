@@ -1,0 +1,10 @@
+import hashlib,json
+from pathlib import Path
+from examples.huggingface.decoder_families import prepare_graph
+from examples.huggingface.torch_decoder_benchmark import digest_arrays
+model,arrays,mapping,reference=prepare_graph('qwen35',real=True,cache_dir='/tmp/onnax-qwen35-real-cache')
+control=json.loads(Path('/tmp/onnax-qwen35-real-bf16-mps-quality/report.json').read_text());assert control['phase']=='complete'
+expected=json.loads(Path('/tmp/onnax-qwen35-real-bf16-canonical-30/training/export/task.json').read_text())
+assert mapping==expected['mapping'] and digest_arrays(arrays)==control['initial_adapter_sha256']
+r={'status':'complete','adapter_tensors':len(arrays),'initial_adapter_sha256':digest_arrays(arrays),'mapping_equal':True,'scope':'Actual generic graph-builder initialization compared with the independently generated MPS control initialization; no training or model export'}
+Path('/tmp/onnax-qwen35-real-bf16-mps-quality/initial-parity.json').write_text(json.dumps(r,indent=2)+'\n');print(json.dumps(r),flush=True)

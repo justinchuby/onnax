@@ -1,0 +1,147 @@
+{
+  "command": [
+    "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+    "-m",
+    "examples.huggingface.decoder_sft",
+    "--family",
+    "qwen35",
+    "--nf4",
+    "--projection-precision",
+    "bf16",
+    "--fused-ops",
+    "--head-chunk-size",
+    "16",
+    "--steps",
+    "100",
+    "--max-length",
+    "64",
+    "--provider",
+    "mlx",
+    "--library",
+    "/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib",
+    "--output-dir",
+    "/tmp/onnax-qwen35-bf16-nf4-cli100/continuous"
+  ],
+  "cwd": "/private/tmp/onnax-decoder-bf16-delivery",
+  "status": "complete",
+  "physical_memory_budget_bytes": 25769803776,
+  "minimum_free_disk_bytes": 5368709120,
+  "observations": [
+    {
+      "utc": "2026-11-04T13:21:13.852673+00:00",
+      "current_bytes": 163960,
+      "peak_bytes": 295032,
+      "free_disk_bytes": 21635686400
+    },
+    {
+      "utc": "2026-11-04T13:21:14.863076+00:00",
+      "current_bytes": 222217008,
+      "peak_bytes": 222217008,
+      "free_disk_bytes": 21635604480
+    },
+    {
+      "utc": "2026-11-04T13:21:15.871748+00:00",
+      "current_bytes": 293635056,
+      "peak_bytes": 293651440,
+      "free_disk_bytes": 21635579904
+    },
+    {
+      "utc": "2026-11-04T13:21:16.882397+00:00",
+      "current_bytes": 413664432,
+      "peak_bytes": 413664432,
+      "free_disk_bytes": 21635424256
+    },
+    {
+      "utc": "2026-11-04T13:21:17.893129+00:00",
+      "current_bytes": 475137368,
+      "peak_bytes": 475137368,
+      "free_disk_bytes": 21634424832
+    },
+    {
+      "utc": "2026-11-04T13:21:18.899993+00:00",
+      "current_bytes": 519849376,
+      "peak_bytes": 519849376,
+      "free_disk_bytes": 21633036288
+    },
+    {
+      "utc": "2026-11-04T13:21:19.902397+00:00",
+      "current_bytes": 549226104,
+      "peak_bytes": 549226104,
+      "free_disk_bytes": 21632430080
+    },
+    {
+      "utc": "2026-11-04T13:21:20.904861+00:00",
+      "current_bytes": 549242488,
+      "peak_bytes": 549242488,
+      "free_disk_bytes": 21632454656
+    },
+    {
+      "utc": "2026-11-04T13:21:21.915708+00:00",
+      "current_bytes": 557631120,
+      "peak_bytes": 557631120,
+      "free_disk_bytes": 21632401408
+    },
+    {
+      "utc": "2026-11-04T13:21:22.919483+00:00",
+      "current_bytes": 557860496,
+      "peak_bytes": 557860496,
+      "free_disk_bytes": 21632356352
+    },
+    {
+      "utc": "2026-11-04T13:21:23.920362+00:00",
+      "current_bytes": 558024336,
+      "peak_bytes": 558024336,
+      "free_disk_bytes": 21632286720
+    },
+    {
+      "utc": "2026-11-04T13:21:24.931116+00:00",
+      "current_bytes": 558024336,
+      "peak_bytes": 558024336,
+      "free_disk_bytes": 21632270336
+    },
+    {
+      "utc": "2026-11-04T13:21:25.941826+00:00",
+      "current_bytes": 557958800,
+      "peak_bytes": 558286480,
+      "free_disk_bytes": 21632126976
+    },
+    {
+      "utc": "2026-11-04T13:21:26.952623+00:00",
+      "current_bytes": 557958800,
+      "peak_bytes": 558286480,
+      "free_disk_bytes": 21632122880
+    },
+    {
+      "utc": "2026-11-04T13:21:27.963328+00:00",
+      "current_bytes": 558089872,
+      "peak_bytes": 558286480,
+      "free_disk_bytes": 21632114688
+    },
+    {
+      "utc": "2026-11-04T13:21:28.974081+00:00",
+      "current_bytes": 558286480,
+      "peak_bytes": 558286480,
+      "free_disk_bytes": 21632106496
+    },
+    {
+      "utc": "2026-11-04T13:21:29.984875+00:00",
+      "current_bytes": 557958800,
+      "peak_bytes": 558286480,
+      "free_disk_bytes": 21631967232
+    },
+    {
+      "utc": "2026-11-04T13:21:30.995660+00:00",
+      "current_bytes": 523519632,
+      "peak_bytes": 568592016,
+      "free_disk_bytes": 21631094784
+    }
+  ],
+  "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+  "observation_errors": 0,
+  "temporary_directory": "/tmp/onnax-qwen35-bf16-nf4-cli100/continuous-guard/worker-tmp-dog407t1",
+  "pid": 98200,
+  "started": "2026-11-04T13:21:13.852087+00:00",
+  "returncode": 0,
+  "finished": "2026-11-04T13:21:32.006494+00:00",
+  "temporary_files_removed": true
+}

@@ -8,6 +8,7 @@ for a runnable task; use the reports below to investigate a specific question.
 
 | Question | Report |
 | --- | --- |
+| How does BF16/NF4 training behave across decoder families? | [Family audits and 100-step recovery](decoder-bf16-projections) |
 | Do independent training runs reach similar quality? | [Training quality](training-quality.md) |
 | How closely do reference logits and optimizer trajectories agree? | [Reference accuracy](qwen-reference-accuracy.md) |
 | Where does forward or backward rounding enter? | [Qwen runtime audit](qwen-runtime-audit.md) |

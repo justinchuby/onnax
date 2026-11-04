@@ -1,0 +1,72 @@
+{
+  "command": [
+    "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+    "-m",
+    "examples.huggingface.decoder_sft",
+    "--audit-only",
+    "--audit-steps",
+    "6",
+    "--family",
+    "phi3",
+    "--projection-precision",
+    "bf16",
+    "--fused-ops",
+    "--provider",
+    "mlx",
+    "--library",
+    "/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib",
+    "--output-dir",
+    "/tmp/onnax-canonical-bf16-family-audits/phi3-nf4",
+    "--nf4"
+  ],
+  "cwd": "/private/tmp/onnax-decoder-canonical-primal",
+  "status": "complete",
+  "physical_memory_budget_bytes": 25769803776,
+  "minimum_free_disk_bytes": 5368709120,
+  "observations": [
+    {
+      "utc": "2026-11-04T14:29:33.264280+00:00",
+      "current_bytes": 180344,
+      "peak_bytes": 295032,
+      "free_disk_bytes": 17169362944
+    },
+    {
+      "utc": "2026-11-04T14:29:34.274610+00:00",
+      "current_bytes": 219202352,
+      "peak_bytes": 219202352,
+      "free_disk_bytes": 17166577664
+    },
+    {
+      "utc": "2026-11-04T14:29:35.285155+00:00",
+      "current_bytes": 276005752,
+      "peak_bytes": 276005752,
+      "free_disk_bytes": 17164484608
+    },
+    {
+      "utc": "2026-11-04T14:29:36.295746+00:00",
+      "current_bytes": 390808728,
+      "peak_bytes": 390808728,
+      "free_disk_bytes": 17163022336
+    },
+    {
+      "utc": "2026-11-04T14:29:37.306403+00:00",
+      "current_bytes": 470746480,
+      "peak_bytes": 470746480,
+      "free_disk_bytes": 17161117696
+    },
+    {
+      "utc": "2026-11-04T14:29:38.307974+00:00",
+      "current_bytes": 524125720,
+      "peak_bytes": 524125720,
+      "free_disk_bytes": 17159073792
+    }
+  ],
+  "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+  "observation_errors": 0,
+  "temporary_directory": "/tmp/onnax-canonical-bf16-family-audits/phi3-nf4-guard/worker-tmp-uk11qs2t",
+  "pid": 4260,
+  "started": "2026-11-04T14:29:33.263553+00:00",
+  "returncode": 0,
+  "finished": "2026-11-04T14:29:39.314708+00:00",
+  "temporary_files_removed": true
+}

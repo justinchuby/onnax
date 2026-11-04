@@ -50,6 +50,8 @@ def reference_from_export(directory, *, cache_dir=None):
         raise ValueError("Expected an exported decoder task")
     if task.get("quantization") is not None or config.get("onnax_quantization") is not None:
         raise ValueError("This FP32 control requires an unquantized task")
+    if config.get("onnax_precision", {}).get("projection_compute", "float32") != "float32":
+        raise ValueError("This FP32 control requires FP32 projection compute")
     execution = directory / "execution"
     interface = json.loads((execution / "interface.json").read_text())
     if interface.get("version") != 1 or interface.get("kind") != "checkpointed_vjp":

@@ -1,0 +1,22 @@
+import json,os
+from pathlib import Path
+import numpy as np,onnx_ir as ir,torch
+from onnax._file_snapshot import copy_file
+from examples.huggingface.decoder_head import _inference
+from examples.huggingface.long_context import memory_limit
+from examples.huggingface.optimization import optimize_training_graph
+from examples.lora.mlx_runtime import register_library,session
+root=Path('/tmp/onnax-qwen35-real-bf16-nf4-30');source=root/'training/export/execution';out=root/'canonical-export';out.mkdir(exist_ok=False)
+library='/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib';register_library(library);api,prev=memory_limit(library,20*1024**3);torch.set_num_threads(1)
+for p in source.glob('*.data'):copy_file(str(p),str(out/p.name))
+model=optimize_training_graph(ir.load(source/'model.onnx'));interface=json.loads((source/'interface.json').read_text());names=interface['specification']['parameters'];inputs={v.name:v for v in model.graph.inputs}
+with np.load(source/'parameters.npz',allow_pickle=False) as a:
+ for i,n in enumerate(names):
+  v=inputs[n];model.graph.inputs.remove(v);v.const_value=ir.tensor(a[f'arr_{i}'].copy(),name=n);model.graph.register_initializer(v)
+ir.save(model,out/'forward.onnx');_inference(out,ir.load(source/'head_loss.onnx'))
+with np.load('/tmp/onnax-torch-decoder-real/inputs-64.npz',allow_pickle=False) as a:feeds={n:a[n].copy() for n in a.files if n!='labels'}
+executor=session(str(out/'inference.onnx'));actual=executor.run(None,feeds)[0]
+with np.load(root/'audit-diagnostic-arrays.npz',allow_pickle=False) as a:expected=a['onnx.logits'].copy()
+delta=actual-expected;report={'max_abs':float(np.max(np.abs(delta))),'unequal':int(np.count_nonzero(delta)),'relative_l2':float(np.linalg.norm(delta)/np.linalg.norm(expected)),'same_fp32_tolerance':bool(np.all(np.abs(delta)<=1e-6+1e-4*np.abs(expected)))}
+(out/'report.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report),flush=True)
+np.savez(out/'outputs.npz',actual=actual,expected=expected)

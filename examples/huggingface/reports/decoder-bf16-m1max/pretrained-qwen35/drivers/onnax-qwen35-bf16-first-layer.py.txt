@@ -1,0 +1,31 @@
+import json,os
+from pathlib import Path
+import numpy as np,onnx_ir as ir,torch
+from onnax._file_snapshot import copy_file
+from examples.huggingface.long_context import memory_limit
+from examples.lora.mlx_runtime import register_library,session
+root=Path('/tmp/onnax-qwen35-real-bf16-nf4-30');out=root/'first-layer-trace';out.mkdir(exist_ok=False);source=root/'training/export/execution'
+library='/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib';register_library(library);api,prev=memory_limit(library,20*1024**3);torch.set_num_threads(1)
+interface=json.loads((source/'interface.json').read_text());parameters=interface['specification']['parameters']
+with np.load(source/'parameters.npz',allow_pickle=False) as a:known={n:a[f'arr_{i}'].copy() for i,n in enumerate(parameters)}
+with np.load('/tmp/onnax-torch-decoder-real/inputs-64.npz',allow_pickle=False) as a:inputs={n:a[n].copy() for n in a.files if n!='labels'}
+known.update(inputs)
+block=interface['blocks'][0];executor=session(str(source/'block_0_forward.onnx'));vals=executor.run(block['outputs'],{n:known[n] for n in block['inputs']})
+known.update(dict(zip(block['outputs'],vals,strict=True)));del executor
+full=ir.load(source/'forward.onnx');part=ir.load(source/'block_1_forward.onnx');fm=ir.convenience.create_value_mapping(full.graph);pm=ir.convenience.create_value_mapping(part.graph)
+names=[v.name for node in full.graph for v in node.outputs if v.name in pm and v.dtype==ir.DataType.FLOAT and v.name not in full.graph.initializers]
+for p in source.glob('*.data'):copy_file(str(p),str(out/p.name))
+for model,name in [(full,'full'),(part,'block')]:model.graph.outputs.clear();model.graph.outputs.extend(ir.convenience.create_value_mapping(model.graph)[n] for n in names);ir.save(model,out/(name+'.onnx'))
+part_inputs=[v.name for v in part.graph.inputs];block_session=session(str(out/'block.onnx'));left=block_session.run(names,{n:known[n] for n in part_inputs});del block_session
+full_session=session(str(out/'full.onnx'));right=full_session.run(names,inputs)
+rows=[];first=None
+for n,a,b in zip(names,left,right,strict=True):
+ row={'name':n,'max_abs':float(np.max(np.abs(a-b),initial=0)),'unequal':int(np.count_nonzero(a!=b))};rows.append(row)
+ if first is None and row['unequal']:
+  node=fm[n].producer();first={**row,'op':node.op_type,'domain':node.domain,'inputs':[v.name for v in node.inputs]};snapshot={'block.output':a,'full.output':b};byname={name:(x,y) for name,x,y in zip(names,left,right,strict=True)}
+  for v in node.inputs:
+   if v.name in byname:snapshot['block.input.'+v.name],snapshot['full.input.'+v.name]=byname[v.name]
+   elif v.name in known:snapshot['input.'+v.name]=known[v.name]
+   elif v.const_value is not None:snapshot['input.'+v.name]=v.const_value.numpy()
+  np.savez(out/'first-difference.npz',**snapshot)
+report={'status':'complete','first_difference':first,'outputs':rows};(out/'report.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(first),flush=True)

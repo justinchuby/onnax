@@ -1,0 +1,20 @@
+import json,os,subprocess,sys,time
+from pathlib import Path
+out=Path('/tmp/onnax-packed-inference-constant-pair');out.mkdir(exist_ok=False);state=out/'status.json';follow=Path('/tmp/onnax-qwen35-canonical-bf16-followup.json');python=sys.executable
+state.write_text(json.dumps({'phase':'awaiting_existing_real_audit'}))
+for attempt in range(240):
+ data=json.loads(follow.read_text())
+ if data['phase'] in ['audit_complete','audit_failed']:break
+ time.sleep(30)
+else:raise SystemExit('Observation timeout; inspect original worker')
+assert data['phase']=='audit_complete',data
+source='/tmp/onnax-qwen35-real-bf16-canonical-30/training/export/execution/model.onnx'
+for name in ['baseline','budget']:
+ state.write_text(json.dumps({'phase':name}));env=dict(os.environ,OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1',VECLIB_MAXIMUM_THREADS='1')
+ env['PYTHONPATH']=('' if name=='baseline' else '/tmp/onnax-shape-constant-controlled/src:')+'src:.'
+ command=[python,'/tmp/onnax-packed-inference-worker.py','--source',source,'--output',str(out/(name+'.json'))]
+ with open(out/(name+'.log'),'w') as log:result=subprocess.run([python,'-m','examples.huggingface.guard','--output-dir',str(out/(name+'-guard')),'--',*command],env=env,stdout=log,stderr=subprocess.STDOUT)
+ if result.returncode:state.write_text(json.dumps({'phase':'failed','case':name,'returncode':result.returncode}));raise SystemExit(result.returncode)
+a=json.loads((out/'baseline.json').read_text());b=json.loads((out/'budget.json').read_text())
+assert a['source_sha256']==b['source_sha256'] and a['result_without_symbolic_cache_sha256']==b['result_without_symbolic_cache_sha256']
+state.write_text(json.dumps({'phase':'complete','same_graph_and_inferred_shapes':True,'baseline_seconds':a['inference_seconds'],'budget_seconds':b['inference_seconds'],'scope':'One cold inference per independent process; graph-preparation measurement'}));print(state.read_text(),flush=True)

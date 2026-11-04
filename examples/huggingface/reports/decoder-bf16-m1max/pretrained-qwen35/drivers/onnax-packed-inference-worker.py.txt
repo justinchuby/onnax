@@ -1,0 +1,22 @@
+import argparse,gc,hashlib,json,resource,time
+from pathlib import Path
+from importlib.metadata import version
+import onnx_ir as ir
+from onnx_shape_inference import SYM_DATA_KEY
+import onnx_shape_inference
+from onnax._inference import _infer_shapes
+parser=argparse.ArgumentParser();parser.add_argument('--source',required=True);parser.add_argument('--output',required=True);args=parser.parse_args()
+source=Path(args.source);start=time.perf_counter();model=ir.load(source);load=time.perf_counter()-start
+before=ir.serde.serialize_model(model).SerializeToString();gc.collect()
+start=time.perf_counter();inferred=_infer_shapes(model);elapsed=time.perf_counter()-start
+assert ir.serde.serialize_model(model).SerializeToString()==before
+encoded=ir.serde.serialize_model(inferred).SerializeToString()
+metadata_bytes=0
+for top in [inferred.graph,*[f.graph for f in inferred.functions.values()]]:
+ for graph in [top,*top.subgraphs()]:
+  values=list(graph.inputs)+list(graph.initializers.values())+[v for n in graph for v in n.outputs]
+  for value in values:metadata_bytes+=len(value.metadata_props.pop(SYM_DATA_KEY,''))
+canonical=ir.serde.serialize_model(inferred).SerializeToString()
+engine=Path(onnx_shape_inference.__file__).parent
+report={'status':'complete','source':str(source),'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'source_proto_sha256':hashlib.sha256(before).hexdigest(),'result_proto_sha256':hashlib.sha256(encoded).hexdigest(),'result_without_symbolic_cache_sha256':hashlib.sha256(canonical).hexdigest(),'symbolic_metadata_bytes':metadata_bytes,'load_seconds':load,'inference_seconds':elapsed,'peak_rss_bytes':resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,'memory_scope':'Independent process, imports, IR loading, one inference and serialization; physical footprint in guard','timing_scope':'One cold core _infer_shapes call including clone; excludes imports, initial load and output serialization','engine_directory':str(engine),'engine_files_sha256':{n:hashlib.sha256((engine/n).read_bytes()).hexdigest() for n in ['_context.py','_engine.py']},'versions':{n:version(n) for n in ['onnax','onnx','onnx-ir','onnx-shape-inference']},'sample_count':1,'threads':1}
+Path(args.output).write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report),flush=True)

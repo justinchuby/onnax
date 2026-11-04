@@ -28,6 +28,7 @@ from examples.huggingface.decoder_graph import (
     protect_decoder_boundaries,
     restore_decoder_outputs,
 )
+from examples.huggingface.optimization import freeze_constants
 from examples.huggingface.pretrained import PretrainedSource, load_reference
 from examples.huggingface.qwen35 import build_base as build_qwen35_base
 from examples.huggingface.qwen35 import reference_model as qwen35_reference
@@ -251,8 +252,18 @@ def inject(model, family, *, rank=4, alpha=1.0):
     return result, params, mapping
 
 
-def prepare_graph(family, *, preserve_fused=False, real=False, cache_dir=None, nf4=False):
+def prepare_graph(
+    family,
+    *,
+    preserve_fused=False,
+    real=False,
+    cache_dir=None,
+    nf4=False,
+    projection_precision="fp32",
+):
     """Build, annotate and adapt one Mobius model without PyTorch tracing."""
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 decoder projection precision")
     reference = reference_model(family, real=real, cache_dir=cache_dir)
     entry = FAMILIES[family]
     graph = (
@@ -263,6 +274,10 @@ def prepare_graph(family, *, preserve_fused=False, real=False, cache_dir=None, n
     protect_decoder_boundaries(graph)
     graph = decompose(graph, preserve_fused=preserve_fused or entry.preserve_fused)
     graph, params, mapping = inject(graph, family)
+    # Freeze one numerical value for source-only expressions before partitioning.
+    # Forward exports and block VJPs then share the same constants, including
+    # Qwen3.5 decay rates whose FP32 rounding can cross later BF16 boundaries.
+    graph = freeze_constants(graph)
     if real:
         assert entry.pretrained is not None
         for row in mapping:
@@ -273,8 +288,17 @@ def prepare_graph(family, *, preserve_fused=False, real=False, cache_dir=None, n
     if nf4:
         from examples.huggingface.nf4 import lower_decoder
 
-        graph, quantization = lower_decoder(graph, reference, mapping=mapping)
+        graph, quantization = lower_decoder(
+            graph, reference, mapping=mapping, precision=projection_precision
+        )
         reference.config.onnax_quantization = quantization
         graph.metadata_props["onnax.example.nf4"] = json.dumps(quantization, sort_keys=True)
+    if projection_precision != "fp32":
+        from examples.huggingface.mixed_precision import precision_projections
+
+        graph = precision_projections(graph, precision=projection_precision)
+        reference.config.onnax_precision = json.loads(
+            graph.metadata_props["onnax.example.precision"]
+        )
     restore_decoder_outputs(graph)
     return graph, params, mapping, reference

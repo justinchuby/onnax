@@ -18,6 +18,10 @@ optimizers, data loading, schedulers and checkpoint storage.
    pullbacks at the same precision, context and effective batch.
 3. **Precision and quantized bases.** Keep FP32 gradients and external optimizer
    state while extending qualified BF16/FP16 projections and packed frozen weights.
+   [BF16 family training](decoder-bf16-projections) now covers NF4, PEFT exchange
+   and fresh-process recovery, including a pinned Qwen3.5-0.8B run. Next trace
+   whole-model BF16 reference differences at shared activation points, qualify
+   FP16 adapter exchange and measure long-context memory and execution costs.
 4. **Adapter curvature.** Explore matrix-free HVP diagnostics for LoRA, connecting
    the existing higher-order transforms to practical fine-tuning questions.
 

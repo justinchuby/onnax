@@ -1,0 +1,125 @@
+{
+  "command": [
+    "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+    "-m",
+    "examples.huggingface.decoder_sft",
+    "--family",
+    "qwen35",
+    "--nf4",
+    "--projection-precision",
+    "bf16",
+    "--fused-ops",
+    "--head-chunk-size",
+    "16",
+    "--steps",
+    "100",
+    "--max-length",
+    "64",
+    "--provider",
+    "mlx",
+    "--library",
+    "/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib",
+    "--output-dir",
+    "/tmp/onnax-qwen35-bf16-nf4-cli100/interrupted",
+    "--stop",
+    "50"
+  ],
+  "cwd": "/private/tmp/onnax-decoder-bf16-delivery",
+  "status": "complete",
+  "physical_memory_budget_bytes": 25769803776,
+  "minimum_free_disk_bytes": 5368709120,
+  "observations": [
+    {
+      "utc": "2026-11-04T13:21:32.075057+00:00",
+      "current_bytes": 163960,
+      "peak_bytes": 295032,
+      "free_disk_bytes": 21631021056
+    },
+    {
+      "utc": "2026-11-04T13:21:33.075498+00:00",
+      "current_bytes": 221037336,
+      "peak_bytes": 221037336,
+      "free_disk_bytes": 21630976000
+    },
+    {
+      "utc": "2026-11-04T13:21:34.086108+00:00",
+      "current_bytes": 291783664,
+      "peak_bytes": 291898352,
+      "free_disk_bytes": 21630971904
+    },
+    {
+      "utc": "2026-11-04T13:21:35.096715+00:00",
+      "current_bytes": 409797784,
+      "peak_bytes": 411681944,
+      "free_disk_bytes": 21631115264
+    },
+    {
+      "utc": "2026-11-04T13:21:36.107440+00:00",
+      "current_bytes": 479839576,
+      "peak_bytes": 479839576,
+      "free_disk_bytes": 21630574592
+    },
+    {
+      "utc": "2026-11-04T13:21:37.118085+00:00",
+      "current_bytes": 520717680,
+      "peak_bytes": 520717680,
+      "free_disk_bytes": 21629476864
+    },
+    {
+      "utc": "2026-11-04T13:21:38.128765+00:00",
+      "current_bytes": 548767352,
+      "peak_bytes": 548767352,
+      "free_disk_bytes": 21631090688
+    },
+    {
+      "utc": "2026-11-04T13:21:39.131670+00:00",
+      "current_bytes": 555648656,
+      "peak_bytes": 555648656,
+      "free_disk_bytes": 21631119360
+    },
+    {
+      "utc": "2026-11-04T13:21:40.142425+00:00",
+      "current_bytes": 557368976,
+      "peak_bytes": 557368976,
+      "free_disk_bytes": 21631037440
+    },
+    {
+      "utc": "2026-11-04T13:21:41.153243+00:00",
+      "current_bytes": 557368976,
+      "peak_bytes": 557368976,
+      "free_disk_bytes": 21631012864
+    },
+    {
+      "utc": "2026-11-04T13:21:42.163967+00:00",
+      "current_bytes": 557368976,
+      "peak_bytes": 557368976,
+      "free_disk_bytes": 21630976000
+    },
+    {
+      "utc": "2026-11-04T13:21:43.174711+00:00",
+      "current_bytes": 557827752,
+      "peak_bytes": 557827752,
+      "free_disk_bytes": 21630963712
+    },
+    {
+      "utc": "2026-11-04T13:21:44.185391+00:00",
+      "current_bytes": 557827752,
+      "peak_bytes": 557827752,
+      "free_disk_bytes": 21630947328
+    },
+    {
+      "utc": "2026-11-04T13:21:45.187798+00:00",
+      "current_bytes": 0,
+      "peak_bytes": 567756456,
+      "free_disk_bytes": 21629947904
+    }
+  ],
+  "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+  "observation_errors": 0,
+  "temporary_directory": "/tmp/onnax-qwen35-bf16-nf4-cli100/interrupted-guard/worker-tmp-q3kj3w16",
+  "pid": 98217,
+  "started": "2026-11-04T13:21:32.074408+00:00",
+  "returncode": 0,
+  "finished": "2026-11-04T13:21:46.188685+00:00",
+  "temporary_files_removed": true
+}

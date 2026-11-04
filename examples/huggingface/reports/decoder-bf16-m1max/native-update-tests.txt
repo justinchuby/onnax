@@ -1,0 +1,8 @@
+....s.....s.                                                             [100%]
+=============================== warnings summary ===============================
+tests/test_decoder_bounded_head.py: 96 warnings
+  /Users/justinc/Documents/GitHub/onnax/.venv/lib/python3.11/site-packages/onnx/reference/ops/_op.py:129: RuntimeWarning: overflow encountered in add
+    res = (self.numpy_fct(a, b),)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+10 passed, 2 skipped, 30 deselected, 96 warnings in 25.05s

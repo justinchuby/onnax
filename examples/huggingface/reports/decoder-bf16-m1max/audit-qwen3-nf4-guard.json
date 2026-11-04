@@ -1,0 +1,72 @@
+{
+  "command": [
+    "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+    "-m",
+    "examples.huggingface.decoder_sft",
+    "--audit-only",
+    "--audit-steps",
+    "6",
+    "--family",
+    "qwen3",
+    "--projection-precision",
+    "bf16",
+    "--fused-ops",
+    "--provider",
+    "mlx",
+    "--library",
+    "/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib",
+    "--output-dir",
+    "/tmp/onnax-decoder-bf16-audits/qwen3-nf4",
+    "--nf4"
+  ],
+  "cwd": "/private/tmp/onnax-decoder-bf16-delivery",
+  "status": "complete",
+  "physical_memory_budget_bytes": 25769803776,
+  "minimum_free_disk_bytes": 5368709120,
+  "observations": [
+    {
+      "utc": "2026-11-04T13:40:22.803756+00:00",
+      "current_bytes": 180344,
+      "peak_bytes": 295032,
+      "free_disk_bytes": 21604007936
+    },
+    {
+      "utc": "2026-11-04T13:40:23.814176+00:00",
+      "current_bytes": 221446960,
+      "peak_bytes": 221446960,
+      "free_disk_bytes": 21603983360
+    },
+    {
+      "utc": "2026-11-04T13:40:24.824718+00:00",
+      "current_bytes": 295404552,
+      "peak_bytes": 295404552,
+      "free_disk_bytes": 21603975168
+    },
+    {
+      "utc": "2026-11-04T13:40:25.834709+00:00",
+      "current_bytes": 414762160,
+      "peak_bytes": 416269488,
+      "free_disk_bytes": 21602914304
+    },
+    {
+      "utc": "2026-11-04T13:40:26.845363+00:00",
+      "current_bytes": 488867208,
+      "peak_bytes": 488867208,
+      "free_disk_bytes": 21602312192
+    },
+    {
+      "utc": "2026-11-04T13:40:27.856015+00:00",
+      "current_bytes": 527222344,
+      "peak_bytes": 529598024,
+      "free_disk_bytes": 21601755136
+    }
+  ],
+  "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+  "observation_errors": 0,
+  "temporary_directory": "/tmp/onnax-decoder-bf16-audits/qwen3-nf4-guard/worker-tmp-9t7yv1b9",
+  "pid": 99243,
+  "started": "2026-11-04T13:40:22.803119+00:00",
+  "returncode": 0,
+  "finished": "2026-11-04T13:40:28.866756+00:00",
+  "temporary_files_removed": true
+}

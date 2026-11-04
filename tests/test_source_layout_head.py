@@ -91,8 +91,8 @@ def test_source_layout_is_explicit_and_validated():
     weight = np.ones((257, 16), np.float32)
     with pytest.raises(ValueError, match="weight layout"):
         head_graph(weight, weight_layout="guess")
-    with pytest.raises(ValueError, match="FP32"):
-        head_graph(weight, weight_layout="vocab_hidden", projection_precision="bf16")
+    with pytest.raises(ValueError, match="precision"):
+        head_graph(weight, weight_layout="vocab_hidden", projection_precision="fp8")
 
 
 def test_shared_head_terms_preserve_small_gradients(factory):
@@ -150,5 +150,97 @@ def test_shared_head_terms_native_precision(precision, compiled, monkeypatch):
         np.testing.assert_allclose(
             values[1], np.array([[-2 * tail / (1 + tail), 0]], np.float32), rtol=1e-4, atol=0
         )
+    finally:
+        runtime.close()
+
+
+@pytest.mark.parametrize("precision", ["bf16", "fp16"])
+def test_source_layout_half_updates_and_reload(tmp_path, precision):
+    from onnx.reference import ReferenceEvaluator
+
+    from examples.huggingface.mixed_precision import _FP16Product, _Product
+
+    torch.set_num_threads(1)
+    rng = np.random.default_rng(77)
+    weight = rng.normal(0, 0.2, (257, 16)).astype(np.float32)
+
+    def factory(path):
+        return ReferenceEvaluator(str(path))
+
+    product = _Product if precision == "bf16" else _FP16Product
+    runtime = ChunkedHead(
+        weight,
+        chunk_size=3,
+        weight_layout="vocab_hidden",
+        projection_precision=precision,
+        session_factory=factory,
+    )
+    with SharedWeights(tmp_path) as writer:
+        record = runtime.export_to(writer)
+    restored = ChunkedHead.from_record(tmp_path, record, session_factory=factory)
+    try:
+        for graph in (restored.model, restored.gradient, restored.forward_model):
+            np.testing.assert_array_equal(
+                graph.graph.initializers["head.weight"].const_value.numpy(), weight
+            )
+        for key in ("loss", "gradient", "forward"):
+            onnx.checker.check_model(str(tmp_path / record[key]), full_check=True)
+        x = torch.nn.Parameter(torch.tensor(rng.normal(size=(2, 7, 16)).astype(np.float32)))
+        y = torch.nn.Parameter(x.detach().clone())
+        labels = torch.tensor([[1, 2, 3, 4, -100, -100, -100], [-100, 3, -100, 5, 6, 7, 8]])
+        optimizers = [torch.optim.AdamW([p], lr=0.003, eps=1e-5) for p in (x, y)]
+        for _ in range(3):
+            for optimizer in optimizers:
+                optimizer.zero_grad(set_to_none=True)
+            actual = restored(x, labels, num_items=17)
+            expected = token_loss(
+                product.apply(y, torch.from_numpy(weight.T.copy())), labels, num_items=17
+            )
+            torch.testing.assert_close(actual, expected, rtol=1e-4, atol=1e-6)
+            (actual * 2.3).backward()
+            (expected * 2.3).backward()
+            assert x.grad.dtype == torch.float32
+            torch.testing.assert_close(x.grad, y.grad, rtol=1e-4, atol=1e-6)
+            for optimizer in optimizers:
+                optimizer.step()
+            torch.testing.assert_close(x, y, rtol=1e-4, atol=1e-6)
+        torch.testing.assert_close(
+            restored.forward(x),
+            product.apply(x, torch.from_numpy(weight.T.copy())),
+            rtol=1e-4,
+            atol=1e-6,
+        )
+        x.grad = None
+        restored(x, torch.full_like(labels, -100)).backward()
+        assert x.grad.count_nonzero() == 0
+    finally:
+        restored.close()
+        runtime.close()
+
+
+@pytest.mark.parametrize("precision", ["bf16", "fp16"])
+def test_source_layout_half_preserves_fp32_tail_gradient(precision):
+    from onnx.reference import ReferenceEvaluator
+
+    def factory(path):
+        return ReferenceEvaluator(str(path))
+
+    runtime = ChunkedHead(
+        np.array([[1, 0], [-1, 0]], np.float32),
+        weight_layout="vocab_hidden",
+        projection_precision=precision,
+        session_factory=factory,
+    )
+    try:
+        loss, gradient = runtime.executor.run(
+            None,
+            {"hidden": np.array([[20, 0]], np.float32), "labels": np.array([0], np.int64)},
+        )
+        tail = np.float32(np.exp(-40))
+        np.testing.assert_allclose(loss, np.log1p(tail), rtol=1e-4, atol=0)
+        np.testing.assert_allclose(
+            gradient, np.array([[-2 * tail / (1 + tail), 0]], np.float32), rtol=1e-4, atol=0
+        )
+        assert gradient.dtype == np.float32 and gradient[0, 0] < 0
     finally:
         runtime.close()

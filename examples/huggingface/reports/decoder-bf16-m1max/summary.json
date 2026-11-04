@@ -1,0 +1,35 @@
+{
+  "status": "complete",
+  "scope": "Tiny offline model correctness, training quality and recovery",
+  "source_commit": "94ba8f6e12e7fed86609ddabd6a33a79c488c3ae",
+  "library_sha256": "f6079553459908fa84a090201aaea90f71ccdfcb7700e0c090eb5c5a344efabc",
+  "families": [
+    "phi3",
+    "qwen3",
+    "qwen35"
+  ],
+  "audit_cases": 6,
+  "audit_updates_per_case": 6,
+  "precision_comparison_policy": "reference_precision_effect_l2",
+  "training_steps": 100,
+  "train_loss_bf16": [
+    5.5810699462890625,
+    5.127493381500244
+  ],
+  "validation_loss_bf16": [
+    5.622933387756348,
+    5.432000637054443
+  ],
+  "train_loss_fp32": [
+    5.581001281738281,
+    5.1271514892578125
+  ],
+  "validation_loss_fp32": [
+    5.622943878173828,
+    5.428565502166748
+  ],
+  "matched_data_and_batches": true,
+  "all_frozen_initializers_match_fp32_control": 99,
+  "checkpoint_and_export_recovery": "42 checkpoint tensors byte equal, 10 gradient arrays byte equal; see audits",
+  "performance_scope": "Guard reports include process and runtime overhead. CLI elapsed times include evaluation/export and are not isolated step benchmarks."
+}

@@ -1,0 +1,27 @@
+{
+  "status": "complete",
+  "source": "/tmp/onnax-qwen35-real-bf16-canonical-30/training/export/execution/model.onnx",
+  "source_sha256": "b00181f8d2b9cf53c3e32b52fd44286a870d6b0f2a730b7d7ea6fd2ce0e849c5",
+  "source_proto_sha256": "8307d487f9e61530bfc3b97b91e805bbaa200046b8319729ddc3687bbbaf51fe",
+  "result_proto_sha256": "8307d487f9e61530bfc3b97b91e805bbaa200046b8319729ddc3687bbbaf51fe",
+  "result_without_symbolic_cache_sha256": "f630217692b6c1a40191a14d801fb49c01be5e08154d13c81c6d58b705eaad7a",
+  "symbolic_metadata_bytes": 7046,
+  "load_seconds": 0.05791195807978511,
+  "inference_seconds": 125.39212037494872,
+  "peak_rss_bytes": 1292910592,
+  "memory_scope": "Independent process, imports, IR loading, one inference and serialization; physical footprint in guard",
+  "timing_scope": "One cold core _infer_shapes call including clone; excludes imports, initial load and output serialization",
+  "engine_directory": "/Users/justinc/Documents/GitHub/onnax/.venv/lib/python3.11/site-packages/onnx_shape_inference",
+  "engine_files_sha256": {
+    "_context.py": "7889a59578ebd7bfe4d515acf0a538c5145af400dd288056f4a26608bd679141",
+    "_engine.py": "7c34e064dee05c018dde8481d11ece00e1278b19e16b159ff5e7e23fa9d20d07"
+  },
+  "versions": {
+    "onnax": "0.1.0",
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnx-shape-inference": "0.4.1"
+  },
+  "sample_count": 1,
+  "threads": 1
+}

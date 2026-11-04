@@ -1,0 +1,88 @@
+{
+  "source_commit": "39d18f70ad4aacf21665c0bacafe93ca13bd59b6",
+  "library_sha256": "f6079553459908fa84a090201aaea90f71ccdfcb7700e0c090eb5c5a344efabc",
+  "model": {
+    "version": 1,
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "reference_class": "Qwen3_5ForCausalLM",
+    "checkpoint_to_reference_prefix": {
+      "model.language_model.": "model."
+    },
+    "parameter_count": 752393024,
+    "dtype": "float32",
+    "loading": {
+      "missing_keys": [],
+      "unexpected_keys": [],
+      "mismatched_keys": [],
+      "error_msgs": []
+    }
+  },
+  "scope": "Qwen3.5-0.8B NF4/BF16 fixed-corpus 30-step Trainer training; sequence64, microbatch1, accumulation4, head128",
+  "onnx_training_loss": [
+    5.355411529541016,
+    0.3001950979232788
+  ],
+  "onnx_validation_loss": [
+    6.140902042388916,
+    5.778957843780518
+  ],
+  "mps_training_loss": [
+    5.359641075134277,
+    0.3021295666694641
+  ],
+  "mps_validation_loss": [
+    6.137701034545898,
+    5.768248081207275
+  ],
+  "identical_initial_adapters_and_mapping": {
+    "status": "complete",
+    "adapter_tensors": 60,
+    "initial_adapter_sha256": "e35b8de0ec34184c5ab8f04cbd6e527cad2e941d904984c4023ff85490395ced",
+    "mapping_equal": true,
+    "scope": "Actual generic graph-builder initialization compared with the independently generated MPS control initialization; no training or model export"
+  },
+  "matching_data_and_batch_target_counts": true,
+  "recovery_checkpoint_tensors": 62,
+  "recovery_gradient_tensors": 60,
+  "recovery_byte_equal": true,
+  "standalone_training_max_abs": 0.0,
+  "frozen_initializers": 532,
+  "onnx_modules_checked": [
+    57,
+    57
+  ],
+  "reference_audit": {
+    "losses": {
+      "onnx": 2.794670343399048,
+      "bf16_reference": 2.792787790298462,
+      "fp32_control": 2.7965219020843506
+    },
+    "gradient_relative_l2_median": 0.021918553858995438,
+    "gradient_relative_l2_max": 0.07765909284353256,
+    "gradient_cosine_min": 0.9969831705093384,
+    "gradient_tensors_outside_precision_effect_gate": 48,
+    "all_within_precision_effect_gate": false,
+    "policy": "Original strict differences and measured precision-effect comparisons retained in independent-audit.json"
+  },
+  "cold_graph_preparation": {
+    "samples_per_process": 1,
+    "baseline_seconds": 125.39212037494872,
+    "budget_seconds": 0.6098885840037838,
+    "baseline_peak_rss_bytes": 1292910592,
+    "budget_peak_rss_bytes": 139755520,
+    "serialized_inferred_models_byte_equal": true,
+    "scope": "One cold core _infer_shapes call including clone; excludes imports, initial load and output serialization",
+    "upstream_pr": "https://github.com/onnx/onnx-shape-inference/pull/146",
+    "implementation": "Internal MAX_SYMBOLIC_ELEMENTS=1024; public signatures unchanged"
+  },
+  "runtime": {
+    "provider": "mlx",
+    "ort_graph_optimizer": false,
+    "cpu_fallback": false,
+    "compile": false,
+    "torch_threads": 1,
+    "mlx_memory_limit_bytes": 21474836480,
+    "mlx_cache_limit_bytes": 536870912
+  }
+}

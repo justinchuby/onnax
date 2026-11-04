@@ -27,8 +27,6 @@ def head_graph(weight, *, projection_precision="fp32", weight_layout="hidden_voc
         raise ValueError("Expected fp32, bf16 or fp16 head projection precision")
     if weight_layout not in ("hidden_vocab", "vocab_hidden"):
         raise ValueError("Expected hidden_vocab or vocab_hidden weight layout")
-    if weight_layout == "vocab_hidden" and projection_precision != "fp32":
-        raise ValueError("The source-layout head currently uses FP32 projection compute")
     width, vocab = weight.shape if weight_layout == "hidden_vocab" else weight.shape[::-1]
     hidden = ir.val("hidden", dtype=ir.DataType.FLOAT, shape=["tokens", width])
     labels = ir.val("labels", dtype=ir.DataType.INT64, shape=["tokens"])
@@ -248,8 +246,6 @@ class ChunkedHead:
         result.chunk_size = record["chunk_size"]
         result.vocab_size = record["vocab_size"]
         result.projection_precision = record["projection_precision"]
-        if result.weight_layout == "vocab_hidden" and result.projection_precision != "fp32":
-            raise ValueError("The source-layout head currently uses FP32 projection compute")
         result._load_sources(
             {
                 name: os.path.join(directory, record[name])
