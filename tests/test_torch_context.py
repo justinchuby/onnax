@@ -175,3 +175,57 @@ def test_hybrid_multi_layer_groups_keep_original_layout_on_rejection():
     with pytest.raises(ValueError, match="one-layer"):
         checkpoint_decoder(model, 2)
     assert list(model.model.layers) == layers
+
+
+@pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
+def test_exported_decoder_benchmark_matches_onnx(tmp_path, family):
+    import hashlib
+    import json
+
+    import numpy as np
+
+    from examples.huggingface.decoder_sft import batch as decoder_batch
+    from examples.huggingface.decoder_sft import prepare
+    from examples.huggingface.torch_decoder_benchmark import digest_arrays
+    from examples.huggingface.torch_decoder_benchmark import measure as measure_decoder
+
+    module, _ = prepare(family, head_chunk_size=3)
+    try:
+        with torch.no_grad():
+            for name, parameter in module.onnx.parameters_by_name().items():
+                if name.endswith(".B"):
+                    parameter.fill_(0.01)
+        export = tmp_path / "export"
+        module.export(export)
+        values = decoder_batch()
+        loss = module(**values).loss
+        loss.backward()
+        expected = {
+            name: p.grad.numpy().copy() for name, p in module.onnx.parameters_by_name().items()
+        }
+        arrays = {name: value.numpy() for name, value in values.items()}
+        report, actual = measure_decoder(
+            export, arrays, warmup=0, samples=1, head_chunk_size=3, attention="eager"
+        )
+        np.testing.assert_allclose(
+            actual.pop("loss"), loss.detach().numpy(), rtol=1e-4, atol=1e-6
+        )
+        assert set(actual) == set(expected)
+        for name in expected:
+            np.testing.assert_allclose(
+                actual[name], expected[name], rtol=1e-4, atol=1e-6, err_msg=name
+            )
+        assert report["input_sha256"] == digest_arrays(arrays)
+        assert report["effective_tokens"] == 6
+        assert report["timings"]["total_seconds"]["median"] > 0
+        # A changed adapter archive must fail before constructing the reference.
+        path = export / "execution" / "parameters.npz"
+        old = path.read_bytes()
+        path.write_bytes(old + b"changed")
+        with pytest.raises(ValueError, match="integrity"):
+            measure_decoder(export, arrays, warmup=0, samples=1)
+        path.write_bytes(old)
+        manifest = json.loads((export / "execution" / "interface.json").read_text())
+        assert hashlib.sha256(old).hexdigest() == manifest["files"]["parameters.npz"]
+    finally:
+        module.close()

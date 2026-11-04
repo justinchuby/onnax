@@ -485,6 +485,51 @@ Phi-3. Recomputation remains active in evaluation mode when gradients are
 enabled, matching the deterministic training reference. Groups larger than one
 use models whose decoder layout is explicitly full attention.
 
+### Measure the corresponding PyTorch reference
+
+The reference worker reads the named adapter snapshot from an exported decoder
+task and loads its pinned Transformers source (or the deterministic tiny model).
+It supports Phi-3, Qwen3 and Qwen3.5 in FP32. Supply the same input archive to
+both execution paths:
+
+```python
+import numpy as np
+
+np.savez(
+    "/tmp/decoder-inputs.npz",
+    **{name: value.detach().cpu().numpy() for name, value in batch.items()},
+)
+```
+
+The archive contains INT64 `input_ids`, `attention_mask`, `position_ids` and
+`labels`, with the same batch/sequence shape. Labels use `-100` for ignored
+targets; the loss shifts by one token and averages over valid shifted targets.
+
+```sh
+PYTORCH_ENABLE_MPS_FALLBACK=0 python -m examples.huggingface.torch_decoder_benchmark \
+  --export /tmp/decoder-export --inputs /tmp/decoder-inputs.npz \
+  --device mps --attention sdpa --checkpoint-layers 1 \
+  --head-chunk-size 128 --warmup 10 --samples 100 \
+  --output /tmp/torch-decoder.json
+```
+
+Run each measurement in its own process, using the same adapter snapshot,
+inputs, precision, checkpoint boundaries and head chunk size. Use `--device cpu`
+for an offline reference or `--attention eager` to compare attention schedules.
+The JSON records per-sample execution and output-exchange times, median/P95,
+peak process RSS, source hashes and effective token count. The companion
+`/tmp/torch-decoder.json.npz` stores the loss and all named adapter gradients.
+Compare those arrays with the ONNX results before comparing throughput.
+
+Inputs are staged on the device before warmup. Device work is synchronized at
+timing boundaries, and gradients/loss return to CPU after each iteration.
+Parameters stay fixed; the timed scope is forward, loss and backward. The
+PyTorch head checkpoints each frozen projection and cross entropy chunk, so its
+backward recomputes logits. The ONNX head uses its exported loss/VJP schedule.
+The worker validates the adapter archive against the export manifest and
+records source identity; the Transformers base comes from the pinned checkpoint.
+Use an unquantized FP32 task for this control.
+
 ### Bounded-head measurement
 
 The 64-token tiny Qwen3.5 comparison uses 32 supervised targets, FP32, batch one,
