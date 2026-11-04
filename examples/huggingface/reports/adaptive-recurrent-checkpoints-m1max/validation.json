@@ -1,0 +1,42 @@
+{
+  "measured_onnax_source": "709912c1cf8d6761099d038fbefd684e4f5568e4",
+  "implementation_sha256": "562c1bd8768840badf1bf43371b2fe769284b3dec8962b941cc4b4de9e8239f7",
+  "native_source": "043f1def965fab6b67dea16e692b71951b7331cf",
+  "library_sha256": "f6079553459908fa84a090201aaea90f71ccdfcb7700e0c090eb5c5a344efabc",
+  "configuration": {
+    "model": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "precision": "FP32",
+    "head_rows": 128,
+    "checkpoint_layers": 1,
+    "allocator_limit_bytes": 21474836480,
+    "cache_bytes": 536870912,
+    "process_guard_bytes": 25769803776,
+    "cpu_threads": 1,
+    "ort_graph_optimizer": "disabled",
+    "cpu_fallback": false
+  },
+  "full_scope": "forward, mean shifted-token loss and all adapter gradients; fixed parameters",
+  "derivative_override_scope": "18 recurrent-layer derivatives regenerated from the same exported forward blocks; other body/head modules unchanged; separate immutable frozen-weight payload included in process setup",
+  "full_ratio": 1.224404698006917,
+  "combined_vs_generic_ratio": 1.9923856268452755,
+  "full_gradients": 60,
+  "full_gradients_byte_equal": 60,
+  "baseline_raw_provenance": "72ed448c88e17ab5f0ddc7f70f1fa61c355f8bdc/examples/huggingface/reports/qwen35-state-scans-m1max/fused.json",
+  "offline_regression": {
+    "length": 2113,
+    "passed": 1,
+    "source_test_commit": "92776ccf01e9695b06aa03a2989e2e64e9d6c2e9",
+    "checkpoint_source": "fixed32 checkpoint restored into both policies"
+  },
+  "rebase": "The measured differentiation implementation is byte-identical after rebasing onto187.",
+  "reused_native_session": {
+    "lengths": [
+      4032,
+      8192,
+      4032
+    ],
+    "changed_parameters_and_inputs": true,
+    "all_gradients_byte_equal": true
+  }
+}

@@ -181,3 +181,50 @@ def test_dynamic_sequence_and_independent_output_cotangents(cotangent_mode):
         )
         for result, gradient in zip(actual, expected, strict=True):
             np.testing.assert_allclose(result, gradient, rtol=1e-4, atol=1e-6)
+
+
+def test_checkpoint_plan_minimizes_retained_state_tiles():
+    from onnax._autodiff._context import _Context
+    from onnax._autodiff._linear_attention import _checkpoint_chunk
+
+    time = ir.val("time", dtype=ir.DataType.INT64, shape=["cases"])
+    graph = ir.Graph([time], [], nodes=[], opset_imports={"": 18}, name="checkpoint_plan")
+    chunk = _checkpoint_chunk(_Context(graph), time)
+    chunk.name, chunk.dtype, chunk.shape = "chunk", ir.DataType.INT64, ir.Shape(["cases"])
+    graph.outputs.append(chunk)
+    model = ir.Model(graph, ir_version=10)
+    CheckerPass(full_check=True)(model)
+    lengths = np.array([1, 32, 65, 1024, 1025, 2048, 2081, 4032, 4096, 8192, 32768], np.int64)
+    chunks = runtime_session(model).run(None, {"time": lengths})[0]
+    np.testing.assert_array_equal(chunks, [32, 32, 32, 32, 32, 32, 64, 64, 64, 96, 192])
+
+    def cost(length, chunk):
+        return (int(length) + chunk - 1) // chunk + chunk
+
+    for length, actual in zip(lengths, chunks, strict=True):
+        assert cost(length, int(actual)) == min(cost(length, c) for c in range(32, 1025, 32))
+        assert cost(length, int(actual)) <= cost(length, 32)
+
+
+def test_adaptive_replay_reuses_session_across_tile_sizes():
+    source, _ = model_and_arrays()
+    product = onnax.vjp(source)
+    CheckerPass(full_check=True)(product)
+    session = runtime_session(product)
+    rng = np.random.default_rng(195)
+    for length in (33, 2081, 8192, 7):
+        _, arrays = model_and_arrays(length=length)
+        arrays = {name: value[:1] for name, value in arrays.items()}
+        gy = rng.normal(size=arrays["v"].shape).astype(np.float32)
+        gs = rng.normal(size=arrays["state"].shape).astype(np.float32)
+        feeds = dict(arrays)
+        feeds.update(
+            (value.name, array)
+            for value, array in zip(list(product.graph.inputs)[6:], (gy, gs), strict=True)
+        )
+        actual = session.run(None, feeds)[2:]
+        expected, _ = pullback(
+            *arrays.values(), gy, gs, q_num_heads=1, kv_num_heads=2, scale=0.7, chunk_size=32
+        )
+        for result, gradient in zip(actual, expected, strict=True):
+            np.testing.assert_allclose(result, gradient, rtol=1e-4, atol=1e-6)

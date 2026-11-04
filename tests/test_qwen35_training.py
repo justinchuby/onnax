@@ -3,6 +3,7 @@
 """Hybrid text-model training, frozen base and fresh-process optimizer recovery."""
 # ruff: file-ignore[module-import-not-at-top-of-file] - Optional model dependencies.
 
+import json
 import os
 import subprocess
 import sys
@@ -117,3 +118,51 @@ def test_checkpoint_recovery_in_new_process(tmp_path):
             assert left == right
 
     equal(expected, actual)
+
+
+def test_adaptive_context_updates_and_fresh_process_recovery(tmp_path):
+    directory = os.path.dirname(os.path.abspath(__file__))
+    repository = os.path.dirname(directory)
+    worker = os.path.join(directory, "_qwen35_checkpoint_training.py")
+    environment = os.environ.copy()
+    environment["PYTHONPATH"] = os.pathsep.join(
+        [repository, os.path.join(repository, "src"), environment.get("PYTHONPATH", "")]
+    )
+    for mode in ("continuous", "resumed"):
+        command = [
+            sys.executable,
+            worker,
+            "--output",
+            str(tmp_path / mode),
+            "--length",
+            "2113",
+        ]
+        if mode == "resumed":
+            command.extend(["--resume", str(tmp_path / "continuous")])
+        result = subprocess.run(
+            command,
+            cwd=repository,
+            env=environment,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=180,
+        )
+        assert result.returncode == 0, result.stdout
+        report = json.loads((tmp_path / mode / "report.json").read_text())
+        assert report["status"] == "complete"
+        assert report["physical_sequence"] == 2113
+        assert report["frozen_weights_unchanged"] and report["loaded_execution_bitwise"]
+        assert all(row["violations"] == 0 for row in report["checks"])
+        if mode == "continuous":
+            assert report["steps"][-1]["adaptive_loss"] < report["steps"][0]["adaptive_loss"]
+            assert any(row["name"].startswith("reference/") for row in report["checks"])
+    with (
+        np.load(tmp_path / "continuous" / "final.npz") as expected,
+        np.load(tmp_path / "resumed" / "final.npz") as actual,
+    ):
+        assert set(expected.files) == set(actual.files) and len(expected.files) == 80
+        for name in expected.files:
+            assert expected[name].dtype == actual[name].dtype
+            assert expected[name].shape == actual[name].shape
+            assert expected[name].tobytes() == actual[name].tobytes(), name

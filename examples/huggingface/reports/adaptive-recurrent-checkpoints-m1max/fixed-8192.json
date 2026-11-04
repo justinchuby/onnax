@@ -1,0 +1,232 @@
+{
+  "main_graph_nodes": 453,
+  "declared_initializer_bytes": 86270880,
+  "onnx_file_bytes": 155066,
+  "gradient_mapping": {
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A": "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent",
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B": "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent"
+  },
+  "status": "complete",
+  "mode": "fixed",
+  "length": 8192,
+  "warmup": 10,
+  "samples": [
+    0.5859484999673441,
+    0.5834972499869764,
+    0.5825957920169458,
+    0.5815960830077529,
+    0.5908428750699386,
+    0.5842408749740571,
+    0.5838476249482483,
+    0.5823081249836832,
+    0.5783946249866858,
+    0.5726046250201762,
+    0.5836716659832746,
+    0.5750743329990655,
+    0.5999570419080555,
+    0.5818198339547962,
+    0.5892325829481706,
+    0.5897990419762209,
+    0.58773637493141,
+    0.5834549580467865,
+    0.5868732919916511,
+    0.5803960839984939,
+    0.5924930420005694,
+    0.579373334068805,
+    0.5748662500409409,
+    0.5793537499848753,
+    0.5844426249386743,
+    0.5970946670277044,
+    0.583817083039321,
+    0.5830490420339629,
+    0.5847372499993071,
+    0.5841398750199005,
+    0.5731294580036774,
+    0.5922087499639019,
+    0.586110792006366,
+    0.5904074589489028,
+    0.5830114169511944,
+    0.5908717919373885,
+    0.5811286660609767,
+    0.584707458037883,
+    0.5755264590261504,
+    0.5812562920618802,
+    0.5789400830399245,
+    0.5902570410398766,
+    0.5789210840594023,
+    0.584944500005804,
+    0.5766538749448955,
+    0.5843125830870122,
+    0.5873270839219913,
+    0.577920249896124,
+    0.5797759169945493,
+    0.5805799170630053,
+    0.5915199170121923,
+    0.5908080829540268,
+    0.5943430420011282,
+    0.581708874902688,
+    0.5831622499972582,
+    0.590088790981099,
+    0.5841599999694154,
+    0.5740460419328883,
+    0.5920971669256687,
+    0.5776318749412894,
+    0.5997622499708086,
+    0.5856228749034926,
+    0.5802394999191165,
+    0.5904335420345888,
+    0.5910716250073165,
+    0.5825185830472037,
+    0.5889796669362113,
+    0.607848042040132,
+    0.5745272079948336,
+    0.5891330000013113,
+    0.5910505839856341,
+    0.583857125020586,
+    0.5927248330553994,
+    0.58109908294864,
+    0.5729862910229713,
+    0.5799337920034304,
+    0.5852044170023873,
+    0.584085083915852,
+    0.5909838330699131,
+    0.5901029999367893,
+    0.5801007079426199,
+    0.5860320830252022,
+    0.5764634169172496,
+    0.5884128749603406,
+    0.5871367499930784,
+    0.5996217919746414,
+    0.7734660831047222,
+    0.5821842909790576,
+    0.5826374170137569,
+    0.5848087499616668,
+    0.5849769590422511,
+    0.5813245000317693,
+    0.5916449589421973,
+    0.5820545830065385,
+    0.5876584170619026,
+    0.5787073340034112,
+    0.5879210830898955,
+    0.5857591670937836,
+    0.5804220830323175,
+    0.5866621249588206
+  ],
+  "median_seconds": 0.5842004374717362,
+  "p95_seconds": 0.5972210232750512,
+  "session_creation_seconds": 0.08107025001663715,
+  "first_execution_seconds": 0.639863625052385,
+  "inputs": {
+    "input_ids": {
+      "shape": [
+        1,
+        8192
+      ],
+      "dtype": "int64",
+      "bytes": 65536,
+      "sha256": "f85ce7a1823f9c440e9374938c41e6e7d520de821d663a0bc48aba98ae47a7a7"
+    },
+    "v_model.embed_tokens.Gather_109": {
+      "shape": [
+        1,
+        8192,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 33554432,
+      "sha256": "a13152e20dc2cbe85266daf13b780d09ec73539907814b658c3f654fe0127a86"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "cd21394052551d4dd17f09cf59b7232058d486b48c59ad697c51fb816e1fddac"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B": {
+      "shape": [
+        4,
+        6144
+      ],
+      "dtype": "float32",
+      "bytes": 98304,
+      "sha256": "19f74bc30adf7071abe518242ecb37e4e22866107a6f8e79b5d5d106213024f0"
+    },
+    "v_model.layers.0.Add_219_cotangent": {
+      "shape": [
+        1,
+        8192,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 33554432,
+      "sha256": "3b7e58f47706508a3b7075c21cc89cd52df3ce3977665ad2d8b7565cfc7a5d55"
+    }
+  },
+  "outputs": {
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "c9da29a4c501413c97725be75da62f234bdbb67aa63273e5e7080eaee998cbd2"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent": {
+      "shape": [
+        4,
+        6144
+      ],
+      "dtype": "float32",
+      "bytes": 98304,
+      "sha256": "7ceaaa0fbcceb06f6745249056dfa44b248657d93576a7d48d3903e22ebb7824"
+    }
+  },
+  "checks": null,
+  "allocator_before": {
+    "active_bytes": 86270824,
+    "cache_bytes": 536870912,
+    "peak_bytes": 0
+  },
+  "allocator_after": {
+    "active_bytes": 86270824,
+    "cache_bytes": 536870912,
+    "peak_bytes": 6035170164
+  },
+  "physical_memory": {
+    "available": true,
+    "current_bytes": 1110082880,
+    "lifetime_peak_bytes": 6722962752,
+    "current_resident_bytes": 376160256,
+    "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+  },
+  "peak_rss_bytes": 387596288,
+  "library_sha256": "f6079553459908fa84a090201aaea90f71ccdfcb7700e0c090eb5c5a344efabc",
+  "model_sha256": "2aba793d77eee9acd68804d20169db573b1a2f2bee83d5b3412495c27f85c4a0",
+  "scope": "One real Qwen3.5 linear decoder block recomputation/VJP with fixed weights and captured upstream seed; 8192 repeats captured sequence arguments; runtime exchange included",
+  "rtol": 0.0001,
+  "atol": 1e-06,
+  "ort_optimizer": "disabled",
+  "cpu_fallback": false,
+  "compile": false,
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "python": "3.11.17",
+  "versions": {
+    "numpy": "2.4.6",
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnxscript": "0.7.2",
+    "onnxruntime": "1.31.1",
+    "mlx": "0.32.4",
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "mobius-onnx": "0.1.0"
+  },
+  "cpu_threads": 1,
+  "inter_threads": 1,
+  "onnax_source": "709912c1cf8d6761099d038fbefd684e4f5568e4",
+  "native_source": "fa333d7f203f9e3d758ebf6a315f34ecd034b627"
+}

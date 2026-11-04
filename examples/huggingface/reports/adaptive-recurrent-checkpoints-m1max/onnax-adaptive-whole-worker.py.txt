@@ -1,0 +1,37 @@
+import hashlib,json,os,runpy,sys
+from pathlib import Path
+import onnx,onnx_ir as ir
+from onnx_ir.passes import common
+import onnax
+from onnax._shared_weights import SharedWeights
+from examples.huggingface.decoder_sft import OnnxDecoder
+from examples.huggingface.optimization import optimize_training_graph
+from examples.huggingface.long_context import memory_limit
+from examples.lora.mlx_runtime import register_library
+root=Path('/tmp/onnax-adaptive-whole-4k');graphs=root/'graphs';graphs.mkdir(exist_ok=False)
+library=sys.argv[sys.argv.index('--library')+1];register_library(library);memory_limit(library,20*1024**3)
+original_load=OnnxDecoder.load.__func__;overrides={};details={}
+def load(cls,directory,**kwargs):
+ source=Path(directory)/'execution';record=json.loads((source/'interface.json').read_text())
+ with SharedWeights(graphs) as weights:
+  for index,row in enumerate(record['blocks']):
+   if not row['backward']:continue
+   model=ir.load(source/f'block_{index}_forward.onnx')
+   if not any(n.op_type=='LinearAttention' and n.domain=='com.microsoft' for n in model.graph):continue
+   derivative=onnax.vjp(model,inputs=row['active_inputs'],outputs=row['active_outputs'])
+   values={v.name:v for v in derivative.graph.outputs};derivative.graph.outputs.clear();derivative.graph.outputs.extend(values[n] for n in row['gradients'])
+   derivative=optimize_training_graph(derivative);common.RemoveUnusedNodesPass()(derivative)
+   for value in list(derivative.graph.inputs):
+    if not value.uses() and value not in derivative.graph.outputs:derivative.graph.inputs.remove(value)
+   filename=f'block_{index}_backward.onnx';path=weights.save(derivative,f'block_{index}_backward');overrides[filename]=path
+   details[row['name']]={'file':path,'nodes':len(derivative.graph),'initializer_bytes':sum(v.const_value.nbytes for v in derivative.graph.initializers.values()),'gradients':row['gradients'],'inputs':[v.name for v in derivative.graph.inputs]}
+ assert len(overrides)==18,len(overrides)
+ for path in overrides.values():onnx.checker.check_model(path,full_check=True)
+ for value in details.values():value['sha256']=hashlib.sha256(Path(value['file']).read_bytes()).hexdigest()
+ (root/'overrides.json').write_text(json.dumps(details,indent=2)+'\n')
+ factory=kwargs['session_factory']
+ def transformed(path):return factory(overrides.get(os.path.basename(os.fspath(path)),path))
+ kwargs['session_factory']=transformed
+ return original_load(cls,directory,**kwargs)
+OnnxDecoder.load=classmethod(load)
+runpy.run_path('/tmp/onnax-mlx-gated-delta-state/bench/onnax_decoder.py',run_name='__main__')

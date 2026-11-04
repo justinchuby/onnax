@@ -1,0 +1,311 @@
+{
+  "scope": "forward, mean shifted-token loss and all adapter gradients; fixed parameters",
+  "arrays": {
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.1.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.1.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.2.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.2.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.3.self_attn.q_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.3.self_attn.q_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.3.self_attn.v_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.3.self_attn.v_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.4.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.4.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.5.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.5.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.6.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.6.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.7.self_attn.q_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.7.self_attn.q_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.7.self_attn.v_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.7.self_attn.v_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.8.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.8.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.9.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.9.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.10.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.10.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.11.self_attn.q_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.11.self_attn.q_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.11.self_attn.v_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.11.self_attn.v_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.12.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.12.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.13.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.13.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.14.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.14.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.15.self_attn.q_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.15.self_attn.q_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.15.self_attn.v_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.15.self_attn.v_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.16.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.16.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.17.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.17.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.18.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.18.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.19.self_attn.q_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.19.self_attn.q_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.19.self_attn.v_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.19.self_attn.v_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.20.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.20.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.21.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.21.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.22.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.22.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.23.self_attn.q_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.23.self_attn.q_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.23.self_attn.v_proj.lora.A": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    "model.layers.23.self_attn.v_proj.lora.B": {
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    }
+  },
+  "rtol": 0.0001,
+  "atol": 1e-06,
+  "reference_measured_calls": 100,
+  "candidate_measured_calls": 100,
+  "parameters_unchanged": true,
+  "median_ratio": 1.224404698006917
+}

@@ -53,6 +53,8 @@ the original query/key layout. A chunk's initial-state gradient becomes the
 preceding chunk's final-state cotangent. Frozen projection weights still pass
 this gradient to earlier trainable adapters.
 
+(adaptive-recurrent-checkpoints)=
+
 ## Recompute a chunk from its boundary
 
 Saving every recurrent state costs $O(Td_kd_v)$ elements per head. The oracle
@@ -69,8 +71,15 @@ $S$ occupies 1 MiB. At 8192 tokens, a complete state history contains 8193 MiB;
 are state-array budgets; process measurements will include activations,
 gradients, workspaces and the runtime.
 
-The portable VJP uses 32-token chunks. It pads the last chunk with identity
-state updates and removes padded gradients before returning them. The JVP
+The portable VJP chooses a chunk length from the sequence shape. It compares
+32-token multiples on either side of $\sqrt{T}$ using the retained-state count
+$\lceil T/C\rceil+C$, choosing the smaller chunk on ties. Short sequences retain
+32-token chunks. A 4,032-token sequence uses 64-token chunks (127 states versus
+158 with fixed 32); 8,192 tokens use 96-token chunks (182 versus 288).
+
+The shape calculation uses ordinary ONNX operations and adapts when a session
+receives a different sequence length. The last chunk is padded with identity
+state updates, and padded gradients are removed before returning them. The JVP
 carries just the primal state and its tangent through a single `Scan`.
 
 The reference tests compare both outputs and all six gradients with independent
@@ -79,6 +88,55 @@ initial states, independent output/state cotangents, partial final chunks,
 external chunk composition and the state-storage ledger. Graph tests execute
 the actual Mobius function with ONNX Runtime, compare its derivatives with
 PyTorch, and reuse a session across batch and sequence sizes.
+
+### Measured checkpoint choices on M1 Max
+
+A real Qwen3.5-0.8B recurrent block uses 64-token chunks at 4,032 tokens and
+96-token chunks at 8,192. Both policies execute the fused state/replay/reverse
+kernels. Each case ran in a fresh process with 10 warmups and 100 samples:
+
+| Sequence | Chunk | Block median / P95 | MLX allocator window peak | Process peak physical footprint |
+| --- | ---: | ---: | ---: | ---: |
+| 4,032 | 32 | 284.54 / 293.73 ms | 3.44 GiB | 4.00 GiB |
+| 4,032 | 64 | 264.02 / 269.06 ms | 3.17 GiB | 3.74 GiB |
+| 8,192 | 32 | 584.20 / 597.22 ms | 5.62 GiB | 6.26 GiB |
+| 8,192 | 96 | 538.27 / 549.86 ms | 5.54 GiB | 6.15 GiB |
+
+The 4K case replays a captured training block; the 8K case repeats its arguments
+and upstream direction. Both adapter gradients agree at `rtol=1e-4, atol=1e-6`.
+Runtime array exchange is included, with ORT optimization and CPU fallback
+disabled, eager MLX execution, one CPU thread and a 512 MiB allocator cache.
+
+The complete 24-layer 4K model also ran with 10 warmups and 100 samples:
+
+| Recurrent policy | Forward/loss/all-gradient median / P95 | Process peak physical footprint |
+| --- | ---: | ---: |
+| Fixed 32 | 12.922 / 13.114 s | 8.07 GiB |
+| Shape-selected 64 | 10.553 / 10.660 s | 8.46 GiB |
+
+The shape-selected run is **1.22×** the fixed-32 throughput, and **1.99×** the
+original generic-state-scan baseline. The input, adapter snapshot, eager 128-row
+head and native library are the same; parameters stay fixed. All 60 adapter
+gradients are byte-identical. This run loads 18 regenerated derivative modules
+with their own immutable frozen-weight payload; process footprint includes
+that setup and the runtime. The block allocator and whole-process peaks above
+measure these two different scopes.
+
+A separate four-layer 4K training check compares three AdamW updates against
+fixed-32 execution. Predictions, losses, all adapter gradients, parameters and
+optimizer moments are identical. Shared-state predictions/loss/gradients also
+match Transformers at the original tolerance. Frozen weights remain unchanged,
+exported ONNX modules pass the full checker, and loaded logits/gradients match
+byte for byte. A fresh process restores checkpoint one through update three,
+reproducing all 80 parameter/state arrays byte for byte. The offline CI regression
+uses 2,113 tokens, including a partial 64-token tail and recovery across policies.
+
+Generate the derivative with current onnax to include the shape-driven plan.
+The exported ONNX graph retains this calculation and adapts to later sequence
+lengths. A reused MLX session also matches fixed-32 gradients byte for byte
+across 4,032 → 8,192 → 4,032 tokens with changing adapters and inputs.
+The [raw samples, traces, training/recovery checks and drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/adaptive-recurrent-checkpoints-m1max)
+record the qualified implementation and runtime hashes.
 
 ## Implement the training graph
 

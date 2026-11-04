@@ -1,0 +1,28 @@
+{
+  "4032": {
+    "executions": 2,
+    "fast_kernels": {
+      "mlx_fast_rms_norm": 6,
+      "mlx_matmul": 34,
+      "mlx_cpu_shape": 264,
+      "mlx_gated_delta_state_scan": 126,
+      "mlx_linear_attention_scan": 2,
+      "mlx_gated_delta_replay_scan": 126,
+      "mlx_gated_delta_reverse_scan": 126
+    },
+    "trace_sha256": "a0bc2d85163e640b11e68e333571c37e98338ccb3eeaa24df04c59b5bc8bba4d"
+  },
+  "8192": {
+    "executions": 2,
+    "fast_kernels": {
+      "mlx_fast_rms_norm": 6,
+      "mlx_matmul": 34,
+      "mlx_cpu_shape": 264,
+      "mlx_gated_delta_state_scan": 172,
+      "mlx_linear_attention_scan": 2,
+      "mlx_gated_delta_replay_scan": 172,
+      "mlx_gated_delta_reverse_scan": 172
+    },
+    "trace_sha256": "f4afd4e880c9545b9081754737d298a474304d6b4f0e5a3ccff8d35190f4e23e"
+  }
+}

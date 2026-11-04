@@ -1,0 +1,989 @@
+{
+  "status": "complete",
+  "source": "709912c1cf8d6761099d038fbefd684e4f5568e4",
+  "physical_sequence": 4032,
+  "valid_shifted_tokens": 4014,
+  "steps": [
+    {
+      "step": 1,
+      "fixed_loss": 5.560982704162598,
+      "adaptive_loss": 5.560982704162598
+    },
+    {
+      "step": 2,
+      "fixed_loss": 5.560941219329834,
+      "adaptive_loss": 5.560941219329834
+    },
+    {
+      "step": 3,
+      "fixed_loss": 5.560896396636963,
+      "adaptive_loss": 5.560896396636963
+    }
+  ],
+  "checks": [
+    {
+      "name": "0/logits",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/loss",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/gradient/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/gradient/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/gradient/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/gradient/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/gradient/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/gradient/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/gradient/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/gradient/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/gradient/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/gradient/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "reference/logits",
+      "max_abs": 4.76837158203125e-07,
+      "violations": 0,
+      "bitwise": false
+    },
+    {
+      "name": "reference/loss",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "reference/gradient/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 1.7280399333685637e-11,
+      "violations": 0,
+      "bitwise": false
+    },
+    {
+      "name": "reference/gradient/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 4.3655745685100555e-11,
+      "violations": 0,
+      "bitwise": false
+    },
+    {
+      "name": "reference/gradient/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 2.864908310584724e-11,
+      "violations": 0,
+      "bitwise": false
+    },
+    {
+      "name": "reference/gradient/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 3.774403012357652e-11,
+      "violations": 0,
+      "bitwise": false
+    },
+    {
+      "name": "reference/gradient/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 2.8194335754960775e-11,
+      "violations": 0,
+      "bitwise": false
+    },
+    {
+      "name": "reference/gradient/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 3.2741809263825417e-11,
+      "violations": 0,
+      "bitwise": false
+    },
+    {
+      "name": "reference/gradient/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 1.5916157281026244e-11,
+      "violations": 0,
+      "bitwise": false
+    },
+    {
+      "name": "reference/gradient/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 6.821210263296962e-11,
+      "violations": 0,
+      "bitwise": false
+    },
+    {
+      "name": "reference/gradient/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 2.0463630789890885e-11,
+      "violations": 0,
+      "bitwise": false
+    },
+    {
+      "name": "reference/gradient/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 7.821654435247183e-11,
+      "violations": 0,
+      "bitwise": false
+    },
+    {
+      "name": "0/parameter/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg_sq/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/parameter/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg_sq/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/parameter/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg_sq/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/parameter/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg_sq/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/parameter/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg_sq/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/parameter/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg_sq/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/parameter/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg_sq/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/parameter/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg_sq/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/parameter/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg_sq/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/parameter/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "0/exp_avg_sq/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/logits",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/loss",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/gradient/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/gradient/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/gradient/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/gradient/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/gradient/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/gradient/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/gradient/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/gradient/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/gradient/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/gradient/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/parameter/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg_sq/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/parameter/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg_sq/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/parameter/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg_sq/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/parameter/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg_sq/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/parameter/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg_sq/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/parameter/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg_sq/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/parameter/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg_sq/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/parameter/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg_sq/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/parameter/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg_sq/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/parameter/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "1/exp_avg_sq/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/logits",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/loss",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/gradient/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/gradient/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/gradient/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/gradient/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/gradient/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/gradient/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/gradient/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/gradient/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/gradient/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/gradient/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/parameter/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg_sq/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/parameter/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg_sq/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/parameter/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg_sq/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/parameter/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg_sq/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/parameter/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg_sq/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/parameter/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg_sq/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/parameter/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg_sq/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/parameter/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg_sq/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/parameter/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg_sq/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/parameter/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "2/exp_avg_sq/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "fixed/loaded_logits",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "fixed/loaded_gradient/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "fixed/loaded_gradient/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "fixed/loaded_gradient/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "fixed/loaded_gradient/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "fixed/loaded_gradient/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "fixed/loaded_gradient/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "fixed/loaded_gradient/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "fixed/loaded_gradient/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "fixed/loaded_gradient/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "fixed/loaded_gradient/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "adaptive/loaded_logits",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "adaptive/loaded_gradient/model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "adaptive/loaded_gradient/model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "adaptive/loaded_gradient/model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "adaptive/loaded_gradient/model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "adaptive/loaded_gradient/model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "adaptive/loaded_gradient/model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "adaptive/loaded_gradient/model.layers.3.self_attn.q_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "adaptive/loaded_gradient/model.layers.3.self_attn.q_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "adaptive/loaded_gradient/model.layers.3.self_attn.v_proj.lora.A",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    },
+    {
+      "name": "adaptive/loaded_gradient/model.layers.3.self_attn.v_proj.lora.B",
+      "max_abs": 0.0,
+      "violations": 0,
+      "bitwise": true
+    }
+  ],
+  "resume": null,
+  "frozen_weights_unchanged": true,
+  "loaded_execution_bitwise": true,
+  "elapsed_seconds": 18.040243541938253
+}
