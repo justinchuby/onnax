@@ -194,3 +194,130 @@ def test_task_head_mode_rejected_before_loading_sessions(tmp_path, monkeypatch, 
     monkeypatch.setattr(decoder_sft.CheckpointedModule, "load", unexpected_load)
     with pytest.raises(ValueError, match="head execution mode"):
         OnnxDecoder.load(directory)
+
+
+@pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
+def test_separate_head_session_factory_survives_export(tmp_path, family):
+    calls = {"body": 0, "head": 0}
+
+    def body_factory(source):
+        calls["body"] += 1
+        return session(source)
+
+    def head_factory(source):
+        calls["head"] += 1
+        return session(source)
+
+    model, _ = prepare(
+        family,
+        nf4=True,
+        head_chunk_size=3,
+        session_factory=body_factory,
+        head_session_factory=head_factory,
+    )
+    try:
+        data = batch()
+        expected = model(**data).loss
+        expected.backward()
+        gradients = [p.grad.clone() for p in model.parameters()]
+        # The lazy logits session must also use the selected head backend.
+        expected_logits = model(**{k: v for k, v in data.items() if k != "labels"}).logits
+        assert calls["body"] > 0 and calls["head"] == 2
+        model.export(tmp_path / "export")
+    finally:
+        model.close()
+    calls.update(body=0, head=0)
+    restored = OnnxDecoder.load(
+        tmp_path / "export",
+        session_factory=body_factory,
+        head_session_factory=head_factory,
+    )
+    try:
+        actual = restored(**data).loss
+        actual.backward()
+        torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+        for parameter, gradient in zip(restored.parameters(), gradients, strict=True):
+            torch.testing.assert_close(parameter.grad, gradient, rtol=0, atol=0)
+        logits = restored(**{k: v for k, v in data.items() if k != "labels"}).logits
+        torch.testing.assert_close(logits, expected_logits, rtol=0, atol=0)
+        assert calls["body"] > 0 and calls["head"] == 2
+    finally:
+        restored.close()
+
+
+def test_head_session_factory_requires_a_head():
+    with pytest.raises(ValueError, match="requires head_chunk_size"):
+        prepare("phi3", head_session_factory=session)
+
+
+@pytest.mark.parametrize(
+    "options,global_disable,message",
+    [
+        ([], "0", "requires MLX and --head-chunk-size"),
+        (["--provider", "mlx"], "0", "requires MLX and --head-chunk-size"),
+        (
+            ["--provider", "mlx", "--head-chunk-size", "3"],
+            "1",
+            "requires ONNXRUNTIME_EP_MLX_NO_COMPILE=0 or unset",
+        ),
+    ],
+)
+def test_compile_head_cli_rejects_incompatible_options(
+    tmp_path, options, global_disable, message
+):
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "examples.huggingface.decoder_sft",
+            "--output-dir",
+            str(tmp_path),
+            "--compile-head",
+            *options,
+        ],
+        env={**os.environ, "ONNXRUNTIME_EP_MLX_NO_COMPILE": global_disable},
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2 and message in result.stderr
+
+
+@pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
+def test_native_compiled_head_with_eager_decoder(tmp_path, family, monkeypatch):
+    if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
+        pytest.skip("Native MLX opt-in")
+    import functools
+
+    from examples.huggingface.decoder_sft import audit
+    from examples.lora.mlx_runtime import register_library
+    from examples.lora.mlx_runtime import session as mlx_session
+
+    monkeypatch.setenv("ONNXRUNTIME_EP_MLX_NO_COMPILE", "0")
+    if path := os.environ.get("ONNAX_MLX_EP_LIBRARY"):
+        register_library(path)
+    calls = {False: 0, True: 0}
+
+    def factory(source, *, compiled):
+        executor = mlx_session(source, enable_compile=compiled)
+        assert executor.get_session_options().get_session_config_entry(
+            "ep.mlx.enable_compile"
+        ) == str(int(compiled))
+        calls[compiled] += 1
+        return executor
+
+    report = audit(
+        family,
+        str(tmp_path),
+        nf4=True,
+        head_chunk_size=3,
+        steps=3,
+        session_factory=functools.partial(factory, compiled=False),
+        head_session_factory=functools.partial(factory, compiled=True),
+        fused_ops=True,
+    )
+    assert calls[False] > 0 and calls[True] > 0
+    assert report["reload"] and report["peft"]["gradient_check_passed"]
+    assert report["peft"]["update_check_passed"]

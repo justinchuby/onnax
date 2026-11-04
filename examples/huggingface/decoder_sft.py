@@ -5,6 +5,7 @@
 import argparse
 import contextlib
 import copy
+import functools
 import hashlib
 import json
 import math
@@ -58,6 +59,7 @@ class OnnxDecoder(PreTrainedModel):
         self.onnx = execution
         self.mapping = mapping
         self.family = family
+        self.quantization = getattr(config, "onnax_quantization", None)
         self.head = head
         self.mode = "chunked" if head is not None else "full"
         if head is not None:
@@ -119,6 +121,7 @@ class OnnxDecoder(PreTrainedModel):
             "family": self.family,
             "mapping": self.mapping,
             "base_model": self.config._name_or_path,
+            "quantization": self.quantization,
         }
         if self.head is not None:
             from examples.huggingface.decoder_head import export
@@ -130,14 +133,18 @@ class OnnxDecoder(PreTrainedModel):
             json.dump(record, stream, indent=2)
 
     @classmethod
-    def load(cls, directory, *, session_factory=None):
+    def load(cls, directory, *, session_factory=None, head_session_factory=None):
         with open(os.path.join(directory, "task.json"), encoding="utf-8") as stream:
             record = json.load(stream)
         if record.get("version") not in (1, 2) or record.get("family") not in FAMILIES:
             raise ValueError("Unsupported decoder task interface")
         config = AutoConfig.from_pretrained(directory, local_files_only=True)
+        if record.get("quantization") != getattr(config, "onnax_quantization", None):
+            raise ValueError("Decoder quantization differs from the saved configuration")
         configured_head = getattr(config, "onnax_head", None)
         has_head = record["version"] == 2
+        if head_session_factory is not None and not has_head:
+            raise ValueError("A head session factory requires a chunked-head task")
         if has_head != (configured_head is not None):
             raise ValueError("Decoder task version and configured head execution mode differ")
         if has_head and configured_head.get("identity") != record["head"].get("identity"):
@@ -167,7 +174,7 @@ class OnnxDecoder(PreTrainedModel):
                 head = load(
                     os.path.join(directory, "execution"),
                     record["head"],
-                    session_factory=session_factory or session,
+                    session_factory=head_session_factory or session_factory or session,
                 )
                 resources.callback(head.close)
             result = cls(config, execution, record["mapping"], record["family"], head=head)
@@ -175,9 +182,11 @@ class OnnxDecoder(PreTrainedModel):
             return result
 
     def close(self):
-        self.onnx.close()
-        if self.head is not None:
-            self.head.close()
+        try:
+            self.onnx.close()
+        finally:
+            if self.head is not None:
+                self.head.close()
 
 
 def _check_head_identity(module, state_dict, prefix, *_args):
@@ -233,10 +242,12 @@ def prepare(
     *,
     checkpoint_layers=1,
     session_factory=None,
+    head_session_factory=None,
     fused_ops=False,
     real=False,
     cache_dir=None,
     head_chunk_size=None,
+    nf4=False,
 ):
     if (
         isinstance(checkpoint_layers, bool)
@@ -245,8 +256,10 @@ def prepare(
     ):
         raise ValueError("checkpoint_layers must be a positive integer")
     _validate_head_chunk_size(head_chunk_size)
+    if head_session_factory is not None and head_chunk_size is None:
+        raise ValueError("A head session factory requires head_chunk_size")
     graph, parameters, mapping, reference = prepare_graph(
-        family, preserve_fused=fused_ops, real=real, cache_dir=cache_dir
+        family, preserve_fused=fused_ops, real=real, cache_dir=cache_dir, nf4=nf4
     )
     if head_chunk_size is not None:
         from onnxscript import optimizer
@@ -283,7 +296,7 @@ def prepare(
                 projection.weight.detach().cpu().numpy(),
                 chunk_size=head_chunk_size,
                 weight_layout="vocab_hidden",
-                session_factory=session_factory or session,
+                session_factory=head_session_factory or session_factory or session,
             )
             resources.callback(head.close)
         result = OnnxDecoder(reference.config, module, mapping, family, head=head)
@@ -345,20 +358,24 @@ def audit(
     *,
     steps=6,
     session_factory=None,
+    head_session_factory=None,
     fused_ops=False,
     adam_epsilon=1e-5,
     real=False,
     cache_dir=None,
     head_chunk_size=None,
+    nf4=False,
 ):
     """Compare native source modules, including nonzero-B derivatives and PEFT exchange."""
     model, reference = prepare(
         family,
         session_factory=session_factory,
+        head_session_factory=head_session_factory,
         fused_ops=fused_ops,
         real=real,
         cache_dir=cache_dir,
         head_chunk_size=head_chunk_size,
+        nf4=nf4,
     )
     audit_data = (
         text_batch(task_tokenizer(family, real=True, cache_dir=cache_dir)) if real else batch()
@@ -395,7 +412,8 @@ def audit(
                     predictions = model(
                         **{k: v for k, v in data.items() if k != "labels"}
                     ).logits
-            torch.testing.assert_close(predictions, logits, rtol=1e-4, atol=1e-6)
+            valid = data["attention_mask"].bool()
+            torch.testing.assert_close(predictions[valid], logits[valid], rtol=1e-4, atol=1e-6)
             torch.testing.assert_close(actual.loss, loss, rtol=1e-4, atol=1e-6)
             actual.loss.backward()
             loss.backward()
@@ -428,7 +446,9 @@ def audit(
         inference_data = {k: v for k, v in audit_data.items() if k != "labels"}
         expected = model(**inference_data).logits.detach()
         with_checkpoint = OnnxDecoder.load(
-            os.path.join(directory, "export"), session_factory=session_factory
+            os.path.join(directory, "export"),
+            session_factory=session_factory,
+            head_session_factory=head_session_factory,
         )
         try:
             torch.testing.assert_close(
@@ -437,9 +457,18 @@ def audit(
             # A fresh native source model receives the standard PEFT adapter.
             from examples.huggingface.decoder_families import reference_model
 
+            exchange_base = reference_model(family, real=real, cache_dir=cache_dir)
+            if model.quantization is not None:
+                from examples.huggingface.nf4 import quantize_reference
+
+                quantize_reference(
+                    exchange_base,
+                    mapping=model.mapping,
+                    block_size=model.quantization["block_size"],
+                )
             exchange = roundtrip(
                 with_checkpoint,
-                reference_model(family, real=real, cache_dir=cache_dir),
+                exchange_base,
                 audit_data,
                 os.path.join(directory, "adapter"),
                 adam_epsilon=adam_epsilon,
@@ -448,6 +477,7 @@ def audit(
             with_checkpoint.close()
         return {
             "family": family,
+            "quantization": model.quantization,
             "independent_steps": steps,
             "adam_epsilon": adam_epsilon,
             "losses": losses,
@@ -461,7 +491,9 @@ def audit(
         model.close()
 
 
-def _validate_task_source(config, family, real, head_chunk_size):
+def _validate_task_source(config, family, real, head_chunk_size, nf4=False):
+    if (config.get("onnax_quantization") is not None) != nf4:
+        raise ValueError("Checkpoint quantization mode mismatch")
     if config["model_type"] != FAMILIES[family].config_type.model_type:
         raise ValueError("Checkpoint decoder family mismatch")
     if (config.get("onnax_head") is not None) != (head_chunk_size is not None):
@@ -487,11 +519,13 @@ def run(
     resume=None,
     stop=None,
     session_factory=None,
+    head_session_factory=None,
     fused_ops=False,
     adam_epsilon=1e-5,
     real=False,
     cache_dir=None,
     head_chunk_size=None,
+    nf4=False,
     max_length=64,
     pad_to_multiple_of=None,
     train_file=None,
@@ -500,6 +534,8 @@ def run(
 ):
     """Let TRL own training, accumulation, optimizer and checkpoint policy."""
     _validate_head_chunk_size(head_chunk_size)
+    if head_session_factory is not None and head_chunk_size is None:
+        raise ValueError("A head session factory requires head_chunk_size")
     _validate_max_length(max_length, limit=None if real else 64)
     if pad_to_multiple_of is None and real:
         pad_to_multiple_of = 64
@@ -515,10 +551,10 @@ def run(
     if resume is not None:
         with open(os.path.join(resume, "config.json"), encoding="utf-8") as stream:
             previous_config = json.load(stream)
-        _validate_task_source(previous_config, family, real, head_chunk_size)
+        _validate_task_source(previous_config, family, real, head_chunk_size, nf4)
     if load_export is not None:
         with open(os.path.join(load_export, "config.json"), encoding="utf-8") as stream:
-            _validate_task_source(json.load(stream), family, real, head_chunk_size)
+            _validate_task_source(json.load(stream), family, real, head_chunk_size, nf4)
     os.makedirs(directory, exist_ok=True)
     train_texts, eval_texts = _training_texts(train_file, validation_file)
     tok = task_tokenizer(
@@ -539,14 +575,20 @@ def run(
         model, reference = prepare(
             family,
             session_factory=session_factory,
+            head_session_factory=head_session_factory,
             fused_ops=fused_ops,
             real=real,
             cache_dir=cache_dir,
             head_chunk_size=head_chunk_size,
+            nf4=nf4,
         )
         del reference
     else:
-        model = OnnxDecoder.load(load_export, session_factory=session_factory)
+        model = OnnxDecoder.load(
+            load_export,
+            session_factory=session_factory,
+            head_session_factory=head_session_factory,
+        )
     batch_records = []
 
     def record_batch(module, args, kwargs):
@@ -617,6 +659,7 @@ def run(
         export_adapter(model, os.path.join(directory, "adapter"))
         return {
             "family": family,
+            "quantization": model.quantization,
             "pretrained_source": getattr(model.config, "onnax_pretrained", None),
             "steps": trainer.state.global_step,
             "microbatch_size": trainer.args.per_device_train_batch_size,
@@ -651,6 +694,8 @@ def main():
     parser.add_argument("--audit-only", action="store_true")
     parser.add_argument("--audit-steps", type=int, default=6)
     parser.add_argument("--fused-ops", action="store_true")
+    parser.add_argument("--nf4", action="store_true")
+    parser.add_argument("--compile-head", action="store_true")
     parser.add_argument("--head-chunk-size", type=int)
     parser.add_argument("--max-length", type=int, default=64)
     parser.add_argument("--pad-to-multiple-of", type=int)
@@ -677,8 +722,16 @@ def main():
         or args.load_export
     ):
         parser.error("Context and data options apply to training")
+    if args.compile_head and (args.provider != "mlx" or args.head_chunk_size is None):
+        parser.error("--compile-head requires MLX and --head-chunk-size")
+    if args.compile_head and os.environ.get("ONNXRUNTIME_EP_MLX_NO_COMPILE", "") not in (
+        "",
+        "0",
+    ):
+        parser.error("--compile-head requires ONNXRUNTIME_EP_MLX_NO_COMPILE=0 or unset")
     torch.set_num_threads(1)
     factory = None
+    head_factory = None
     library_sha256 = None
     if args.provider == "mlx":
         from examples.lora.mlx_runtime import register_library, session
@@ -687,12 +740,18 @@ def main():
             with open(args.library, "rb") as stream:
                 library_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
             register_library(args.library)
-        factory = session
+        factory = (
+            functools.partial(session, enable_compile=False) if args.compile_head else session
+        )
+        if args.compile_head:
+            head_factory = functools.partial(session, enable_compile=True)
     elif args.library:
         parser.error("--library requires --provider mlx")
     options = {
         "session_factory": factory,
+        "head_session_factory": head_factory,
         "fused_ops": args.fused_ops,
+        "nf4": args.nf4,
         "adam_epsilon": args.adam_epsilon,
         "real": args.real,
         "cache_dir": args.cache_dir,
@@ -738,6 +797,10 @@ def main():
     )
     report.update(
         provider=args.provider,
+        compile_head=args.compile_head,
+        session_policy="eager_decoder_compiled_head"
+        if args.compile_head
+        else "runtime_default",
         dtype="float32",
         library_sha256=library_sha256,
         source_commit=source_commit,

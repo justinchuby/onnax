@@ -276,3 +276,38 @@ def test_tiny_qwen_adapters_updates_and_context_gradients_match_full_head(factor
         }
     finally:
         handle.remove()
+
+
+@pytest.mark.parametrize("close_fails", [False, True])
+def test_custom_head_sessions_are_closed_and_files_released(close_fails):
+    closed = []
+
+    class ClosingSession:
+        def __init__(self, source):
+            self.runtime = session(source)
+
+        def run(self, outputs, feeds):
+            return self.runtime.run(outputs, feeds)
+
+        def close(self):
+            closed.append(self)
+            self.runtime = None
+            if close_fails:
+                raise RuntimeError("custom head close failed")
+
+    head = ChunkedHead(
+        np.ones((16, 8), np.float32),
+        weight_layout="vocab_hidden",
+        session_factory=ClosingSession,
+    )
+    head.forward(torch.ones((1, 2, 8)))
+    temporary = head.directory.name
+    if close_fails:
+        with pytest.raises(RuntimeError, match="custom head close failed"):
+            head.close()
+    else:
+        head.close()
+    assert len(closed) == 2 and len({id(value) for value in closed}) == 2
+    assert not os.path.exists(temporary)
+    head.close()
+    assert len(closed) == 2

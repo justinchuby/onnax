@@ -17,9 +17,11 @@ from examples.huggingface.shared_vjp import shared_activation_audit
 
 @pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
 @pytest.mark.parametrize("ignored", [False, True])
-def test_shared_activation_gradients_and_caller_state(family, ignored):
+@pytest.mark.parametrize("nf4", [False, True])
+@pytest.mark.parametrize("head_chunk_size", [None, 3])
+def test_shared_activation_gradients_and_caller_state(family, ignored, nf4, head_chunk_size):
     torch.set_num_threads(1)
-    model, reference = prepare(family)
+    model, reference = prepare(family, nf4=nf4, head_chunk_size=head_chunk_size)
     executions = model.onnx.executions
     original_modules = {
         row["module"]: reference.get_submodule(row["module"]) for row in model.mapping
@@ -37,11 +39,23 @@ def test_shared_activation_gradients_and_caller_state(family, ignored):
         data = batch()
         if ignored:
             data["labels"].fill_(-100)
+        original_head = model.head
+        previous_profile = original_head.last_profile if original_head is not None else None
         report = shared_activation_audit(model, reference, data)
+        assert model.head is original_head
+        if original_head is not None:
+            assert original_head.last_profile is previous_profile
         assert report["decoder_gradients_passed"]
         assert len(report["layers"]) == model.config.num_hidden_layers
         assert report["shifted_targets"] == (0 if ignored else 6)
-        assert report["frozen_suffix"]["pairwise"]["pointwise_violations"] == 0
+        if head_chunk_size is None:
+            assert report["frozen_suffix"]["pairwise"]["pointwise_violations"] == 0
+            assert report["output_head"] is None
+        else:
+            assert report["frozen_suffix"]["normalization"]["pointwise_violations"] == 0
+            for row in report["output_head"].values():
+                assert row["loss"]["pointwise_violations"] == 0
+                assert row["hidden_gradient"]["pointwise_violations"] == 0
         assert all(
             row["forward_valid_tokens"]["pointwise_violations"] == 0
             for row in report["layers"]
@@ -87,10 +101,12 @@ def test_mismatched_local_derivative_is_reported():
         model.close()
 
 
-def test_exception_removes_reference_hooks_and_restores_sessions(monkeypatch):
+@pytest.mark.parametrize("head_chunk_size", [None, 3])
+def test_exception_removes_reference_hooks_and_restores_sessions(monkeypatch, head_chunk_size):
     import examples.huggingface.shared_vjp as audit_module
 
-    model, reference = prepare("qwen35")
+    model, reference = prepare("qwen35", head_chunk_size=head_chunk_size)
+    original_head = model.head
     executions = model.onnx.executions
     original_modules = {
         row["module"]: reference.get_submodule(row["module"]) for row in model.mapping
@@ -104,6 +120,7 @@ def test_exception_removes_reference_hooks_and_restores_sessions(monkeypatch):
         with pytest.raises(RuntimeError, match="injected reference"):
             shared_activation_audit(model, reference, batch())
         assert model.onnx.executions is executions
+        assert model.head is original_head
         assert all(not layer._forward_hooks for layer in reference.model.layers)
         assert all(not layer._forward_pre_hooks for layer in reference.model.layers)
         assert all(
@@ -123,4 +140,26 @@ def test_grouped_checkpoints_rejected_before_recording():
             shared_activation_audit(model, reference, batch())
         assert model.onnx.executions is executions
     finally:
+        model.close()
+
+
+def test_bounded_head_mismatch_is_separated_from_decoder_vjps():
+    model, reference = prepare("phi3", nf4=True, head_chunk_size=3)
+    original = model.head
+
+    class ChangedObjective:
+        def __getattr__(self, name):
+            return getattr(original, name)
+
+        def __call__(self, hidden, labels, num_items=None):
+            return original(hidden, labels, num_items) + hidden.sum() * 0.01
+
+    model.head = ChangedObjective()
+    try:
+        report = shared_activation_audit(model, reference, batch())
+        assert report["decoder_gradients_passed"]
+        assert report["output_head"]["stock"]["loss"]["pointwise_violations"] > 0
+        assert report["output_head"]["stock"]["hidden_gradient"]["pointwise_violations"] > 0
+    finally:
+        model.head = original
         model.close()

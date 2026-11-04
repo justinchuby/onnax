@@ -1,0 +1,32 @@
+import json,os,subprocess,time
+from pathlib import Path
+root=Path('/tmp/onnax-generic-nf4-real-followup');root.mkdir(exist_ok=False)
+first=Path('/tmp/onnax-generic-nf4-real-qwen35');guard=Path(str(first)+'-guard')
+python='/Users/justinc/Documents/GitHub/onnax/.venv/bin/python';lib='/tmp/onnax-key-tiles-runtime/libonnxruntime_mlx_ep.dylib'
+env={**os.environ,'PYTHONPATH':'src:.','HF_HUB_OFFLINE':'1','HF_DATASETS_OFFLINE':'1','ONNAX_TILED_ATTENTION':'1','ONNXRUNTIME_EP_MLX_NO_COMPILE':'1','ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES':'0'}
+def record(d):
+ (root/'status.json').write_text(json.dumps(d,indent=2)+'\n');print(json.dumps(d),flush=True)
+record({'phase':'waiting_training','pid':72479})
+deadline=time.monotonic()+10800
+while True:
+ assert time.monotonic()<deadline,'Training observation deadline; leave live worker unchanged'
+ d=json.loads((guard/'execution.json').read_text())
+ if d['status']!='running':
+  assert d['status']=='complete' and d['returncode']==0,d
+  break
+ os.kill(d['pid'],0)
+ time.sleep(15)
+report=json.loads((first/'report.json').read_text());assert report['steps']==30 and len(report['quantization']['weights'])==186
+assert report['training_loss'][1]<report['training_loss'][0] and report['validation_loss'][1]<report['validation_loss'][0]
+def run(phase,worker):
+ command=[python,'-m','examples.huggingface.guard','--output-dir','/tmp/onnax-generic-nf4-real-'+phase+'-guard','--',python,*worker]
+ with open(root/(phase+'.log'),'w') as log:
+  child=subprocess.Popen(command,cwd='/tmp/onnax-generic-nf4',env=env,stdout=log,stderr=subprocess.STDOUT)
+  record({'phase':phase,'pid':child.pid});code=child.wait()
+ if code:record({'phase':'failed','stage':phase,'returncode':code});raise SystemExit(code)
+resumed='/tmp/onnax-generic-nf4-real-qwen35-resume'
+run('resume',['/tmp/onnax-generic-nf4-real-driver.py','--family','qwen35','--real','--cache-dir','/tmp/onnax-qwen35-real-cache','--nf4','--head-chunk-size','128','--fused-ops','--provider','mlx','--library',lib,'--steps','30','--max-length','64','--resume',str(first/'checkpoint-15'),'--load-export',str(first/'export'),'--output-dir',resumed])
+run('replay',['/tmp/onnax-generic-nf4-real-replay-driver.py','--uninterrupted',str(first),'--resumed',resumed,'--step','30','--provider','mlx','--library',lib,'--output','/tmp/onnax-generic-nf4-real-replay.json'])
+r=json.loads(Path('/tmp/onnax-generic-nf4-real-replay.json').read_text())
+for key in ('checkpoint_bitwise_equal','optimizer_bitwise_equal','scheduler_equal','adapter_bitwise_equal','export_load_loss_gradients_bitwise_equal','standalone_outputs_bitwise_equal'):assert r[key],key
+record({'phase':'qualified','training_loss':report['training_loss'],'validation_loss':report['validation_loss'],'gradient_tensors':r['exported_gradient_tensors'],'onnx_models_checked':r['onnx_models_checked']})

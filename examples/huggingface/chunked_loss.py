@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 """Bounded-token ONNX LM-head loss and hidden-state derivatives."""
 
+import contextlib
 import json
 import os
 import tempfile
@@ -257,10 +258,23 @@ class ChunkedHead:
             raise RuntimeError("The output head is closed")
 
     def close(self):
+        if self._closed:
+            return
         self._closed = True
+        sessions = {id(value): value for value in (self.executor, self.forward_executor)}
         self.executor = self.forward_executor = None
-        if hasattr(self, "directory"):
-            self.directory.cleanup()
+        try:
+            with contextlib.ExitStack() as resources:
+                for value in sessions.values():
+                    close = getattr(value, "close", None)
+                    if close is not None:
+                        resources.callback(close)
+                # Drop runtime references before removing external tensor files.
+                close = value = None
+                sessions.clear()
+        finally:
+            if hasattr(self, "directory"):
+                self.directory.cleanup()
 
     def forward(self, hidden):
         self._ensure_open()

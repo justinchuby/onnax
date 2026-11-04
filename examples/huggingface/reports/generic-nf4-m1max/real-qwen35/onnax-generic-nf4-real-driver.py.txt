@@ -1,0 +1,7 @@
+from examples.huggingface.long_context import memory_limit
+from examples.lora.mlx_runtime import register_library
+LIBRARY='/tmp/onnax-key-tiles-runtime/libonnxruntime_mlx_ep.dylib'
+register_library(LIBRARY)
+memory_limit(LIBRARY,20*1024**3)
+from examples.huggingface.decoder_sft import main
+main()

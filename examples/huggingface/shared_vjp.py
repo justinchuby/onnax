@@ -17,6 +17,7 @@ from examples.huggingface.decoder_families import FAMILIES, reference_model
 from examples.huggingface.decoder_sft import OnnxDecoder, batch, text_batch
 from examples.huggingface.pretrained import PretrainedSource, load_reference, load_tokenizer
 from examples.huggingface.reference_head import pairwise_head
+from examples.huggingface.sft import token_loss
 from examples.huggingface.validation import add_reference_parameters
 
 RTOL, ATOL = 1e-4, 1e-6
@@ -37,6 +38,43 @@ class _RecordingSession:
             name: value.copy() for name, value in zip(outputs, values, strict=True)
         }
         return values
+
+
+class _RecordingHead:
+    def __init__(self, original, record, handles):
+        self.original, self.record, self.handles = original, record, handles
+
+    def __call__(self, hidden, labels, num_items=None):
+        self.record.update(
+            hidden=hidden.detach().clone(), labels=labels.detach().clone(), num_items=num_items
+        )
+
+        def incoming(gradient):
+            self.record["gradient"] = gradient.detach().clone()
+
+        self.handles.append(hidden.register_hook(incoming))
+        result = self.original(hidden, labels, num_items)
+        self.record["loss"] = result.detach().clone()
+        return result
+
+    def forward(self, hidden):
+        return self.original.forward(hidden)
+
+
+def _head_audit(reference, captured):
+    reports = {}
+    for method in ("stock", "pairwise"):
+        hidden = captured["hidden"].clone().requires_grad_(True)
+        context = pairwise_head(reference) if method == "pairwise" else nullcontext()
+        with context:
+            logits = reference.lm_head(hidden)
+            loss = token_loss(logits, captured["labels"], captured["num_items"])
+            gradient = torch.autograd.grad(loss, hidden)[0]
+        reports[method] = {
+            "loss": _compare(loss, captured["loss"]),
+            "hidden_gradient": _compare(gradient, captured["gradient"]),
+        }
+    return reports
 
 
 def _compare(actual, expected):
@@ -173,6 +211,11 @@ def shared_activation_audit(model, reference, data):
         ),
     ]
     handles = []
+    original_head = getattr(model, "head", None)
+    captured_head = {}
+    previous_profile = original_head.last_profile if original_head is not None else None
+    if original_head is not None:
+        model.head = _RecordingHead(original_head, captured_head, handles)
     try:
         with torch.enable_grad(), _reference_adapters(reference, model):
             actual = model(**data)
@@ -217,12 +260,25 @@ def shared_activation_audit(model, reference, data):
             ).requires_grad_(True)
             seed = torch.from_numpy(record["feeds"][execution.seeds[0]])
             head = {}
-            for method in ("stock", "pairwise"):
-                context = pairwise_head(reference) if method == "pairwise" else nullcontext()
-                with context:
-                    logits = reference.lm_head(reference.model.norm(hidden))
-                    gradient = torch.autograd.grad(logits, hidden, grad_outputs=seed)[0]
-                head[method] = _compare(gradient, record["gradients"][execution.gradients[0]])
+            output_head = None
+            if original_head is not None:
+                normalized = reference.model.norm(hidden)
+                gradient = torch.autograd.grad(normalized, hidden, grad_outputs=seed)[0]
+                head["normalization"] = _compare(
+                    gradient, record["gradients"][execution.gradients[0]]
+                )
+                output_head = _head_audit(reference, captured_head)
+            else:
+                for method in ("stock", "pairwise"):
+                    context = (
+                        pairwise_head(reference) if method == "pairwise" else nullcontext()
+                    )
+                    with context:
+                        logits = reference.lm_head(reference.model.norm(hidden))
+                        gradient = torch.autograd.grad(logits, hidden, grad_outputs=seed)[0]
+                    head[method] = _compare(
+                        gradient, record["gradients"][execution.gradients[0]]
+                    )
         return {
             "version": 1,
             "family": model.family,
@@ -239,11 +295,15 @@ def shared_activation_audit(model, reference, data):
             ),
             "layers": reports,
             "frozen_suffix": head,
+            "output_head": output_head,
         }
     finally:
         for handle in handles:
             handle.remove()
         model.onnx.executions = executions
+        if original_head is not None:
+            model.head = original_head
+            original_head.last_profile = previous_profile
 
 
 def main():
@@ -280,6 +340,12 @@ def main():
             data = text_batch(load_tokenizer(source, cache_dir=args.cache_dir))
         else:
             reference, data = reference_model(model.family), batch()
+        if model.quantization is not None:
+            from examples.huggingface.nf4 import quantize_reference
+
+            quantize_reference(
+                reference, mapping=model.mapping, block_size=model.quantization["block_size"]
+            )
         report = shared_activation_audit(model, reference, data)
         with open(__file__, "rb") as stream:
             source_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()

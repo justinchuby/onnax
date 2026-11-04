@@ -77,6 +77,72 @@ Training and audits use Adam epsilon `1e-5` and compare values at
 `rtol=1e-4, atol=1e-6`. The [Adam conditioning example](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/phi3-fused-adam-conditioning.json)
 includes a scalar replay of small-gradient updates.
 
+## Packed NF4 bases
+
+Add `--nf4` to store frozen decoder Linear weights as packed NF4 while keeping
+adapters, gradients and optimizer state in FP32:
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family phi3 --nf4 --head-chunk-size 128 --steps 30 \
+  --output-dir /tmp/phi3-nf4
+```
+
+The same option applies to Qwen3 and Qwen3.5. The source mapping checks that
+all decoder Linear weights are covered before quantization. Phi-3's Q/K/V
+pieces map back to slices of its fused QKV source weight; each graph piece
+keeps its own row-major NF4 blocks. Qwen3.5's linear-attention projections use
+the same mapping. Embeddings, normalization, recurrent convolutions and the
+output head retain FP32 weights.
+
+The independent Transformers reference reconstructs exactly those stored
+weight values. Audits compare logits, token loss, every adapter gradient and
+multiple AdamW updates, then exchange adapters through PEFT. Adapter files
+record the base quantization alongside the source parameter mapping.
+Export/load preserves the NF4 graph and its mapping; repeat `--nf4` when
+resuming a checkpoint or loading an exported task.
+
+The [offline MLX qualification reports](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/generic-nf4-m1max)
+cover six independent AdamW updates and PEFT exchange for all three families.
+Tiny Qwen3.5 also completes 100 SFTTrainer updates: training loss falls from
+5.581 to 5.127 and validation loss from 5.623 to 5.429. A fresh process resumes
+from step 50 with bitwise-equal final adapters and optimizer state. Reloaded
+ONNX loss, all ten adapter gradients and standalone logits match the continuous
+run exactly. Its 31 frozen Linear projections occupy 93,024 packed/scale bytes,
+compared with 661,504 FP32 bytes.
+
+The same path completes 30 MLX updates for the pinned Qwen3.5-0.8B checkpoint
+at sequence length 64, microbatch one and accumulation four. On the fixed
+version-controlled corpus, train loss changes from 5.361 to 0.303 and validation
+loss from 6.145 to 5.813. Its 186 frozen Linear projections use 279.9 MB of NF4
+codes/scales instead of 1,990.5 MB of FP32 weights. Embeddings and the head are
+stored separately in FP32.
+
+A fresh process resumes from step 15 using `--load-export` to reuse the exported
+ONNX graphs. Final adapters, AdamW, scheduler, loaded loss, all 60 adapter
+gradients and standalone logits are bitwise equal to continuous training.
+The full checker validates 57 exported models per run.
+[Pretrained reports and reproduction drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/generic-nf4-m1max/real-qwen35)
+record the source revision, input batches, memory scope and runtime hashes.
+
+### Compile the output head independently
+
+With MLX, add `--compile-head` to compile the chunked loss/gradient and logits
+sessions while keeping decoder checkpoints eager:
+
+```sh
+ONNXRUNTIME_EP_MLX_NO_COMPILE=0 python -m examples.huggingface.decoder_sft \
+  --family qwen35 --nf4 --head-chunk-size 128 --compile-head \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --output-dir /tmp/qwen35-compiled-head
+```
+
+The same policy applies when auditing, resuming or loading an exported task.
+Python callers can supply `session_factory` for the decoder and a separate
+`head_session_factory` to `prepare`, `audit`, `run` or `OnnxDecoder.load`.
+Sessions are reused, including the lazy full-logits session. Exported graphs
+and parameter identities stay the same across these execution choices.
+
 ## Train and restore with TRL
 
 ```sh
@@ -106,6 +172,25 @@ python -m examples.huggingface.decoder_sft \
 This path uses the version-controlled text corpus and local tokenizer. The
 [recurrent tutorial](qwen35-training.md) explains the model update and the
 standalone token-pattern qualification.
+
+Resume into another output directory:
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family phi3 --steps 30 \
+  --resume /tmp/phi3-training/checkpoint-15 \
+  --output-dir /tmp/phi3-resumed
+```
+
+The regression suite compares fresh-process recovery against continuous training,
+including final parameters, loss and AdamW state. A different decoder family is
+rejected before graph construction; graph and parameter identities also participate
+in checkpoint validation.
+
+The export contains `config.json`, `task.json`, and an `execution/` bundle with the
+source graph, bound inference graph, parameter arrays and block forward/VJP graphs.
+`OnnxDecoder.load(export_directory)` executes the saved derivatives. The separate
+`adapter/` directory contains standard PEFT configuration and safetensors.
 
 ### Load a pretrained text backbone
 
@@ -194,6 +279,13 @@ participate in the loss. The tool preserves existing ONNX parameter gradients
 and restores execution sessions after the audit. Its recording copies belong
 to diagnostic memory usage; run performance timing separately.
 
+For NF4 exports, the CLI reconstructs the corresponding frozen source weight
+slices before comparing local derivatives. With a chunked head, it records the
+normalization VJP and the external head's loss/hidden gradient separately. The
+head receives the same hidden states, labels and effective target count.
+Audits supply explicit position IDs and compare valid-token predictions;
+padded predictions remain visible in the diagnostic report.
+
 The suffix has two independent FP32 controls: the native CPU PyTorch head
 backward and a head backward that sums 128-element partial products with a
 binary tree. Both use the same activation and loss cotangent. These controls
@@ -206,24 +298,25 @@ For the suffix, ordinary CPU head accumulation gives relative gradient L2
 `1.66e-4`; FP32 pairwise accumulation gives `3.63e-6` and passes the elementwise
 gate. The report includes every layer's forward and gradient comparisons.
 
-Resume into another output directory:
+The [pretrained NF4 controls](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/generic-nf4-m1max/real-qwen35/reference)
+start from the trained adapter state and use two diagnostic sentences. Initial
+valid-token logits have relative L2 difference `3.12e-6`. The shared-input local
+VJPs report three out-of-tolerance elements in layer 15's `q_proj` B gradient,
+with relative L2 difference `5.21e-6`. Normalization gradients pass the original
+elementwise check. For the external vocabulary head, pairwise FP32 accumulation
+reduces hidden-gradient violations from 46 to one.
 
-```sh
-python -m examples.huggingface.decoder_sft \
-  --family phi3 --steps 30 \
-  --resume /tmp/phi3-training/checkpoint-15 \
-  --output-dir /tmp/phi3-resumed
-```
+Three independent fresh AdamW updates give these losses:
 
-The regression suite compares fresh-process recovery against continuous training,
-including final parameters, loss and AdamW state. A different decoder family is
-rejected before graph construction; graph and parameter identities also participate
-in checkpoint validation.
+| Update input state | ONNX / MLX | Transformers |
+| --- | ---: | ---: |
+| Trained adapter | 5.507835 | 5.507665 |
+| After one update | 1.640609 | 1.640494 |
+| After two updates | 0.339562 | 0.339462 |
 
-The export contains `config.json`, `task.json`, and an `execution/` bundle with the
-source graph, bound inference graph, parameter arrays and block forward/VJP graphs.
-`OnnxDecoder.load(export_directory)` executes the saved derivatives. The separate
-`adapter/` directory contains standard PEFT configuration and safetensors.
+After three updates, the largest parameter difference is `2.32e-3` and valid-logit
+relative L2 difference is `1.77e-4`. The reports include every gradient and update
+comparison, retaining `rtol=1e-4, atol=1e-6` and its violation counts.
 
 ## Train with a bounded output head
 
