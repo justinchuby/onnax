@@ -1,0 +1,31 @@
+import hashlib
+import json
+from pathlib import Path
+import numpy as np
+prefix = Path('/tmp')
+mps = json.loads((prefix/'onnax-qwen35-bf16-reference-benchmark64.json').read_text())
+native = json.loads((prefix/'onnax-qwen35-bf16-native-benchmark64.json').read_text())
+for key in ('input_sha256', 'adapter_sha256'):
+    assert mps[key] == native[key], key
+assert native['parameters_unchanged']
+assert len(native['samples']) == len(mps['samples']) == 100
+assert native['warmup_steps'] == mps['warmup'] == 10
+rows = {}
+with np.load(prefix/'onnax-qwen35-bf16-reference-benchmark64.json.npz') as a, np.load(prefix/'onnax-qwen35-bf16-native-benchmark64.npz') as b:
+    assert set(a.files) == set(b.files) | {'loss'}
+    assert len(b.files) == 60
+    for name in b.files:
+        actual, expected = b[name].astype(np.float64), a[name].astype(np.float64)
+        assert np.isfinite(actual).all() and np.isfinite(expected).all()
+        error = actual - expected
+        denominator = np.linalg.norm(expected)
+        product = np.linalg.norm(actual) * denominator
+        rows[name] = {'max_abs': float(np.max(np.abs(error))), 'relative_l2': float(np.linalg.norm(error)/denominator) if denominator else None, 'cosine': float(np.vdot(actual, expected)/product) if product else None, 'fp32_allclose': bool(np.allclose(actual, expected, rtol=1e-4, atol=1e-6))}
+a = mps['timings']['total_seconds']; b = native['summary']['gradient_step_seconds']
+report = {'input_sha256':mps['input_sha256'],'adapter_sha256':mps['adapter_sha256'],'scope':'64 tokens, batch1, BF16 projections, NF4 frozen decoder, FP32 adapters/adjoints; head128; checkpoint1; fixed parameters; forward/loss/backward plus output exchange; 10 warmup,100 samples','mps_seconds':a,'native_seconds':b,'native_throughput_ratio':a['median']/b['median'],'mps_loss':mps['losses'][0],'native_loss':native['samples'][0]['loss'],'gradient_count':len(rows),'gradients':rows,'gradient_summary':{'fp32_allclose_count':sum(r['fp32_allclose'] for r in rows.values()),'median_relative_l2':float(np.median([r['relative_l2'] for r in rows.values() if r['relative_l2'] is not None]))},'reference_storage':mps['frozen_weight_storage']}
+for name in ['mps','native']:
+    path = prefix/f'onnax-qwen35-bf16-{"reference" if name=="mps" else "native"}-benchmark64-guard/execution.json'
+    guard = json.loads(path.read_text()); assert guard['status']=='complete' and guard['returncode']==0
+    report[name+'_peak_physical_bytes'] = max(o['peak_bytes'] for o in guard['observations'])
+(prefix/'onnax-qwen35-bf16-benchmark64-comparison.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps({k:v for k,v in report.items() if k!='gradients'},indent=2))

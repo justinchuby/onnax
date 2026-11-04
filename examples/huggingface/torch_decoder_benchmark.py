@@ -17,12 +17,15 @@ import torch
 
 from examples.huggingface.benchmark import hardware
 from examples.huggingface.decoder_families import reference_model
+from examples.huggingface.mixed_precision import reference_projections
+from examples.huggingface.nf4 import quantize_reference
 from examples.huggingface.torch_context import (
     checkpoint_decoder,
     chunked_token_loss,
     synchronize,
 )
 from examples.huggingface.validation import add_reference_parameters
+from examples.lora.nf4 import CODEBOOK
 
 
 def _digest(path):
@@ -48,10 +51,22 @@ def reference_from_export(directory, *, cache_dir=None):
     config = json.loads((directory / "config.json").read_text())
     if task.get("version") not in (1, 2):
         raise ValueError("Expected an exported decoder task")
-    if task.get("quantization") is not None or config.get("onnax_quantization") is not None:
-        raise ValueError("This FP32 control requires an unquantized task")
-    if config.get("onnax_precision", {}).get("projection_compute", "float32") != "float32":
-        raise ValueError("This FP32 control requires FP32 projection compute")
+    quantization = task.get("quantization")
+    if quantization != config.get("onnax_quantization"):
+        raise ValueError("Decoder quantization differs from the saved configuration")
+    dtype = config.get("onnax_precision", {}).get("projection_compute", "float32")
+    if dtype not in ("float32", "bfloat16", "float16"):
+        raise ValueError("Unknown projection compute dtype")
+    if quantization is not None:
+        if (
+            quantization.get("format") != "onnax-row-major-nf4-v1"
+            or quantization.get("codebook") != CODEBOOK.tolist()
+            or quantization.get("compute_dtype") != dtype
+            or isinstance(quantization.get("block_size"), bool)
+            or not isinstance(quantization.get("block_size"), int)
+            or quantization["block_size"] < 1
+        ):
+            raise ValueError("Unsupported NF4 reference policy")
     execution = directory / "execution"
     interface = json.loads((execution / "interface.json").read_text())
     if interface.get("version") != 1 or interface.get("kind") != "checkpointed_vjp":
@@ -94,7 +109,16 @@ def reference_from_export(directory, *, cache_dir=None):
             layer.out_features,
         ):
             raise ValueError("Adapter shape differs from its source projection")
+    if quantization is not None:
+        quantize_reference(
+            reference, mapping=task["mapping"], block_size=quantization["block_size"]
+        )
     add_reference_parameters(reference, arrays, task["mapping"])
+    if dtype != "float32":
+        reference_projections(
+            reference, precision={"bfloat16": "bf16", "float16": "fp16"}[dtype]
+        )
+    reference.config.onnax_precision = config.get("onnax_precision", {})
     return reference, task, arrays
 
 
@@ -139,6 +163,10 @@ def measure(
         Path(__file__).with_name("torch_context.py"),
         Path(__file__).with_name("decoder_families.py"),
         Path(__file__).with_name("validation.py"),
+        Path(__file__).with_name("mixed_precision.py"),
+        Path(__file__).with_name("nf4.py"),
+        Path(__file__).parents[1] / "lora" / "nf4.py",
+        Path(__file__).parents[1] / "torch_precision.py",
         Path(__file__).with_name("pretrained.py"),
         Path(__file__).with_name("qwen35.py"),
         Path(directory) / "task.json",
@@ -218,6 +246,15 @@ def measure(
         "gradient_count": len(gradients),
         "samples": records,
         "dtype": "float32",
+        "projection_compute": getattr(model.config, "onnax_precision", {}).get(
+            "projection_compute", "float32"
+        ),
+        "frozen_weight_storage": (
+            "NF4 values dequantized into FP32 reference parameters"
+            if task.get("quantization") is not None
+            else "float32"
+        ),
+        "autocast": False,
         "threads": 1,
         "effective_tokens": int((batch["labels"][:, 1:] != -100).sum()),
         "input_sha256": digest_arrays(batch),
