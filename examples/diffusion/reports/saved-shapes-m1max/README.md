@@ -38,3 +38,28 @@ retained byte counts and the complete shape-compression plan.
 The recorded measurements use driver commit `fca005d` and native source
 `c7fa4e4`. The current CLI reads only the pinned scheduler configuration during
 setup, eliminating the earlier unused PyTorch UNet weight load.
+
+## Public training bridge
+
+`public-module.json` qualifies `onnax.torch.OnnxModule(save_activations=True)`
+on the same pretrained UNet and cached image batch. Its predictions and all 72
+adapter gradients match the whole-VJP graph at `rtol=1e-4, atol=1e-6`.
+The external PyTorch MSE supplies the backward seed. The module retains
+744,177,304 bytes of activation arrays; the independent process reaches a
+4.706 GB physical-footprint peak including graph construction, the whole-VJP
+control and the public forward/backward execution. All three generated graphs
+pass the full ONNX checker, and the source inputs and adapters remain unchanged.
+
+Reproduce using the artifacts from the preceding shape-vector experiment:
+
+```sh
+HF_HUB_OFFLINE=1 ONNXRUNTIME_EP_MLX_NO_COMPILE=0 \
+ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES=536870912 \
+python -m examples.huggingface.guard --output-dir public-saved-guard -- \
+  python -m examples.diffusion.qualify_saved \
+  --source-dir /tmp/onnax-unet-pretrained-qualification-v2 \
+  --batch-file /tmp/onnax-unet-real-images-512/example-0.pt \
+  --golden-path /tmp/onnax-unet-saved-vector-shapes-measured/joint.onnx \
+  --library /tmp/onnax-shape-vector-runtime/libonnxruntime_mlx_ep.dylib \
+  --output public-saved.json
+```
