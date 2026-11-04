@@ -107,7 +107,7 @@ The same products can diagnose a fine-tuning model. For the
 loss as $L=\|f(A,B)-y\|^2/N$, where $N$ counts prediction elements.
 
 ```sh
-uv sync --group dev --group training --group huggingface
+uv sync --group dev --group training --extra torch
 uv run python -m examples.lora.curvature --output-dir adapter-curvature
 ```
 
