@@ -19,6 +19,35 @@ AdamW moments in FP32. `--precision bf16` uses BF16 projection arithmetic with
 FP32 boundaries and adjoints. The frozen decoder uses packed NF4 weights.
 Trainer owns updates, gradient accumulation and checkpoint storage.
 
+
+(current-4k-performance)=
+
+## Current 4K performance
+
+Native attention pullbacks, NF4 GEMM execution and cached frozen-weight layouts
+reduce the complete 4096-token training step to the following times on an
+M1 Max with 32 GiB memory:
+
+| Projection compute | ONNX / MLX median / P95 | PyTorch / MPS eager median / P95 | Throughput ratio (ONNX / PyTorch) |
+| --- | ---: | ---: | ---: |
+| FP32 | 8.61 / 8.89 s | 9.10 / 9.13 s | 1.057× |
+| BF16 | 9.64 / 10.45 s | 10.47 / 10.51 s | 1.086× |
+
+Each run uses microbatch 1, 4095 valid shifted targets, four-layer checkpoint
+groups, 128-token head chunks, 10 warmups and 100 measured updates. The step
+includes forward, loss, backward, array exchange and external FP32 AdamW.
+ONNX keeps packed NF4 weights; PyTorch uses the same reconstructed weight values
+in dense storage. Whole-process peak physical footprint is 14.32 / 12.89 GiB
+for FP32 (ONNX / PyTorch), and 14.15 / 14.51 GiB for BF16.
+
+The [native-pullback measurements](m1-max-measurements)
+include reproduction commands and the full evidence report. The 21.12 s FP32
+and 20.73 s BF16 results later on this page describe the earlier execution path.
+
+In the updated FP32 run, decoder execution accounts for 7.63 s and the chunked
+output-head loss/gradient computation for 0.97 s; AdamW takes 2.38 ms.
+Further speed work should target decoder execution and the vocabulary projection.
+
 ## Prepare complete long examples
 
 The pinned LongAlpaca revision supplies complete QA pairs. Selection preserves
@@ -124,6 +153,9 @@ PEFT exchange preserved all 112 adapter arrays under both policies; the stable F
 control aligned all adapter gradients at rtol=1e-4 and atol=1e-6.
 
 ## Strategy measurements
+
+These measurements use the earlier execution path. See
+[current 4K performance](current-4k-performance) for the native-pullback results.
 
 The M1 Max measurements below use packed NF4 decoder weights, microbatch 1
 and 128-token output-head chunks. Each strategy
@@ -260,6 +292,10 @@ Use fixed input tokens, precision and batch size when comparing strategies.
 ## PyTorch CPU and MPS baselines
 
 ### Recorded M1 Max runs
+
+This table records the earlier execution path. The
+[current comparison](current-4k-performance) includes native attention pullbacks
+and frozen-weight layout caching.
 
 All rows use batch one, 4095 valid shifted targets, four-layer decoder groups,
 128-token head chunks, 10 warmups and 100 measured updates.
