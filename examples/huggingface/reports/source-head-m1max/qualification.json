@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "source_commit": "50280a6738bca01b17eb9df644d47b62406ace09",
+  "native_repository": "https://github.com/onnxruntime/onnxruntime-ep-mlx",
+  "native_reviewed_commit": "5ca69b92b5c1eda6281e4241b9a4b4c364c03221",
+  "native_merge_commit": "34253be9554a39883bb613e70f580d5aad842804",
+  "native_library_sha256": "c32f3a97d966530a5a46c6ae23222a805a9b12e1324a9249a75690f7cc35f359",
+  "training_provider": "MLXExecutionProvider",
+  "session_policy": {
+    "body": "eager",
+    "head": "compiled_when_eligible"
+  },
+  "checks": {
+    "trainer.json": "Two tiny-Qwen3 SFTTrainer updates: independent reference logits, loss and adapter gradients; PEFT exchange.",
+    "recovery.json": "Two uninterrupted updates versus one update plus fresh-process checkpoint recovery. Export replay uses CPU ONNX Runtime."
+  },
+  "files": {
+    "recovery.json": "e8df298290cc45602c6766a4ac24509888f3eaa2b00dfb8c8ec7333ab0e988e6",
+    "trainer.json": "310ae9d392e239ac380f1f3e01b506196ca4d70e1e16ec87ac4dafa45d5b5df5"
+  }
+}

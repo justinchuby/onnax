@@ -72,7 +72,12 @@ def measure(
     validate_updates=False,
     torch_mps_memory_limit_bytes=None,
     fused_ops=False,
+    compile_head=False,
 ):
+    if compile_head and (provider != "mlx" or mode != "chunked"):
+        raise ValueError("compile_head requires MLX chunked execution")
+    if compile_head and os.environ.get("ONNXRUNTIME_EP_MLX_NO_COMPILE", "") not in ("", "0"):
+        raise ValueError("compile_head requires ONNXRUNTIME_EP_MLX_NO_COMPILE=0 or unset")
     for name, value, minimum in (
         ("sequence_length", sequence_length, 2),
         ("chunk_size", chunk_size, 1),
@@ -170,6 +175,7 @@ def measure(
 
         factory = cpu_session
         native_construction = {}
+        head_selected_factory = None
         if provider == "mlx":
             from examples.lora.mlx_runtime import register_library
             from examples.lora.mlx_runtime import session as mlx_session
@@ -178,11 +184,12 @@ def measure(
                 register_library(library)
             selected = functools.partial(mlx_session, target_nodes=segment_nodes)
 
-            def factory(source):
+            def factory(source, *, enable_compile=None):
                 before = time.perf_counter()
-                executor = selected(source)
+                executor = selected(source, enable_compile=enable_compile)
                 native_construction[f"session_{len(native_construction)}"] = {
                     "factory_seconds": time.perf_counter() - before,
+                    "enable_compile": enable_compile,
                     "segments": len(executor.segments) if segment_nodes is not None else 1,
                     "source": "protobuf bytes"
                     if isinstance(source, bytes)
@@ -190,11 +197,15 @@ def measure(
                 }
                 return executor
 
+            if compile_head:
+                head_selected_factory = functools.partial(factory, enable_compile=True)
+                factory = functools.partial(factory, enable_compile=False)
+
         selected_factory = factory
 
         class TimedSession:
-            def __init__(self, source):
-                self.executor = selected_factory(source)
+            def __init__(self, source, *, factory=None):
+                self.executor = (selected_factory if factory is None else factory)(source)
                 self.name = os.path.basename(source) if isinstance(source, str) else "body"
                 if phase_observer is not None:
                     phase_observer("session_constructed", source=self.name)
@@ -224,6 +235,11 @@ def measure(
             nf4=nf4,
             projection_precision=projection_precision,
             session_factory=TimedSession,
+            head_session_factory=(
+                functools.partial(TimedSession, factory=head_selected_factory)
+                if head_selected_factory is not None
+                else None
+            ),
             fused_ops=fused_ops,
             **({"phase_observer": phase_observer} if phase_observer is not None else {}),
         )
@@ -371,6 +387,7 @@ def measure(
         if mode == "pytorch"
         else ("fused" if fused_ops else "decomposed"),
         "fused_ops": fused_ops,
+        "compile_head": compile_head,
         "synchronization": "MPS at each phase boundary"
         if device == "mps"
         else "synchronous CPU/ORT execution",
@@ -464,6 +481,11 @@ def measure(
                 if fn(ctypes.byref(value)) != 0:
                     raise RuntimeError("MLX memory query failed")
                 report["mlx_allocator"][name + "_bytes"] = value.value
+        report["mlx_session_compile_policy"] = (
+            {"body": "eager", "head": "compiled_when_eligible"}
+            if compile_head
+            else {"body": "process_default", "head": "process_default"}
+        )
         report["native_construction"] = native_construction
         report["cpu_fallback_disabled"] = True
         report["library"] = os.path.abspath(library) if library else "installed plugin"
@@ -484,6 +506,7 @@ def measure(
                 else {"forward": model.onnx.model, "backward": model.onnx.optimized_vjp}
             )
         if mode == "chunked":
+            report["head_weight_layout"] = model.head.weight_layout
             executed_graphs["head_backward"] = model.head.gradient
             report["head_forward_session_created"] = model.head.forward_executor is not None
             if model.head.forward_executor is not None:
@@ -574,6 +597,7 @@ if __name__ == "__main__":
     parser.add_argument("--provider", choices=["cpu", "mlx"], default="cpu")
     parser.add_argument("--library", help="Development MLX EP library")
     parser.add_argument("--segment-nodes", type=int)
+    parser.add_argument("--compile-head", action="store_true")
     parser.add_argument("--samples", type=int, default=100)
     parser.add_argument(
         "--progress-every",
@@ -623,6 +647,7 @@ if __name__ == "__main__":
                     torch_attention=args.torch_attention,
                     progress_every=args.progress_every,
                     fused_ops=args.fused_ops,
+                    compile_head=args.compile_head,
                     checkpoint_layers=args.checkpoint_layers,
                     train_file=args.train_file,
                     save_activations=args.save_activations,
@@ -651,7 +676,7 @@ if __name__ == "__main__":
             if args.projection_precision != "fp32"
             else ("pytorch", "raw", "optimized", "saved", "chunked", "joint")
         )
-        if args.checkpoint_layers or args.save_activations:
+        if args.checkpoint_layers or args.save_activations or args.compile_head:
             modes = ("chunked",)
         if args.torch_chunked or args.torch_device != "cpu" or args.torch_attention != "eager":
             modes = ("pytorch",)
@@ -700,6 +725,8 @@ if __name__ == "__main__":
                 cmd.extend(["--mlx-memory-limit-gib", str(args.mlx_memory_limit_gib)])
             if args.train_file:
                 cmd.extend(["--train-file", args.train_file])
+            if args.compile_head:
+                cmd.append("--compile-head")
             if args.library:
                 cmd.extend(["--library", args.library])
             if args.segment_nodes:

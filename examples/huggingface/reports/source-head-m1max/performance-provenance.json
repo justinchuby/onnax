@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "scope": "Qwen3-0.6B FP32, NF4-rounded frozen decoder, 4096 tokens, batch 1, checkpoint groups of 4, head chunks of 128. Complete forward/loss/backward/exchange/AdamW steps.",
+  "warmup": 10,
+  "samples": 100,
+  "environment": {
+    "ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES": null,
+    "ONNAX_TILED_ATTENTION": "1",
+    "ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES": "1073741824"
+  },
+  "runs": {
+    "legacy": {
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "/tmp/onnax-source-head-full-worker.py",
+        "--output",
+        "/tmp/onnax-full-legacy-head-formal.json",
+        "--capture",
+        "--warmup",
+        "10",
+        "--samples",
+        "100",
+        "--library",
+        "/tmp/onnax-session-compile-runtime/libonnxruntime_mlx_ep.dylib"
+      ],
+      "cwd": "/private/tmp/onnax-source-head-baseline",
+      "ONNXRUNTIME_EP_MLX_NO_COMPILE": "1",
+      "guard_status": "complete",
+      "guard_returncode": 0,
+      "physical_memory_budget_bytes": 25769803776,
+      "minimum_free_disk_bytes": 5368709120,
+      "started": "2026-11-04T04:21:04.405810+00:00",
+      "finished": "2026-11-04T04:39:20.892769+00:00",
+      "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+      "observation_errors": 0,
+      "guard_observations": 1085,
+      "observed_peak_physical_footprint_bytes": 15573227880,
+      "minimum_observed_free_disk_bytes": 26855858176,
+      "guard_record_sha256": "313217a51136312e68861af503a0019ebf381681a7efb83c51517858dc27e947",
+      "peak_rss_bytes": 6543867904
+    },
+    "candidate": {
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "/tmp/onnax-source-head-full-worker.py",
+        "--output",
+        "/tmp/onnax-full-source-head-selective-formal.json",
+        "--capture",
+        "--compile-head",
+        "--warmup",
+        "10",
+        "--samples",
+        "100",
+        "--library",
+        "/tmp/onnax-session-compile-runtime/libonnxruntime_mlx_ep.dylib"
+      ],
+      "cwd": "/private/tmp/onnax-source-head",
+      "ONNXRUNTIME_EP_MLX_NO_COMPILE": "0",
+      "guard_status": "complete",
+      "guard_returncode": 0,
+      "physical_memory_budget_bytes": 25769803776,
+      "minimum_free_disk_bytes": 5368709120,
+      "started": "2026-11-04T04:40:35.488462+00:00",
+      "finished": "2026-11-04T04:58:02.899077+00:00",
+      "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+      "observation_errors": 0,
+      "guard_observations": 1037,
+      "observed_peak_physical_footprint_bytes": 13710121320,
+      "minimum_observed_free_disk_bytes": 22380859392,
+      "guard_record_sha256": "d12a9b01f270dff4bc69d6fe90898110f0e3c277db4d4a4c083c0a6d2f77a478",
+      "peak_rss_bytes": 5946933248
+    },
+    "pytorch_mps": {
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "/tmp/onnax-source-head-mps-worker.py"
+      ],
+      "cwd": "/private/tmp/onnax-source-head",
+      "started": "2026-11-04T04:58:03.145601+00:00",
+      "finished": "2026-11-04T05:15:15.646079+00:00",
+      "returncode": 0,
+      "physical_memory_budget_bytes": 25769803776,
+      "minimum_free_disk_bytes": 5368709120,
+      "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+      "observation_errors": 0,
+      "guard_record_sha256": "3b22f41c3778f5adb9e6231485f0fa6c4463e75fa215ccde3de946c72ff54555",
+      "observed_peak_physical_footprint_bytes": 13865339232
+    }
+  },
+  "files": {
+    "legacy-head.json": "d4f2e67089f9d9bc58dc8c12d9065b08100eb45481c4f99a9cba093380f60421",
+    "source-head-selective.json": "42c0f0a1e7e206c10dec454406a71f31561a5e7147a383d23f8b38c9cf289dd6",
+    "comparison.json": "713a71e0dc0d303f9a56069e023d36b2149d04c2551c3e36939e1cfd4f67725b",
+    "pytorch-mps.json": "038e6f30965fe5c54a03da3bd5a792aedc3d26157c5e13c38eac07070f261652"
+  },
+  "drivers": {
+    "onnx-driver.py.txt": "12077bf49b918bad6105974d670cc9ba478d59a3706b1dcb232c2255be611cd4",
+    "pytorch-driver.py.txt": "90686bf0ba72711c61fb5ea7f3fe87e07e9b3bdf0f82a77d00e50fceec59be3a"
+  },
+  "driver_replay": "Copy the archived driver to a .py file, provide the recorded corpus path, and run it from the corresponding source checkout with PYTHONPATH=src:.; ONNX driver arguments are recorded per run. The driver hash identifies the original measured script.",
+  "comparison": {
+    "onnx_vs_pytorch_eager_throughput_ratio": 1.1218069563004918,
+    "configuration_validation": "Complete; input digest, geometry, precision, versions, hardware and thread settings match. ONNX uses packed NF4; PyTorch uses the same reconstructed decoder weight values in dense storage."
+  }
+}

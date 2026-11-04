@@ -91,6 +91,12 @@ def test_peft_two_way_logits_gradients_and_update(tmp_path):
 def test_chunked_body_full_loss_and_adapter_gradients():
     full, _ = prepare()
     chunked, _ = prepare(mode="chunked", chunk_size=7)
+    assert chunked.head.weight_layout == "vocab_hidden"
+    for graph in (chunked.head.model, chunked.head.gradient, chunked.head.forward_model):
+        assert list(graph.graph.initializers["head.weight"].shape) == [
+            chunked.config.vocab_size,
+            chunked.config.hidden_size,
+        ]
     ids = torch.tensor([[1, 4, 5, 6, 2], [1, 7, 8, 0, 0]])
     mask = ids.ne(0).long()
     labels = ids.clone()

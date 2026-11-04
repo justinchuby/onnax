@@ -141,6 +141,7 @@ class OnnxQwen3(PreTrainedModel):
         checkpoint_layers=0,
         projection_precision="fp32",
         session_factory=session,
+        head_session_factory=None,
     ):
         super().__init__(config)
         self.loss_type = "ForCausalLM"
@@ -183,11 +184,15 @@ class OnnxQwen3(PreTrainedModel):
                 weight = rhs.producer().inputs[0].const_value.numpy().T
             else:
                 raise ValueError("Expected a frozen output projection")
+            layout = "vocab_hidden" if projection_precision == "fp32" else "hidden_vocab"
             self.head = ChunkedHead(
-                weight,
+                weight.T if layout == "vocab_hidden" else weight,
                 chunk_size=chunk_size,
                 projection_precision=projection_precision,
-                session_factory=session_factory,
+                weight_layout=layout,
+                session_factory=(
+                    session_factory if head_session_factory is None else head_session_factory
+                ),
             )
             body = model.clone()
             hidden = body.graph.outputs[1]
@@ -344,6 +349,7 @@ def prepare(
     nf4=False,
     projection_precision="fp32",
     session_factory=session,
+    head_session_factory=None,
     fused_ops=False,
     phase_observer=None,
 ):
@@ -375,6 +381,7 @@ def prepare(
         checkpoint_layers=checkpoint_layers,
         projection_precision=projection_precision,
         session_factory=session_factory,
+        head_session_factory=head_session_factory,
     )
     model.quantization = quantization
     model.projection_precision = projection_precision
@@ -574,9 +581,15 @@ def run(
     evaluate_train=False,
     callbacks=None,
     fused_ops=False,
+    compile_head=False,
     pad_to_multiple_of=None,
 ):
     _validate_checkpoints(mode, checkpoint_layers, save_activations)
+    if compile_head and (provider != "mlx" or mode != "chunked"):
+        raise ValueError("compile_head requires MLX chunked execution")
+    if compile_head and os.environ.get("ONNXRUNTIME_EP_MLX_NO_COMPILE", "") not in ("", "0"):
+        raise ValueError("compile_head requires ONNXRUNTIME_EP_MLX_NO_COMPILE=0 or unset")
+    head_runtime = None
     if checkpoint_layers and fp64_audit:
         raise ValueError("fp64_audit requires checkpoint_layers=0")
     reference_audit = bool(
@@ -603,7 +616,13 @@ def run(
 
         if library is not None:
             register_library(library)
-        runtime = functools.partial(mlx_session, target_nodes=segment_nodes)
+        runtime = functools.partial(
+            mlx_session,
+            target_nodes=segment_nodes,
+            enable_compile=False if compile_head else None,
+        )
+        if compile_head:
+            head_runtime = functools.partial(mlx_session, enable_compile=True)
     if fp64_audit and nf4:
         raise ValueError(
             "FP64 oracle expects an FP32 base; use the dequantized FP32 NF4 reference"
@@ -646,6 +665,7 @@ def run(
         nf4=nf4,
         projection_precision=projection_precision,
         session_factory=runtime,
+        head_session_factory=head_runtime,
         fused_ops=fused_ops,
     )
     _validate_max_length(max_length, limit=model.config.max_position_embeddings)
@@ -753,12 +773,20 @@ def run(
         "reference_retained_during_training": reference_audit,
         "quantization": model.quantization,
         "provider": provider,
+        "compile_head": compile_head,
         "segment_target_nodes": segment_nodes,
         "ort_graph_optimization": None if provider == "reference" else "disabled",
         "fused_ops": fused_ops,
         "frozen_buffers_unchanged": frozen_hashes(model.forward_graph) == initial_frozen,
     }
+    if mode == "chunked":
+        report["head_weight_layout"] = model.head.weight_layout
     if provider == "mlx":
+        report["mlx_session_compile_policy"] = (
+            {"body": "eager", "head": "compiled_when_eligible"}
+            if compile_head
+            else {"body": "process_default", "head": "process_default"}
+        )
         report["cpu_fallback_disabled"] = True
         report["mlx_compile_disabled"] = os.environ.get(
             "ONNXRUNTIME_EP_MLX_NO_COMPILE", ""
@@ -901,6 +929,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--library")
     parser.add_argument("--segment-nodes", type=int)
+    parser.add_argument("--compile-head", action="store_true")
     parser.add_argument(
         "--stable-reference",
         action="store_true",
@@ -932,6 +961,7 @@ if __name__ == "__main__":
                 fused_ops=args.fused_ops,
                 library=args.library,
                 segment_nodes=args.segment_nodes,
+                compile_head=args.compile_head,
                 stable_reference=args.stable_reference,
                 projection_precision=args.projection_precision,
             ),

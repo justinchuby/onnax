@@ -22,8 +22,10 @@ def register_library(path):
     _development_library = path
 
 
-def session(graph, *, profile_prefix=None, target_nodes=None):
+def session(graph, *, profile_prefix=None, target_nodes=None, enable_compile=None):
     """Load the optional plugin and require complete MLX provider assignment."""
+    if enable_compile is not None and not isinstance(enable_compile, bool):
+        raise TypeError("enable_compile must be bool or None")
     if target_nodes is not None:
         import onnx
 
@@ -37,7 +39,14 @@ def session(graph, *, profile_prefix=None, target_nodes=None):
                 if isinstance(graph, bytes)
                 else ir.load(graph)
             )
-        return SegmentedSession(graph, target_nodes=target_nodes, session_factory=session)
+        # Each segment inherits the session policy without changing global state.
+        from functools import partial
+
+        return SegmentedSession(
+            graph,
+            target_nodes=target_nodes,
+            session_factory=partial(session, enable_compile=enable_compile),
+        )
     import onnxruntime_ep_mlx
 
     if not any(device.ep_name == "MLXExecutionProvider" for device in ort.get_ep_devices()):
@@ -50,6 +59,10 @@ def session(graph, *, profile_prefix=None, target_nodes=None):
     options.intra_op_num_threads = 1
     options.inter_op_num_threads = 1
     options.add_session_config_entry("session.disable_cpu_ep_fallback", "1")
+    if enable_compile is not None:
+        options.add_session_config_entry(
+            "ep.mlx.enable_compile", "1" if enable_compile else "0"
+        )
     if profile_prefix is not None:
         options.enable_profiling = True
         options.profile_file_prefix = str(profile_prefix)

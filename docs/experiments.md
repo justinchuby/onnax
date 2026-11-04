@@ -33,6 +33,12 @@ composed-bounds
 The measurements below cover particular workloads and machines. Each article
 records the execution boundary, precision and validation used for its comparison.
 
+| Question | Measurements |
+| --- | --- |
+| How does 4K ONNX training compare with PyTorch MPS? | [Current Qwen performance](current-4k-performance) |
+| How much does compiling the output head save? | [Head layout and session policy](selective-head-compilation) |
+| Where do fused attention pullbacks help? | [Native pullback measurements](m1-max-measurements) |
+
 ```{toctree}
 :maxdepth: 1
 

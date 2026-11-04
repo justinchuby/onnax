@@ -207,7 +207,8 @@ def test_checkpoint_against_independent_transformers_reference():
 
 
 @pytest.mark.parametrize("precision", ["fp32", "bf16", "fp16"])
-def test_native_checkpoint_gradients(precision, tmp_path):
+@pytest.mark.parametrize("compile_head", [False, True])
+def test_native_checkpoint_gradients(precision, compile_head, tmp_path):
     if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
         pytest.skip("Native MLX opt-in")
     from examples.lora.mlx_runtime import register_library, session
@@ -218,6 +219,11 @@ def test_native_checkpoint_gradients(precision, tmp_path):
     options = dict(
         mode="chunked", nf4=True, projection_precision=precision, session_factory=session
     )
+    if compile_head:
+        from functools import partial
+
+        options["session_factory"] = partial(session, enable_compile=False)
+        options["head_session_factory"] = partial(session, enable_compile=True)
     flat, _ = prepare(**options)
     grouped, _ = prepare(checkpoint_layers=1, **options)
     with torch.no_grad():
@@ -237,8 +243,10 @@ def test_native_checkpoint_gradients(precision, tmp_path):
     from examples.huggingface.chunked_loss import ChunkedHead
 
     grouped.onnx.export(tmp_path, forward_model=grouped.forward_graph, head=grouped.head)
-    body = CheckpointedModule.load(tmp_path, session_factory=session)
-    head = ChunkedHead.load(tmp_path, session_factory=session)
+    body = CheckpointedModule.load(tmp_path, session_factory=options["session_factory"])
+    head = ChunkedHead.load(
+        tmp_path, session_factory=options.get("head_session_factory", session)
+    )
     inputs = batch()
     labels = inputs.pop("labels")
     loaded_loss = head(body(**inputs), labels)
@@ -416,6 +424,7 @@ def test_checkpoint_benchmark_reports_executed_groups_and_components(layers, sav
         batch_size=1,
         sequence_length=8,
     )
+    assert report["head_weight_layout"] == "vocab_hidden"
     assert report["checkpoint_layers"] == layers
     assert report["save_activations"] == saved
     assert report["valid_shifted_tokens"] == 7

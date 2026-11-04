@@ -1,0 +1,7 @@
+import hashlib,json,subprocess
+from examples.huggingface.benchmark import measure
+r=measure('pytorch',real=True,samples=100,warmup=10,batch_size=1,sequence_length=4096,chunk_size=128,nf4=True,projection_precision='fp32',checkpoint_layers=4,train_file='/tmp/onnax-qwen-longalpaca-4k-with-benchmark/benchmark.jsonl',progress_every=1,torch_device='mps',torch_chunked=True,torch_attention='eager',torch_mps_memory_limit_bytes=20*1024**3,validate_updates=True)
+r['source_commit']=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+r['driver_sha256']=hashlib.sha256(open(__file__,'rb').read()).hexdigest()
+json.dump(r,open('/tmp/onnax-full-source-head-mps-formal.json','w'),indent=2)
+print(json.dumps(r['timings_ms']['step']),flush=True)
