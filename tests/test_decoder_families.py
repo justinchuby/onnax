@@ -465,3 +465,72 @@ def test_checkpoint_projection_precision_is_checked_before_loading(saved, reques
             None,
             projection_precision=requested,
         )
+
+
+def test_frozen_decay_is_shared_before_partition_and_export():
+    import onnx_ir as ir
+
+    graph, _, _, reference = prepare_graph("qwen35", projection_precision="bf16")
+    for index, layer in enumerate(reference.model.layers):
+        if not hasattr(layer, "linear_attn"):
+            continue
+        name = f"model.layers.{index}.linear_attn.A_log"
+        assert not any(
+            node.op_type == "Exp" and node.inputs[0].name == name for node in graph.graph
+        )
+        expected = -np.exp(layer.linear_attn.A_log.detach().numpy())
+        candidates = [
+            value.const_value.numpy()
+            for node in graph.graph
+            if node.op_type == "Mul"
+            and (node.outputs[0].name or "").startswith(
+                f"v_model.layers.{index}.linear_attn.Mul_"
+            )
+            for value in node.inputs
+            if value.const_value is not None
+            and value.dtype == ir.DataType.FLOAT
+            and value.shape == list(expected.shape)
+            and np.array_equal(value.const_value.numpy(), expected)
+        ]
+        assert candidates
+
+
+def test_frozen_constants_preserve_parameters_and_source():
+    import onnx_ir as ir
+    from onnx.reference import ReferenceEvaluator
+
+    from examples.huggingface.optimization import freeze_constants
+
+    names = []
+    for temporary in ("first", "second"):
+        parameter = ir.val("adapter", dtype=ir.DataType.FLOAT, shape=[1])
+        weight = ir.val("base.log", const_value=ir.tensor(np.array([0.125], np.float32)))
+        tape = ir.tape.Tape()
+        scale = tape.op("Exp", [weight])
+        scale.name = temporary
+        product = tape.op("Mul", [parameter, scale])
+        output = tape.op("Add", [product, weight])
+        output.name = "prediction"
+        model = ir.Model(
+            ir.Graph(
+                [parameter],
+                [output],
+                nodes=tape.nodes,
+                initializers=[weight],
+                opset_imports={"": 18},
+            ),
+            ir_version=10,
+        )
+        before = ir.serde.serialize_model(model).SerializeToString()
+        frozen = freeze_constants(model)
+        assert ir.serde.serialize_model(model).SerializeToString() == before
+        assert [v.name for v in frozen.graph.inputs] == ["adapter"]
+        assert "base.log" in frozen.graph.initializers
+        names.append(sorted(frozen.graph.initializers))
+        assert sorted(freeze_constants(frozen).graph.initializers) == names[-1]
+        runtime = ReferenceEvaluator(ir.serde.serialize_model(frozen))
+        actual = runtime.run(None, {"adapter": np.array([2], np.float32)})[0]
+        np.testing.assert_array_equal(
+            actual, 2 * np.exp(np.array([0.125], np.float32)) + np.float32(0.125)
+        )
+    assert names[0] == names[1]

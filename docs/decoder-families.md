@@ -141,6 +141,10 @@ The registered straight-through pullback computes
 $\bar X=\bar Y\,R(W)$ in FP32, where $R(W)$ is the BF16-rounded weight viewed
 as FP32. The exported loss/gradient modules carry this policy through reloads.
 
+Before partitioning, ONNXScript evaluates expressions that depend only on frozen
+weights. Training blocks and standalone inference reuse those constants,
+including Qwen3.5’s decay rates $-\exp(A_{\log})$.
+
 ```sh
 python -m examples.huggingface.decoder_sft \
   --family qwen35 --nf4 --projection-precision bf16 --fused-ops \

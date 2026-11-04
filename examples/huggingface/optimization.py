@@ -2,10 +2,44 @@
 # SPDX-License-Identifier: MIT
 """Optimize large derivative graphs with ONNXScript folding and IR cleanup."""
 
+import hashlib
+import json
 import os
 
+import onnx_ir as ir
 from onnx_ir.passes import common
 from onnxscript import optimizer
+
+
+def freeze_constants(model):
+    """Evaluate frozen expressions once and give derived tensors stable names."""
+    result = model.clone()
+    original = set(result.graph.initializers)
+    public_outputs = {value.name for value in result.graph.outputs}
+    optimizer.fold_constants(result)
+    common.LiftConstantsToInitializersPass(lift_all_constants=True, size_limit=0)(result)
+    used = set(ir.convenience.create_value_mapping(result.graph))
+    canonical = {}
+    for old, value in list(result.graph.initializers.items()):
+        if old in original or old in public_outputs:
+            continue
+        tensor = value.const_value
+        header = json.dumps([str(tensor.dtype), list(tensor.shape)]).encode()
+        digest = hashlib.sha256(header + tensor.tobytes()).hexdigest()
+        del result.graph.initializers[old]
+        if digest in canonical:
+            value.replace_all_uses_with(canonical[digest])
+            continue
+        name = "pkg.onnax.frozen." + digest
+        base, index = name, 0
+        while name in used:
+            index += 1
+            name = f"{base}_{index}"
+        value.name = name
+        used.add(name)
+        result.graph.register_initializer(value)
+        canonical[digest] = value
+    return result
 
 
 def optimize_training_graph(model):

@@ -28,6 +28,7 @@ from examples.huggingface.decoder_graph import (
     protect_decoder_boundaries,
     restore_decoder_outputs,
 )
+from examples.huggingface.optimization import freeze_constants
 from examples.huggingface.pretrained import PretrainedSource, load_reference
 from examples.huggingface.qwen35 import build_base as build_qwen35_base
 from examples.huggingface.qwen35 import reference_model as qwen35_reference
@@ -273,6 +274,10 @@ def prepare_graph(
     protect_decoder_boundaries(graph)
     graph = decompose(graph, preserve_fused=preserve_fused or entry.preserve_fused)
     graph, params, mapping = inject(graph, family)
+    # Freeze one numerical value for source-only expressions before partitioning.
+    # Forward exports and block VJPs then share the same constants, including
+    # Qwen3.5 decay rates whose FP32 rounding can cross later BF16 boundaries.
+    graph = freeze_constants(graph)
     if real:
         assert entry.pretrained is not None
         for row in mapping:
