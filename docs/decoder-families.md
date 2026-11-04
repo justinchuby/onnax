@@ -102,6 +102,15 @@ record the base quantization alongside the source parameter mapping.
 Export/load preserves the NF4 graph and its mapping; repeat `--nf4` when
 resuming a checkpoint or loading an exported task.
 
+The [offline MLX qualification reports](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/generic-nf4-m1max)
+cover six independent AdamW updates and PEFT exchange for all three families.
+Tiny Qwen3.5 also completes 100 SFTTrainer updates: training loss falls from
+5.581 to 5.127 and validation loss from 5.623 to 5.429. A fresh process resumes
+from step 50 with bitwise-equal final adapters and optimizer state. Reloaded
+ONNX loss, all ten adapter gradients and standalone logits match the continuous
+run exactly. Its 31 frozen Linear projections occupy 93,024 packed/scale bytes,
+compared with 661,504 FP32 bytes.
+
 ## Train and restore with TRL
 
 ```sh

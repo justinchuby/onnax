@@ -1,0 +1,25 @@
+{
+  "model_scope": "Offline tiny Qwen3, Phi-3 and Qwen3.5; FP32 compute/gradients/AdamW; packed NF4 frozen decoder Linear weights",
+  "source_commit": "61ba081a284945b6bd93c13aa10e9b933e035019",
+  "cpu_regression": {
+    "passed": 49,
+    "native_opt_in_skipped": 6,
+    "log_sha256": "6054c9d458de1bb8d3c91f1e9f0acc164f842c2cf93ddf5252cf97145400c564"
+  },
+  "mlx_regression": {
+    "passed": 6,
+    "log_sha256": "999cf82e920dc465e267529f6775a6363dbebe80d7b07b41a97a1f3ee06384a6"
+  },
+  "static_checks": [
+    "Ruff and format passed",
+    "mypy: 51 source files passed",
+    "Strict Sphinx HTML passed"
+  ],
+  "quality": {
+    "training_steps": 100,
+    "fresh_process_resume_from_step": 50,
+    "loss_and_all_10_exported_gradients_bitwise_equal": true,
+    "checkpoint_adapter_optimizer_scheduler_equal": true
+  },
+  "scope": "Quality/recovery validation; elapsed time includes evaluation, training and export after construction"
+}

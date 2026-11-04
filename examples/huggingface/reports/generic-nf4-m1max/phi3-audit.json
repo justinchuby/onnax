@@ -1,0 +1,232 @@
+{
+  "family": "phi3",
+  "quantization": {
+    "format": "onnax-row-major-nf4-v1",
+    "codebook": [
+      -1.0,
+      -0.6961928009986877,
+      -0.5250730514526367,
+      -0.39491748809814453,
+      -0.28444138169288635,
+      -0.18477343022823334,
+      -0.09105003625154495,
+      0.0,
+      0.07958029955625534,
+      0.16093020141124725,
+      0.24611230194568634,
+      0.33791524171829224,
+      0.44070982933044434,
+      0.5626170039176941,
+      0.7229568362236023,
+      1.0
+    ],
+    "packing": "high nibble first; row-major transposed Linear weight",
+    "block_size": 64,
+    "compute_dtype": "float32",
+    "adapter_dtype": "float32",
+    "embedding_dtype": "float32",
+    "lm_head_dtype": "float32",
+    "weights": {
+      "model.layers.0.mlp.down_proj.weight_t": {
+        "packed": "model.layers.0.mlp.down_proj.weight_t.nf4",
+        "scales": "model.layers.0.mlp.down_proj.weight_t.absmax",
+        "shape": [
+          128,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 4096,
+        "scale_bytes": 512,
+        "original_bytes": 32768
+      },
+      "model.layers.0.mlp.gate_up_proj.weight_t": {
+        "packed": "model.layers.0.mlp.gate_up_proj.weight_t.nf4",
+        "scales": "model.layers.0.mlp.gate_up_proj.weight_t.absmax",
+        "shape": [
+          64,
+          256
+        ],
+        "block_size": 64,
+        "packed_bytes": 8192,
+        "scale_bytes": 1024,
+        "original_bytes": 65536
+      },
+      "model.layers.0.self_attn.k_proj.weight_t": {
+        "packed": "model.layers.0.self_attn.k_proj.weight_t.nf4",
+        "scales": "model.layers.0.self_attn.k_proj.weight_t.absmax",
+        "shape": [
+          64,
+          32
+        ],
+        "block_size": 64,
+        "packed_bytes": 1024,
+        "scale_bytes": 128,
+        "original_bytes": 8192
+      },
+      "model.layers.0.self_attn.o_proj.weight_t": {
+        "packed": "model.layers.0.self_attn.o_proj.weight_t.nf4",
+        "scales": "model.layers.0.self_attn.o_proj.weight_t.absmax",
+        "shape": [
+          64,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 2048,
+        "scale_bytes": 256,
+        "original_bytes": 16384
+      },
+      "model.layers.0.self_attn.q_proj.weight_t": {
+        "packed": "model.layers.0.self_attn.q_proj.weight_t.nf4",
+        "scales": "model.layers.0.self_attn.q_proj.weight_t.absmax",
+        "shape": [
+          64,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 2048,
+        "scale_bytes": 256,
+        "original_bytes": 16384
+      },
+      "model.layers.0.self_attn.v_proj.weight_t": {
+        "packed": "model.layers.0.self_attn.v_proj.weight_t.nf4",
+        "scales": "model.layers.0.self_attn.v_proj.weight_t.absmax",
+        "shape": [
+          64,
+          32
+        ],
+        "block_size": 64,
+        "packed_bytes": 1024,
+        "scale_bytes": 128,
+        "original_bytes": 8192
+      },
+      "model.layers.1.mlp.down_proj.weight_t": {
+        "packed": "model.layers.1.mlp.down_proj.weight_t.nf4",
+        "scales": "model.layers.1.mlp.down_proj.weight_t.absmax",
+        "shape": [
+          128,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 4096,
+        "scale_bytes": 512,
+        "original_bytes": 32768
+      },
+      "model.layers.1.mlp.gate_up_proj.weight_t": {
+        "packed": "model.layers.1.mlp.gate_up_proj.weight_t.nf4",
+        "scales": "model.layers.1.mlp.gate_up_proj.weight_t.absmax",
+        "shape": [
+          64,
+          256
+        ],
+        "block_size": 64,
+        "packed_bytes": 8192,
+        "scale_bytes": 1024,
+        "original_bytes": 65536
+      },
+      "model.layers.1.self_attn.k_proj.weight_t": {
+        "packed": "model.layers.1.self_attn.k_proj.weight_t.nf4",
+        "scales": "model.layers.1.self_attn.k_proj.weight_t.absmax",
+        "shape": [
+          64,
+          32
+        ],
+        "block_size": 64,
+        "packed_bytes": 1024,
+        "scale_bytes": 128,
+        "original_bytes": 8192
+      },
+      "model.layers.1.self_attn.o_proj.weight_t": {
+        "packed": "model.layers.1.self_attn.o_proj.weight_t.nf4",
+        "scales": "model.layers.1.self_attn.o_proj.weight_t.absmax",
+        "shape": [
+          64,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 2048,
+        "scale_bytes": 256,
+        "original_bytes": 16384
+      },
+      "model.layers.1.self_attn.q_proj.weight_t": {
+        "packed": "model.layers.1.self_attn.q_proj.weight_t.nf4",
+        "scales": "model.layers.1.self_attn.q_proj.weight_t.absmax",
+        "shape": [
+          64,
+          64
+        ],
+        "block_size": 64,
+        "packed_bytes": 2048,
+        "scale_bytes": 256,
+        "original_bytes": 16384
+      },
+      "model.layers.1.self_attn.v_proj.weight_t": {
+        "packed": "model.layers.1.self_attn.v_proj.weight_t.nf4",
+        "scales": "model.layers.1.self_attn.v_proj.weight_t.absmax",
+        "shape": [
+          64,
+          32
+        ],
+        "block_size": 64,
+        "packed_bytes": 1024,
+        "scale_bytes": 128,
+        "original_bytes": 8192
+      }
+    },
+    "original_decoder_bytes": 294912,
+    "packed_decoder_bytes": 41472
+  },
+  "independent_steps": 6,
+  "adam_epsilon": 1e-05,
+  "losses": [
+    5.513665676116943,
+    5.468547344207764,
+    5.508979320526123,
+    5.458743572235107,
+    5.496437072753906,
+    5.438711166381836
+  ],
+  "max_gradient_abs_error": 1.30385160446167e-08,
+  "frozen_source_weights_unchanged": true,
+  "reload": true,
+  "peft": {
+    "adapter_tensors": 4,
+    "format_roundtrip_bitwise": true,
+    "loss_check_passed": true,
+    "loss": 5.475362300872803,
+    "reference_loss": 5.475361347198486,
+    "loss_abs_difference": 9.5367431640625e-07,
+    "gradient_check_passed": true,
+    "gradient_failures": {},
+    "update_check_passed": true,
+    "update_failures": {},
+    "logit_violations": 0,
+    "logits_max_abs": 1.9371509552001953e-07
+  },
+  "adapter_tensors": 4,
+  "provider": "mlx",
+  "dtype": "float32",
+  "library_sha256": "51fd7a3d04d516992ba51e4dfc280079b3079120308e0aa9f13bc4f6d841071f",
+  "source_commit": "61ba081a284945b6bd93c13aa10e9b933e035019",
+  "working_tree_dirty": false,
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "versions": {
+    "onnax": "0.1.0",
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnxscript": "0.7.2",
+    "onnxruntime": "1.31.1",
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "trl": "0.24.0",
+    "datasets": "5.1.0",
+    "peft": "0.21.2",
+    "mobius-onnx": "0.1.0"
+  },
+  "threads": {
+    "torch": 1,
+    "ort_intra": 1,
+    "ort_inter": 1
+  },
+  "process_peak_rss_bytes": 645890048,
+  "rss_scope": "process, imports, construction, runtime, training or audit, and export"
+}

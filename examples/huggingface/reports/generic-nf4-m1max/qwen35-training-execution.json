@@ -1,0 +1,167 @@
+{
+  "command": [
+    "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+    "-m",
+    "examples.huggingface.decoder_sft",
+    "--family",
+    "qwen35",
+    "--nf4",
+    "--head-chunk-size",
+    "128",
+    "--fused-ops",
+    "--provider",
+    "mlx",
+    "--library",
+    "/tmp/onnax-key-tiles-runtime/libonnxruntime_mlx_ep.dylib",
+    "--steps",
+    "100",
+    "--output-dir",
+    "/tmp/onnax-generic-nf4-qwen35-training"
+  ],
+  "cwd": "/private/tmp/onnax-generic-nf4",
+  "status": "complete",
+  "physical_memory_budget_bytes": 25769803776,
+  "minimum_free_disk_bytes": 5368709120,
+  "observations": [
+    {
+      "utc": "2026-11-04T07:36:32.504378+00:00",
+      "current_bytes": 180344,
+      "peak_bytes": 295032,
+      "free_disk_bytes": 20262170624
+    },
+    {
+      "utc": "2026-11-04T07:36:33.514812+00:00",
+      "current_bytes": 220414768,
+      "peak_bytes": 220414768,
+      "free_disk_bytes": 20261031936
+    },
+    {
+      "utc": "2026-11-04T07:36:34.517401+00:00",
+      "current_bytes": 275923832,
+      "peak_bytes": 275923832,
+      "free_disk_bytes": 20260290560
+    },
+    {
+      "utc": "2026-11-04T07:36:35.528087+00:00",
+      "current_bytes": 386172032,
+      "peak_bytes": 386172032,
+      "free_disk_bytes": 20259680256
+    },
+    {
+      "utc": "2026-11-04T07:36:36.530548+00:00",
+      "current_bytes": 470549872,
+      "peak_bytes": 470549872,
+      "free_disk_bytes": 20259258368
+    },
+    {
+      "utc": "2026-11-04T07:36:37.541328+00:00",
+      "current_bytes": 515835272,
+      "peak_bytes": 515835272,
+      "free_disk_bytes": 20258385920
+    },
+    {
+      "utc": "2026-11-04T07:36:38.546910+00:00",
+      "current_bytes": 538805808,
+      "peak_bytes": 538871344,
+      "free_disk_bytes": 20256702464
+    },
+    {
+      "utc": "2026-11-04T07:36:39.557627+00:00",
+      "current_bytes": 539248176,
+      "peak_bytes": 539248176,
+      "free_disk_bytes": 20255686656
+    },
+    {
+      "utc": "2026-11-04T07:36:40.565203+00:00",
+      "current_bytes": 541574728,
+      "peak_bytes": 541640264,
+      "free_disk_bytes": 20254691328
+    },
+    {
+      "utc": "2026-11-04T07:36:41.575903+00:00",
+      "current_bytes": 551192136,
+      "peak_bytes": 551257672,
+      "free_disk_bytes": 20253958144
+    },
+    {
+      "utc": "2026-11-04T07:36:42.586740+00:00",
+      "current_bytes": 552224352,
+      "peak_bytes": 552289888,
+      "free_disk_bytes": 20253466624
+    },
+    {
+      "utc": "2026-11-04T07:36:43.597381+00:00",
+      "current_bytes": 553404000,
+      "peak_bytes": 553420384,
+      "free_disk_bytes": 20253536256
+    },
+    {
+      "utc": "2026-11-04T07:36:44.608371+00:00",
+      "current_bytes": 553436768,
+      "peak_bytes": 553436768,
+      "free_disk_bytes": 20252483584
+    },
+    {
+      "utc": "2026-11-04T07:36:45.619112+00:00",
+      "current_bytes": 554288808,
+      "peak_bytes": 556779176,
+      "free_disk_bytes": 20252106752
+    },
+    {
+      "utc": "2026-11-04T07:36:46.628983+00:00",
+      "current_bytes": 554518184,
+      "peak_bytes": 556779176,
+      "free_disk_bytes": 20251467776
+    },
+    {
+      "utc": "2026-11-04T07:36:47.637382+00:00",
+      "current_bytes": 554911400,
+      "peak_bytes": 556779176,
+      "free_disk_bytes": 20250570752
+    },
+    {
+      "utc": "2026-11-04T07:36:48.648239+00:00",
+      "current_bytes": 555632296,
+      "peak_bytes": 556779176,
+      "free_disk_bytes": 20250025984
+    },
+    {
+      "utc": "2026-11-04T07:36:49.659022+00:00",
+      "current_bytes": 555075240,
+      "peak_bytes": 556779176,
+      "free_disk_bytes": 20249501696
+    },
+    {
+      "utc": "2026-11-04T07:36:50.663075+00:00",
+      "current_bytes": 555140776,
+      "peak_bytes": 556779176,
+      "free_disk_bytes": 20249497600
+    },
+    {
+      "utc": "2026-11-04T07:36:51.673863+00:00",
+      "current_bytes": 555140776,
+      "peak_bytes": 556779176,
+      "free_disk_bytes": 20249456640
+    },
+    {
+      "utc": "2026-11-04T07:36:52.683433+00:00",
+      "current_bytes": 555140776,
+      "peak_bytes": 556779176,
+      "free_disk_bytes": 20249325568
+    },
+    {
+      "utc": "2026-11-04T07:36:53.690279+00:00",
+      "current_bytes": 558728896,
+      "peak_bytes": 558728896,
+      "free_disk_bytes": 20247957504
+    }
+  ],
+  "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+  "observation_errors": 0,
+  "temporary_directory": "/tmp/onnax-generic-nf4-qwen35-training-guard/worker-tmp-k3up436a",
+  "pid": 71785,
+  "started": "2026-11-04T07:36:32.503518+00:00",
+  "returncode": 0,
+  "finished": "2026-11-04T07:36:54.699788+00:00",
+  "temporary_files_removed": true
+}

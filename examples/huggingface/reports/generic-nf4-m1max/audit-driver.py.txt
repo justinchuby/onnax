@@ -1,0 +1,14 @@
+import json,os,subprocess
+from pathlib import Path
+python='/Users/justinc/Documents/GitHub/onnax/.venv/bin/python'
+env={**os.environ,'PYTHONPATH':'src:.','HF_HUB_OFFLINE':'1','HF_DATASETS_OFFLINE':'1','ONNAX_TILED_ATTENTION':'1','ONNXRUNTIME_EP_MLX_NO_COMPILE':'1','ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES':'0'}
+for family in ('phi3','qwen3','qwen35'):
+ output='/tmp/onnax-generic-nf4-audit-'+family
+ assert not Path(output).exists()
+ print(json.dumps({'phase':family}),flush=True)
+ code=subprocess.call([python,'-m','examples.huggingface.guard','--output-dir',output+'-guard','--',python,'-m','examples.huggingface.decoder_sft','--family',family,'--nf4','--audit-only','--audit-steps','6','--fused-ops','--head-chunk-size','3','--provider','mlx','--library','/tmp/onnax-key-tiles-runtime/libonnxruntime_mlx_ep.dylib','--output-dir',output],cwd='/tmp/onnax-generic-nf4',env=env)
+ if code:raise SystemExit(code)
+ report=json.loads((Path(output)/'report.json').read_text())
+ assert report['independent_steps']==6 and report['reload'] and report['frozen_source_weights_unchanged']
+ assert report['peft']['gradient_check_passed'] and report['peft']['update_check_passed'] and report['peft']['format_roundtrip_bitwise']
+ print(json.dumps({'phase':family,'status':'qualified','max_gradient_abs_error':report['max_gradient_abs_error']}),flush=True)
