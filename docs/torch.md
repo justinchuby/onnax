@@ -50,6 +50,34 @@ The ONNX backward computes \(\bar\theta=J_\theta^T\bar y\) and, when requested,
 \(\bar x=J_x^T\bar y\). PyTorch then accumulates these gradients and updates
 \(\theta\). This supports losses computed outside ONNX and multiple ONNX outputs.
 
+## Reuse forward activations in backward
+
+Use `save_activations=True` when the loss is computed in PyTorch or a model has
+multiple differentiable outputs:
+
+```python
+model = OnnxModule(
+    "model.onnx",
+    {"lora.A": initial_a, "lora.B": initial_b},
+    save_activations=True,
+)
+prediction = model(features=features)
+loss = torch.nn.functional.mse_loss(prediction, targets)
+loss.backward()
+```
+
+The forward session returns the prediction and the intermediate values needed
+by the ONNX VJP. Backward consumes those saved values with PyTorch's upstream
+gradients. Shape-only intermediates are stored as INT64 shape vectors. Fused
+attention pullbacks recompute attention statistics during backward.
+
+PyTorch owns the saved tensors and releases them after backward;
+`retain_graph=True` keeps them for another call. Each outstanding forward has its
+own activations. In-place changes to inputs requiring gradients, parameters, or
+returned outputs are checked before backward. Export/load preserves this mode,
+and parameter checkpoints can be exchanged with the default execution mode.
+Choose either `save_activations` or `eager_gradients` for a module.
+
 ## Compute a scalar objective and its gradients together
 
 Put the loss in ONNX and select its scalar output with `eager_gradients=True`:

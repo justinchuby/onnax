@@ -72,9 +72,9 @@ def provider(request):
     return request.param
 
 
-@pytest.mark.parametrize("eager", [False, True])
+@pytest.mark.parametrize("eager,saved", [(False, False), (True, False), (False, True)])
 @pytest.mark.parametrize("shape_inputs", [False, True])
-def test_weighted_accumulation_and_dynamic_batch_updates(eager, provider, shape_inputs):
+def test_weighted_accumulation_and_dynamic_batch_updates(eager, saved, provider, shape_inputs):
     calls = []
     initial = np.arange(6, dtype=np.float32).reshape(3, 2) / 20
     reference = torch.nn.Parameter(torch.from_numpy(initial.copy()))
@@ -83,6 +83,7 @@ def test_weighted_accumulation_and_dynamic_batch_updates(eager, provider, shape_
         {"w": initial},
         input_gradients=["x"],
         eager_gradients=eager,
+        save_activations=saved,
         session_factory=factory(calls, provider=provider),
         optimize=lambda model: (
             onnax.FuseBroadcastAdjointsPass(shape_inputs=True)(model).model
