@@ -1,0 +1,15 @@
+import json,os,subprocess
+from pathlib import Path
+ROOT=Path('/tmp/onnax-head-shared-terms-measurement');ROOT.mkdir(exist_ok=False)
+PYTHON='/Users/justinc/Documents/GitHub/onnax/.venv/bin/python'
+env={**os.environ,'PYTHONPATH':'src:.','ONNXRUNTIME_EP_MLX_NO_COMPILE':'0','HF_HUB_OFFLINE':'1','HF_DATASETS_OFFLINE':'1'}
+env.pop('ONNXRUNTIME_EP_MLX_TRACE',None)
+for rows in (17,128):
+ directory=ROOT/str(rows);directory.mkdir()
+ for mode,compiled in [('reference',1),('baseline',1),('shared',1),('baseline',0),('shared',0)]:
+  label=mode+'-'+str(compiled);print(json.dumps({'rows':rows,'phase':label}),flush=True)
+  command=[PYTHON,'/tmp/onnax-head-shared-terms-worker.py','--mode',mode,'--rows',str(rows),'--directory',str(directory),'--compile',str(compiled)]
+  with open(directory/(label+'.log'),'w') as log:
+   code=subprocess.call([PYTHON,'-m','examples.huggingface.guard','--output-dir',str(directory/(label+'-guard')),'--',*command],cwd='/tmp/onnax-head-shared-terms',env=env,stdout=log,stderr=subprocess.STDOUT)
+  if code:raise SystemExit(code)
+print(json.dumps({'phase':'complete'}),flush=True)

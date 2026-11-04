@@ -1,0 +1,53 @@
+import argparse,hashlib,json,os,resource,time
+from pathlib import Path
+from collections import Counter
+import numpy as np
+import onnx
+import onnx_ir as ir
+from onnx_ir.passes import common
+from examples.huggingface.optimization import optimize_training_graph
+from examples.process_memory import physical_footprint
+from onnax._file_snapshot import copy_file
+p=argparse.ArgumentParser();p.add_argument('--mode',choices=['reference','baseline','shared'],required=True);p.add_argument('--rows',type=int,required=True);p.add_argument('--directory',required=True);p.add_argument('--compile',type=int,choices=[0,1],default=1);p.add_argument('--warmup',type=int,default=10);p.add_argument('--samples',type=int,default=100);a=p.parse_args();root=Path(a.directory);root.mkdir(exist_ok=True)
+SOURCE=Path('/tmp/onnax-generic-nf4-real-qwen35/export/execution/head_gradient.onnx');LIB=Path('/tmp/onnax-key-tiles-runtime/libonnxruntime_mlx_ep.dylib')
+graph=ir.load(SOURCE);vocab,width=graph.graph.initializers['head.weight'].shape
+if a.mode=='reference':
+ import torch
+ torch.set_num_threads(1);rng=np.random.default_rng(20261104+a.rows)
+ hidden=rng.normal(0,.05,(a.rows,width)).astype(np.float32);labels=rng.integers(0,vocab,a.rows,dtype=np.int64)
+ x=torch.tensor(hidden,requires_grad=True);w=torch.from_numpy(graph.graph.initializers['head.weight'].const_value.numpy().copy())
+ logits=x@w.T;loss=torch.nn.functional.cross_entropy(logits,torch.from_numpy(labels),reduction='sum');gradient=torch.autograd.grad(loss,x)[0]
+ np.savez(root/'inputs.npz',hidden=hidden,labels=labels);np.savez(root/'reference.npz',loss=loss.detach().numpy(),gradient=gradient.numpy());print('reference complete',flush=True)
+else:
+ from examples.lora.mlx_runtime import register_library,session
+ from examples.huggingface.long_context import memory_limit
+ register_library(LIB);memory_limit(LIB,20*1024**3)
+ if a.mode=='shared':
+  common.InlinePass(criteria=lambda f:f.domain=='onnax.example.stable_loss' and f.name=='HardCrossEntropyF32')(graph)
+  graph=optimize_training_graph(graph)
+ build=root/(a.mode+('-compiled' if a.compile else '-eager'));build.mkdir(exist_ok=False)
+ for value in graph.graph.initializers.values():
+  tensor=value.const_value
+  if isinstance(tensor,ir.ExternalTensor):
+   assert Path(tensor.location).name==tensor.location
+   target=build/tensor.location
+   if not target.exists():copy_file(str(Path(tensor.base_dir)/tensor.location),str(target))
+ path=build/'gradient.onnx';ir.save(graph,path);onnx.checker.check_model(path,full_check=True)
+ before=time.perf_counter();runtime=session(path,enable_compile=bool(a.compile));creation=time.perf_counter()-before
+ feeds=dict(np.load(root/'inputs.npz'));reference=dict(np.load(root/'reference.npz'));actual=runtime.run(None,feeds)
+ checks={}
+ for name,value in zip(('loss','gradient'),actual,strict=True):
+  expected=reference[name];checks[name]={'max_abs':float(np.max(np.abs(value-expected))),'violations':int(np.count_nonzero(~np.isclose(value,expected,rtol=1e-4,atol=1e-6)))}
+  np.testing.assert_allclose(value,expected,rtol=1e-4,atol=1e-6)
+ np.savez(build/'outputs.npz',**dict(zip(('loss','gradient'),actual,strict=True)))
+ times=[]
+ for index in range(a.warmup+a.samples):
+  before=time.perf_counter();runtime.run(None,feeds);elapsed=1000*(time.perf_counter()-before)
+  if index>=a.warmup:times.append(elapsed)
+ def expanded(g):
+  counts=Counter()
+  for node in g:
+   f=graph.functions.get((node.domain,node.op_type,node.overload));counts.update(expanded(f.graph) if f is not None else {node.op_type:1})
+  return counts
+ report={'mode':a.mode,'compiled':bool(a.compile),'rows':a.rows,'vocab':vocab,'hidden_width':width,'precision':'float32','warmup':a.warmup,'samples':a.samples,'session_creation_seconds':creation,'timings_ms':{'median':float(np.median(times)),'p95':float(np.percentile(times,95)),'samples':times},'physical_footprint':physical_footprint(),'peak_rss_bytes':resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,'main_nodes':len(graph.graph),'expanded_ops':dict(expanded(graph.graph)),'independent_reference':checks,'library_sha256':hashlib.sha256(LIB.read_bytes()).hexdigest(),'driver_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'input_sha256':hashlib.sha256((root/'inputs.npz').read_bytes()).hexdigest(),'scope':'Isolated real Qwen3.5 output-head loss and hidden-gradient Session.run including NumPy exchange; process memory includes construction and runtime','ort_optimizer':False,'cpu_fallback':False}
+ (build/'report.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:report[k] for k in ('mode','compiled','timings_ms','independent_reference','physical_footprint')}),flush=True)

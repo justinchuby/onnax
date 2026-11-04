@@ -93,3 +93,62 @@ def test_source_layout_is_explicit_and_validated():
         head_graph(weight, weight_layout="guess")
     with pytest.raises(ValueError, match="FP32"):
         head_graph(weight, weight_layout="vocab_hidden", projection_precision="bf16")
+
+
+def test_shared_head_terms_preserve_small_gradients(factory):
+    weight = np.array([[1, 0], [-1, 0]], np.float32)
+    runtime = ChunkedHead(weight, weight_layout="vocab_hidden", session_factory=factory)
+    try:
+        assert any(node.op_type == "HardCrossEntropyF32" for node in runtime.model.graph)
+        assert all(node.op_type != "HardCrossEntropyF32" for node in runtime.gradient.graph)
+        values = runtime.executor.run(
+            None,
+            {
+                "hidden": np.array([[20, 0], [20, 0]], np.float32),
+                "labels": np.array([0, -100], np.int64),
+            },
+        )
+        tail = np.float32(np.exp(-40))
+        expected_loss = np.log1p(tail)
+        expected_gradient = np.array([[-2 * tail / (1 + tail), 0], [0, 0]], np.float32)
+        np.testing.assert_allclose(values[0], expected_loss, rtol=1e-4, atol=0)
+        np.testing.assert_allclose(values[1], expected_gradient, rtol=1e-4, atol=0)
+        assert values[1][0, 0] < 0
+    finally:
+        runtime.close()
+
+
+@pytest.mark.parametrize("precision", ["fp32", "bf16", "fp16"])
+@pytest.mark.parametrize("compiled", [False, True])
+def test_shared_head_terms_native_precision(precision, compiled, monkeypatch):
+    if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
+        pytest.skip("Native MLX opt-in")
+    import functools
+
+    from examples.lora.mlx_runtime import register_library
+    from examples.lora.mlx_runtime import session as mlx_session
+
+    monkeypatch.setenv("ONNXRUNTIME_EP_MLX_NO_COMPILE", "0")
+    if path := os.environ.get("ONNAX_MLX_EP_LIBRARY"):
+        register_library(path)
+    weight = np.array([[1, -1], [0, 0]], np.float32)
+    runtime = ChunkedHead(
+        weight,
+        projection_precision=precision,
+        session_factory=functools.partial(mlx_session, enable_compile=compiled),
+    )
+    try:
+        values = runtime.executor.run(
+            None,
+            {
+                "hidden": np.array([[20, 0]], np.float32),
+                "labels": np.array([0], np.int64),
+            },
+        )
+        tail = np.float32(np.exp(-40))
+        np.testing.assert_allclose(values[0], np.log1p(tail), rtol=1e-4, atol=0)
+        np.testing.assert_allclose(
+            values[1], np.array([[-2 * tail / (1 + tail), 0]], np.float32), rtol=1e-4, atol=0
+        )
+    finally:
+        runtime.close()

@@ -342,6 +342,32 @@ The frozen projection retains its source `[vocab, hidden]` layout and uses
 the frozen head, loss convention and projection precision. Resume with the same
 head mode; chunk size can change without changing the loss definition.
 
+### Share loss and backward statistics
+
+The head first differentiates the stable cross-entropy function using its
+analytic rule. It then expands that function in the derivative graph and lets
+ONNXScript folding and CSE share the target masks, row maxima and exponential
+reductions between loss and backward. The source loss retains its analytic rule.
+The expanded loss/gradient computation uses 58 operators instead of 103.
+
+On M1 Max, the FP32 head from Qwen3.5-0.8B (248,320 classes, width 1024) gives:
+
+| Rows / execution | Before median / P95 | Shared statistics median / P95 | Peak physical before / after |
+| --- | ---: | ---: | ---: |
+| 17 / compiled | 10.05 / 10.32 ms | 10.01 / 10.20 ms | 1.26 / 1.26 GiB |
+| 17 / eager | 12.10 / 12.29 ms | 10.69 / 10.95 ms | 1.36 / 1.23 GiB |
+| 128 / compiled | 28.79 / 29.07 ms | 29.01 / 29.28 ms | 2.18 / 2.18 GiB |
+| 128 / eager | 42.73 / 43.10 ms | 33.09 / 33.54 ms | 2.63 / 2.33 GiB |
+
+Each fresh process performs ten warmups and 100 measurements. Timings cover
+head Session.run and NumPy exchange; peak memory includes construction and
+runtime. Both variants match independent PyTorch loss/gradient values and
+produce bitwise-equal outputs. A separate five-update Qwen3-0.6B 4K replay
+compares the complete training path, including all first-two-update adapter
+gradients and parameters, losses and frozen-weight hashes.
+[Raw measurements and drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/head-shared-terms-m1max)
+record all samples, geometry, environment and validation results.
+
 ## Choose training text and context length
 
 Provide separate training and validation files to train on your own text. Files
