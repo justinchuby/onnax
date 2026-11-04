@@ -18,7 +18,7 @@ from examples.fitting import cg
 from examples.lora.train import session
 
 
-def objective(*, regularized):
+def objective(*, regularized, per_feature=False):
     """Build a linear-regression loss with optional a scalar ridge penalty."""
     theta = ir.val("parameters", dtype=ir.DataType.FLOAT, shape=[8])
     x = ir.val("features", dtype=ir.DataType.FLOAT, shape=["samples", 8])
@@ -32,7 +32,7 @@ def objective(*, regularized):
     )
     inputs = [theta, x, y]
     if regularized:
-        rho = ir.val("log_penalty", dtype=ir.DataType.FLOAT, shape=[])
+        rho = ir.val("log_penalty", dtype=ir.DataType.FLOAT, shape=[8] if per_feature else [])
         inputs.append(rho)
         penalty = tape.op("Mul", [tape.op("Exp", [rho]), tape.op("Mul", [theta, theta])])
         loss = tape.op(
@@ -53,17 +53,19 @@ def objective(*, regularized):
     )
 
 
-def run(output_dir, *, steps=30):
+def run(output_dir, *, steps=30, per_feature=False):
     """Export derivative products, solve inner problems and tune their penalties."""
     os.makedirs(output_dir, exist_ok=True)
-    train = objective(regularized=True)
+    train = objective(regularized=True, per_feature=per_feature)
     before = ir.to_proto(train).SerializeToString()
     gradient = onnax.grad(train, inputs=["parameters"], output="loss")
     gradient_name = gradient.graph.outputs[-1].name
+    mixed_name = "mixed_vjp" if per_feature else "mixed_jvp"
+    mixed_transform = onnax.vjp if per_feature else onnax.jvp
     graphs = {
         "gradient": gradient,
         "hvp": onnax.jvp(gradient, inputs=["parameters"], outputs=[gradient_name]),
-        "mixed_jvp": onnax.jvp(gradient, inputs=["log_penalty"], outputs=[gradient_name]),
+        mixed_name: mixed_transform(gradient, inputs=["log_penalty"], outputs=[gradient_name]),
         "validation": onnax.grad(
             objective(regularized=False), inputs=["parameters"], output="loss"
         ),
@@ -88,7 +90,11 @@ def run(output_dir, *, steps=30):
     y = x @ truth + rng.normal(scale=0.1, size=64).astype(np.float32)
     yv = xv @ truth + rng.normal(scale=0.1, size=96).astype(np.float32)
     zero = np.zeros(8, np.float32)
-    rho = np.array(np.log(1.5), np.float32)
+    rho = (
+        np.full(8, np.log(1.5), np.float32)
+        if per_feature
+        else np.array(np.log(1.5), np.float32)
+    )
     history, checks = [], []
 
     def evaluate(name, parameters, penalties, *, direction=None, validation=False):
@@ -122,16 +128,25 @@ def run(output_dir, *, steps=30):
             tolerance=2e-6,
             max_iterations=32,
         )
-        mixed = evaluate("mixed_jvp", theta, rho, direction=np.array(1, np.float32))[-1]
-        hypergradient = -(u @ mixed)
+        mixed = evaluate(
+            mixed_name, theta, rho, direction=u if per_feature else np.array(1, np.float32)
+        )[-1]
+        hypergradient = -mixed if per_feature else -(u @ mixed)
+        assert theta.dtype == u.dtype == np.asarray(hypergradient).dtype == np.float32
         # Independent dense formulas validate the products and both linear solves.
-        hessian = x.T @ x / np.float32(len(x)) + np.exp(rho) * np.eye(8, dtype=np.float32)
+        hessian = x.T @ x / np.float32(len(x)) + np.diag(np.broadcast_to(np.exp(rho), (8,)))
         reference_theta = np.linalg.solve(hessian, x.T @ y / np.float32(len(x)))
         reference_u = np.linalg.solve(
             hessian, xv.T @ (xv @ reference_theta - yv) / np.float32(len(xv))
         )
-        reference_hypergradient = -np.exp(rho) * (reference_theta @ reference_u)
-        np.testing.assert_allclose(mixed, np.exp(rho) * theta, rtol=1e-4, atol=1e-6)
+        reference_hypergradient = (
+            -np.exp(rho) * reference_theta * reference_u
+            if per_feature
+            else -np.exp(rho) * (reference_theta @ reference_u)
+        )
+        np.testing.assert_allclose(
+            mixed, np.exp(rho) * theta * (u if per_feature else 1), rtol=1e-4, atol=1e-6
+        )
         probe = np.arange(1, 9, dtype=np.float32) / 8
         np.testing.assert_allclose(
             evaluate("hvp", theta, rho, direction=probe)[-1],
@@ -145,7 +160,7 @@ def run(output_dir, *, steps=30):
         train_loss, train_gradient = evaluate("gradient", theta, rho)
         np.testing.assert_allclose(
             train_loss,
-            0.5 * (np.mean((x @ theta - y) ** 2) + np.exp(rho) * (theta @ theta)),
+            0.5 * (np.mean((x @ theta - y) ** 2) + np.sum(np.exp(rho) * theta**2)),
             rtol=1e-4,
             atol=1e-6,
         )
@@ -167,13 +182,28 @@ def run(output_dir, *, steps=30):
             }
         )
         if step == 0:
-            epsilon = np.float32(0.01)
-            plus, _ = inner(rho + epsilon)
-            minus, _ = inner(rho - epsilon)
-            lp = evaluate("validation", plus, rho + epsilon, validation=True)[0]
-            lm = evaluate("validation", minus, rho - epsilon, validation=True)[0]
-            finite_difference = (lp - lm) / (2 * epsilon)
-            np.testing.assert_allclose(hypergradient, finite_difference, rtol=1e-3, atol=1e-5)
+            # The oracle uses high precision only for differencing nearby losses.
+            # The exported graphs, CG solves and outer updates remain FP32.
+            def outer_reference(log_penalty):
+                features = x.astype(np.float64)
+                target = y.astype(np.float64)
+                validation_features = xv.astype(np.float64)
+                system = features.T @ features / len(x) + np.diag(
+                    np.broadcast_to(np.exp(log_penalty), (8,))
+                )
+                fitted = np.linalg.solve(system, features.T @ target / len(x))
+                return 0.5 * np.mean((validation_features @ fitted - yv) ** 2)
+
+            log_penalty = np.asarray(rho, dtype=np.float64)
+            finite_difference = np.empty_like(log_penalty)
+            epsilon = 1e-3
+            for coordinate in np.ndindex(log_penalty.shape):
+                delta = np.zeros_like(log_penalty)
+                delta[coordinate] = epsilon
+                finite_difference[coordinate] = (
+                    outer_reference(log_penalty + delta) - outer_reference(log_penalty - delta)
+                ) / (2 * epsilon)
+            np.testing.assert_allclose(hypergradient, finite_difference, rtol=1e-4, atol=1e-6)
             finite_difference_error = float(np.max(np.abs(hypergradient - finite_difference)))
         if step < steps:
             rho = rho - np.float32(1.0) * hypergradient
@@ -184,6 +214,8 @@ def run(output_dir, *, steps=30):
         "training_samples": len(x),
         "validation_samples": len(xv),
         "dtype": "float32",
+        "per_feature": per_feature,
+        "finite_difference_reference_dtype": "float64",
         "steps": steps,
         "validation_loss": history,
         "penalty": np.exp(rho).tolist(),
@@ -202,8 +234,11 @@ def run(output_dir, *, steps=30):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", default="implicit_tuning_models")
+    parser.add_argument(
+        "--per-feature", action="store_true", help="Learn one penalty per input feature"
+    )
     args = parser.parse_args()
-    result = run(args.output_dir)
+    result = run(args.output_dir, per_feature=args.per_feature)
     print(
         json.dumps(
             {

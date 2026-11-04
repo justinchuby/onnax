@@ -75,10 +75,24 @@ CPU ONNX Runtime sessions. ONNXScript optimizes the graphs; ORT graph
 optimization is disabled. `report.json` records the input/output mapping,
 validation history, CG iteration counts and numerical checks.
 
+Add `--per-feature` to learn eight positive penalties, one per feature:
+
+```sh
+uv run python -m examples.implicit_tuning --per-feature --output-dir feature_penalties
+```
+
+Here $\rho$ is a vector and $c$ becomes the mixed Jacobian $G$. The update needs
+$-G^\mathsf{T}u$, which a single `vjp(gradient, inputs=["log_penalty"])`
+computes directly. With the same observations and 30 updates, validation loss
+falls from about **1.094 to 0.0566**. Each fitted penalty stays positive through
+the exponential parameterization.
+
 An independent dense ridge solution checks the fitted parameters, HVPs, mixed
 products and hypergradients at every outer step. A centered finite difference
-perturbs $\rho$ and solves the inner problem again, checking the derivative of
-the complete outer objective. The dense matrix belongs to this reference;
+perturbs each coordinate of $\rho$ and independently solves the inner problem
+again, checking the derivative of the complete outer objective. This finite-
+difference reference uses FP64 to subtract nearby losses; the ONNX graphs, CG
+solves and outer updates use FP32. The dense matrix belongs to this reference;
 the ONNX solver uses vector products.
 
 This is a starting point for learning regularization strengths in small models.
