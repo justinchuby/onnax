@@ -618,6 +618,29 @@ rounded-operand adjoints as the ONNX functions; adapters and gradients stay FP32
 The report records projection compute, frozen-weight storage and autocast policy.
 This makes the reference’s memory representation visible alongside runtime memory.
 
+### BF16/NF4 short-context measurement
+
+On an M1 Max, the pinned Qwen3.5-0.8B export above gives these results at
+64 tokens, batch one, checkpoint group one and head chunk 128. Each independent
+process runs ten warmups and 100 fixed-parameter forward/loss/backward samples,
+including output exchange.
+
+| Backend | Median | P95 | Peak process physical memory |
+| --- | ---: | ---: | ---: |
+| ONNX / MLX EP | 399 ms | 437 ms | 4.58 GiB |
+| PyTorch MPS / SDPA | 471 ms | 555 ms | 6.47 GiB |
+
+ONNX throughput is 1.18× PyTorch for this configuration. Both use BF16
+projections and FP32 adapters/adjoints. ONNX retains packed NF4 decoder weights;
+the reference holds their decoded values in FP32. Memory includes construction
+and runtime. Input and adapter hashes match across workers.
+
+Token losses are 2.79467 and 2.79102. Across all 60 adapter gradients, the median
+relative L2 difference is 1.99%; none meets the FP32 allclose threshold. The
+[30-update training comparison](decoder-bf16-projections) records both learning
+curves. [Raw timing, gradient diagnostics and drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max/pretrained-qwen35/benchmark64)
+include per-sample timings and process-memory observations.
+
 ### Bounded-head measurement
 
 The 64-token tiny Qwen3.5 comparison uses 32 supervised targets, FP32, batch one,
