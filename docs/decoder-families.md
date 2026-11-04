@@ -622,6 +622,22 @@ rounded-operand adjoints as the ONNX functions; adapters and gradients stay FP32
 The report records projection compute, frozen-weight storage and autocast policy.
 This makes the reference’s memory representation visible alongside runtime memory.
 
+### Frozen-head scheduling
+
+On the same M1 Max and real Qwen3.5-0.8B BF16/NF4 adapter snapshot,
+selecting valid tokens and computing their hidden gradients during each head
+chunk reduces the 64-token PyTorch step median from 443 ms to 422 ms (1.05×).
+P95 changes from 465 ms to 446 ms. Both independent processes use MPS SDPA,
+one-layer decoder checkpoints, 128-token head chunks, ten warmups and 100
+measured steps. The timed step includes forward, loss, backward and output
+exchange, with parameters held fixed. Peak process physical memory is 6.43 GiB
+for both policies. Loss and all 60 adapter gradients match at `rtol=1e-4,
+atol=1e-6`.
+
+[Raw head-policy samples and process observations](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max/pretrained-qwen35/head-policy64)
+record the independent runs. The earlier ONNX comparisons below use the
+checkpoint head policy recorded in their reports.
+
 ### BF16/NF4 short-context measurement
 
 On an M1 Max, the pinned Qwen3.5-0.8B export above gives these results at
