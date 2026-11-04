@@ -1,0 +1,32 @@
+{
+  "status": "qualified",
+  "baseline_ms": {
+    "median": 10856.438874965534,
+    "p95": 10874.846450280165
+  },
+  "candidate_ms": {
+    "median": 9755.751562479418,
+    "p95": 9783.799529779935
+  },
+  "latency_reduction": 0.10138566846484554,
+  "throughput_ratio": 1.1128244508315848,
+  "baseline_physical_footprint": {
+    "available": true,
+    "current_bytes": 9365411768,
+    "lifetime_peak_bytes": 10399242216,
+    "current_resident_bytes": 5677531136,
+    "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+  },
+  "candidate_physical_footprint": {
+    "available": true,
+    "current_bytes": 9366820744,
+    "lifetime_peak_bytes": 10403649488,
+    "current_resident_bytes": 5329240064,
+    "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+  },
+  "baseline_peak_rss_bytes": 6642221056,
+  "candidate_peak_rss_bytes": 6288900096,
+  "all_448_arrays_bitwise_equal": true,
+  "all_110_losses_bitwise_equal": true,
+  "environment_unchanged": true
+}
