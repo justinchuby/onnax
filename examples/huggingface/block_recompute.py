@@ -73,7 +73,7 @@ def measure(
                 node.op_type
                 for node in backward.graph
                 if node.domain == "pkg.onnax"
-                and node.op_type.startswith(("AttentionVJP_v1_", "AttentionVJP_v2_"))
+                and node.op_type.startswith(("AttentionVJP_", "AttentionVJPRecompute_"))
             ]
             if not calls:
                 raise ValueError("No eligible attention pullback in the selected block")

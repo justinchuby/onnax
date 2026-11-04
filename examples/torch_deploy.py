@@ -91,7 +91,7 @@ def prepare_header(
     RemoveUnusedNodesPass()(result)
     calls = sum(
         node.domain == "pkg.onnax"
-        and node.op_type.startswith(("AttentionVJP_v1_", "AttentionVJP_v2_"))
+        and node.op_type.startswith(("AttentionVJP_", "AttentionVJPRecompute_"))
         for node in result.graph
     )
     if fused_attention and not calls:
@@ -155,11 +155,11 @@ def prepare_header(
         header_bytes=len(data),
         fused_attention_calls=calls,
         recomputed_attention_calls=sum(
-            node.domain == "pkg.onnax" and node.op_type.startswith("AttentionVJP_v2_")
+            node.domain == "pkg.onnax" and node.op_type.startswith("AttentionVJPRecompute_")
             for node in result.graph
         ),
         broadcast_adjoint_calls=sum(
-            node.domain == "pkg.onnax" and node.op_type == "SumToShape_v1"
+            node.domain == "pkg.onnax" and node.op_type == "SumToShape"
             for node in result.graph
         ),
         reused_initializers=reused,

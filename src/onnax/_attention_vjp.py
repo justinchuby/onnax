@@ -105,9 +105,9 @@ def _fuse_attention_vjp(model: ir.Model, *, recompute: bool) -> ir.passes.PassRe
 
     Apply immediately after VJP generation, before folding or residual splitting.
     The runtime can implement this function contract with a tiled kernel.
-    With recompute=True, eligible FP32 heads from 32 through 256 use a
-    v2 body that recomputes its primal output from Q/K/V
-    and omits Y from the interface, enabling fused forward/backward kernels.
+    With recompute=True, eligible FP32 heads from 32 through 256 recompute
+    the primal output from Q/K/V inside the function and omit Y from the
+    interface, enabling fused forward/backward kernels.
     """
     result = model.clone()
     modified = False
@@ -269,8 +269,8 @@ def _fuse_attention_vjp(model: ir.Model, *, recompute: bool) -> ir.passes.PassRe
                 ir.Function(DOMAIN, "body", graph=body, attributes=[])
             ).SerializeToString()
         ).hexdigest()[:16]
-        version = 2 if use_recompute else 1
-        name = f"AttentionVJP_v{version}_r{rank}_q{hq}_k{hk}_d{d}_s{bits:08x}_c{attrs.get('is_causal', 0)}_o{''.join(map(str, selected))}_m{kind}_{signature}"
+        operation = "AttentionVJPRecompute" if use_recompute else "AttentionVJP"
+        name = f"{operation}_r{rank}_q{hq}_k{hk}_d{d}_s{bits:08x}_c{attrs.get('is_causal', 0)}_o{''.join(map(str, selected))}_m{kind}_{signature}"
         function = ir.Function(DOMAIN, name, graph=body, attributes=[])
         existing = result.functions.get(function.identifier())
         if (
@@ -305,8 +305,8 @@ class FuseAttentionVJPPass(ir.passes.FunctionalPass):
 
     Args:
         recompute: Recompute the primal output inside the function for head
-            widths from 32 through 256, using the five-input v2 contract.
-            The default v1 contract has six inputs including the primal output.
+            widths from 32 through 256, using the five-input recomputing contract.
+            The default saved-output contract has six inputs including the primal output.
 
     Returns a cloned IR model in ``PassResult``. ``modified`` records whether
     any pullbacks were packaged. Complete region bodies are matched before

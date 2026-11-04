@@ -37,13 +37,10 @@ def measure(
     library,
     save_shapes=False,
     fused_pullbacks=False,
-    shape_vector_adjoints=False,
     warmup=10,
     samples=100,
 ):
     """Compare saved-boundary execution with a whole-VJP result at fixed inputs."""
-    if shape_vector_adjoints and not fused_pullbacks:
-        raise ValueError("Shape-vector adjoints require fused pullbacks")
     if warmup < 0 or samples < 1:
         raise ValueError("Use nonnegative warmup and positive sample counts")
     os.makedirs(output, exist_ok=False)
@@ -73,9 +70,7 @@ def measure(
     joint = onnax.vjp(source, inputs=list(parameters))
     if fused_pullbacks:
         joint = onnax.FuseAttentionVJPPass(recompute=True)(joint).model
-        joint = onnax.FuseBroadcastAdjointsPass(shape_inputs=shape_vector_adjoints)(
-            joint
-        ).model
+        joint = onnax.FuseBroadcastAdjointsPass()(joint).model
     derivative_interface = json.loads(joint.graph.metadata_props["onnax.autodiff.interface"])
     (seed,) = derivative_interface["seeds"]
     gradients = derivative_interface["derivative_outputs"]
@@ -168,7 +163,7 @@ def measure(
         source_identity=interface["identity"],
         save_shapes=save_shapes,
         fused_pullbacks=fused_pullbacks,
-        shape_vector_adjoints=shape_vector_adjoints,
+        shape_vector_adjoints=fused_pullbacks,
         inputs=input_record,
         library_sha256=digest(library),
         graph_sha256={name: digest(path) for name, path in paths.items()},
@@ -214,7 +209,6 @@ def main():
     parser.add_argument("--mlx-library", required=True)
     parser.add_argument("--save-shapes", action="store_true")
     parser.add_argument("--fused-pullbacks", action="store_true")
-    parser.add_argument("--shape-vector-adjoints", action="store_true")
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--samples", type=int, default=100)
     args = parser.parse_args()
@@ -225,7 +219,6 @@ def main():
         library=args.mlx_library,
         save_shapes=args.save_shapes,
         fused_pullbacks=args.fused_pullbacks,
-        shape_vector_adjoints=args.shape_vector_adjoints,
         warmup=args.warmup,
         samples=args.samples,
     )

@@ -67,7 +67,7 @@ def deploy(source, destination, *, broadcast_adjoints=False, recompute_attention
                     node.op_type
                     for node in joint.graph
                     if node.domain == "pkg.onnax"
-                    and node.op_type.startswith(("AttentionVJP_v1_", "AttentionVJP_v2_"))
+                    and node.op_type.startswith(("AttentionVJP_", "AttentionVJPRecompute_"))
                 ]
                 if not calls:
                     continue
@@ -89,7 +89,7 @@ def deploy(source, destination, *, broadcast_adjoints=False, recompute_attention
                         "model": f"block_{index}_backward.onnx",
                         "calls": calls,
                         "broadcast_adjoint_calls": sum(
-                            n.domain == "pkg.onnax" and n.op_type == "SumToShape_v1"
+                            n.domain == "pkg.onnax" and n.op_type == "SumToShape"
                             for n in joint.graph
                         ),
                     }

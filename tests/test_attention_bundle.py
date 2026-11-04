@@ -74,7 +74,7 @@ def test_deployed_decoder_gradients_updates_and_reexport(
     )
     if recompute_attention:
         assert any(
-            name.startswith("AttentionVJP_v2_")
+            name.startswith("AttentionVJPRecompute_")
             for row in report["blocks"]
             for name in row["calls"]
         )
@@ -143,7 +143,7 @@ def test_deployed_decoder_gradients_updates_and_reexport(
             )
             assert any(
                 node.domain == "pkg.onnax"
-                and node.op_type.startswith(("AttentionVJP_v1_", "AttentionVJP_v2_"))
+                and node.op_type.startswith(("AttentionVJP_", "AttentionVJPRecompute_"))
                 for execution in restored.onnx.executions
                 if execution.derivative is not None
                 for node in execution.derivative.graph

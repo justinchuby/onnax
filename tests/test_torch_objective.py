@@ -73,8 +73,10 @@ def provider(request):
 
 
 @pytest.mark.parametrize("eager,saved", [(False, False), (True, False), (False, True)])
-@pytest.mark.parametrize("shape_inputs", [False, True])
-def test_weighted_accumulation_and_dynamic_batch_updates(eager, saved, provider, shape_inputs):
+@pytest.mark.parametrize("fused_broadcast", [False, True])
+def test_weighted_accumulation_and_dynamic_batch_updates(
+    eager, saved, provider, fused_broadcast
+):
     calls = []
     initial = np.arange(6, dtype=np.float32).reshape(3, 2) / 20
     reference = torch.nn.Parameter(torch.from_numpy(initial.copy()))
@@ -86,14 +88,12 @@ def test_weighted_accumulation_and_dynamic_batch_updates(eager, saved, provider,
         save_activations=saved,
         session_factory=factory(calls, provider=provider),
         optimize=lambda model: (
-            onnax.FuseBroadcastAdjointsPass(shape_inputs=True)(model).model
-            if shape_inputs
-            else model
+            onnax.FuseBroadcastAdjointsPass()(model).model if fused_broadcast else model
         ),
     ) as model:
-        if shape_inputs:
+        if fused_broadcast:
             derivative = ir.load(os.path.join(model._directory.name, "derivative.onnx"))
-            assert any(node.op_type == "SumToShape_v2" for node in derivative.graph)
+            assert any(node.op_type == "SumToShape" for node in derivative.graph)
         actual = torch.optim.AdamW(model.parameters(), lr=0.01, eps=1e-5, weight_decay=0)
         expected = torch.optim.AdamW([reference], lr=0.01, eps=1e-5, weight_decay=0)
         for step in range(4):
