@@ -379,7 +379,12 @@ def test_checkpoint_releases_values_unused_by_backward(skip, monkeypatch, tmp_pa
         with CheckpointedModule.load(tmp_path / "bundle") as restored:
             for runtime in (model, restored):
                 actual = runtime(x=torch.ones(2, 3))
-                assert runtime.last_residual_bytes == (1 + skip) * 2 * 3 * 4
+                # The skip connection needs first only during forward, not
+                # as a saved shape reference for its statically known adjoint.
+                assert runtime.last_residual_bytes == 2 * 3 * 4
+                assert "first" not in {
+                    value.name for value in runtime.executions[-1].derivative.graph.inputs
+                }
                 parameter = torch.tensor(initial["weight"], requires_grad=True)
                 first_ref = torch.tanh(torch.ones(2, 3) @ parameter)
                 expected = torch.tanh(first_ref * 0.7)
