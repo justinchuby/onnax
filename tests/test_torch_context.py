@@ -126,6 +126,13 @@ def test_per_layer_checkpoints_preserve_family_updates(family, attention):
     assert len(grouped.model.layers) == len(original_layers)
     assert not grouped.training
     batch, labels = inputs()
+    with torch.no_grad():
+        torch.testing.assert_close(
+            grouped(**batch, use_cache=False).logits,
+            full(**batch, use_cache=False).logits,
+            rtol=1e-4,
+            atol=1e-6,
+        )
     optimizers = [
         torch.optim.AdamW([p for p in m.parameters() if p.requires_grad], lr=0.003)
         for m in (full, grouped)
@@ -136,7 +143,8 @@ def test_per_layer_checkpoints_preserve_family_updates(family, attention):
     for _ in range(3):
         for optimizer in optimizers:
             optimizer.zero_grad(set_to_none=True)
-        loss = token_loss(full(**batch, use_cache=False).logits, labels)
+        # Match head row grouping so the comparison isolates decoder recomputation.
+        loss = chunked_token_loss(full, batch, labels, 3)
         bounded = chunked_token_loss(grouped, batch, labels, 3)
         torch.testing.assert_close(bounded, loss, rtol=1e-4, atol=1e-6)
         loss.backward()
