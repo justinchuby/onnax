@@ -47,6 +47,60 @@ with exact HVPs in a different application.
 independent directions at one shared parameter point. The example checks five directions
 against the independent reference. CG uses one direction per iteration.
 
+(batched-sensitivity)=
+
+## Batch sensitivity directions with vmap
+
+Suppose three sensor readings predict two responses:
+$f(x)=\tanh(xW+b)$. To compare several possible input disturbances at the same
+operating point $x$, compute $J_f(x)v_k$ for unit directions $v_k$.
+For a small perturbation $\epsilon v_k$,
+
+$$
+f(x+\epsilon v_k)\approx f(x)+\epsilon J_f(x)v_k.
+$$
+
+A larger $\|J_f(x)v_k\|_2$ means the prediction is more sensitive to that
+unit disturbance. `jvp` generates one directional product; `vmap` adds an axis
+for independent directions while sharing the operating point and model weights.
+
+```sh
+uv sync --group dev
+uv run python -m examples.vmap_sensitivity --output-dir vmap_sensitivity_models
+```
+
+The [example source](https://github.com/justinchuby/onnax/blob/main/examples/vmap_sensitivity.py)
+builds the predictor with ONNX IR, then composes:
+
+```python
+directional = onnax.jvp(model, inputs=["features"], outputs=["prediction"])
+batched = onnax.vmap(directional, in_axes=(None, 0))
+```
+
+The JVP graph has two inputs in this order:
+
+| Input | One direction | Batched directions | `in_axes` |
+| --- | --- | --- | --- |
+| `features` | `[3]` | `[3]` | `None`: shared |
+| `features_tangent` | `[3]` | `[K, 3]` | `0`: map the leading axis |
+
+Both outputs have shape `[K, 2]`: repeated predictions and the corresponding
+$J_f(x)v_k$ products. Directions are independent; `vmap` keeps them separate
+rather than summing them. The exported graph accepts different positive values
+of K in the same session.
+
+The command exports `forward.onnx`, `jvp.onnx` and `batched_jvp.onnx`, reloads
+them in CPU ONNX Runtime, and checks 1, 3 and 7 directions against separate JVP
+calls and the analytic expression
+
+$$
+J_f(x)v_k=(v_kW)\odot(1-f(x)^2).
+$$
+
+Everything uses FP32, with ORT graph optimization disabled. `report.json` records
+output names, shapes and sensitivity norms. `directions.npz` stores the final
+seven-direction inputs and outputs for replay. No full Jacobian is needed.
+
 ## Verification and artifacts
 
 Fixed seed 42 generates data near $(a,b,c)=(2,1.3,0.4)$ with Gaussian noise of standard
