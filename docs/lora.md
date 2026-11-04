@@ -162,3 +162,7 @@ The [recorded
 JSON](https://github.com/justinchuby/onnax/blob/main/examples/lora/measurements/apple-m1-max.json)
 contains loss endpoints, artifact sizes and runtime versions. Run the CLI to measure
 your own configuration.
+
+For second-order inspection of the same adapter model, see
+[adapter curvature](adapter-curvature). The matrix-free example explains how
+zero initial A gradients coexist with nonzero A/B coupling.
