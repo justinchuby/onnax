@@ -5,6 +5,7 @@
 import json
 
 import numpy as np
+import onnx
 import onnx_ir as ir
 import pytest
 from onnx.reference import ReferenceEvaluator
@@ -169,3 +170,55 @@ def test_analytic_straight_through_gradient_matches_smooth_surrogate_differences
             plus[name][coordinate] += 1e-5
             minus[name][coordinate] -= 1e-5
             close((smooth(plus) - smooth(minus)) / 2e-5, grads[name][coordinate])
+
+
+@pytest.mark.parametrize("precision", ["bf16", "fp16"])
+def test_source_layout_half_linear_jvp_and_both_adjoints(precision):
+    from examples.lora.bf16_rules import DOMAIN, matmul_function
+
+    function = matmul_function(precision=precision, weight_layout="vocab_hidden")
+    a = ir.val("a", dtype=ir.DataType.FLOAT, shape=[3, 5])
+    b = ir.val("b", dtype=ir.DataType.FLOAT, shape=[7, 5])
+    tape = ir.tape.Tape()
+    y = tape.op(function.name, [a, b], domain=DOMAIN)
+    y.name, y.dtype, y.shape = "y", ir.DataType.FLOAT, ir.Shape([3, 7])
+    model = ir.Model(
+        ir.Graph(
+            [a, b],
+            [y],
+            nodes=tape.nodes,
+            opset_imports={"": 18, DOMAIN: 1},
+            name="source_layout_half_product",
+        ),
+        functions=[function],
+        ir_version=10,
+    )
+    rng = np.random.default_rng(72)
+    left, right = [rng.normal(size=shape).astype(np.float32) for shape in [(3, 5), (7, 5)]]
+    da, db, dy = [
+        rng.normal(size=shape).astype(np.float32) for shape in [(3, 5), (7, 5), (3, 7)]
+    ]
+    rounded = (
+        round_bf16
+        if precision == "bf16"
+        else lambda x: x.astype(np.float16).astype(np.float32)
+    )
+    qa, qb = rounded(left), rounded(right)
+    reverse = onnax.vjp(model, inputs=["a", "b"], outputs=["y"])
+    feeds = {"a": left, "b": right, reverse.graph.inputs[-1].name: dy}
+    outputs = ReferenceEvaluator(ir.to_proto(reverse)).run(None, feeds)
+    close(outputs[-2], dy @ qb)
+    close(outputs[-1], dy.T @ qa)
+    forward = onnax.jvp(model, inputs=["a", "b"], outputs=["y"])
+    tangent = ReferenceEvaluator(ir.to_proto(forward)).run(
+        None,
+        {
+            "a": left,
+            "b": right,
+            forward.graph.inputs[-2].name: da,
+            forward.graph.inputs[-1].name: db,
+        },
+    )[-1]
+    close(tangent, da @ qb.T + qa @ db.T)
+    onnx.checker.check_model(ir.to_proto(forward), full_check=True)
+    onnx.checker.check_model(ir.to_proto(reverse), full_check=True)

@@ -8,6 +8,7 @@ import json
 import os
 
 import numpy as np
+import onnx
 import pytest
 
 pytest.importorskip("mobius")
@@ -321,3 +322,124 @@ def test_native_compiled_head_with_eager_decoder(tmp_path, family, monkeypatch):
     assert calls[False] > 0 and calls[True] > 0
     assert report["reload"] and report["peft"]["gradient_check_passed"]
     assert report["peft"]["update_check_passed"]
+
+
+def _assert_projection_close(actual, expected, precision):
+    if precision == "bf16":
+        torch.testing.assert_close(actual, expected, rtol=1e-4, atol=1e-6)
+        return
+    # Match the existing Qwen FP16 qualification budget: one FP16 epsilon
+    # on vector norm and maximum magnitude, with FP32 absolute floor.
+    delta = (actual.detach() - expected.detach()).float()
+    scale = expected.detach().float()
+    epsilon = torch.finfo(torch.float16).eps
+    assert torch.linalg.vector_norm(delta) <= epsilon * torch.linalg.vector_norm(scale) + 1e-6
+    assert delta.abs().max() <= epsilon * scale.abs().max() + 1e-6
+
+
+@pytest.mark.parametrize("provider", ["reference", "mlx"])
+@pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
+@pytest.mark.parametrize("precision", ["bf16", "fp16"])
+@pytest.mark.parametrize("nf4", [False, True])
+def test_half_family_updates_and_portable_export(tmp_path, family, precision, nf4, provider):
+    from onnx.reference import ReferenceEvaluator
+
+    from examples.huggingface.mixed_precision import reference_projections
+
+    def factory(path):
+        return ReferenceEvaluator(str(path))
+
+    if provider == "reference" and family == "qwen35":
+        pytest.skip("ONNX ReferenceEvaluator does not execute reverse Scan")
+    if provider == "mlx":
+        if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
+            pytest.skip("Native MLX opt-in")
+        from examples.lora.mlx_runtime import register_library, session
+
+        if path := os.environ.get("ONNAX_MLX_EP_LIBRARY"):
+            register_library(path)
+        factory = session
+
+    torch.set_num_threads(1)
+    model, reference = prepare(
+        family,
+        head_chunk_size=3,
+        session_factory=factory,
+        projection_precision=precision,
+        nf4=nf4,
+    )
+    try:
+        with torch.no_grad():
+            for name, p in model.onnx.parameters_by_name().items():
+                if name.endswith(".B"):
+                    p.fill_(0.01)
+        reference = reference_projections(
+            add_reference_parameters(reference, model.onnx.arrays(), model.mapping),
+            precision=precision,
+        )
+        optimizers = [
+            torch.optim.AdamW(
+                [p for p in m.parameters() if p.requires_grad], lr=0.003, eps=1e-5
+            )
+            for m in (model, reference)
+        ]
+        frozen = {
+            n: p.detach().clone()
+            for n, p in reference.named_parameters()
+            if not p.requires_grad
+        }
+        data = batch()
+        for _ in range(3):
+            for optimizer in optimizers:
+                optimizer.zero_grad(set_to_none=True)
+            actual = model(**data)
+            expected = reference(
+                **{k: v for k, v in data.items() if k != "labels"}, use_cache=False
+            ).logits
+            expected_loss = token_loss(expected, data["labels"])
+            torch.testing.assert_close(actual.loss, expected_loss, rtol=1e-4, atol=1e-6)
+            actual.loss.backward()
+            expected_loss.backward()
+            for row in model.mapping:
+                target = reference.get_submodule(row["module"])
+                for key in ("A", "B"):
+                    p = model.onnx.parameters_by_name()[row[key]]
+                    assert p.dtype == p.grad.dtype == torch.float32
+                    _assert_projection_close(p.grad, getattr(target, key).grad, precision)
+            for optimizer in optimizers:
+                optimizer.step()
+            for row in model.mapping:
+                target = reference.get_submodule(row["module"])
+                for key in ("A", "B"):
+                    _assert_projection_close(
+                        model.onnx.parameters_by_name()[row[key]],
+                        getattr(target, key),
+                        precision,
+                    )
+        assert all(
+            torch.equal(p, frozen[n])
+            for n, p in reference.named_parameters()
+            if not p.requires_grad
+        )
+        model.export(tmp_path / "export")
+        restored = OnnxDecoder.load(tmp_path / "export", session_factory=factory)
+        try:
+            assert restored.projection_precision == precision
+            for m in (model, restored):
+                m.zero_grad()
+                m(**data).loss.backward()
+            for name, p in model.onnx.parameters_by_name().items():
+                torch.testing.assert_close(
+                    p.grad, restored.onnx.parameters_by_name()[name].grad, rtol=0, atol=0
+                )
+            inputs = {k: v for k, v in data.items() if k != "labels"}
+            torch.testing.assert_close(
+                restored(**inputs).logits, model(**inputs).logits, rtol=0, atol=0
+            )
+            onnx.checker.check_model(
+                str(tmp_path / "export" / "execution" / "inference.onnx"), full_check=True
+            )
+        finally:
+            restored.close()
+    finally:
+        model.close()

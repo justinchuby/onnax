@@ -29,24 +29,40 @@ def operands(ctx, node):
 
 @onnax.register_jvp(DOMAIN, "MatMulFP16", since_version=1, until_version=1)
 @onnax.register_jvp(DOMAIN, OP, since_version=1, until_version=1)
+@onnax.register_jvp(DOMAIN, "LinearBF16", since_version=1, until_version=1)
+@onnax.register_jvp(DOMAIN, "LinearFP16", since_version=1, until_version=1)
 def matmul_jvp(ctx, node, tangents):
     a, b = operands(ctx, node)
-    dtype = ir.DataType.FLOAT16 if node.op_type == "MatMulFP16" else ir.DataType.BFLOAT16
+    dtype = ir.DataType.FLOAT16 if node.op_type.endswith("FP16") else ir.DataType.BFLOAT16
+
+    def product(x, y):
+        if node.op_type.startswith("Linear"):
+            return ctx.op("Gemm", x, y, transB=1)
+        return ctx.op("MatMul", x, y)
+
     terms = []
     if 0 in tangents:
-        terms.append(ctx.op("MatMul", tangents[0], rounded(ctx, b, dtype)))
+        terms.append(product(tangents[0], rounded(ctx, b, dtype)))
     if 1 in tangents:
-        terms.append(ctx.op("MatMul", rounded(ctx, a, dtype), tangents[1]))
+        terms.append(product(rounded(ctx, a, dtype), tangents[1]))
     return [ctx.sum(terms)]
 
 
 @onnax.register_vjp(DOMAIN, "MatMulFP16", since_version=1, until_version=1)
 @onnax.register_vjp(DOMAIN, OP, since_version=1, until_version=1)
+@onnax.register_vjp(DOMAIN, "LinearBF16", since_version=1, until_version=1)
+@onnax.register_vjp(DOMAIN, "LinearFP16", since_version=1, until_version=1)
 def matmul_vjp(ctx, node, cotangents, input_indices):
     a, b = operands(ctx, node)
-    dtype = ir.DataType.FLOAT16 if node.op_type == "MatMulFP16" else ir.DataType.BFLOAT16
+    dtype = ir.DataType.FLOAT16 if node.op_type.endswith("FP16") else ir.DataType.BFLOAT16
     g = cotangents[0]
     contributions = {}
+    if node.op_type.startswith("Linear"):
+        if 0 in input_indices:
+            contributions[0] = ctx.op("MatMul", g, rounded(ctx, b, dtype))
+        if 1 in input_indices:
+            contributions[1] = ctx.op("Gemm", g, rounded(ctx, a, dtype), transA=1)
+        return contributions
     if 0 in input_indices:
         contributions[0] = ctx.op("MatMul", g, ctx.transpose(rounded(ctx, b, dtype), 2))
     if 1 in input_indices:
@@ -54,19 +70,27 @@ def matmul_vjp(ctx, node, cotangents, input_indices):
     return contributions
 
 
-def matmul_function(opset=18, *, precision="bf16"):
+def matmul_function(opset=18, *, precision="bf16", weight_layout="hidden_vocab"):
     """Portable BF16 product with an FP32 public boundary."""
     if precision not in ("bf16", "fp16"):
         raise ValueError("Expected bf16 or fp16 product precision")
+    if weight_layout not in ("hidden_vocab", "vocab_hidden"):
+        raise ValueError("Expected hidden_vocab or vocab_hidden weight layout")
     dtype = ir.DataType.BFLOAT16 if precision == "bf16" else ir.DataType.FLOAT16
     args = [ir.val(n) for n in ("a", "b")]
     tape = ir.tape.Tape()
     reduced = [tape.op("Cast", [arg], {"to": int(dtype)}) for arg in args]
-    product = tape.op("MatMul", reduced)
+    source_layout = weight_layout == "vocab_hidden"
+    product = (
+        tape.op("Gemm", reduced, {"transB": 1})
+        if source_layout
+        else tape.op("MatMul", reduced)
+    )
     output = tape.op("Cast", [product], {"to": int(ir.DataType.FLOAT)})
     return ir.Function(
         DOMAIN,
-        OP if precision == "bf16" else "MatMulFP16",
+        ("Linear" if source_layout else "MatMul")
+        + ("BF16" if precision == "bf16" else "FP16"),
         graph=ir.Graph(
             args,
             [output],

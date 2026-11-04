@@ -10,7 +10,7 @@ import torch
 
 import onnax
 from examples.huggingface.validation import TorchLora
-from examples.lora.bf16_rules import DOMAIN, OP, matmul_function
+from examples.lora.bf16_rules import DOMAIN, matmul_function
 from examples.torch_precision import BFloat16Product as _Product
 from examples.torch_precision import Float16Product as _FP16Product
 from onnax._inference import _infer_shapes
@@ -49,7 +49,15 @@ def precision_projections(model, *, precision="bf16"):
     context = onnax.AutodiffContext(result.graph)
     count = 0
     for node in list(result.graph):
-        if node.domain or node.op_type != "MatMul":
+        if node.domain or node.op_type not in ("MatMul", "Gemm"):
+            continue
+        source_layout = node.op_type == "Gemm"
+        if source_layout and (
+            len(node.inputs) != 2
+            or node.attributes.get_int("transA", 0) != 0
+            or node.attributes.get_int("transB", 0) != 1
+            or node.attributes.get_float("alpha", 1.0) != 1.0  # ruff: ignore[float-equality-comparison] - Exact Gemm coefficient.
+        ):
             continue
         a, b = node.inputs
         if b.shape is None or len(b.shape) != 2:
@@ -64,7 +72,15 @@ def precision_projections(model, *, precision="bf16"):
             raise ValueError(
                 "Half-precision projections require FP32 activations and a static matrix"
             )
-        k, n = b.shape
+        k, n = b.shape[::-1] if source_layout else b.shape
+        selected = function
+        if source_layout:
+            selected = matmul_function(
+                result.graph.opset_imports[""],
+                precision=precision,
+                weight_layout="vocab_hidden",
+            )
+            result.functions[selected.identifier()] = selected
         tape = ir.tape.Tape()
 
         def constant(value, tape=tape):
@@ -75,9 +91,7 @@ def precision_projections(model, *, precision="bf16"):
         flat = tape.op("Reshape", [a, constant([-1, k])]) if len(a.shape) > 2 else a
         if flat is not a:
             flat.dtype, flat.shape = ir.DataType.FLOAT, ir.Shape(["projection_rows", k])
-        product = tape.op(
-            OP if precision == "bf16" else "MatMulFP16", [flat, b], domain=DOMAIN
-        )
+        product = tape.op(selected.name, [flat, b], domain=DOMAIN)
         product.dtype, product.shape = ir.DataType.FLOAT, ir.Shape(["projection_rows", n])
         output = product
         if len(a.shape) > 2:
