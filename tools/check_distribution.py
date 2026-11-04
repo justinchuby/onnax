@@ -149,6 +149,50 @@ def main() -> None:
         onnx.checker.check_model(serialized, full_check=True)
         return ReferenceEvaluator(serialized).run(None, feeds)
 
+    # Saved-boundary graph utilities must ship without depending on examples.
+    from onnax._residuals import split_vjp
+    from onnax._saved_shapes import compress
+
+    saved_input = ir.val("saved_x", dtype=ir.DataType.FLOAT, shape=["batch", 3])
+    saved_tape = ir.tape.Tape()
+    saved_output = saved_tape.op("Tanh", [saved_input])
+    saved_output.name = "saved_y"
+    saved_output.dtype, saved_output.shape = ir.DataType.FLOAT, ir.Shape(["batch", 3])
+    saved_model = ir.Model(
+        ir.Graph(
+            [saved_input],
+            [saved_output],
+            nodes=saved_tape.nodes,
+            opset_imports={"": 18},
+            name="installed_saved_vjp",
+        ),
+        ir_version=10,
+    )
+    saved_joint = vjp(saved_model, inputs=["saved_x"])
+    saved_forward, saved_backward, saved_names = split_vjp(saved_model, saved_joint)
+    saved_forward, saved_backward, saved_names, _ = compress(
+        saved_forward, saved_backward, saved_names, outputs=["saved_y"]
+    )
+    saved_data = np.arange(6, dtype=np.float32).reshape(2, 3) / 10
+    saved_values = dict(
+        zip(
+            (v.name for v in saved_forward.graph.outputs),
+            run(saved_forward, {"saved_x": saved_data}),
+            strict=True,
+        )
+    )
+    saved_grads = run(
+        saved_backward,
+        {
+            "saved_x": saved_data,
+            saved_joint.graph.inputs[-1].name: np.ones_like(saved_data),
+            **{name: saved_values[name] for name in saved_names},
+        },
+    )
+    np.testing.assert_allclose(
+        saved_grads[0], 1 - np.tanh(saved_data) ** 2, rtol=1e-6, atol=1e-6
+    )
+
     for transform in (grad, lambda m, **kw: GradPass(**kw)(m).model):
         graph = transform(model, inputs=["weight"], output="loss")
         values = run(graph, {"x": x})
