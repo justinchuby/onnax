@@ -41,6 +41,7 @@ def main():
     parser.add_argument("--precision", choices=("fp32", "bf16"), required=True)
     parser.add_argument("--resume")
     parser.add_argument("--fused-ops", action="store_true")
+    parser.add_argument("--compile-head", action="store_true")
     parser.add_argument("--pad-to-multiple-of", type=int)
     parser.add_argument("--steps", type=int, default=30)
     parser.add_argument("--max-length", type=int, default=4096)
@@ -48,8 +49,11 @@ def main():
     args = parser.parse_args()
     if os.path.exists(args.output_dir):
         parser.error("Select a new output directory")
-    if os.environ.get("ONNXRUNTIME_EP_MLX_NO_COMPILE") != "1":
-        parser.error("Set ONNXRUNTIME_EP_MLX_NO_COMPILE=1 for qualification")
+    expected_compile_setting = "0" if args.compile_head else "1"
+    if os.environ.get("ONNXRUNTIME_EP_MLX_NO_COMPILE") != expected_compile_setting:
+        parser.error(
+            f"Set ONNXRUNTIME_EP_MLX_NO_COMPILE={expected_compile_setting} for this policy"
+        )
     os.environ.setdefault("ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES", "536870912")
     api, previous = memory_limit(args.library, 20 * 1024**3)
 
@@ -73,6 +77,7 @@ def main():
         "precision": args.precision,
         "max_length": args.max_length,
         "fused_ops": args.fused_ops,
+        "compile_head": args.compile_head,
         "pad_to_multiple_of": args.pad_to_multiple_of,
         "checkpoint_layers": args.checkpoint_layers,
         "training_batches": [],
@@ -200,6 +205,7 @@ def main():
             max_length=args.max_length,
             evaluate_train=True,
             fused_ops=args.fused_ops,
+            compile_head=args.compile_head,
             pad_to_multiple_of=args.pad_to_multiple_of,
             callbacks=[Observe()],
         )

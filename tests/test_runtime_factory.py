@@ -73,3 +73,47 @@ def test_chunked_head_prediction_and_loss_use_selected_evaluator():
     torch.testing.assert_close(actual, expected, rtol=1e-4, atol=1e-6)
     torch.testing.assert_close(hidden.grad, expected_hidden.grad, rtol=1e-4, atol=1e-6)
     assert len(executors) == 2
+
+
+def test_qwen_body_and_head_use_independent_factories():
+    pytest.importorskip("mobius")
+    pytest.importorskip("trl")
+    from examples.huggingface.sft import prepare
+    from examples.lora.train import session
+
+    calls = {"body": [], "head": []}
+
+    def body(source):
+        calls["body"].append(source)
+        return session(source)
+
+    def head(source):
+        calls["head"].append(source)
+        return session(source)
+
+    model, _ = prepare(
+        mode="chunked", checkpoint_layers=1, session_factory=body, head_session_factory=head
+    )
+    assert len(calls["head"]) == 1
+    ids = torch.tensor([[1, 4, 5, 2]])
+    loss = model(input_ids=ids, attention_mask=torch.ones_like(ids), labels=ids).loss
+    loss.backward()
+    assert calls["body"] and len(calls["head"]) == 1
+    assert all(parameter.grad is not None for parameter in model.onnx.adapters)
+    model(input_ids=ids, attention_mask=torch.ones_like(ids))
+    assert len(calls["head"]) == 2
+
+
+@pytest.mark.parametrize("entrypoint", ["benchmark", "sft"])
+@pytest.mark.parametrize("mode,provider", [("chunked", "cpu"), ("joint", "mlx")])
+def test_compile_head_requires_native_chunked_execution(entrypoint, mode, provider, tmp_path):
+    pytest.importorskip("mobius")
+    pytest.importorskip("trl")
+    from examples.huggingface import benchmark, sft
+
+    with pytest.raises(ValueError, match="compile_head requires MLX chunked"):
+        if entrypoint == "benchmark":
+            benchmark.measure(mode, provider=provider, compile_head=True)
+        else:
+            sft.run(str(tmp_path / "unused"), mode=mode, provider=provider, compile_head=True)
+    assert not (tmp_path / "unused").exists()

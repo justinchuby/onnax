@@ -34,6 +34,54 @@ also initialize this prediction session. The SFT CLI releases its PyTorch
 reference after graph construction unless a reference audit is requested;
 ordinary chunked training keeps the prediction session unloaded.
 
+### Store the frozen head in source layout
+
+The FP32 Qwen head stores one matrix $W$ with shape `[vocabulary, hidden]`:
+
+$$
+Z=HW^T,\qquad \bar H=\bar ZW.
+$$
+
+Forward uses `Gemm(transB=1)` and backward uses the same initializer directly.
+The exported head records `weight_layout="vocab_hidden"`, so loading preserves
+the layout and parameter values. Older `hidden_vocab` bundles keep their stored
+layout when loaded.
+
+### Select compilation per session
+
+With an MLX EP build containing [session-local compilation](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/117),
+`--compile-head` runs the decoder eagerly and permits compilation for the output
+head. The SFT, long-context and benchmark CLIs accept this option. Set
+`ONNXRUNTIME_EP_MLX_NO_COMPILE=0` so the process-wide kill switch permits it.
+
+```sh
+ONNXRUNTIME_EP_MLX_NO_COMPILE=0 \
+uv run --group training --group huggingface --group native-mlx \
+  python -m examples.huggingface.benchmark --mode chunked --provider mlx \
+  --library /path/to/libonnxruntime_mlx_ep.dylib --real --nf4 --fused-ops \
+  --checkpoint-layers 4 --projection-precision fp32 --compile-head \
+  --sequence-length 4096 --batch-size 1 --chunk-size 128 \
+  --train-file /tmp/qwen-long-corpus/benchmark.jsonl --warmup 10 --samples 100
+```
+
+For a custom training loop, supply separate factories to `prepare`:
+
+```python
+from functools import partial
+from examples.huggingface.sft import prepare
+from examples.lora.mlx_runtime import session
+
+model, reference = prepare(
+    mode="chunked",
+    session_factory=partial(session, enable_compile=False),
+    head_session_factory=partial(session, enable_compile=True),
+)
+```
+
+The native `ep.mlx.enable_compile` session option chooses the policy. Factories
+remain independent when sessions execute alternately or use different shapes.
+Benchmark reports include the head layout and each session's compile policy.
+
 ## Save or recompute
 
 `prepare(save_activations=True)` cuts the flat VJP at the exact primal/derivative
