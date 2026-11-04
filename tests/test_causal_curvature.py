@@ -121,6 +121,25 @@ def test_parameter_selection_is_explicit(names):
         causal_ggn(linear_model(), names)
 
 
+@pytest.mark.parametrize("optimize", [False, True])
+def test_common_logit_shift_has_zero_curvature(optimize, tmp_path):
+    model = causal_ggn(linear_model(), ["labels"], optimize=optimize)
+    metadata = json.loads(model.graph.metadata_props[INTERFACE])
+    path = tmp_path / "shift.onnx"
+    ir.save(model, path)
+    onnx.checker.check_model(path, full_check=True)
+    # A common shift changes neither token probabilities nor cross-entropy.
+    # Large directions expose cancellation in an uncentered Softmax product.
+    feeds = {
+        "directional_curvature": np.ones((1, 3, 3), np.float32),
+        "labels": np.array([[4, 0, 0, 0]] * 3, np.float32),
+        metadata["labels"]: np.array([[0, 1, 2]], np.int64),
+        metadata["directions"][0]: np.full((3, 4), 1e6, np.float32),
+    }
+    for value in session(path).run(None, feeds):
+        np.testing.assert_array_equal(value, np.zeros_like(value))
+
+
 def test_valid_token_microbatch_weighting(exported):
     _, _, metadata, runtime = exported
     rng = np.random.default_rng(23)

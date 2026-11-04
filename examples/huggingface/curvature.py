@@ -17,6 +17,23 @@ INTERFACE = "onnax.example.causal_ggn"
 DOMAIN = "pkg.onnax"
 
 
+def _softmax_jvp(logits, opset):
+    """Use the registered Softmax derivative for the token-loss Hessian product."""
+    value = ir.val("logits", dtype=logits.dtype, shape=logits.shape)
+    probability = ir.val("probability", dtype=logits.dtype, shape=logits.shape)
+    model = ir.Model(
+        ir.Graph(
+            [value],
+            [probability],
+            nodes=[ir.node("Softmax", [value], {"axis": -1}, outputs=[probability])],
+            opset_imports={"": opset},
+            name="token_probability",
+        ),
+        ir_version=10,
+    )
+    return onnax.jvp(model, inputs=["logits"], outputs=["probability"])
+
+
 def causal_ggn(model, parameters, *, output="logits", optimize=True):
     """Compose JVP, masked cross-entropy curvature and VJP at an FP32 parameter point.
 
@@ -142,17 +159,16 @@ def causal_ggn(model, parameters, *, output="logits", optimize=True):
     count = op("Max", op("ReduceSum", valid, keepdims=0), constant(np.float32(1)))
     mask = op("Pad", valid, constant(np.array([0, 0, 0, 1], np.int64)))
     mask = op("Unsqueeze", mask, constant(np.array([-1], np.int64)))
-    probability = op("Softmax", primal[output], axis=-1)
     tangent = primal[forward_info["derivative_outputs"][0]]
-    center = op(
-        "ReduceSum",
-        op("Mul", probability, tangent),
-        constant(np.array([-1], np.int64)),
-        keepdims=1,
+    softmax = _softmax_jvp(logits, source.graph.opset_imports[""])
+    softmax_info = json.loads(softmax.graph.metadata_props["onnax.autodiff.interface"])
+    product = call(
+        softmax,
+        "CausalGGNSoftmaxJVP",
+        {"logits": primal[output], softmax_info["seeds"][0]: tangent},
     )
-    cotangent = op(
-        "Div", op("Mul", op("Mul", probability, op("Sub", tangent, center)), mask), count
-    )
+    product = product[softmax_info["derivative_outputs"][0]]
+    cotangent = op("Div", op("Mul", product, mask), count)
     curvature = op("ReduceSum", op("Mul", tangent, cotangent), keepdims=0)
     curvature.name, curvature.dtype, curvature.shape = (
         fresh("directional_curvature"),

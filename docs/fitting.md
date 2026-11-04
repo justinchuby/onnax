@@ -151,6 +151,10 @@ how an adapter direction changes the predicted token distribution. Its scalar
 curvature $v^TGv$ is nonnegative. Unlike the exact Hessian, this operator uses
 the loss curvature without second derivatives of the decoder.
 
+The token-loss curvature action reuses onnax's Softmax JVP. It centers the
+direction before reduction, so a common shift of all logits gives zero curvature
+in FP32, including large shift directions.
+
 The example composes JVP, the softmax curvature action and VJP into one ordinary
 ONNX graph. JVP and VJP share the same primal values. Labels shift one position
 for causal prediction, `-100` masks ignored targets, and all-ignored batches
