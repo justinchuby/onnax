@@ -1,4 +1,39 @@
-# Differentiate fused operators
+(differentiate-fused-operators)=
+
+# Graph optimization and memory
+
+Compose the derivative graph first, then optimize its execution form. Choose
+portable local functions for fused pullbacks and explicit boundaries for saved
+activations or recomputation.
+
+(optimize-a-deployment-copy)=
+
+## Optimize a deployment copy
+
+Use ONNXScript after composing the transforms you need:
+
+```python
+import onnx_ir as ir
+from onnxscript import optimizer
+
+model = ir.load("gradient.onnx")
+optimized = optimizer.optimize(model.clone(), onnx_shape_inference=False)
+ir.save(optimized, "gradient.optimized.onnx")
+```
+
+The clone keeps the original available for further differentiation. Check the
+optimized graph against representative inputs before deployment.
+`HoistLinearCoefficientsPass` can expose shared direction-independent expressions
+in HVP graphs; the [optimization example](https://github.com/justinchuby/onnax#optimize-generated-models)
+shows the opt-in factoring policy.
+
+## Choose an execution boundary
+
+- [Attention and broadcast pullbacks](attention-vjp.md) package portable functions for native execution.
+- [Named checkpoints](checkpointing.md) split a large graph for external autograd.
+- [Saved-value analysis](vjp-memory.md) identifies retained tensors and selective replay regions.
+
+The operator sections below describe the derivative semantics used by these workflows.
 
 onnax differentiates `Attention`, `RMSNormalization`, `LayerNormalization`,
 `RotaryEmbedding` and `Swish` directly. Their original forward nodes stay in the
@@ -172,3 +207,11 @@ Higher-order composition requires products for those generated `Scan` graphs.
 
 The [Qwen3.5 tutorial](qwen35-training.md) connects these rules to an offline
 hybrid decoder and an external LoRA training loop.
+
+```{toctree}
+:maxdepth: 1
+
+attention-vjp
+checkpointing
+vjp-memory
+```

@@ -292,3 +292,8 @@ The Sphinx site follows onnx-ir: Furo, MyST-NB, MathJax, autodoc and Napoleon.
 Run `uv sync --group docs`, then
 `uv run sphinx-build -W --keep-going -b html docs docs/_build/html`.
 The deployment workflow builds Jelly separately and assembles both into `_site/`.
+
+Keep tutorials focused on the model, mathematics, runnable workflow and validation.
+Place detailed measurements and numerical investigations under the experiment
+index. Add new pages to the relevant topic overview rather than the root
+navigation; keep the roadmap focused on current priorities.

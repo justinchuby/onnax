@@ -1,62 +1,46 @@
 # onnax
 
-JAX-inspired transformations for ONNX graphs. Batch models with **vmap**,
-differentiate with **grad**, **jvp**, and **vjp**, then save ordinary ONNX models.
+Generate, compose and optimize ONNX differentiation graphs. Use `grad`, `jvp`,
+`vjp` and `vmap`, then export ordinary ONNX models. External tools run training,
+update parameters and manage data and checkpoints.
 
-## Get started
+## Choose a starting point
+
+| Goal | Start here |
+| --- | --- |
+| Differentiate an ONNX graph | [Quickstart](guide.md) |
+| Train adapters or a small model | [Training tutorials](training.md) |
+| Fine-tune a language or diffusion model | [Model workflows](models.md) |
+| Control graph memory and fusion | [Graph optimization](fused-autodiff.md) |
+| Choose precision and execution backends | [Runtime guide](runtime.md) |
+| Compare measured results | [Experiments and reports](experiments.md) |
+
+Explore gradients and matrix-free Newton-CG in the
+[Jelly playground](https://www.justinchuby.com/onnax/jelly/).
 
 ```{toctree}
 :maxdepth: 1
+:caption: Learn and build
 
 guide
-ndonnx
-onnxscript
-lora
-nf4-lora
-huggingface
-torch
-checkpointing
-vjp-memory
-block-runtime
-decoder-families
-diffusion
-diffusion-images
-qwen35-training
-qwen-sft
-fused-autodiff
-attention-vjp
-mlx-precision
-qwen-adapters
-qwen-context-training
-qwen-nf4
-training-quality
-qwen-runtime-audit
-qwen-reference-accuracy
-mlp
-mlp-bf16
-classifier-device
-metal-microbatch
-memory-lifecycle
-activation-liveness
-fitting
-precision
-softmax-precision
-iobinding
-dlpack
-coreml
-mlx-training
-mlx-bf16
-bf16-bounds
-composed-bounds
-bf16
-roadmap
-api
-Jelly playground <https://www.justinchuby.com/onnax/jelly/>
+training
+models
 ```
 
-## Interactive example
+```{toctree}
+:maxdepth: 1
+:caption: Optimize and execute
 
-Explore generated gradients and Hessian-vector products in a WebGPU spring-sheet
-simulation.
+fused-autodiff
+runtime
+```
 
-<a href="jelly/">Open the WebGPU Jelly playground</a>.
+```{toctree}
+:maxdepth: 1
+:caption: Reference and results
+
+api
+experiments
+roadmap
+Jelly playground <https://www.justinchuby.com/onnax/jelly/>
+```

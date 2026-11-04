@@ -207,6 +207,6 @@ python -m examples.diffusion.validate_unet --training-run /tmp/unet-pretrained \
 Use `--mlx-library` to select a development MLX EP library.
 
 Native MLX opt-in tests run both dynamic rectangular batches through three
-updates and reload with CPU fallback disabled. They use the qualified MLX EP
-#106 runtime. MLX measurements at 64×64 latent resolution and
-workload-based fusion are the next execution milestone.
+updates and reload with CPU fallback disabled. The pretrained report uses the qualified MLX EP #106 runtime. For 64×64
+latent resolution and fused execution, continue with the
+[real-image workflow](diffusion-images.md).
