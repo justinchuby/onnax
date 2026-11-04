@@ -532,6 +532,39 @@ contains per-output numerical errors and guard summaries; the
 and [bounded-head](../examples/huggingface/reports/qwen35-bounded-head-512-mlx-chunked.json)
 reports retain all timing samples, versions, source hashes and the native library digest.
 
+(qwen35-state-scan-performance)=
+
+### Qwen3.5 at 4K: fused recurrent replay
+
+The FP32 24-layer Qwen3.5-0.8B executes at 4,032 tokens with per-layer checkpoints
+and a 128-row frozen head. State-only and replay scans now use Metal kernels
+alongside the fused reverse recurrence.
+
+| State/replay execution | Forward/loss/all-gradient median / P95 | Shifted targets/s | Process peak physical footprint |
+| --- | ---: | ---: | ---: |
+| Generic scans | 21.026 / 21.173 s | 191.7 | 7.94 GiB |
+| Fused Metal scans | 12.922 / 13.114 s | 312.0 | 8.07 GiB |
+
+Each library ran in its own M1 Max process, with 10 warmups and 100 measured
+calls at the same fixed adapter snapshot and repeated-text input. Timing includes
+the full forward, mean causal token loss, all 60 adapter gradients and runtime
+array exchange. The optimizer runs outside this measurement. The head is eager
+in both runs; ORT graph optimization and CPU fallback are disabled, with one CPU
+thread and a 512 MiB MLX allocator cache.
+
+The measured throughput ratio is **1.63**. All 60 gradients match the parent at
+`rtol=1e-4, atol=1e-6`, with maximum absolute difference 4.80e-9. All 100 losses
+are identical, and adapter parameter hashes remain unchanged.
+
+Checkpoint backward drops from 17.283 to 7.494 seconds. Task forward/loss rises
+from 3.737 to 5.427 seconds in this pair, including a change in head/wrapper
+execution. The component samples guide the next allocator and head controls.
+Process memory includes model loading, initialization and the runtime.
+
+The [raw samples, component timings, gradient comparison, guards and drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/qwen35-state-scans-m1max)
+record library and source hashes. The native implementation is
+[MLX EP #121](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/121).
+
 ### Real-model adapter updates
 
 The same bounded-head task completes 30 SFTTrainer updates on the pinned
