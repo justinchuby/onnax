@@ -2427,5 +2427,53 @@
     "idle_cache_limit_bytes": 536870912,
     "ort_graph_optimizer": false,
     "cpu_fallback": false
+  },
+  "cpu_reference_diagnostic": {
+    "status": "strict_comparison_failed",
+    "curvature": 3.359321117401123,
+    "comparisons": {
+      "stock_transformers": {
+        "curvature": {
+          "shape": [],
+          "max_abs": 0.0004930496215820312,
+          "relative_l2": 0.00014674908015877008,
+          "violations": 1,
+          "elements": 1
+        },
+        "adapter_tensors": 112,
+        "elements": 573440,
+        "violations": 27,
+        "maximum_absolute_error": 4.434958100318909e-06,
+        "maximum_parameter_relative_l2": 0.00016639054229017347
+      },
+      "sqrt_div_control": {
+        "curvature": {
+          "shape": [],
+          "max_abs": 0.0005142688751220703,
+          "relative_l2": 0.00015306370914913714,
+          "violations": 1,
+          "elements": 1
+        },
+        "adapter_tensors": 112,
+        "elements": 573440,
+        "violations": 17,
+        "maximum_absolute_error": 4.1406601667404175e-06,
+        "maximum_parameter_relative_l2": 0.0001602787378942594
+      }
+    },
+    "ort_memory_reuse": false,
+    "ort_graph_optimizer": false,
+    "threads": 1,
+    "audit_worker": "import json,os,tempfile\nimport numpy as np\nimport examples.huggingface.validate_curvature as validation\nfrom examples.huggingface.rms_audit import division_control, diagnostic_session\nvalidation.session=diagnostic_session\nout='/tmp/onnax-real-causal-ggn-cpu-audit'\nos.makedirs(out,exist_ok=False)\noriginal_reference=validation.reference_product\noriginal_check=validation._check\ncontrols=[]\ndef reference(*args,**kwargs):\n    baseline=original_reference(*args,**kwargs)\n    with division_control(args[0]) as count:\n        controls.extend(original_reference(*args,**kwargs))\n    print(json.dumps({'diagnostic':'sqrt_div_control','normalizations':count}),flush=True)\n    return baseline\ndef metrics(actual,expected):\n    rows=[]\n    for a,b in zip(actual,expected,strict=True):\n        delta=a-b\n        rows.append({'shape':list(a.shape),'max_abs':float(np.max(np.abs(delta))),\n                     'relative_l2':float(np.linalg.norm(delta.ravel())/max(float(np.linalg.norm(b.ravel())),1e-30)),\n                     'violations':int(np.count_nonzero(np.abs(delta)>1e-6+1e-4*np.abs(b))),\n                     'elements':a.size})\n    return rows\ndef check(actual,expected):\n    report={'stock_transformers':metrics(actual,expected),'sqrt_div_control':metrics(actual,controls),\n            'curvature':float(actual[0]),'reference_curvature':float(expected[0]),\n            'control_curvature':float(controls[0]),'rtol':1e-4,'atol':1e-6}\n    with open(os.path.join(out,'diagnostic.json'),'w') as stream:json.dump(report,stream,indent=2)\n    np.savez(os.path.join(out,'products.npz'),**{f'{name}_{i}':v for name,values in [('onnx',actual),('reference',expected),('control',controls)] for i,v in enumerate(values)})\n    print(json.dumps({k:sum(row['violations'] for row in report[k]) for k in ['stock_transformers','sqrt_div_control']}),flush=True)\n    return original_check(actual,expected)\nvalidation.reference_product=reference\nvalidation._check=check\nvalidation.run(os.path.join(tempfile.gettempdir(),'curvature-audit'),real=True,provider='cpu')\n",
+    "products_npz_sha256": "c16c74d18a8b3c6ebdbf971fb82dbd666a41abc3a3b8118f85fd71a05ad710fc"
+  },
+  "mlx_cpu_comparison": {
+    "independent_reference_arrays_bitwise_equal": true,
+    "curvature": {
+      "maximum_absolute_error": 0.00015354156494140625,
+      "relative_l2": 4.570612873067148e-05
+    },
+    "maximum_parameter_relative_l2": 0.0005392287857830524,
+    "maximum_absolute_product_difference": 7.955357432365417e-06
   }
 }
