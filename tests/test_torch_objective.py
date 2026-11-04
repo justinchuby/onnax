@@ -93,7 +93,8 @@ def test_weighted_accumulation_and_dynamic_batch_updates(
     ) as model:
         if fused_broadcast:
             derivative = ir.load(os.path.join(model._directory.name, "derivative.onnx"))
-            assert any(node.op_type == "SumToShape" for node in derivative.graph)
+            # Shared batch symbols determine the elementwise reduction axes.
+            assert not any(node.op_type == "SumToShape" for node in derivative.graph)
         actual = torch.optim.AdamW(model.parameters(), lr=0.01, eps=1e-5, weight_decay=0)
         expected = torch.optim.AdamW([reference], lr=0.01, eps=1e-5, weight_decay=0)
         for step in range(4):

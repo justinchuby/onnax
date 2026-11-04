@@ -120,8 +120,8 @@ def test_shared_intermediate_keeps_portable_region():
 
 
 def test_fused_nonlinear_vjp_and_second_directional_product():
-    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=["batch", "width"])
-    z = ir.val("z", dtype=ir.DataType.FLOAT, shape=["batch", "width"])
+    x = ir.val("x", dtype=ir.DataType.FLOAT, shape=["x_batch", "x_width"])
+    z = ir.val("z", dtype=ir.DataType.FLOAT, shape=["z_batch", "z_width"])
     tape = ir.tape.Tape()
     y = tape.op("Tanh", [tape.op("Mul", [x, z])])
     y.name = "y"
@@ -133,7 +133,7 @@ def test_fused_nonlinear_vjp_and_second_directional_product():
     fused = onnax.FuseBroadcastAdjointsPass()(baseline).model
     name = "SumToShape"
     assert sum(n.op_type == name for n in fused.graph) == 2
-    # Equal symbolic names still allow independent singleton broadcast extents.
+    # Independent symbols allow singleton broadcasting on either input axis.
     feeds = {
         "x": np.array([[0.2], [0.5]], np.float32),
         "z": np.array([[0.1, 0.3, 0.7]], np.float32),

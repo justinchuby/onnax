@@ -1,0 +1,96 @@
+"""Rebuild one real exported checkpoint VJP using the active onnax checkout."""
+import argparse
+import collections
+import hashlib
+import json
+import time
+from importlib.metadata import version
+from pathlib import Path
+
+import onnx
+import onnx_ir as ir
+from onnx_ir.passes import common
+
+import onnax
+from examples.huggingface.optimization import optimize_training_graph
+from examples.lora import bf16_rules, nf4
+from onnax._autodiff import _context
+from onnax._checkpoint import partition
+from onnax._shared_weights import SharedWeights
+
+p = argparse.ArgumentParser()
+p.add_argument('--export', type=Path, required=True)
+p.add_argument('--block', type=int, required=True)
+p.add_argument('--output-dir', type=Path, required=True)
+a = p.parse_args()
+a.output_dir.mkdir(exist_ok=False)
+interface = json.loads((a.export / 'interface.json').read_text())
+assert interface['kind'] == 'checkpointed_vjp'
+source = ir.load(a.export / 'model.onnx')
+# Restoring a graph does not recreate its external differentiation registrations.
+registered = []
+functions = {(f.domain, f.name) for f in source.functions.values()}
+for f in source.functions.values():
+    if f.domain != nf4.DOMAIN:
+        continue
+    for prefix, backward, tangent in [('MatMulBF16_', 'InputGradBF16_', 'TangentBF16_'),
+                                      ('MatMulFP16_', 'InputGradFP16_', 'TangentFP16_'),
+                                      ('MatMul_', 'InputGrad_', None)]:
+        if f.name.startswith(prefix):
+            suffix = f.name.removeprefix(prefix)
+            back = backward + suffix
+            forward_tangent = tangent + suffix if tangent else None
+            assert (f.domain, back) in functions
+            assert forward_tangent is None or (f.domain, forward_tangent) in functions
+            nf4._rules(f.name, back, forward_tangent)
+            registered.append(f.name)
+            break
+blocks = partition(source, interface['specification']['parameters'],
+                   boundaries=interface['boundaries'],
+                   input_gradients=interface['specification']['input_gradients'])
+block = blocks[a.block]
+assert block.active_inputs and block.active_outputs
+
+def frozen_digest():
+    digest = hashlib.sha256()
+    for name, value in sorted(block.model.graph.initializers.items()):
+        t = value.const_value
+        digest.update(json.dumps([name, str(t.dtype), list(t.shape)]).encode())
+        digest.update(t.tobytes())
+    return digest.hexdigest()
+
+before = frozen_digest()
+start = time.perf_counter()
+derivative = onnax.vjp(block.model, inputs=list(block.active_inputs), outputs=list(block.active_outputs))
+generated = time.perf_counter()
+info = json.loads(derivative.graph.metadata_props['onnax.autodiff.interface'])
+outputs = {v.name: v for v in derivative.graph.outputs}
+derivative.graph.outputs.clear()
+derivative.graph.outputs.extend(outputs[name] for name in info['derivative_outputs'])
+raw_counts = dict(collections.Counter(n.op_type for n in derivative.graph))
+derivative = optimize_training_graph(derivative)
+common.RemoveUnusedNodesPass()(derivative)
+for value in list(derivative.graph.inputs):
+    if not value.uses() and value not in derivative.graph.outputs:
+        derivative.graph.inputs.remove(value)
+optimized = time.perf_counter()
+assert frozen_digest() == before
+with SharedWeights(str(a.output_dir)) as weights:
+    path = weights.save(derivative, f'block_{a.block}_backward')
+onnx.checker.check_model(path, full_check=True)
+report = {'block': block.name, 'block_index': a.block, 'model': str(path),
+          'timing_scope': 'VJP construction, output selection, optimization, frozen-byte verification, serialization and full checker; source loading and partitioning excluded',
+          'timings': {'differentiate_seconds': generated - start,
+                      'prepare_and_optimize_seconds': optimized - generated,
+                      'export_and_verify_seconds': time.perf_counter() - optimized,
+                      'total_seconds': time.perf_counter() - start},
+          'context_source_sha256': hashlib.sha256(Path(_context.__file__).read_bytes()).hexdigest(),
+          'versions': {name: version(name) for name in ('onnx', 'onnx-ir', 'onnxscript', 'onnx-shape-inference')},
+          'raw_op_counts': raw_counts,
+          'optimized_op_counts': dict(collections.Counter(n.op_type for n in derivative.graph)),
+          'inputs': [v.name for v in derivative.graph.inputs],
+          'outputs': [v.name for v in derivative.graph.outputs],
+          'seeds': info['seeds'], 'frozen_initializer_sha256': before,
+          'precision_rule_domain': bf16_rules.DOMAIN, 'registered_nf4_products': registered}
+(a.output_dir / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+print(json.dumps({k: v for k, v in report.items() if k not in ('inputs', 'outputs', 'registered_nf4_products')}, indent=2))

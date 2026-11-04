@@ -179,12 +179,12 @@ def test_autograd_updates_reference_and_restored_adam(tmp_path, optimize):
         tape = ir.tape.Tape()
         u = tape.op("Mul", [x, a])
         u.name, u.dtype, u.shape = "u", ir.DataType.FLOAT, ir.Shape(["batch", 4])
-        bias = tape.initializer(ir.tensor(np.ones(4, np.float32), name="bias"))
+        bias = ir.val("bias", dtype=ir.DataType.FLOAT, shape=["bias_batch", 4])
         y = tape.op("Add", [u, bias])
-        y.name, y.dtype, y.shape = "y", ir.DataType.FLOAT, ir.Shape(["batch", 4])
+        y.name, y.dtype, y.shape = "y", ir.DataType.FLOAT, ir.Shape(["output_batch", 4])
         return ir.Model(
             ir.Graph(
-                [x, a],
+                [x, a, bias],
                 [y],
                 nodes=tape.nodes,
                 initializers=tape.initializers,
@@ -219,7 +219,7 @@ def test_autograd_updates_reference_and_restored_adam(tmp_path, optimize):
             x = torch.from_numpy(rng.normal(size=(batch, 4)).astype(np.float32))
             seed = torch.from_numpy(rng.normal(size=(batch, 4)).astype(np.float32))
             for module in (baseline, candidate):
-                module(x=x).backward(seed)
+                module(x=x, bias=torch.ones(1, 4)).backward(seed)
             value = x * reference
             (value + 1).backward(seed)
         torch.testing.assert_close(

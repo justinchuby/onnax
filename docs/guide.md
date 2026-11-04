@@ -63,6 +63,14 @@ They return the same container type, with `GraphView` returning an independent
 `Graph`. Transforms preserve the source and retain its original outputs.
 See the [API reference](api.rst) for argument and return contracts.
 
+## Describe dynamic dimensions
+
+A repeated dimension name denotes the same runtime extent. For example, two
+inputs shaped `["batch", 4]` share their batch size. onnax uses this equality to
+choose broadcast-gradient reduction axes while generating the graph. Independent
+axes use different names or anonymous dimensions; their reductions are resolved
+at runtime. Both paths support singleton and zero extents.
+
 ## Differentiate a gradient
 
 Apply `jvp` to a `grad` graph for Hessian-vector products. Applying `vjp` to

@@ -92,22 +92,33 @@ class AutodiffContext:
         self, gradient: ir.Value, primal: ir.Value, *, broadcasted: ir.Value | None = None
     ) -> ir.Value:
         """Sum runtime singleton and leading broadcast dimensions, including zero extents."""
+        target_shape = primal.shape
         source_shape = broadcasted.shape if broadcasted is not None else gradient.shape
         if (
-            primal.shape is not None
+            target_shape is not None
             and source_shape is not None
-            and all(isinstance(d, int) for d in primal.shape)
+            and len(source_shape) >= len(target_shape)
+            and all(
+                isinstance(dimension, int)
+                or (
+                    isinstance(dimension, ir.SymbolicDim)
+                    and bool(dimension.value)
+                    and dimension == source_shape[len(source_shape) - len(target_shape) + i]
+                )
+                for i, dimension in enumerate(target_shape)
+            )
         ):
-            # A fixed target determines the reduction axes even when the source
-            # extents are dynamic. Reducing a singleton source axis is an identity.
-            # Symbolic target extents still require the runtime path.
-            leading_count = len(source_shape) - len(primal.shape)
+            # Fixed extents and matching named symbols determine the reduction
+            # axes. Reducing a singleton source axis is an identity.
+            leading_count = len(source_shape) - len(target_shape)
             reduction_axes = [
                 *range(leading_count),
                 *(
                     leading_count + i
-                    for i, dimension in enumerate(primal.shape)
-                    if dimension == 1 and source_shape[leading_count + i] != 1
+                    for i, dimension in enumerate(target_shape)
+                    if isinstance(dimension, int)
+                    and dimension == 1
+                    and source_shape[leading_count + i] != 1
                 ),
             ]
             if reduction_axes:
