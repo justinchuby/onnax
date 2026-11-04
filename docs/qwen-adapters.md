@@ -47,6 +47,8 @@ The exported head records `weight_layout="vocab_hidden"`, so loading preserves
 the layout and parameter values. Older `hidden_vocab` bundles keep their stored
 layout when loaded.
 
+(selective-head-compilation)=
+
 ### Select compilation per session
 
 With an MLX EP build containing [session-local compilation](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/117),
@@ -55,12 +57,14 @@ head. The SFT, long-context and benchmark CLIs accept this option. Set
 `ONNXRUNTIME_EP_MLX_NO_COMPILE=0` so the process-wide kill switch permits it.
 
 ```sh
-ONNXRUNTIME_EP_MLX_NO_COMPILE=0 \
+env -u ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES \
+ONNXRUNTIME_EP_MLX_NO_COMPILE=0 ONNAX_TILED_ATTENTION=1 \
+ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES=1073741824 \
 uv run --group training --group huggingface --group native-mlx \
   python -m examples.huggingface.benchmark --mode chunked --provider mlx \
   --library /path/to/libonnxruntime_mlx_ep.dylib --real --nf4 --fused-ops \
   --checkpoint-layers 4 --projection-precision fp32 --compile-head \
-  --sequence-length 4096 --batch-size 1 --chunk-size 128 \
+  --sequence-length 4096 --batch-size 1 --chunk-size 128 --mlx-memory-limit-gib 20 \
   --train-file /tmp/qwen-long-corpus/benchmark.jsonl --warmup 10 --samples 100
 ```
 
@@ -81,6 +85,36 @@ model, reference = prepare(
 The native `ep.mlx.enable_compile` session option chooses the policy. Factories
 remain independent when sessions execute alternately or use different shapes.
 Benchmark reports include the head layout and each session's compile policy.
+
+The [native Trainer audit](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/source-head-m1max/trainer.json)
+checks logits, loss, adapter gradients and PEFT exchange with this policy.
+The [fresh-process recovery audit](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/source-head-m1max/recovery.json)
+compares two uninterrupted updates with a checkpoint resumed after one update.
+Adapters, Adam state and scheduler state match exactly. The recovered exports
+also reproduce forward outputs and all eight adapter gradients in CPU ONNX Runtime.
+
+On the M1 Max, a Qwen3-0.6B run with 4,096 tokens, batch size 1, FP32
+computation, NF4-rounded decoder weights, four-layer checkpoints and 128-token
+head chunks gives:
+
+| Configuration | Step median / P95 | Head median | Process peak footprint |
+| --- | --- | --- | --- |
+| Previous head layout, eager sessions | 8.606 / 9.167 s | 1.061 s | 14.50 GiB |
+| Source head layout, compiled head and eager decoder | 8.157 / 8.574 s | 0.612 s | 12.77 GiB |
+| PyTorch / MPS eager, chunked head | 9.151 / 9.170 s | — | 12.91 GiB |
+
+Both runs use the same MLX EP library, input tokens, thread settings and
+20 GiB allocator limit, with 10 warmup updates followed by 100 measured updates.
+Step timing includes forward, loss, backward, array exchange and AdamW.
+The process footprint includes model setup and runtime allocations.
+The [comparison report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/source-head-m1max/comparison.json)
+records bitwise-equal gradients and updated parameters for all 112 adapters
+over the first two updates; all 110 losses agree within `rtol=1e-4, atol=1e-6`.
+The [raw reports and provenance](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/source-head-m1max)
+retain every timing sample, settings and source/library hashes.
+The ONNX path delivers 1.122 times the PyTorch eager throughput on this workload.
+PyTorch uses the same NF4-reconstructed decoder weight values in dense storage;
+ONNX keeps the decoder weights packed.
 
 ## Save or recompute
 

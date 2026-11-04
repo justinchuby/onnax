@@ -1,0 +1,54 @@
+{
+  "step": 2,
+  "input_shape": [
+    1,
+    8
+  ],
+  "input_sha256": "035e26423a2d93524151e02404754ccbba72e1d4cea53efad7b87cc54a02f984",
+  "padding_tokens": 0,
+  "forward_output_digests": [
+    {
+      "dtype": "float32",
+      "shape": [
+        1,
+        8,
+        256
+      ],
+      "sha256": "02b86e219636a0dbde9cc24d887b0a561786fbf1cc5716524e54c03e1cb15ca2"
+    },
+    {
+      "dtype": "float32",
+      "shape": [
+        1,
+        8,
+        64
+      ],
+      "sha256": "c246ef6ec2953dfe241ae1f4bed975fb8597d8e40e166e638f3f2655e8d1d1cb"
+    }
+  ],
+  "adapter_tensors": 8,
+  "checkpoint_tensors": 9,
+  "frozen_initializers": 56,
+  "adapter_bitwise_equal": true,
+  "checkpoint_bitwise_equal": true,
+  "optimizer_bitwise_equal": true,
+  "scheduler_equal": true,
+  "frozen_hashes_equal": true,
+  "export_load_outputs_bitwise_equal": true,
+  "provider": "cpu",
+  "ort_memory_reuse": false,
+  "export_load_loss_gradients_bitwise_equal": true,
+  "exported_gradient_tensors": 8,
+  "training_policy": {
+    "body": "eager",
+    "head": "compiled_when_eligible"
+  },
+  "training_provider": "mlx",
+  "replay_scope": "Native Trainer checkpoint recovery; CPU ONNX forward and all gradient exports after reload",
+  "source_commit": "50280a6738bca01b17eb9df644d47b62406ace09",
+  "library_sha256": "c32f3a97d966530a5a46c6ae23222a805a9b12e1324a9249a75690f7cc35f359",
+  "full_validation_loss": [
+    5.542850971221924,
+    5.539787769317627
+  ]
+}
