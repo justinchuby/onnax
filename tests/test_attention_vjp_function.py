@@ -50,10 +50,11 @@ def test_portable_function(d, rank, mask_type, selected, recompute, causal):
     assert len(optimized.functions) == 1
     assert next(iter(optimized.functions))[0] == "pkg.onnax"
     assert len(optimized.graph) < len(derivative.graph)
-    version = 2 if recompute and 32 <= d <= 256 else 1
-    calls = [n for n in optimized.graph if n.op_type.startswith(f"AttentionVJP_v{version}_")]
+    uses_recompute = recompute and 32 <= d <= 256
+    operation = "AttentionVJPRecompute" if uses_recompute else "AttentionVJP"
+    calls = [n for n in optimized.graph if n.op_type.startswith(f"{operation}_")]
     assert len(calls) == 1
-    assert len(calls[0].inputs) == (5 if version == 2 else 6)
+    assert len(calls[0].inputs) == (5 if uses_recompute else 6)
     assert ir.to_proto(derivative).SerializeToString() == before
     seed = derivative.graph.inputs[-1]
     output_shape = shape(4, 5)

@@ -9,7 +9,7 @@ import onnx_ir as ir
 from onnax._autodiff._context import AutodiffContext
 
 DOMAIN = "pkg.onnax"
-NAME = "SumToShape_v1"
+NAME = "SumToShape"
 REGION = "onnax.unbroadcast.region"
 INTERFACE = "onnax.unbroadcast.interface"
 
@@ -48,12 +48,10 @@ def _shape_vector_function(canonical):
             raise ValueError("Broadcast shape contract must consume only complete shapes")
         node.outputs[0].replace_all_uses_with(target)
         body.remove(node, safe=True)
-    return ir.Function(DOMAIN, "SumToShape_v2", graph=body, attributes=[])
+    return ir.Function(DOMAIN, "SumToShape", graph=body, attributes=[])
 
 
-def _fuse_broadcast_adjoints(
-    model: ir.Model, *, shape_inputs: bool = False
-) -> ir.passes.PassResult:
+def _fuse_broadcast_adjoints(model: ir.Model) -> ir.passes.PassResult:
     """Clone and fuse untouched dynamic unbroadcast regions before optimization.
 
     Each call sums leading and singleton broadcast axes and restores the reference
@@ -71,7 +69,7 @@ def _fuse_broadcast_adjoints(
         return ir.passes.PassResult(result, False)
     canonical = _canonical(graph.opset_imports[""])
     signature = ir.to_proto(canonical).SerializeToString()
-    deployed = _shape_vector_function(canonical) if shape_inputs else canonical
+    deployed = _shape_vector_function(canonical)
     deployed_signature = ir.to_proto(deployed).SerializeToString()
     values = ir.convenience.create_value_mapping(graph)
     for nodes in groups.values():
@@ -124,17 +122,16 @@ def _fuse_broadcast_adjoints(
                 f"An incompatible pkg.onnax {deployed.name} function already exists"
             )
         result.functions[key] = deployed
-        if shape_inputs:
-            reference = inputs[1]
-            name = f"{reference.name}.broadcast_shape"
-            while name in values:
-                name += "_"
-            rank = None if reference.shape is None else len(reference.shape)
-            target = ir.val(name, dtype=ir.DataType.INT64, shape=[rank])
-            shape_node = ir.Node("", "Shape", [reference], outputs=[target])
-            graph.insert_before(nodes[0], shape_node)
-            values[name] = target
-            inputs = [inputs[0], target]
+        reference = inputs[1]
+        name = f"{reference.name}.broadcast_shape"
+        while name in values:
+            name += "_"
+        rank = None if reference.shape is None else len(reference.shape)
+        target = ir.val(name, dtype=ir.DataType.INT64, shape=[rank])
+        shape_node = ir.Node("", "Shape", [reference], outputs=[target])
+        graph.insert_before(nodes[0], shape_node)
+        values[name] = target
+        inputs = [inputs[0], target]
         call = ir.Node(DOMAIN, deployed.name, inputs, num_outputs=1, version=1)
         graph.insert_before(nodes[0], call)
         replacement = call.outputs[0]
@@ -155,12 +152,12 @@ class FuseBroadcastAdjointsPass(ir.passes.FunctionalPass):
     """Package dynamic broadcast adjoints as ordinary ONNX local functions.
 
     Apply to an onnax derivative before ONNXScript optimization or residual
-    splitting. Each ``pkg.onnax::SumToShape_v1`` call sums the leading and
+    splitting. Each ``pkg.onnax::SumToShape`` call sums the leading and
     singleton axes introduced by broadcasting and restores the reference shape.
-    Its second input supplies the shape, while its portable ONNX body lets any
+    Its second input is an INT64 shape vector. Its portable ONNX body lets any
     compatible backend execute the graph. Backends can specialize the function
-    for observed runtime shapes. With ``shape_inputs=True``, the pass emits
-    ``Shape(reference)`` followed by ``SumToShape_v2(gradient, target_shape)``.
+    for observed runtime shapes. The pass emits
+    ``Shape(reference)`` followed by ``SumToShape(gradient, target_shape)``.
     This exposes shape-only dependencies to saved-activation planning, allowing
     backward execution to retain a small INT64 vector instead of a full tensor.
 
@@ -176,10 +173,5 @@ class FuseBroadcastAdjointsPass(ir.passes.FunctionalPass):
         deployed = onnax.FuseBroadcastAdjointsPass()(derivative).model
     """
 
-    def __init__(self, *, shape_inputs: bool = False) -> None:
-        if not isinstance(shape_inputs, bool):
-            raise TypeError("FuseBroadcastAdjointsPass shape_inputs must be a bool")
-        self.shape_inputs = shape_inputs
-
     def call(self, model: ir.Model) -> ir.passes.PassResult:
-        return _fuse_broadcast_adjoints(model, shape_inputs=self.shape_inputs)
+        return _fuse_broadcast_adjoints(model)

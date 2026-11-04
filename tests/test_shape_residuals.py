@@ -277,7 +277,7 @@ def test_fused_broadcast_shape_vector_boundary_keeps_only_dimensions():
     from tests.test_broadcast_adjoint import _model
 
     forward, _ = pair()
-    backward = onnax.FuseBroadcastAdjointsPass(shape_inputs=True)(_model()).model
+    backward = onnax.FuseBroadcastAdjointsPass()(_model()).model
     backward.graph.inputs[0].name = "seed"
     backward.graph.inputs[1].name = "u"
     backward.graph.inputs[0].shape = ir.Shape([4, "batch", "width"])
@@ -286,9 +286,7 @@ def test_fused_broadcast_shape_vector_boundary_keeps_only_dimensions():
     f, b, names, plan = compress(forward, backward, ["u"], outputs=["y"])
     assert len(plan["compressed"]) == 1
     assert "u" not in {value.name for value in b.graph.inputs}
-    assert (
-        next(node for node in b.graph if node.domain == "pkg.onnax").op_type == "SumToShape_v2"
-    )
+    assert next(node for node in b.graph if node.domain == "pkg.onnax").op_type == "SumToShape"
     for batch, width in ((2, 1024), (3, 7), (0, 9)):
         x = np.ones((batch, width), np.float32)
         gradient = np.ones((4, batch, width), np.float32)

@@ -94,12 +94,11 @@ python -m examples.torch_deploy --bundle /tmp/unet-pretrained/export \
   --fused-attention --broadcast-adjoints --output /tmp/unet-training-vjp.onnx
 ```
 
-`pkg.onnax::SumToShape_v1(Gradient, Reference)` uses the reference's shape and
-returns a tensor of that shape with the gradient's dtype. Reference values are
-unused. The portable function discovers axes using ordinary ONNX operators;
-MLX specializes the reduction using both live tensor shapes. This covers leading
-axes, runtime singleton dimensions, scalars and empty tensors. The deployment
-manifest records the number of packaged calls.
+`pkg.onnax::SumToShape(Gradient, TargetShape)` reduces leading and singleton
+broadcast axes and returns the gradient's dtype at the target shape.
+`TargetShape` is an INT64 vector; an empty vector denotes a scalar.
+The portable body uses ordinary ONNX operators. MLX specializes the reduction
+using the live gradient shape and target dimensions.
 
 Apply `onnax.FuseBroadcastAdjointsPass()` immediately after
 differentiation and Attention fusion, before ONNXScript optimization. It matches
@@ -114,16 +113,7 @@ deployed = onnax.FuseBroadcastAdjointsPass()(derivative).model
 deployed = optimizer.optimize(deployed, inline=False)
 ```
 
-For saved-activation execution, expose the target dimensions explicitly:
-
-```python
-deployed = onnax.FuseBroadcastAdjointsPass(shape_inputs=True)(derivative).model
-```
-
-This emits `Shape(Reference)` followed by
-`pkg.onnax::SumToShape_v2(Gradient, TargetShape)`. `TargetShape` is a one-dimensional
-INT64 vector of nonnegative dimensions. Its length is the target rank; an empty
-vector denotes a scalar. The broadcasting and empty-tensor rules match v1.
+The pass emits `Shape(Reference)` followed by `SumToShape(Gradient, TargetShape)`.
 The visible `Shape` dependency lets saved-value planning retain a small dimension
 vector in place of a full activation. The function body remains ordinary ONNX.
 MLX specializes both the gradient shape and the target dimension values, so one
@@ -351,7 +341,7 @@ models; 3935 frozen tensor records remain unchanged throughout training.
 
 ## Recomputed pullbacks
 
-`onnax.FuseAttentionVJPPass(recompute=True)(model).model` emits `AttentionVJP_v2_*` for
+`onnax.FuseAttentionVJPPass(recompute=True)(model).model` emits `AttentionVJPRecompute_*` for
 FP32 heads with widths 32 through 256, in multiples of eight.
 The five inputs are Q, K, V, G and Mask. Mask carries a boolean or additive mask;
 unmasked functions ignore its placeholder value. The ordinary ONNX
@@ -361,8 +351,9 @@ use its fused SDPA forward/backward implementation.
 Rank-three and rank-four layouts, grouped query heads, dynamic batch/sequence
 lengths and selected Q/K/V gradient outputs use the same interface.
 
-The v1 function keeps its supplied-Y contract. Other attention forms continue to
-use that saved-output implementation. Both versions contain portable ONNX bodies.
+`AttentionVJP_*` consumes the supplied output Y; `AttentionVJPRecompute_*`
+recomputes it. These names select execution strategies. Both contain portable
+ONNX bodies.
 
 Prepare an existing Torch bundle with the recomputed functions:
 
@@ -402,7 +393,7 @@ python -m examples.huggingface.attention_bundle --export qwen_run/export \
 
 Qwen3, Qwen3.5 and Phi3 tests compare three AdamW updates, all adapter gradients,
 loss and re-exported execution with Transformers. Their recomputed cases use
-32-wide heads and assert that v2 functions execute.
+32-wide heads and assert that recomputing functions execute.
 
 A Qwen3.5 4032-token attention block with 256-wide heads measures 217.67/222.03 ms
 paired median/P95. The same-binary GEMM control, with a 1 GiB score budget,

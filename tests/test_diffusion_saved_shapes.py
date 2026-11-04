@@ -17,10 +17,7 @@ from examples.diffusion import saved_shapes
 from examples.huggingface.block_runtime import digest
 
 
-@pytest.mark.parametrize("compact", [False, True])
-def test_saved_workload_exports_and_executes_without_reference_weights(
-    tmp_path, monkeypatch, compact
-):
+def test_saved_workload_exports_and_executes_without_reference_weights(tmp_path, monkeypatch):
     import huggingface_hub
     import torch
 
@@ -107,13 +104,12 @@ def test_saved_workload_exports_and_executes_without_reference_weights(
         library=str(scheduler),
         fused_pullbacks=True,
         save_shapes=True,
-        shape_vector_adjoints=compact,
         warmup=1,
         samples=2,
     )
     assert report["gradients_checked"] == 1
     assert report["timing_seconds"]["paired"]["samples"] == 2
-    assert report["shape_vector_adjoints"] is compact
+    assert report["shape_vector_adjoints"] is True
     assert json.loads((output / "report.json").read_text())["inputs"] == report["inputs"]
     forward, backward = session(output / "forward.onnx"), session(output / "backward.onnx")
     feeds = {"x": inputs, "w": initial}

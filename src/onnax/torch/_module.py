@@ -382,7 +382,7 @@ class OnnxModule(torch.nn.Module):
                 from onnax._saved_shapes import compress
 
                 backward = onnax.FuseAttentionVJPPass(recompute=True)(backward).model
-                backward = onnax.FuseBroadcastAdjointsPass(shape_inputs=True)(backward).model
+                backward = onnax.FuseBroadcastAdjointsPass()(backward).model
                 execution, backward, names = split_vjp(source, backward, optimize_layout=True)
                 execution, backward, names, _ = compress(
                     execution, backward, names, outputs=selected
