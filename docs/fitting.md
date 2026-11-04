@@ -187,3 +187,6 @@ The [M1 Max report](https://github.com/justinchuby/onnax/blob/main/examples/hugg
 records 14 passing CPU/MLX decoder tests and real Qwen3-0.6B numerical audits.
 The real-model CPU and MLX products exceed the original strict pointwise
 tolerance; their error statistics and RMSNorm control are included in the report.
+The [centered Softmax follow-up](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/causal-curvature-stable-softmax-m1max.json)
+fixes common-logit-shift invariance; the real-model curvature difference remains
+about 0.01% against Transformers.
