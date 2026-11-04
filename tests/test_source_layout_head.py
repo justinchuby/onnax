@@ -216,3 +216,31 @@ def test_source_layout_half_updates_and_reload(tmp_path, precision):
     finally:
         restored.close()
         runtime.close()
+
+
+@pytest.mark.parametrize("precision", ["bf16", "fp16"])
+def test_source_layout_half_preserves_fp32_tail_gradient(precision):
+    from onnx.reference import ReferenceEvaluator
+
+    def factory(path):
+        return ReferenceEvaluator(str(path))
+
+    runtime = ChunkedHead(
+        np.array([[1, 0], [-1, 0]], np.float32),
+        weight_layout="vocab_hidden",
+        projection_precision=precision,
+        session_factory=factory,
+    )
+    try:
+        loss, gradient = runtime.executor.run(
+            None,
+            {"hidden": np.array([[20, 0]], np.float32), "labels": np.array([0], np.int64)},
+        )
+        tail = np.float32(np.exp(-40))
+        np.testing.assert_allclose(loss, np.log1p(tail), rtol=1e-4, atol=0)
+        np.testing.assert_allclose(
+            gradient, np.array([[-2 * tail / (1 + tail), 0]], np.float32), rtol=1e-4, atol=0
+        )
+        assert gradient.dtype == np.float32 and gradient[0, 0] < 0
+    finally:
+        runtime.close()
