@@ -610,6 +610,47 @@ The [raw samples, component timings, gradient comparison, guards and drivers](ht
 record library and source hashes. The native implementation is
 [MLX EP #121](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/121).
 
+(qwen35-mps-comparison)=
+
+### Qwen3.5 at 4K: PyTorch MPS and MLX EP
+
+The same pinned Qwen3.5-0.8B runs in FP32 with a fixed adapter snapshot,
+batch one, 4,032 input tokens and 4,031 shifted prediction targets. Both paths
+use one-layer decoder checkpoints and 128-token output-head chunks. Each runs
+in a separate process with 10 warmups and 100 measured calls on M1 Max:
+
+| Execution | Forward/loss/all-gradient median / P95 | Shifted targets/s | Process peak physical footprint |
+| --- | ---: | ---: | ---: |
+| PyTorch MPS, SDPA | 10.945 / 10.973 s | 368.3 | 10.19 GiB |
+| ONNX, MLX EP | 10.809 / 11.031 s | 372.9 | 8.45 GiB |
+
+ONNX reaches similar throughput, with a **1.01×** median ratio and **17%** lower
+process peak physical footprint for this workload. All 60 adapter gradients match at `rtol=1e-4, atol=1e-6`, with maximum
+absolute difference 2.94e-07; loss differs by at most
+5.40e-08. Input and adapter digests agree, and parameters stay fixed.
+
+Timing includes forward, mean shifted-token loss, backward and CPU gradient
+availability. MPS inputs are staged before warmup; its device execution and
+output exchange are also recorded separately. ONNX exchanges arrays inside its
+block session calls. The external optimizer is outside the timed scope.
+PyTorch checkpoints the frozen head and recomputes logits during backward;
+ONNX shares loss/VJP statistics and saves the hidden gradient. These schedules
+provide the next head-control comparison.
+
+ONNX uses fused recurrent scans and shape-selected 64-token replay, with an
+eager head, ORT optimization and CPU fallback disabled, one CPU thread and a
+512 MiB MLX cache. PyTorch uses Transformers' Torch recurrent implementation
+and SDPA for full attention, with MPS CPU fallback disabled. Peak physical
+footprint includes model loading and runtime setup; the ONNX process also loads
+18 regenerated derivative modules with a separate immutable frozen payload.
+GPU workers run serially. Short CPU correctness tests ran during portions of
+the measurement.
+
+The [samples, guards, array comparisons and qualified drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/qwen35-mps-comparison-m1max)
+record this pair. The [shape-selected checkpoint report](adaptive-recurrent-checkpoints)
+explains its recurrent plan; the preceding section records the earlier kernel
+comparison.
+
 ### Real-model adapter updates
 
 The same bounded-head task completes 30 SFTTrainer updates on the pinned

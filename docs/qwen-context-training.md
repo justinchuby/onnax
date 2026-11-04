@@ -24,6 +24,9 @@ Trainer owns updates, gradient accumulation and checkpoint storage.
 
 ## Current 4K performance
 
+For the hybrid Qwen3.5 decoder, see the [matched PyTorch MPS and MLX EP
+measurement](qwen35-mps-comparison). The measurements below use Qwen3.
+
 Native attention pullbacks, NF4 GEMM execution and cached frozen-weight layouts
 reduce the complete 4096-token training step to the following times on an
 M1 Max with 32 GiB memory:

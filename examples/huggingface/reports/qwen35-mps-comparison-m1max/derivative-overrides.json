@@ -1,0 +1,325 @@
+{
+  "decoder_0_1": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_1_backward.onnx",
+    "nodes": 472,
+    "initializer_bytes": 86270872,
+    "gradients": [
+      "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "input_ids",
+      "v_model.embed_tokens.Gather_109",
+      "model.layers.0.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.0.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.0.Add_219_cotangent"
+    ],
+    "sha256": "1754b7747b9f8ff2dccce2ef93efa73714403b50ae362e119745773d55530f85"
+  },
+  "decoder_1_2": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_2_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.0.Add_219_cotangent",
+      "model.layers.1.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.1.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.0.Add_219",
+      "model.layers.1.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.1.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.1.Add_292_cotangent"
+    ],
+    "sha256": "19a0060d9a4974d521b244257170f50e6a5be5680c8e3d947c0f7495f91fe41e"
+  },
+  "decoder_2_3": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_3_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.1.Add_292_cotangent",
+      "model.layers.2.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.2.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.1.Add_292",
+      "model.layers.2.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.2.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.2.Add_365_cotangent"
+    ],
+    "sha256": "070a14c20d7a493134f9e9c114e1a1bffcce7d22ac191c6c337fc7c10ebfe854"
+  },
+  "decoder_4_5": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_5_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.3.Add_402_cotangent",
+      "model.layers.4.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.4.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.3.Add_402",
+      "model.layers.4.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.4.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.4.Add_475_cotangent"
+    ],
+    "sha256": "b38b45da2be3365465d3383d94ceecbea81cb975b402c36cf0a4946fcf007794"
+  },
+  "decoder_5_6": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_6_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.4.Add_475_cotangent",
+      "model.layers.5.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.5.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.4.Add_475",
+      "model.layers.5.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.5.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.5.Add_548_cotangent"
+    ],
+    "sha256": "3d6de6f6c0c546f604d2290c032cdc41b2db43a700da7bffb21a7ff72c65121d"
+  },
+  "decoder_6_7": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_7_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.5.Add_548_cotangent",
+      "model.layers.6.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.6.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.5.Add_548",
+      "model.layers.6.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.6.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.6.Add_621_cotangent"
+    ],
+    "sha256": "8e068f9015ada2802f0df24896f7262cde0b807eed5a63601a43894aff54f6d0"
+  },
+  "decoder_8_9": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_9_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.7.Add_658_cotangent",
+      "model.layers.8.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.8.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.7.Add_658",
+      "model.layers.8.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.8.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.8.Add_731_cotangent"
+    ],
+    "sha256": "87a8215da778cac55d3fc85339ba626d242c6931d7183998cfbaecfc5d6ddba8"
+  },
+  "decoder_9_10": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_10_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.8.Add_731_cotangent",
+      "model.layers.9.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.9.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.8.Add_731",
+      "model.layers.9.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.9.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.9.Add_804_cotangent"
+    ],
+    "sha256": "f6ad67b1f9addcfa540dd87b5e1ffb01d305c7d674c86b23fb1dcd2ab5dd4679"
+  },
+  "decoder_10_11": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_11_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.9.Add_804_cotangent",
+      "model.layers.10.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.10.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.9.Add_804",
+      "model.layers.10.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.10.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.10.Add_877_cotangent"
+    ],
+    "sha256": "c4d1f301ff5381744062ae015caec04d445f411a07ff9a6d5f9c3c4a83a8b658"
+  },
+  "decoder_12_13": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_13_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.11.Add_914_cotangent",
+      "model.layers.12.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.12.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.11.Add_914",
+      "model.layers.12.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.12.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.12.Add_987_cotangent"
+    ],
+    "sha256": "f9408682acf3c491f1ad0107ca82624c59008821f710926d62b7420a65bbb58a"
+  },
+  "decoder_13_14": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_14_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.12.Add_987_cotangent",
+      "model.layers.13.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.13.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.12.Add_987",
+      "model.layers.13.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.13.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.13.Add_1060_cotangent"
+    ],
+    "sha256": "e91786e7232100576c625e940b29d547bfe6652266fa42a9113aa38ba478f2e6"
+  },
+  "decoder_14_15": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_15_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.13.Add_1060_cotangent",
+      "model.layers.14.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.14.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.13.Add_1060",
+      "model.layers.14.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.14.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.14.Add_1133_cotangent"
+    ],
+    "sha256": "0acc800432e21298e0539c40ec062fedb827c1d1c02b41155c798964b125c8d3"
+  },
+  "decoder_16_17": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_17_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.15.Add_1170_cotangent",
+      "model.layers.16.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.16.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.15.Add_1170",
+      "model.layers.16.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.16.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.16.Add_1243_cotangent"
+    ],
+    "sha256": "abb098447459c0277aba54a7671fea7c44f6bf0159497b1d8f481be18a37c2d3"
+  },
+  "decoder_17_18": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_18_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.16.Add_1243_cotangent",
+      "model.layers.17.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.17.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.16.Add_1243",
+      "model.layers.17.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.17.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.17.Add_1316_cotangent"
+    ],
+    "sha256": "7250fdb78081c8a0b32237e4cb8dd6495a0df3d8dc0390e3bb1e4b7108e6034f"
+  },
+  "decoder_18_19": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_19_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.17.Add_1316_cotangent",
+      "model.layers.18.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.18.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.17.Add_1316",
+      "model.layers.18.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.18.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.18.Add_1389_cotangent"
+    ],
+    "sha256": "6e3720b2a1b641ece75baa0a9a2bc786c686d62755a89a9b5ac27119c835138c"
+  },
+  "decoder_20_21": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_21_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.19.Add_1426_cotangent",
+      "model.layers.20.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.20.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.19.Add_1426",
+      "model.layers.20.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.20.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.20.Add_1499_cotangent"
+    ],
+    "sha256": "fa8eca448addf5a1aacbb2fd20df3821f27f116bf5d73e8d15456a8d5c60f957"
+  },
+  "decoder_21_22": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_22_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.20.Add_1499_cotangent",
+      "model.layers.21.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.21.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.20.Add_1499",
+      "model.layers.21.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.21.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.21.Add_1572_cotangent"
+    ],
+    "sha256": "bd13ff2d5e407014c1851c2dcd4dc3a079cbf4ac570899bfcdeaca5925309906"
+  },
+  "decoder_22_23": {
+    "file": "/tmp/onnax-adaptive-whole-4k/graphs/block_23_backward.onnx",
+    "nodes": 619,
+    "initializer_bytes": 86270884,
+    "gradients": [
+      "v_model.layers.21.Add_1572_cotangent",
+      "model.layers.22.linear_attn.in_proj_qkv.lora.A_cotangent",
+      "model.layers.22.linear_attn.in_proj_qkv.lora.B_cotangent"
+    ],
+    "inputs": [
+      "v_Shape_0",
+      "v_model.layers.21.Add_1572",
+      "model.layers.22.linear_attn.in_proj_qkv.lora.A",
+      "model.layers.22.linear_attn.in_proj_qkv.lora.B",
+      "v_model.layers.22.Add_1645_cotangent"
+    ],
+    "sha256": "a10b41394701bc9905c45046a0b1af7c1e31589b21db57c6cc01f7c8cad1a978"
+  }
+}
