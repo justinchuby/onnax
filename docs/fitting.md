@@ -97,3 +97,39 @@ preconditioners and device bindings.
 A [recorded development-machine
 report](https://github.com/justinchuby/onnax/blob/main/examples/measurements/decay-fit-apple-arm64.json)
 is included for inspection. Rerun the CLI for measurements on your own machine.
+
+(adapter-curvature)=
+
+## Inspect LoRA adapter curvature
+
+The same products can diagnose a fine-tuning model. For the
+[LoRA workload](lora.md), write its prediction as $f(A,B)$ and its mean squared
+loss as $L=\|f(A,B)-y\|^2/N$, where $N$ counts prediction elements.
+
+```sh
+uv sync --group dev --group training --extra torch
+uv run python -m examples.lora.curvature --output-dir adapter-curvature
+```
+
+The example exports two matrix-free operators:
+
+$$
+Hv=\operatorname{JVP}(\nabla L,v),\qquad
+Gv=\frac{2}{N}J_f^T(J_fv).
+$$
+
+`jvp(grad(...))` computes the exact Hessian product. Composed prediction JVP
+and VJP graphs compute the generalized Gauss–Newton product. Its directional
+curvature is $v^TGv=2\|J_fv\|^2/N\ge0$.
+
+At the usual $B=0$ initialization, the prediction is independent of $A$, so
+$\nabla_A L=0$. The mixed A/B Hessian blocks can still be nonzero. The example
+uses those products to construct a unit direction with negative exact
+curvature and compares it with the nonnegative Gauss–Newton curvature. This
+reveals coupling that a first-order gradient inspection misses.
+
+All products execute in FP32. Independent PyTorch products check zero and
+nonzero adapters at three batch sizes, before and after ONNXScript optimization.
+The command writes six checker-validated ONNX files and `report.json`; frozen
+weights and the source graph remain unchanged. The exported products can be
+reused by an external curvature diagnostic or solver.
