@@ -175,3 +175,11 @@ ordered parameter names, direction inputs, labels and product outputs.
 `report.json` records the reference, tolerances, graph sizes and runtime versions.
 ORT graph optimization is disabled. The tests cover padding, position IDs,
 single-token sequences and unequal valid-token microbatch weighting.
+
+The [M1 Max report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/causal-curvature-m1max.json)
+records the offline CPU result and 14 passing CPU/MLX decoder tests. A separate
+Qwen3-0.6B diagnostic at sequence length 64 measures directional curvature
+3.359475 versus Transformers' 3.359814. Of 573,440 adapter-product elements,
+164 exceed `rtol=1e-4, atol=1e-6`; the largest absolute difference is 7.94e-6.
+The real-model strict comparison remains open. The RMSNorm sqrt/div control
+produces a similar difference.
