@@ -420,11 +420,18 @@ def test_bf16_family_updates_and_portable_export(tmp_path, family, nf4, provider
             if not p.requires_grad
         )
         model.export(tmp_path / "export")
-        if not nf4:
-            from examples.huggingface.torch_decoder_benchmark import reference_from_export
+        from examples.huggingface.torch_decoder_benchmark import reference_from_export
 
-            with pytest.raises(ValueError, match="FP32 projection compute"):
-                reference_from_export(tmp_path / "export")
+        benchmark_reference, _, benchmark_arrays = reference_from_export(tmp_path / "export")
+        assert (
+            benchmark_reference.config.onnax_precision["projection_compute"]
+            == {"bf16": "bfloat16", "fp16": "float16"}[precision]
+        )
+        for row in model.mapping:
+            for key in ("A", "B"):
+                np.testing.assert_array_equal(
+                    benchmark_arrays[row[key]], model.onnx.arrays()[row[key]]
+                )
         restored = OnnxDecoder.load(tmp_path / "export", session_factory=factory)
         try:
             assert restored.projection_precision == precision

@@ -229,3 +229,71 @@ def test_exported_decoder_benchmark_matches_onnx(tmp_path, family):
         assert hashlib.sha256(old).hexdigest() == manifest["files"]["parameters.npz"]
     finally:
         module.close()
+
+
+@pytest.mark.parametrize("family", ["qwen3", "phi3", "qwen35"])
+@pytest.mark.parametrize("precision", ["fp32", "bf16"])
+@pytest.mark.parametrize("nf4", [False, True])
+def test_exported_precision_benchmark_reconstructs_reference(tmp_path, family, precision, nf4):
+    import numpy as np
+
+    from examples.huggingface.decoder_sft import batch as decoder_batch
+    from examples.huggingface.decoder_sft import prepare
+    from examples.huggingface.mixed_precision import reference_projections
+    from examples.huggingface.torch_decoder_benchmark import measure as measure_decoder
+    from examples.huggingface.validation import add_reference_parameters
+
+    class ExportOnlySession:
+        def __init__(self, path):
+            pass
+
+        def run(self, *args):
+            raise AssertionError("Reference benchmark must not execute ONNX sessions")
+
+    torch.set_num_threads(1)
+    module, reference = prepare(
+        family,
+        head_chunk_size=3,
+        projection_precision=precision,
+        nf4=nf4,
+        session_factory=ExportOnlySession,
+    )
+    try:
+        with torch.no_grad():
+            for name, parameter in module.onnx.parameters_by_name().items():
+                if name.endswith(".B"):
+                    parameter.fill_(0.01)
+        add_reference_parameters(reference, module.onnx.arrays(), module.mapping)
+        if precision != "fp32":
+            reference_projections(reference, precision=precision)
+        reference.set_attn_implementation("eager")
+        values = decoder_batch()
+        labels = values.pop("labels")
+        expected = chunked_token_loss(reference, values, labels, 3)
+        expected.backward()
+        export = tmp_path / "export"
+        module.export(export)
+        report, actual = measure_decoder(
+            export,
+            {name: value.numpy() for name, value in {**values, "labels": labels}.items()},
+            warmup=0,
+            samples=2,
+            head_chunk_size=3,
+            attention="eager",
+        )
+        np.testing.assert_allclose(
+            actual["loss"], expected.detach().numpy(), rtol=1e-4, atol=1e-6
+        )
+        for row in module.mapping:
+            layer = reference.get_submodule(row["module"])
+            for key in ("A", "B"):
+                np.testing.assert_allclose(
+                    actual[row[key]], getattr(layer, key).grad.numpy(), rtol=1e-4, atol=1e-6
+                )
+        assert (
+            report["projection_compute"] == {"fp32": "float32", "bf16": "bfloat16"}[precision]
+        )
+        assert ("NF4" in report["frozen_weight_storage"]) == nf4
+        assert report["autocast"] is False
+    finally:
+        module.close()

@@ -573,8 +573,8 @@ use models whose decoder layout is explicitly full attention.
 
 The reference worker reads the named adapter snapshot from an exported decoder
 task and loads its pinned Transformers source (or the deterministic tiny model).
-It supports Phi-3, Qwen3 and Qwen3.5 in FP32. Supply the same input archive to
-both execution paths:
+It supports Phi-3, Qwen3 and Qwen3.5, restoring the export’s projection precision
+and NF4 policy. Supply the same input archive to both execution paths:
 
 ```python
 import numpy as np
@@ -612,7 +612,11 @@ PyTorch head checkpoints each frozen projection and cross entropy chunk, so its
 backward recomputes logits. The ONNX head uses its exported loss/VJP schedule.
 The worker validates the adapter archive against the export manifest and
 records source identity; the Transformers base comes from the pinned checkpoint.
-Use an unquantized FP32 task for this control.
+For NF4 exports, the reference reconstructs each source projection’s NF4 blocks
+and holds their decoded values in FP32. BF16/FP16 projections use the same
+rounded-operand adjoints as the ONNX functions; adapters and gradients stay FP32.
+The report records projection compute, frozen-weight storage and autocast policy.
+This makes the reference’s memory representation visible alongside runtime memory.
 
 ### Bounded-head measurement
 
