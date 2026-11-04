@@ -132,15 +132,31 @@ def test_load_reuses_derivatives(tmp_path, monkeypatch, family):
         restored.close()
 
 
-@pytest.mark.parametrize("family", ["phi3", "qwen35"])
+@pytest.mark.parametrize(
+    "family,precision", [("phi3", "fp32"), ("qwen35", "fp32"), ("phi3", "bf16")]
+)
 @pytest.mark.parametrize("head_chunk_size", [None, 3])
 @pytest.mark.parametrize("nf4", [False, True])
-def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size, nf4):
+def test_trl_training_and_fresh_process_resume(
+    tmp_path, family, precision, head_chunk_size, nf4
+):
     torch.set_num_threads(1)
+    from examples.huggingface.serialization import reference_session
+
+    factory = reference_session if precision == "bf16" else None
+    provider = "reference" if precision == "bf16" else "cpu"
+    options = {
+        "family": family,
+        "steps": 4,
+        "head_chunk_size": head_chunk_size,
+        "nf4": nf4,
+        "projection_precision": precision,
+        "session_factory": factory,
+    }
     full, partial, resumed = (str(tmp_path / name) for name in ("full", "partial", "resumed"))
-    report = run(full, family=family, steps=4, head_chunk_size=head_chunk_size, nf4=nf4)
+    report = run(full, **options)
     assert report["validation_loss"][1] < report["validation_loss"][0]
-    run(partial, family=family, steps=4, stop=2, head_chunk_size=head_chunk_size, nf4=nf4)
+    run(partial, stop=2, **options)
     subprocess.run(
         [
             sys.executable,
@@ -148,6 +164,10 @@ def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size
             "examples.huggingface.decoder_sft",
             "--family",
             family,
+            "--projection-precision",
+            precision,
+            "--provider",
+            provider,
             "--steps",
             "4",
             "--resume",
@@ -161,7 +181,8 @@ def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size
         env={**os.environ, "HF_HUB_OFFLINE": "1", "HF_DATASETS_OFFLINE": "1"},
     )
     models = [
-        OnnxDecoder.load(os.path.join(directory, "export")) for directory in (full, resumed)
+        OnnxDecoder.load(os.path.join(directory, "export"), session_factory=factory)
+        for directory in (full, resumed)
     ]
     try:
         left, right = (model.onnx.arrays() for model in models)
@@ -192,7 +213,7 @@ def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size
 
     from examples.huggingface.replay import verify
 
-    report = verify(full, resumed, step=4)
+    report = verify(full, resumed, step=4, provider=provider)
     assert report["checkpoint_bitwise_equal"] and report["optimizer_bitwise_equal"]
     assert report["standalone_outputs_bitwise_equal"]
     assert report["exported_gradient_tensors"] == {"phi3": 4, "qwen35": 10}[family]
@@ -209,15 +230,29 @@ def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size
 
 @pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
 @pytest.mark.parametrize("nf4", [False, True])
-def test_native_family_gradients_and_peft(tmp_path, family, nf4):
+@pytest.mark.parametrize("precision", ["fp32", "bf16", "fp16"])
+def test_native_family_gradients_and_peft(tmp_path, family, nf4, precision):
     if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
         pytest.skip("Native MLX opt-in")
     from examples.lora.mlx_runtime import register_library, session
 
     if path := os.environ.get("ONNAX_MLX_EP_LIBRARY"):
         register_library(path)
-    report = audit(family, str(tmp_path), session_factory=session, fused_ops=True, nf4=nf4)
-    assert report["peft"]["gradient_check_passed"] and report["peft"]["update_check_passed"]
+    report = audit(
+        family,
+        str(tmp_path),
+        session_factory=session,
+        fused_ops=True,
+        nf4=nf4,
+        projection_precision=precision,
+    )
+    if precision != "fp32":
+        assert report["peft"]["precision_control"]["passed"]
+        assert report["peft"]["format_roundtrip_bitwise"]
+    else:
+        assert (
+            report["peft"]["gradient_check_passed"] and report["peft"]["update_check_passed"]
+        )
 
 
 @pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35", "legacy_qwen3"])
@@ -416,3 +451,17 @@ def test_text_reference_batch_has_explicit_padding_positions():
     expected = (data["attention_mask"].cumsum(-1) - 1).clamp(min=0)
     assert torch.equal(data["position_ids"], expected)
     assert torch.equal(data["labels"].eq(-100), data["attention_mask"].eq(0))
+
+
+@pytest.mark.parametrize("saved,requested", [("bfloat16", "fp32"), ("float32", "bf16")])
+def test_checkpoint_projection_precision_is_checked_before_loading(saved, requested):
+    from examples.huggingface.decoder_sft import _validate_task_source
+
+    with pytest.raises(ValueError, match="projection precision"):
+        _validate_task_source(
+            {"onnax_precision": {"projection_compute": saved}},
+            "phi3",
+            False,
+            None,
+            projection_precision=requested,
+        )

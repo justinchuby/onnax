@@ -262,7 +262,7 @@ def prepare_graph(
 ):
     """Build, annotate and adapt one Mobius model without PyTorch tracing."""
     if projection_precision not in ("fp32", "bf16", "fp16"):
-        raise ValueError("Expected fp32, bf16 or fp16 projection precision")
+        raise ValueError("Expected fp32, bf16 or fp16 decoder projection precision")
     reference = reference_model(family, real=real, cache_dir=cache_dir)
     entry = FAMILIES[family]
     graph = (

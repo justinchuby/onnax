@@ -324,24 +324,11 @@ def test_native_compiled_head_with_eager_decoder(tmp_path, family, monkeypatch):
     assert report["peft"]["update_check_passed"]
 
 
-def _assert_projection_close(actual, expected, precision):
-    if precision == "bf16":
-        torch.testing.assert_close(actual, expected, rtol=1e-4, atol=1e-6)
-        return
-    # Match the existing Qwen FP16 qualification budget: one FP16 epsilon
-    # on vector norm and maximum magnitude, with FP32 absolute floor.
-    delta = (actual.detach() - expected.detach()).float()
-    scale = expected.detach().float()
-    epsilon = torch.finfo(torch.float16).eps
-    assert torch.linalg.vector_norm(delta) <= epsilon * torch.linalg.vector_norm(scale) + 1e-6
-    assert delta.abs().max() <= epsilon * scale.abs().max() + 1e-6
-
-
 @pytest.mark.parametrize("provider", ["reference", "mlx"])
 @pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
-@pytest.mark.parametrize("precision", ["bf16", "fp16"])
 @pytest.mark.parametrize("nf4", [False, True])
-def test_half_family_updates_and_portable_export(tmp_path, family, precision, nf4, provider):
+def test_bf16_family_updates_and_portable_export(tmp_path, family, nf4, provider):
+    precision = "bf16"
     from onnx.reference import ReferenceEvaluator
 
     from examples.huggingface.mixed_precision import reference_projections
@@ -369,6 +356,12 @@ def test_half_family_updates_and_portable_export(tmp_path, family, precision, nf
         nf4=nf4,
     )
     try:
+        linears = sum(isinstance(module, torch.nn.Linear) for module in reference.modules())
+        assert model.config.onnax_precision["projection_products"] == linears + sum(
+            2 * len(row["pieces"]) for row in model.mapping
+        )
+        if nf4:
+            assert model.quantization["compute_dtype"] == "bfloat16"
         with torch.no_grad():
             for name, p in model.onnx.parameters_by_name().items():
                 if name.endswith(".B"):
@@ -405,16 +398,21 @@ def test_half_family_updates_and_portable_export(tmp_path, family, precision, nf
                 for key in ("A", "B"):
                     p = model.onnx.parameters_by_name()[row[key]]
                     assert p.dtype == p.grad.dtype == torch.float32
-                    _assert_projection_close(p.grad, getattr(target, key).grad, precision)
+                    torch.testing.assert_close(
+                        p.grad, getattr(target, key).grad, rtol=1e-4, atol=1e-6
+                    )
             for optimizer in optimizers:
                 optimizer.step()
+                for state in optimizer.state.values():
+                    assert state["exp_avg"].dtype == state["exp_avg_sq"].dtype == torch.float32
             for row in model.mapping:
                 target = reference.get_submodule(row["module"])
                 for key in ("A", "B"):
-                    _assert_projection_close(
+                    torch.testing.assert_close(
                         model.onnx.parameters_by_name()[row[key]],
                         getattr(target, key),
-                        precision,
+                        rtol=1e-4,
+                        atol=1e-6,
                     )
         assert all(
             torch.equal(p, frozen[n])
@@ -422,6 +420,11 @@ def test_half_family_updates_and_portable_export(tmp_path, family, precision, nf
             if not p.requires_grad
         )
         model.export(tmp_path / "export")
+        if not nf4:
+            from examples.huggingface.torch_decoder_benchmark import reference_from_export
+
+            with pytest.raises(ValueError, match="FP32 projection compute"):
+                reference_from_export(tmp_path / "export")
         restored = OnnxDecoder.load(tmp_path / "export", session_factory=factory)
         try:
             assert restored.projection_precision == precision
@@ -443,3 +446,37 @@ def test_half_family_updates_and_portable_export(tmp_path, family, precision, nf
             restored.close()
     finally:
         model.close()
+
+
+def test_precision_control_rejects_a_corrupted_adjoint():
+    from onnx.reference import ReferenceEvaluator
+
+    from examples.huggingface.chunked_loss import ChunkedHead
+    from examples.huggingface.validation import precision_comparison
+
+    def factory(path):
+        return ReferenceEvaluator(str(path))
+
+    weight = np.array([[1.00390625], [-1.00390625]], np.float32)
+    runtime = ChunkedHead(
+        weight,
+        weight_layout="vocab_hidden",
+        projection_precision="bf16",
+        session_factory=factory,
+    )
+    try:
+        _, actual = runtime.executor.run(
+            None, {"hidden": np.array([[0.25]], np.float32), "labels": np.array([0], np.int64)}
+        )
+
+        def derivative(w):
+            return np.array([[-2 * w / (1 + np.exp(0.5 * w))]], np.float32)
+
+        reference, control = derivative(1.0), derivative(float(weight[0, 0]))
+        report = precision_comparison(actual, reference, control)
+        assert report["reference_precision_max_abs"] > 0
+        assert report["strict_violations"] == 0
+        with pytest.raises(AssertionError, match="measured precision effect"):
+            precision_comparison(actual * np.float32(1.5), reference, control)
+    finally:
+        runtime.close()
