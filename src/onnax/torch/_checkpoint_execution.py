@@ -11,6 +11,7 @@ import torch
 from torch.autograd.function import once_differentiable
 
 from onnax._checkpoint import Block
+from onnax.torch._ownership import output_aliases
 
 
 @dataclass(frozen=True)
@@ -37,13 +38,9 @@ def _forward_arrays(execution, feeds):
         not isinstance(a, np.ndarray) for a in arrays
     ):
         raise TypeError("Session.run must return one NumPy array per checkpoint output")
+    aliases = output_aliases(arrays, feeds.values())
     return [
-        array.copy()
-        if not array.flags.writeable
-        or any(np.shares_memory(array, feed) for feed in feeds.values())
-        or any(i != j and np.shares_memory(array, other) for j, other in enumerate(arrays))
-        else array
-        for i, array in enumerate(arrays)
+        array.copy() if alias else array for array, alias in zip(arrays, aliases, strict=True)
     ]
 
 
