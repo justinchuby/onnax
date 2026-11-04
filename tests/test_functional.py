@@ -454,20 +454,28 @@ def test_invalid_container_type(function, kwargs):
         function(object(), **kwargs)
 
 
-@pytest.mark.parametrize("kind", ["graph", "proto"])
-def test_container_composition_after_serialization(kind):
+@pytest.mark.parametrize("kind", ["model", "graph", "view", "proto"])
+@pytest.mark.parametrize("transform", [jvp, vjp])
+def test_container_composition_after_serialization(kind, transform):
     source = _container(_loss(), kind)
     gradient = grad(source, inputs=["weight"], output="loss")
     if kind == "proto":
         gradient = onnx.ModelProto.FromString(gradient.SerializeToString())
-    hvp = jvp(gradient, inputs=["weight"])
-    model = ir.from_proto(hvp) if kind == "proto" else ir.Model(hvp, ir_version=10)
+    hvp = transform(gradient, inputs=["weight"])
+    model = (
+        ir.from_proto(hvp)
+        if kind == "proto"
+        else hvp
+        if isinstance(hvp, ir.Model)
+        else ir.Model(hvp, ir_version=10)
+    )
+    info = json.loads(model.graph.metadata_props["onnax.autodiff.interface"])
     result = evaluator(model).run(
         None,
         {
             "x": np.array([2.0, 3.0]),
             "target": np.zeros(2),
-            "weight_tangent": np.array([0.2, -0.5]),
+            info["seeds"][0]: np.array([0.2, -0.5]),
         },
     )
     np.testing.assert_allclose(result[-1], [1.6, -9.0])

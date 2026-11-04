@@ -119,7 +119,7 @@ def _prepare(
     *,
     mode: str,
 ) -> tuple[ir.Model, list[ir.Value], list[ir.Value], list[ir.Node], set[ir.Value]]:
-    default_inputs, default_outputs = _composition_defaults(model, registry)
+    default_inputs, default_outputs = _composition_defaults(model, registry, mode=mode)
     if inputs is None and default_inputs is not None:
         inputs = default_inputs
     if outputs is None and default_outputs is not None:
@@ -388,8 +388,8 @@ class JvpPass(ir.passes.FunctionalPass):
           flow when a globally registered rule defines its call-level products.
           Literal function defaults are bound on the cloned call before rules run.
           Other custom/local-function calls must be inlined with InlinePass first.
-        * One forward-over-reverse composition is supported: apply JvpPass to a
-          GradPass or VjpPass model, including after serialization. By default
+        * Second-order compositions support JvpPass over GradPass/VjpPass and
+          VjpPass over GradPass, including after serialization. By default
           differentiate the original non-initializer FLOAT/DOUBLE inputs and
           only the generated gradient/cotangent outputs. Explicit selections
           use actual graph value names, including collision-resolved suffixes;

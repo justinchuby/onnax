@@ -201,3 +201,19 @@ def pad_jvp(ctx: _Context, node: ir.Node, d: Mapping[int, ir.Value]) -> list[ir.
             "Pad", [value, _input(node, 1), fill, *node.inputs[3:]], dict(node.attributes)
         )
     ]
+
+
+@_builtin("vjp", frozenset(("ScatterND",)))
+def scatter_nd_vjp(
+    ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
+) -> dict[int, ir.Value]:
+    """Pull back additive scatter, including repeated index tuples."""
+    reduction = node.attributes.get_string("reduction", "none")
+    if reduction != "add":
+        raise NotImplementedError(
+            f"VJP ScatterND requires reduction='add'; got reduction={reduction!r}. "
+            "Use a separate derivative for other reductions without changing semantics."
+        )
+    return {
+        i: gs[0] if i == 0 else ctx.op("GatherND", gs[0], _input(node, 1)) for i in indices
+    }
