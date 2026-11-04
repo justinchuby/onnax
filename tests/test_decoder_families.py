@@ -383,3 +383,36 @@ def test_nf4_checkpoint_mode_is_checked_before_loading(tmp_path):
         _validate_task_source({"onnax_quantization": {}}, "phi3", False, None)
     with pytest.raises(ValueError, match="quantization mode"):
         _validate_task_source({}, "phi3", False, None, nf4=True)
+
+
+@pytest.mark.parametrize("change_valid_tokens", [False, True])
+def test_reference_audit_compares_valid_predictions_only(
+    tmp_path, monkeypatch, change_valid_tokens
+):
+    original = OnnxDecoder.forward
+
+    def changed(self, *args, **kwargs):
+        output = original(self, *args, **kwargs)
+        if output.logits is not None:
+            valid = kwargs["attention_mask"].bool()
+            selected = valid if change_valid_tokens else ~valid
+            output.logits = output.logits + selected.unsqueeze(-1) * 100
+        return output
+
+    monkeypatch.setattr(OnnxDecoder, "forward", changed)
+    if change_valid_tokens:
+        with pytest.raises(AssertionError):
+            audit("phi3", str(tmp_path), steps=2)
+    else:
+        report = audit("phi3", str(tmp_path), steps=2)
+        assert report["reload"] and report["peft"]["gradient_check_passed"]
+
+
+def test_text_reference_batch_has_explicit_padding_positions():
+    from examples.huggingface.decoder_sft import text_batch
+    from examples.huggingface.sft import tokenizer
+
+    data = text_batch(tokenizer())
+    expected = (data["attention_mask"].cumsum(-1) - 1).clamp(min=0)
+    assert torch.equal(data["position_ids"], expected)
+    assert torch.equal(data["labels"].eq(-100), data["attention_mask"].eq(0))

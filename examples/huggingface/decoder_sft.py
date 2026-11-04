@@ -412,7 +412,8 @@ def audit(
                     predictions = model(
                         **{k: v for k, v in data.items() if k != "labels"}
                     ).logits
-            torch.testing.assert_close(predictions, logits, rtol=1e-4, atol=1e-6)
+            valid = data["attention_mask"].bool()
+            torch.testing.assert_close(predictions[valid], logits[valid], rtol=1e-4, atol=1e-6)
             torch.testing.assert_close(actual.loss, loss, rtol=1e-4, atol=1e-6)
             actual.loss.backward()
             loss.backward()
