@@ -53,6 +53,39 @@ In the updated FP32 run, decoder execution accounts for 7.52 s and the chunked
 output-head loss/gradient computation for 0.61 s.
 Further speed work should target decoder execution and the vocabulary projection.
 
+(tiled-attention-performance)=
+
+## Lower-memory attention
+
+Set `ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES=0` to use tiled
+attention pullbacks. They compute score tiles as needed, reducing peak process
+memory to 9.69 GiB for the same FP32 4K workload. Dense attention reaches
+8.16 s per step at 12.77 GiB; choose tiled attention when memory is tighter.
+
+Smaller key tiles improve this lower-memory path:
+
+| Tiled attention | Complete step median / P95 | Peak physical footprint |
+| --- | ---: | ---: |
+| Previous tile policy | 10.856 / 10.875 s | 9.69 GiB |
+| Updated tile policy | 9.756 / 9.784 s | 9.69 GiB |
+
+The update uses eight key rows for head widths 128–192, halving shared
+workspace in the key/value-gradient kernel. At width 128, workspace falls
+from 24 to 12 KiB. Complete-step latency falls 10.1%; throughput rises 1.113×.
+
+Both fresh processes ran 10 warmups and 100 measured updates, using the same
+corpus prefix, checkpoint groups, source-layout compiled head and FP32 AdamW
+as the measurements above. All 110 losses and the first two updates' 448
+adapter-gradient/parameter arrays are bitwise equal. Frozen weights stayed
+unchanged. Peak physical footprint covers model setup and runtime; timings
+cover forward, loss, backward, array exchange and AdamW. The allocator cap
+was 20 GiB, with one ORT/PyTorch thread and ORT graph optimization disabled.
+
+The [raw reports and reproduction drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/tiled-attention-m1max)
+include all timing samples, environment and binary hashes, comparison results,
+and process-memory counters. The native change is
+[MLX EP #119](https://github.com/onnxruntime/onnxruntime-ep-mlx/pull/119).
+
 ## Prepare complete long examples
 
 The pinned LongAlpaca revision supplies complete QA pairs. Selection preserves

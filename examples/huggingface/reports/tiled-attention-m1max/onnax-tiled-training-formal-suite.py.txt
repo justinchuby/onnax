@@ -1,0 +1,26 @@
+import json,os,subprocess
+from pathlib import Path
+import numpy as np
+root=Path('/tmp/onnax-tiled-training-formal');root.mkdir(exist_ok=False)
+python='/Users/justinc/Documents/GitHub/onnax/.venv/bin/python'
+env={**os.environ,'PYTHONPATH':'src:.','HF_HUB_OFFLINE':'1','HF_DATASETS_OFFLINE':'1','ONNAX_TILED_ATTENTION':'1','ONNXRUNTIME_EP_MLX_NO_COMPILE':'0','ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES':'0'}
+env.pop('ONNXRUNTIME_EP_MLX_TRACE',None);env.pop('ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES',None)
+for kind,library in [('baseline','/tmp/onnax-kernel-contracts-runtime/libonnxruntime_mlx_ep.dylib'),('candidate','/tmp/onnax-key-tiles-runtime/libonnxruntime_mlx_ep.dylib')]:
+ print(json.dumps({'phase':kind}),flush=True)
+ out=root/(kind+'.json')
+ code=subprocess.call([python,'-m','examples.huggingface.guard','--output-dir',str(root/(kind+'-guard')),'--',python,'/tmp/onnax-tiled-training-worker.py','--output',str(out),'--capture','--compile-head','--warmup','10','--samples','100','--library',library],cwd='/tmp/onnax-kernel-contracts',env=env)
+ if code:raise SystemExit(code)
+a=json.loads((root/'baseline.json').read_text());b=json.loads((root/'candidate.json').read_text())
+for report in (a,b):
+ assert report['warmup']==10 and report['samples']==100 and report['validated_updates']==110
+ assert len(report['losses'])==110 and len(report['timing_samples_ms'])==100
+ assert np.isfinite(report['losses']).all() and report['losses'][-1]<report['losses'][0]
+for key in ('input_ids_sha256','frozen_sha256','projection_precision','threads','hardware','versions','attention_calls','driver_sha256','batch','sequence','valid_shifted_tokens','head_chunk_size','checkpoint_layers','parameter_bytes','decoder_storage_bytes','gradient_and_optimizer_dtype','mlx_memory_limit_bytes','cpu_fallback_disabled','ort_optimizer'):assert a[key]==b[key],key
+assert a['frozen_hashes_unchanged'] and b['frozen_hashes_unchanged']
+x=np.load(root/'baseline.json.npz');y=np.load(root/'candidate.json.npz');assert set(x.files)==set(y.files) and len(x.files)==448
+rows={k:{'bitwise_equal':bool(np.array_equal(x[k],y[k])),'violations':int(np.count_nonzero(~np.isclose(x[k],y[k],rtol=1e-4,atol=1e-6))),'maximum_absolute_error':float(np.max(np.abs(x[k]-y[k])))} for k in x.files}
+r={'arrays':rows,'losses_bitwise_equal':a['losses']==b['losses'],'step_speedup':a['timings_ms']['step']['median']/b['timings_ms']['step']['median'],'baseline_ms':a['timings_ms']['step'],'candidate_ms':b['timings_ms']['step']}
+(root/'comparison.json').write_text(json.dumps(r,indent=2)+'\n')
+assert all(v['violations']==0 for v in rows.values())
+np.testing.assert_allclose(a['losses'],b['losses'],rtol=1e-4,atol=1e-6)
+print(json.dumps({'phase':'complete','baseline_ms':r['baseline_ms'],'candidate_ms':r['candidate_ms'],'arrays_bitwise_equal':sum(v['bitwise_equal'] for v in rows.values()),'losses_bitwise_equal':r['losses_bitwise_equal']}),flush=True)
