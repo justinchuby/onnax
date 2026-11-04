@@ -41,7 +41,7 @@ def checkpoint_decoder(model, group_size):
     return model
 
 
-def chunked_token_loss(model, batch, labels, chunk_size):
+def chunked_token_loss(model, batch, labels, chunk_size, *, head_policy="checkpoint"):
     """Checkpoint each frozen head/CE chunk and normalize over shifted targets.
 
     Transformers computes the decoder hidden states. Recomputing each head chunk
@@ -50,7 +50,14 @@ def chunked_token_loss(model, batch, labels, chunk_size):
     """
     if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size < 1:
         raise ValueError("Expected a positive output-head chunk size")
+    if head_policy not in ("checkpoint", "eager"):
+        raise ValueError("Expected checkpoint or eager head policy")
     hidden = model.model(**batch, use_cache=False).last_hidden_state
+    if head_policy == "eager":
+        from examples.huggingface.torch_head import eager_head_sum
+
+        total = eager_head_sum(model.lm_head, hidden, labels, chunk_size)
+        return total / labels[:, 1:].ne(-100).sum().clamp(min=1)
     rows = hidden[:, :-1].reshape(-1, hidden.shape[-1])
     targets = labels[:, 1:].reshape(-1)
 

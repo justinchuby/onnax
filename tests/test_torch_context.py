@@ -38,10 +38,11 @@ def inputs():
     return {"input_ids": ids, "attention_mask": mask}, labels
 
 
+@pytest.mark.parametrize("head_policy", ["checkpoint", "eager"])
 @pytest.mark.parametrize("group_size", [1, 2, 4])
 @pytest.mark.parametrize("precision", ["fp32", "bf16"])
 @pytest.mark.parametrize("attention", ["eager", "sdpa"])
-def test_grouped_chunked_gradients_and_updates(group_size, precision, attention):
+def test_grouped_chunked_gradients_and_updates(group_size, precision, attention, head_policy):
     torch.set_num_threads(1)
     full = model()
     full.set_attn_implementation(attention)
@@ -60,7 +61,7 @@ def test_grouped_chunked_gradients_and_updates(group_size, precision, attention)
             optimizer.zero_grad(set_to_none=True)
         loss = token_loss(full(**batch, use_cache=False).logits, labels)
         # Eight shifted rows exercise a tail chunk and a padded batch boundary.
-        bounded = chunked_token_loss(grouped, batch, labels, 7)
+        bounded = chunked_token_loss(grouped, batch, labels, 7, head_policy=head_policy)
         torch.testing.assert_close(loss, bounded, rtol=1e-4, atol=1e-6)
         loss.backward()
         bounded.backward()
@@ -76,7 +77,9 @@ def test_grouped_chunked_gradients_and_updates(group_size, precision, attention)
         if not p.requires_grad:
             assert p.grad is None
     grouped.zero_grad(set_to_none=True)
-    zero = chunked_token_loss(grouped, batch, torch.full_like(labels, -100), 1)
+    zero = chunked_token_loss(
+        grouped, batch, torch.full_like(labels, -100), 1, head_policy=head_policy
+    )
     assert zero.item() == 0
     zero.backward()
     assert all(p.grad.count_nonzero() == 0 for p in grouped.parameters() if p.requires_grad)
