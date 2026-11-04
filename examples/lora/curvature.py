@@ -216,13 +216,13 @@ def run(output_dir, *, fit_steps=12):
     base_feeds = {"features": x, "target": target}
     solve_checks = []
 
-    def evaluate(params):
+    def evaluate(params, *, features=x, observed=target):
         prediction, loss, *gradients = executors["hvp.optimized"].run(
             ["prediction", "loss", *gradient_names],
-            {**base_feeds, **params, **zero_seeds},
+            {"features": features, "target": observed, **params, **zero_seeds},
         )
         expected_prediction, expected_loss, expected_gradients = reference(
-            x, target, params, w, c
+            features, observed, params, w, c
         )
         for actual, expected in zip(
             [prediction, loss, *gradients],
@@ -250,7 +250,7 @@ def run(output_dir, *, fit_steps=12):
             raise AssertionError("Expected a descending Gauss-Newton update")
     initial_loss, _ = evaluate(initial)
     final_loss, _ = evaluate(fitted)
-    validation = [float(reference(vx, vy, params, w, c)[1]) for params in (initial, fitted)]
+    validation = [evaluate(params, features=vx, observed=vy)[0] for params in (initial, fitted)]
     np.savez(output_dir / "adapter.npz", **fitted)
     with np.load(output_dir / "adapter.npz", allow_pickle=False) as archive:
         restored = {name: archive[name] for name in PARAMETERS}
