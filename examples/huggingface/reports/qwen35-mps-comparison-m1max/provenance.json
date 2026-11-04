@@ -1,0 +1,19 @@
+{
+  "driver_onnax_commit": {
+    "commit": "0c8dbe1d8a2f9df667c6c028269d5d2fd988587a",
+    "dirty": false
+  },
+  "torch_source_commit": "012a359291a8e313cab3e121d4dd8eb6fa03478a; doc-only follow-up 0c8dbe1d8a2f9df667c6c028269d5d2fd988587a",
+  "derivative_generation_source": "709912c1cf8d6761099d038fbefd684e4f5568e4; measured implementation unchanged in merged #186",
+  "runtime_source": "043f1def965fab6b67dea16e692b71951b7331cf",
+  "library_sha256": "f6079553459908fa84a090201aaea90f71ccdfcb7700e0c090eb5c5a344efabc",
+  "runtime_overrides": "18 recurrent derivatives replaced with the verified shape-selected graphs; the remaining source modules and eager128-row head are unchanged",
+  "native_size_scope": "Raw native export_bundle_bytes and primal_graph_nodes describe the original export; derivative-overrides.json records the replaced derivative modules and separate frozen payload",
+  "retained_artifacts": "The qualified exported model, adapter snapshot and full gradient archives remain with the local experiment; source and array digests identify that state",
+  "machine_workload": "GPU workers ran serially; short CPU correctness tests ran during portions of this pair.",
+  "gradient_archive_sha256": {
+    "mps.json.npz": "b4fbff00911e3f88a0bd3cd0a7dcdd62db8dbcc31c2995984717cdf185d06e96",
+    "onnx.npz": "f36cc6e979d6cfabda62c19c8b06d572fb839020f9df0ac229bff35c9f996c5d"
+  },
+  "memory_summary": "Physical peaks use macOS kernel lifetime peak from process guards and, for ONNX, the worker lifetime-peak reading; RSS is separately recorded in raw reports."
+}

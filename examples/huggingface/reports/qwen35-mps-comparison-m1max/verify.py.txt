@@ -1,0 +1,118 @@
+"""Verify the completed paired 4K measurement before publishing its summary."""
+
+import hashlib, json, sys
+from pathlib import Path
+import numpy as np
+
+root = Path(sys.argv[1])
+read = lambda p: json.loads(p.read_text())
+assert read(root / "status.json")["phase"] == "complete"
+a, b = read(root / "mps.json"), read(root / "onnx.json")
+assert a["warmup"] == b["warmup_steps"] == 10
+assert len(a["samples"]) == len(b["samples"]) == b["measured_steps"] == 100
+assert b["status"] == "complete" and b["parameters_unchanged"]
+assert a["input_shape"] == b["input_shape"] == [1, 4032]
+assert a["effective_tokens"] == b["prediction_targets_per_step"] == 4031
+assert a["gradient_count"] == 60 and a["dtype"] == "float32"
+assert a["checkpoint_layers"] == 1 and a["head_chunk_size"] == 128
+assert len(b["checkpoint_boundaries"]) == 25
+assert a["device"] == "mps" and a["attention"] == "sdpa" and a["mps_cpu_fallback"] is False
+assert b["ort"] == {
+    "intra_threads": 1,
+    "inter_threads": 1,
+    "graph_optimization": "GraphOptimizationLevel.ORT_DISABLE_ALL",
+    "cpu_fallback_disabled": True,
+}
+assert a["threads"] == b["torch_threads"] == 1
+assert b["environment"]["ONNXRUNTIME_EP_MLX_NO_COMPILE"] == "1"
+assert (
+    b["library_sha256"] == "f6079553459908fa84a090201aaea90f71ccdfcb7700e0c090eb5c5a344efabc"
+)
+for key in ["input_sha256", "adapter_sha256"]:
+    assert a[key] == b[key], key
+assert a["source"] == b["pretrained_source"]
+assert a["source"]["model_id"] == "Qwen/Qwen3.5-0.8B"
+assert a["source"]["revision"] == "2fc06364715b967f1860aea9cf38778875588b17"
+for path, digest in a["source_sha256"].items():
+    with open(path, "rb") as stream:
+        assert hashlib.file_digest(stream, "sha256").hexdigest() == digest, path
+for record in a["samples"]:
+    assert (
+        abs(
+            record["total_seconds"]
+            - record["execution_seconds"]
+            - record["output_exchange_seconds"]
+        )
+        < 1e-12
+    )
+for samples, summary, key in [
+    (a["samples"], a["timings"]["total_seconds"], "total_seconds"),
+    (b["samples"], b["summary"]["gradient_step_seconds"], "gradient_step_seconds"),
+]:
+    values = np.array([row[key] for row in samples])
+    assert np.isfinite(values).all() and (values > 0).all()
+    for stat, actual in [("median", np.median(values)), ("p95", np.percentile(values, 95))]:
+        assert abs(summary[stat] - actual) < 1e-12
+with (
+    np.load(root / "mps.json.npz", allow_pickle=False) as x,
+    np.load(root / "onnx.npz", allow_pickle=False) as y,
+):
+    assert set(x.files) == set(y.files) | {"loss"} and len(y.files) == 60
+    rows = {}
+    for key in y.files:
+        assert x[key].dtype == y[key].dtype == np.float32 and x[key].shape == y[key].shape
+        assert np.isfinite(x[key]).all() and np.isfinite(y[key]).all()
+        np.testing.assert_allclose(y[key], x[key], rtol=1e-4, atol=1e-6, err_msg=key)
+        rows[key] = {
+            "shape": list(x[key].shape),
+            "bytes": x[key].nbytes,
+            "max_abs": float(np.abs(x[key] - y[key]).max()),
+            "violations": 0,
+        }
+    np.testing.assert_allclose(
+        a["losses"], [s["loss"] for s in b["samples"]], rtol=1e-4, atol=1e-6
+    )
+    np.testing.assert_allclose(x["loss"], a["losses"][-1], rtol=0, atol=0)
+peaks = {}
+for name in ["mps", "onnx"]:
+    g = read(root / (name + "-guard") / "execution.json")
+    assert g["status"] == "complete" and g["returncode"] == 0 and g["observation_errors"] == 0
+    peaks[name] = max(r["peak_bytes"] for r in g["observations"])
+peaks["onnx"] = max(peaks["onnx"], b["physical_memory"]["lifetime_peak_bytes"])
+report = {
+    "scope": b["scope"],
+    "model": a["source"],
+    "input_shape": a["input_shape"],
+    "effective_tokens": 4031,
+    "input_sha256": a["input_sha256"],
+    "adapter_sha256": a["adapter_sha256"],
+    "adapter_bytes": sum(r["bytes"] for r in rows.values()),
+    "gradients": rows,
+    "rtol": 1e-4,
+    "atol": 1e-6,
+    "max_gradient_abs": max(r["max_abs"] for r in rows.values()),
+    "max_loss_abs": float(
+        np.max(np.abs(np.array(a["losses"]) - np.array([r["loss"] for r in b["samples"]])))
+    ),
+    "mps": a["timings"]["total_seconds"],
+    "onnx": b["summary"]["gradient_step_seconds"],
+    "throughput_ratio": a["timings"]["total_seconds"]["median"]
+    / b["summary"]["gradient_step_seconds"]["median"],
+    "shifted_targets_per_second": {
+        "mps": 4031 / a["timings"]["total_seconds"]["median"],
+        "onnx": 4031 / b["summary"]["gradient_step_seconds"]["median"],
+    },
+    "peak_physical_bytes": peaks,
+    "warmups": 10,
+    "samples": 100,
+    "machine_workload": "GPU workers ran serially; short CPU correctness tests ran during portions of this pair.",
+    "head_schedules": {
+        "mps": "Non-reentrant checkpointed frozen projection plus native CE; logits recomputed during backward",
+        "onnx": "Exported frozen-head loss/hidden VJP, with shared loss and gradient statistics",
+    },
+    "derivative_source": "709912c1cf8d6761099d038fbefd684e4f5568e4; measured implementation unchanged in merged #186",
+    "native_source": "043f1def965fab6b67dea16e692b71951b7331cf",
+    "library_sha256": b["library_sha256"],
+}
+(root / "verified-summary.json").write_text(json.dumps(report, indent=2) + "\n")
+print(json.dumps({k: v for k, v in report.items() if k != "gradients"}, indent=2))
