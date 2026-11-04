@@ -173,6 +173,25 @@ This path uses the version-controlled text corpus and local tokenizer. The
 [recurrent tutorial](qwen35-training.md) explains the model update and the
 standalone token-pattern qualification.
 
+Resume into another output directory:
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family phi3 --steps 30 \
+  --resume /tmp/phi3-training/checkpoint-15 \
+  --output-dir /tmp/phi3-resumed
+```
+
+The regression suite compares fresh-process recovery against continuous training,
+including final parameters, loss and AdamW state. A different decoder family is
+rejected before graph construction; graph and parameter identities also participate
+in checkpoint validation.
+
+The export contains `config.json`, `task.json`, and an `execution/` bundle with the
+source graph, bound inference graph, parameter arrays and block forward/VJP graphs.
+`OnnxDecoder.load(export_directory)` executes the saved derivatives. The separate
+`adapter/` directory contains standard PEFT configuration and safetensors.
+
 ### Load a pretrained text backbone
 
 `--real` selects the family's pinned checkpoint and tokenizer. For Qwen3.5:
@@ -260,6 +279,13 @@ participate in the loss. The tool preserves existing ONNX parameter gradients
 and restores execution sessions after the audit. Its recording copies belong
 to diagnostic memory usage; run performance timing separately.
 
+For NF4 exports, the CLI reconstructs the corresponding frozen source weight
+slices before comparing local derivatives. With a chunked head, it records the
+normalization VJP and the external head's loss/hidden gradient separately. The
+head receives the same hidden states, labels and effective target count.
+Audits supply explicit position IDs and compare valid-token predictions;
+padded predictions remain visible in the diagnostic report.
+
 The suffix has two independent FP32 controls: the native CPU PyTorch head
 backward and a head backward that sums 128-element partial products with a
 binary tree. Both use the same activation and loss cotangent. These controls
@@ -272,24 +298,25 @@ For the suffix, ordinary CPU head accumulation gives relative gradient L2
 `1.66e-4`; FP32 pairwise accumulation gives `3.63e-6` and passes the elementwise
 gate. The report includes every layer's forward and gradient comparisons.
 
-Resume into another output directory:
+The [pretrained NF4 controls](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/generic-nf4-m1max/real-qwen35/reference)
+start from the trained adapter state and use two diagnostic sentences. Initial
+valid-token logits have relative L2 difference `3.12e-6`. The shared-input local
+VJPs report three out-of-tolerance elements in layer 15's `q_proj` B gradient,
+with relative L2 difference `5.21e-6`. Normalization gradients pass the original
+elementwise check. For the external vocabulary head, pairwise FP32 accumulation
+reduces hidden-gradient violations from 46 to one.
 
-```sh
-python -m examples.huggingface.decoder_sft \
-  --family phi3 --steps 30 \
-  --resume /tmp/phi3-training/checkpoint-15 \
-  --output-dir /tmp/phi3-resumed
-```
+Three independent fresh AdamW updates give these losses:
 
-The regression suite compares fresh-process recovery against continuous training,
-including final parameters, loss and AdamW state. A different decoder family is
-rejected before graph construction; graph and parameter identities also participate
-in checkpoint validation.
+| Update input state | ONNX / MLX | Transformers |
+| --- | ---: | ---: |
+| Trained adapter | 5.507835 | 5.507665 |
+| After one update | 1.640609 | 1.640494 |
+| After two updates | 0.339562 | 0.339462 |
 
-The export contains `config.json`, `task.json`, and an `execution/` bundle with the
-source graph, bound inference graph, parameter arrays and block forward/VJP graphs.
-`OnnxDecoder.load(export_directory)` executes the saved derivatives. The separate
-`adapter/` directory contains standard PEFT configuration and safetensors.
+After three updates, the largest parameter difference is `2.32e-3` and valid-logit
+relative L2 difference is `1.77e-4`. The reports include every gradient and update
+comparison, retaining `rtol=1e-4, atol=1e-6` and its violation counts.
 
 ## Train with a bounded output head
 

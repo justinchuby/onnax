@@ -1,0 +1,19 @@
+W1104 00:03:29.184000 74207 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:   0%|          | 1/320 [00:01<07:23,  1.39s/it]Loading weights: 100%|██████████| 320/320 [00:01<00:00, 229.18it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+Traceback (most recent call last):
+  File "/tmp/onnax-generic-nf4-real-driver.py", line 7, in <module>
+    main()
+  File "/private/tmp/onnax-generic-nf4/examples/huggingface/decoder_sft.py", line 760, in main
+    report = audit(args.family, args.output_dir, steps=args.audit_steps, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/onnax-generic-nf4/examples/huggingface/decoder_sft.py", line 415, in audit
+    torch.testing.assert_close(predictions, logits, rtol=1e-4, atol=1e-6)
+  File "/Users/justinc/Documents/GitHub/onnax/.venv/lib/python3.11/site-packages/torch/testing/_comparison.py", line 1689, in assert_close
+    raise error_metas[0].to_error(msg)
+AssertionError: Tensor-likes are not close!
+
+Mismatched elements: 789336 / 5463040 (14.4%)
+Greatest absolute difference: 15.628900527954102 at index (0, 9, 96674) (up to 1e-06 allowed)
+Greatest relative difference: 63172.19140625 at index (0, 9, 8472) (up to 0.0001 allowed)

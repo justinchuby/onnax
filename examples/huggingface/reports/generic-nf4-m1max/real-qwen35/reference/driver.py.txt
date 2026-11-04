@@ -1,0 +1,58 @@
+import functools,hashlib,json,time,subprocess
+from pathlib import Path
+import numpy as np
+import torch
+from examples.huggingface.decoder_sft import OnnxDecoder,task_tokenizer,text_batch,_frozen
+from examples.huggingface.decoder_families import reference_model
+from examples.huggingface.nf4 import quantize_reference
+from examples.huggingface.sft import token_loss
+from examples.huggingface.shared_vjp import shared_activation_audit
+from examples.huggingface.validation import add_reference_parameters
+from examples.huggingface.long_context import memory_limit
+from examples.lora.mlx_runtime import register_library,session
+ROOT=Path('/tmp/onnax-nf4-pretrained-reference-positions');ROOT.mkdir(exist_ok=False)
+LIB='/tmp/onnax-key-tiles-runtime/libonnxruntime_mlx_ep.dylib'
+register_library(LIB);memory_limit(LIB,20*1024**3);torch.set_num_threads(1)
+report={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'rtol':1e-4,'atol':1e-6,'library_sha256':hashlib.sha256(Path(LIB).read_bytes()).hexdigest(),'driver_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'scope':'Trained NF4 Qwen3.5-0.8B: shared-activation local VJPs and three independent fresh AdamW updates','steps':[]}
+def save(phase):
+ report['phase']=phase;(ROOT/'report.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({'phase':phase}),flush=True)
+def metric(actual,expected):
+ a=actual.detach().cpu().numpy() if isinstance(actual,torch.Tensor) else np.asarray(actual)
+ b=expected.detach().cpu().numpy() if isinstance(expected,torch.Tensor) else np.asarray(expected)
+ assert a.shape==b.shape and a.dtype==b.dtype and np.isfinite(a).all() and np.isfinite(b).all()
+ delta=a-b;an=float(np.linalg.norm(a.ravel().astype(np.float64)));bn=float(np.linalg.norm(b.ravel().astype(np.float64)))
+ return {'elements':a.size,'maximum_absolute_error':float(np.max(np.abs(delta))) if a.size else 0.,'relative_l2':float(np.linalg.norm(delta.ravel().astype(np.float64))/(bn+1e-30)),'pointwise_violations':int(np.count_nonzero(~np.isclose(a,b,rtol=1e-4,atol=1e-6))),'cosine':float(np.dot(a.ravel().astype(np.float64),b.ravel().astype(np.float64))/(an*bn)) if an*bn else float(an==bn)}
+save('load_onnx')
+model=OnnxDecoder.load('/tmp/onnax-generic-nf4-real-qwen35/export',session_factory=functools.partial(session,enable_compile=False),head_session_factory=functools.partial(session,enable_compile=True))
+try:
+ save('load_reference');reference=reference_model('qwen35',real=True,cache_dir='/tmp/onnax-qwen35-real-cache')
+ quantize_reference(reference,mapping=model.mapping,block_size=model.quantization['block_size'])
+ data=text_batch(task_tokenizer('qwen35',real=True,cache_dir='/tmp/onnax-qwen35-real-cache'))
+ report['position_ids']=data['position_ids'].tolist();report['input_ids']=data['input_ids'].tolist();report['attention_mask']=data['attention_mask'].tolist();report['source_identity']=model.onnx._identity
+ save('shared_activation_vjps');local=shared_activation_audit(model,reference,data);(ROOT/'shared-vjp.json').write_text(json.dumps(local,indent=2)+'\n')
+ reference=add_reference_parameters(reference,model.onnx.arrays(),model.mapping);frozen=_frozen(reference.named_parameters())
+ optimizers=[torch.optim.AdamW([p for p in item.parameters() if p.requires_grad],lr=.003,eps=1e-5,weight_decay=0) for item in (model,reference)]
+ snapshots={}
+ for step in range(3):
+  for opt in optimizers:opt.zero_grad(set_to_none=True)
+  actual=model(**data);expected=reference(**{k:v for k,v in data.items() if k!='labels'},use_cache=False).logits;loss=token_loss(expected,data['labels'])
+  with torch.no_grad():prediction=model(**{k:v for k,v in data.items() if k!='labels'}).logits
+  valid=data['attention_mask'].bool();row={'step':step,'loss_actual':float(actual.loss.detach()),'loss_reference':float(loss.detach()),'loss':metric(actual.loss,loss),'valid_logits':metric(prediction[valid],expected[valid]),'padding_logits':metric(prediction[~valid],expected[~valid]),'gradients':{},'parameters_after_update':{}}
+  actual.loss.backward();loss.backward()
+  for mapping in model.mapping:
+   layer=reference.get_submodule(mapping['module'])
+   for key in ('A','B'):
+    name=mapping[key];p=model.onnx.parameters_by_name()[name];q=getattr(layer,key)
+    row['gradients'][name]=metric(p.grad,q.grad)
+    if step==0:
+     snapshots['gradient_actual/'+name]=p.grad.detach().numpy().copy();snapshots['gradient_reference/'+name]=q.grad.detach().numpy().copy()
+  if step==0:
+   snapshots.update(logits_actual=prediction.detach().numpy(),logits_reference=expected.detach().numpy(),**{k:v.numpy() for k,v in data.items()});np.savez(ROOT/'first-step.npz',**snapshots);snapshots.clear()
+  for opt in optimizers:opt.step()
+  for mapping in model.mapping:
+   layer=reference.get_submodule(mapping['module'])
+   for key in ('A','B'):row['parameters_after_update'][mapping[key]]=metric(model.onnx.parameters_by_name()[mapping[key]],getattr(layer,key))
+  report['steps'].append(row);save('updated_'+str(step+1))
+ assert frozen==_frozen(reference.named_parameters());report['frozen_reference_unchanged']=True
+ save('complete')
+finally:model.close()

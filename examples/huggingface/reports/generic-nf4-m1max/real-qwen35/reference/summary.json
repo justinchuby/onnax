@@ -1,0 +1,20 @@
+{
+  "diagnostic_source_commit": "de9db708e3a1fbd409c6217339c219f1f3669589",
+  "status": "measured",
+  "all_model_and_optimizer_dtypes": "float32",
+  "strict_rtol": 0.0001,
+  "strict_atol": 1e-06,
+  "local_gradient_violations": 3,
+  "local_gradient_tensor": "model.layers.15.self_attn.q_proj.lora.B",
+  "local_gradient_relative_l2": 5.210325525695225e-06,
+  "normalization_gradient_violations": 0,
+  "head_hidden_gradient_violations": {
+    "pytorch": 46,
+    "pairwise_fp32": 1
+  },
+  "first_step_valid_logits_relative_l2": 3.118631841552104e-06,
+  "third_update_valid_logits_relative_l2": 0.00017697198520767767,
+  "maximum_parameter_absolute_difference_after_three_updates": 0.0023194551467895508,
+  "frozen_reference_unchanged": true,
+  "note": "Padded predictions are recorded separately. Strict elementwise failures remain in the reports."
+}
