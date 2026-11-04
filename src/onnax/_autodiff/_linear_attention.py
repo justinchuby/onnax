@@ -152,12 +152,34 @@ def _finish(graph: ir.Graph, outputs: Sequence[ir.Value]) -> None:
             output.name = f"{graph.name}_value_{index}_{slot}"
 
 
+def _checkpoint_chunk(ctx: _Context, time: ir.Value) -> ir.Value:
+    # Boundary states cost ceil(T / C), replay states cost C. The minimum over
+    # 32-token tiles lies on either side of sqrt(T); prefer the smaller on ties.
+    root = ctx.op(
+        "Cast",
+        ctx.op("Ceil", ctx.op("Sqrt", ctx.op("Cast", time, to=ir.DataType.FLOAT))),
+        to=ir.DataType.INT64,
+    )
+    tile = ctx.constant([32])
+    upper = ctx.op(
+        "Max",
+        tile,
+        ctx.op("Mul", ctx.op("Div", ctx.op("Add", root, ctx.constant([31])), tile), tile),
+    )
+    lower = ctx.op("Max", tile, ctx.op("Sub", upper, tile))
+
+    def cost(chunk: ir.Value) -> ir.Value:
+        numerator = ctx.op("Sub", ctx.op("Add", time, chunk), ctx.constant([1]))
+        return ctx.op("Add", ctx.op("Div", numerator, chunk), chunk)
+
+    return ctx.op("Where", ctx.op("Less", cost(upper), cost(lower)), upper, lower)
+
+
 @_BUILTINS.vjp("com.microsoft", "LinearAttention", since_version=1, until_version=1)
 def vjp(
     ctx: _Context, node: ir.Node, gs: Sequence[ir.Value], indices: Sequence[int]
 ) -> dict[int, ir.Value]:
     a = _LinearAttention(ctx, node)
-    chunk_size = 32
     state_shape: list[int | None] = [None, a.vh, a.dk, a.dv]
     key_shape: list[int | None] = [None, a.vh, a.dk]
     value_shape: list[int | None] = [None, a.vh, a.dv]
@@ -186,7 +208,7 @@ def vjp(
             output.name = f"{replay_step.name}_value_{index}_{slot}"
 
     chunk_shapes = [
-        [chunk_size, *shape] for shape in (key_shape, value_shape, decay_shape, beta_shape)
+        [None, *shape] for shape in (key_shape, value_shape, decay_shape, beta_shape)
     ]
     forward_chunk, forward = _body(
         ctx, a, "linear_attention_forward_chunk", [state_shape, *chunk_shapes]
@@ -260,7 +282,7 @@ def vjp(
             state_shape,
             state_shape,
             *[
-                [chunk_size, *shape]
+                [None, *shape]
                 for shape in (
                     key_shape,
                     key_shape,
@@ -293,12 +315,11 @@ def vjp(
     _finish(reverse_chunk, outputs)
 
     time = ctx.op("Shape", a.values[0], start=1, end=2)
+    chunk_size = _checkpoint_chunk(ctx, time)
     padding = ctx.op(
         "Mod",
-        ctx.op(
-            "Sub", ctx.constant([chunk_size]), ctx.op("Mod", time, ctx.constant([chunk_size]))
-        ),
-        ctx.constant([chunk_size]),
+        ctx.op("Sub", chunk_size, ctx.op("Mod", time, chunk_size)),
+        chunk_size,
     )
 
     def chunks(sequence, rank):
@@ -308,7 +329,8 @@ def vjp(
         padded = ctx.op("Pad", sequence, pads)
         shape = ctx.op(
             "Concat",
-            ctx.constant([-1, chunk_size]),
+            ctx.constant([-1]),
+            chunk_size,
             ctx.op("Shape", sequence, start=1),
             axis=0,
         )

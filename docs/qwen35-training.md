@@ -69,8 +69,15 @@ $S$ occupies 1 MiB. At 8192 tokens, a complete state history contains 8193 MiB;
 are state-array budgets; process measurements will include activations,
 gradients, workspaces and the runtime.
 
-The portable VJP uses 32-token chunks. It pads the last chunk with identity
-state updates and removes padded gradients before returning them. The JVP
+The portable VJP chooses a chunk length from the sequence shape. It compares
+32-token multiples on either side of $\sqrt{T}$ using the retained-state count
+$\lceil T/C\rceil+C$, choosing the smaller chunk on ties. Short sequences retain
+32-token chunks. A 4,032-token sequence uses 64-token chunks (127 states versus
+158 with fixed 32); 8,192 tokens use 96-token chunks (182 versus 288).
+
+The shape calculation uses ordinary ONNX operations and adapts when a session
+receives a different sequence length. The last chunk is padded with identity
+state updates, and padded gradients are removed before returning them. The JVP
 carries just the primal state and its tangent through a single `Scan`.
 
 The reference tests compare both outputs and all six gradients with independent
