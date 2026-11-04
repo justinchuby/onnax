@@ -19,7 +19,7 @@ from examples.lora.train import session
 
 
 def objective(*, regularized, per_feature=False):
-    """Build a linear-regression loss with optional a scalar ridge penalty."""
+    """Build a regression loss with shared or per-feature ridge penalties."""
     theta = ir.val("parameters", dtype=ir.DataType.FLOAT, shape=[8])
     x = ir.val("features", dtype=ir.DataType.FLOAT, shape=["samples", 8])
     y = ir.val("targets", dtype=ir.DataType.FLOAT, shape=["samples"])
@@ -132,7 +132,13 @@ def run(output_dir, *, steps=30, per_feature=False):
             mixed_name, theta, rho, direction=u if per_feature else np.array(1, np.float32)
         )[-1]
         hypergradient = -mixed if per_feature else -(u @ mixed)
-        assert theta.dtype == u.dtype == np.asarray(hypergradient).dtype == np.float32
+        assert (
+            theta.dtype
+            == u.dtype
+            == np.asarray(hypergradient).dtype
+            == np.asarray(rho).dtype
+            == np.float32
+        )
         # Independent dense formulas validate the products and both linear solves.
         hessian = x.T @ x / np.float32(len(x)) + np.diag(np.broadcast_to(np.exp(rho), (8,)))
         reference_theta = np.linalg.solve(hessian, x.T @ y / np.float32(len(x)))

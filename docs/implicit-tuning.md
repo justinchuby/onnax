@@ -90,8 +90,8 @@ the exponential parameterization.
 An independent dense ridge solution checks the fitted parameters, HVPs, mixed
 products and hypergradients at every outer step. A centered finite difference
 perturbs each coordinate of $\rho$ and independently solves the inner problem
-again, checking the derivative of the complete outer objective. This finite-
-difference reference uses FP64 to subtract nearby losses; the ONNX graphs, CG
+again, checking the derivative of the complete outer objective. Centered
+differences use FP64 to subtract nearby losses; the ONNX graphs, CG
 solves and outer updates use FP32. The dense matrix belongs to this reference;
 the ONNX solver uses vector products.
 
