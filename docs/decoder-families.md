@@ -111,6 +111,24 @@ ONNX loss, all ten adapter gradients and standalone logits match the continuous
 run exactly. Its 31 frozen Linear projections occupy 93,024 packed/scale bytes,
 compared with 661,504 FP32 bytes.
 
+### Compile the output head independently
+
+With MLX, add `--compile-head` to compile the chunked loss/gradient and logits
+sessions while keeping decoder checkpoints eager:
+
+```sh
+ONNXRUNTIME_EP_MLX_NO_COMPILE=0 python -m examples.huggingface.decoder_sft \
+  --family qwen35 --nf4 --head-chunk-size 128 --compile-head \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --output-dir /tmp/qwen35-compiled-head
+```
+
+The same policy applies when auditing, resuming or loading an exported task.
+Python callers can supply `session_factory` for the decoder and a separate
+`head_session_factory` to `prepare`, `audit`, `run` or `OnnxDecoder.load`.
+Sessions are reused, including the lazy full-logits session. Exported graphs
+and parameter identities stay the same across these execution choices.
+
 ## Train and restore with TRL
 
 ```sh

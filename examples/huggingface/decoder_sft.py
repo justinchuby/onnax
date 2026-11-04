@@ -5,6 +5,7 @@
 import argparse
 import contextlib
 import copy
+import functools
 import hashlib
 import json
 import math
@@ -132,7 +133,7 @@ class OnnxDecoder(PreTrainedModel):
             json.dump(record, stream, indent=2)
 
     @classmethod
-    def load(cls, directory, *, session_factory=None):
+    def load(cls, directory, *, session_factory=None, head_session_factory=None):
         with open(os.path.join(directory, "task.json"), encoding="utf-8") as stream:
             record = json.load(stream)
         if record.get("version") not in (1, 2) or record.get("family") not in FAMILIES:
@@ -142,6 +143,8 @@ class OnnxDecoder(PreTrainedModel):
             raise ValueError("Decoder quantization differs from the saved configuration")
         configured_head = getattr(config, "onnax_head", None)
         has_head = record["version"] == 2
+        if head_session_factory is not None and not has_head:
+            raise ValueError("A head session factory requires a chunked-head task")
         if has_head != (configured_head is not None):
             raise ValueError("Decoder task version and configured head execution mode differ")
         if has_head and configured_head.get("identity") != record["head"].get("identity"):
@@ -171,7 +174,7 @@ class OnnxDecoder(PreTrainedModel):
                 head = load(
                     os.path.join(directory, "execution"),
                     record["head"],
-                    session_factory=session_factory or session,
+                    session_factory=head_session_factory or session_factory or session,
                 )
                 resources.callback(head.close)
             result = cls(config, execution, record["mapping"], record["family"], head=head)
@@ -237,6 +240,7 @@ def prepare(
     *,
     checkpoint_layers=1,
     session_factory=None,
+    head_session_factory=None,
     fused_ops=False,
     real=False,
     cache_dir=None,
@@ -250,6 +254,8 @@ def prepare(
     ):
         raise ValueError("checkpoint_layers must be a positive integer")
     _validate_head_chunk_size(head_chunk_size)
+    if head_session_factory is not None and head_chunk_size is None:
+        raise ValueError("A head session factory requires head_chunk_size")
     graph, parameters, mapping, reference = prepare_graph(
         family, preserve_fused=fused_ops, real=real, cache_dir=cache_dir, nf4=nf4
     )
@@ -288,7 +294,7 @@ def prepare(
                 projection.weight.detach().cpu().numpy(),
                 chunk_size=head_chunk_size,
                 weight_layout="vocab_hidden",
-                session_factory=session_factory or session,
+                session_factory=head_session_factory or session_factory or session,
             )
             resources.callback(head.close)
         result = OnnxDecoder(reference.config, module, mapping, family, head=head)
@@ -350,6 +356,7 @@ def audit(
     *,
     steps=6,
     session_factory=None,
+    head_session_factory=None,
     fused_ops=False,
     adam_epsilon=1e-5,
     real=False,
@@ -361,6 +368,7 @@ def audit(
     model, reference = prepare(
         family,
         session_factory=session_factory,
+        head_session_factory=head_session_factory,
         fused_ops=fused_ops,
         real=real,
         cache_dir=cache_dir,
@@ -435,7 +443,9 @@ def audit(
         inference_data = {k: v for k, v in audit_data.items() if k != "labels"}
         expected = model(**inference_data).logits.detach()
         with_checkpoint = OnnxDecoder.load(
-            os.path.join(directory, "export"), session_factory=session_factory
+            os.path.join(directory, "export"),
+            session_factory=session_factory,
+            head_session_factory=head_session_factory,
         )
         try:
             torch.testing.assert_close(
@@ -506,6 +516,7 @@ def run(
     resume=None,
     stop=None,
     session_factory=None,
+    head_session_factory=None,
     fused_ops=False,
     adam_epsilon=1e-5,
     real=False,
@@ -520,6 +531,8 @@ def run(
 ):
     """Let TRL own training, accumulation, optimizer and checkpoint policy."""
     _validate_head_chunk_size(head_chunk_size)
+    if head_session_factory is not None and head_chunk_size is None:
+        raise ValueError("A head session factory requires head_chunk_size")
     _validate_max_length(max_length, limit=None if real else 64)
     if pad_to_multiple_of is None and real:
         pad_to_multiple_of = 64
@@ -559,6 +572,7 @@ def run(
         model, reference = prepare(
             family,
             session_factory=session_factory,
+            head_session_factory=head_session_factory,
             fused_ops=fused_ops,
             real=real,
             cache_dir=cache_dir,
@@ -567,7 +581,11 @@ def run(
         )
         del reference
     else:
-        model = OnnxDecoder.load(load_export, session_factory=session_factory)
+        model = OnnxDecoder.load(
+            load_export,
+            session_factory=session_factory,
+            head_session_factory=head_session_factory,
+        )
     batch_records = []
 
     def record_batch(module, args, kwargs):
@@ -674,6 +692,7 @@ def main():
     parser.add_argument("--audit-steps", type=int, default=6)
     parser.add_argument("--fused-ops", action="store_true")
     parser.add_argument("--nf4", action="store_true")
+    parser.add_argument("--compile-head", action="store_true")
     parser.add_argument("--head-chunk-size", type=int)
     parser.add_argument("--max-length", type=int, default=64)
     parser.add_argument("--pad-to-multiple-of", type=int)
@@ -700,8 +719,16 @@ def main():
         or args.load_export
     ):
         parser.error("Context and data options apply to training")
+    if args.compile_head and (args.provider != "mlx" or args.head_chunk_size is None):
+        parser.error("--compile-head requires MLX and --head-chunk-size")
+    if args.compile_head and os.environ.get("ONNXRUNTIME_EP_MLX_NO_COMPILE", "") not in (
+        "",
+        "0",
+    ):
+        parser.error("--compile-head requires ONNXRUNTIME_EP_MLX_NO_COMPILE=0 or unset")
     torch.set_num_threads(1)
     factory = None
+    head_factory = None
     library_sha256 = None
     if args.provider == "mlx":
         from examples.lora.mlx_runtime import register_library, session
@@ -710,11 +737,16 @@ def main():
             with open(args.library, "rb") as stream:
                 library_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
             register_library(args.library)
-        factory = session
+        factory = (
+            functools.partial(session, enable_compile=False) if args.compile_head else session
+        )
+        if args.compile_head:
+            head_factory = functools.partial(session, enable_compile=True)
     elif args.library:
         parser.error("--library requires --provider mlx")
     options = {
         "session_factory": factory,
+        "head_session_factory": head_factory,
         "fused_ops": args.fused_ops,
         "nf4": args.nf4,
         "adam_epsilon": args.adam_epsilon,
@@ -762,6 +794,10 @@ def main():
     )
     report.update(
         provider=args.provider,
+        compile_head=args.compile_head,
+        session_policy="eager_decoder_compiled_head"
+        if args.compile_head
+        else "runtime_default",
         dtype="float32",
         library_sha256=library_sha256,
         source_commit=source_commit,
