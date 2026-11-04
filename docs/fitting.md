@@ -171,9 +171,12 @@ sharing the input batch, labels and parameters.
 `single.onnx` and `batched.onnx` contain the exported products, with shared
 external weight data. Their `onnax.example.causal_ggn` graph metadata records
 ordered parameter names, direction inputs, labels and product outputs.
-`feeds.npz`, `outputs.npz` and `batched_feeds.npz` preserve named arrays;
+`feeds.npz`, `outputs.npz`, `reference_outputs.npz` and `batched_feeds.npz`
+preserve named arrays;
 `report.json` records the reference, tolerances, graph sizes and runtime versions.
-ORT graph optimization is disabled. The tests cover padding, position IDs,
+Inputs and both sets of single-direction outputs are saved before comparison,
+so a failed check leaves replay data in the output directory. ORT graph
+optimization is disabled. The tests cover padding, position IDs,
 single-token sequences and unequal valid-token microbatch weighting.
 
 The [M1 Max report](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/causal-curvature-m1max.json)

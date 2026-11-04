@@ -147,14 +147,18 @@ def run(directory, *, real=False, provider="cpu", library=None, target_nodes=Non
     actual = runtime.run(None, feeds)
     print(json.dumps({"phase": "independent_reference"}), flush=True)
     expected = reference_product(reference, mapping, parameters, batch, labels, directions)
-    maximum = _check(actual, expected)
-    if not float(actual[0]) > 0:
-        raise AssertionError("Expected a positive directional curvature")
     np.savez(os.path.join(directory, "feeds.npz"), **feeds)
     np.savez(
         os.path.join(directory, "outputs.npz"),
         **dict(zip((value.name for value in model.graph.outputs), actual, strict=True)),
     )
+    np.savez(
+        os.path.join(directory, "reference_outputs.npz"),
+        **dict(zip((value.name for value in model.graph.outputs), expected, strict=True)),
+    )
+    maximum = _check(actual, expected)
+    if not float(actual[0]) > 0:
+        raise AssertionError("Expected a positive directional curvature")
     batch_checks = 0
     if not real:
         mapped = factory(paths["batched"])

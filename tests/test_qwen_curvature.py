@@ -137,3 +137,30 @@ def test_mapped_directions_share_the_primal(workload):
         np.testing.assert_allclose(
             value, np.stack([row[index] for row in expected]), rtol=1e-4, atol=1e-6
         )
+
+
+def test_cli_preserves_named_arrays_when_comparison_fails(tmp_path, monkeypatch):
+    from examples.huggingface import validate_curvature
+
+    def reject(actual, expected):
+        raise AssertionError("Deliberate comparison failure")
+
+    monkeypatch.setattr(validate_curvature, "_check", reject)
+    directory = tmp_path / "failed"
+    with pytest.raises(AssertionError, match="Deliberate comparison failure"):
+        validate_curvature.run(str(directory))
+    model = ir.load(directory / "single.onnx")
+    interface = json.loads(model.graph.metadata_props[INTERFACE])
+    with np.load(directory / "feeds.npz") as feeds:
+        assert set(interface["parameters"]) <= set(feeds.files)
+        assert set(interface["directions"]) <= set(feeds.files)
+        assert interface["labels"] in feeds
+    with (
+        np.load(directory / "outputs.npz") as actual,
+        np.load(directory / "reference_outputs.npz") as reference,
+    ):
+        names = {value.name for value in model.graph.outputs}
+        assert names == set(actual.files) == set(reference.files)
+        for name in names:
+            np.testing.assert_allclose(actual[name], reference[name], rtol=1e-4, atol=1e-6)
+    assert not (directory / "report.json").exists()
