@@ -11,12 +11,13 @@ import time
 import numpy as np
 import onnx_ir as ir
 import torch
-from onnx_ir.passes.common import ShapeInferencePass
+from onnx_ir.passes.common import InlinePass, ShapeInferencePass
 from torch.autograd.function import once_differentiable
 
 import onnax
 from examples.huggingface.optimization import optimize_training_graph
 from examples.huggingface.serialization import SharedWeights
+from examples.huggingface.stable_losses import DOMAIN as LOSS_DOMAIN
 from examples.huggingface.stable_losses import hard_cross_entropy, install
 from examples.lora.train import session
 
@@ -141,9 +142,14 @@ class ChunkedHead:
             weight, projection_precision=projection_precision, weight_layout=weight_layout
         )
         self.vocab_size = weight.shape[0 if weight_layout == "vocab_hidden" else 1]
-        self.gradient = optimize_training_graph(
-            onnax.grad(self.model, inputs=["hidden"], output="loss_sum")
-        )
+        derivative = onnax.grad(self.model, inputs=["hidden"], output="loss_sum")
+        # Preserve the analytic loss rule through AD, then share primal/VJP terms.
+        InlinePass(
+            criteria=lambda function: (
+                function.domain == LOSS_DOMAIN and function.name == "HardCrossEntropyF32"
+            )
+        )(derivative)
+        self.gradient = optimize_training_graph(derivative)
         self.gradient.graph.sort()
         self.directory = tempfile.TemporaryDirectory(prefix="onnax-head-")
         forward = self.model.clone()
