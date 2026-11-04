@@ -133,3 +133,45 @@ nonzero adapters at three batch sizes, before and after ONNXScript optimization.
 The command writes six checker-validated ONNX files and `report.json`; frozen
 weights and the source graph remain unchanged. The exported products can be
 reused by an external curvature diagnostic or solver.
+
+
+## Token-loss curvature for language-model adapters
+
+For causal-language-model logits $z(\theta)$ and mean valid-token cross-entropy,
+the generalized Gauss–Newton product is
+
+$$
+Gv=J_z^T C J_zv,\qquad
+Cd=\frac{m}{N}\,p\odot\left(d-\sum_{\mathrm{vocab}}p\odot d\right),
+\quad p=\operatorname{softmax}(z).
+$$
+
+Here $m$ selects valid shifted targets and $N$ counts them. The product measures
+how an adapter direction changes the predicted token distribution. Its scalar
+curvature $v^TGv$ is nonnegative. Unlike the exact Hessian, this operator uses
+the loss curvature without second derivatives of the decoder.
+
+The example composes JVP, the softmax curvature action and VJP into one ordinary
+ONNX graph. JVP and VJP share the same primal values. Labels shift one position
+for causal prediction, `-100` masks ignored targets, and all-ignored batches
+produce zero products.
+
+```sh
+uv sync --group dev --group training --group huggingface
+uv run python -m examples.huggingface.validate_curvature \
+  --output-dir token-curvature
+```
+
+The default runs an offline two-layer Qwen3 with rank-4 q/v adapters at a seeded
+nonzero adapter point. It checks every FP32 adapter product against independent
+Transformers JVP, cross-entropy Hessian-vector and VJP calculations. The CLI
+also uses `vmap` to check three directions against sequential execution while
+sharing the input batch, labels and parameters.
+
+`single.onnx` and `batched.onnx` contain the exported products, with shared
+external weight data. Their `onnax.example.causal_ggn` graph metadata records
+ordered parameter names, direction inputs, labels and product outputs.
+`feeds.npz`, `outputs.npz` and `batched_feeds.npz` preserve named arrays;
+`report.json` records the reference, tolerances, graph sizes and runtime versions.
+ORT graph optimization is disabled. The tests cover padding, position IDs,
+single-token sequences and unequal valid-token microbatch weighting.
