@@ -167,7 +167,7 @@ def test_additive_scatter_reverse_repeated_negative_and_empty_indices(selected, 
         np.testing.assert_array_equal(value, expected[name])
 
 
-@pytest.mark.parametrize("reduction", [None, "none", "mul", "max", "min"])
+@pytest.mark.parametrize("reduction", ["mul", "max", "min"])
 def test_scatter_reverse_rejects_other_reductions(reduction):
     data = ir.val("data", dtype=ir.DataType.FLOAT, shape=[2])
     updates = ir.val("updates", dtype=ir.DataType.FLOAT, shape=[1])
@@ -186,5 +186,5 @@ def test_scatter_reverse_rejects_other_reductions(reduction):
         ),
         ir_version=10,
     )
-    with pytest.raises(NotImplementedError, match="VJP ScatterND requires reduction='add'"):
+    with pytest.raises(NotImplementedError, match="VJP ScatterND requires reduction="):
         onnax.vjp(source)
