@@ -1,0 +1,56 @@
+{
+  "matched_fields": [
+    "source_identity",
+    "library_sha256",
+    "driver_sha256",
+    "graph_sha256",
+    "input_arrays",
+    "gradient_arrays",
+    "versions",
+    "environment",
+    "torch_threads",
+    "warmup",
+    "samples",
+    "saved_bytes"
+  ],
+  "gradient_arrays_bit_identical": 72,
+  "step_median_reduction_fraction": 0.08142688298829448,
+  "timing_seconds": {
+    "forward": {
+      "baseline": {
+        "median": 0.288446020509582,
+        "p95": 0.2951518669375218
+      },
+      "candidate": {
+        "median": 0.24297829100396484,
+        "p95": 0.26905119575676506
+      }
+    },
+    "backward": {
+      "baseline": {
+        "median": 0.27228754200041294,
+        "p95": 0.28276273894589393
+      },
+      "candidate": {
+        "median": 0.2729847709997557,
+        "p95": 0.3051699839474168
+      }
+    },
+    "step": {
+      "baseline": {
+        "median": 0.5624358120257966,
+        "p95": 0.5746828872943297
+      },
+      "candidate": {
+        "median": 0.5166384169715457,
+        "p95": 0.5764009312086273
+      }
+    }
+  },
+  "mlx_peak_bytes": {
+    "baseline": 4146235653,
+    "candidate": 4146235653
+  },
+  "preparation": "Task-owned GPU replay sessions were stopped before both final workers.",
+  "scope": "Fixed-input FP32 public OnnxModule forward, external MSE backward and AdamW step (lr=0). Host exchange, ownership checks, gradient accumulation and optimizer state updates are timed. Process memory includes setup and whole-VJP qualification; allocator peak is reset after warmup."
+}

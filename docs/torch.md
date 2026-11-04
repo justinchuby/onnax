@@ -78,6 +78,11 @@ returned outputs are checked before backward. Export/load preserves this mode,
 and parameter checkpoints can be exchanged with the default execution mode.
 Choose either `save_activations` or `eager_gradients` for a module.
 
+Wide saved boundaries use byte intervals to narrow exact output-overlap checks.
+The [real UNet comparison](https://github.com/justinchuby/onnax/tree/main/examples/diffusion/reports/output-ownership-m1max)
+records an 8.1% lower complete-step median with identical graph and gradient
+hashes; both measured P95 values are about 575 ms.
+
 ## Compute a scalar objective and its gradients together
 
 Put the loss in ONNX and select its scalar output with `eager_gradients=True`:

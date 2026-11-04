@@ -23,6 +23,7 @@ from torch.autograd.function import once_differentiable
 import onnax
 from onnax._file_snapshot import copy_file
 from onnax._inference import _infer_shapes
+from onnax.torch._ownership import output_aliases
 from onnax.torch._serialization import file_digest, save_model, source_identity
 
 _FLOATS = (ir.DataType.FLOAT, ir.DataType.DOUBLE)
@@ -162,12 +163,7 @@ class _Function(torch.autograd.Function):
         # Identity/view outputs must not expose saved backward inputs or aliases
         # invisible to PyTorch storage/version tracking. Keep ordinary owned
         # runtime outputs as zero-copy NumPy views.
-        aliases = [
-            not value.flags.writeable
-            or any(np.shares_memory(value, feed) for feed in feeds.values())
-            or any(i != j and np.shares_memory(value, other) for j, other in enumerate(arrays))
-            for i, value in enumerate(arrays)
-        ]
+        aliases = output_aliases(arrays, feeds.values())
         arrays = [
             value.copy() if alias else value
             for value, alias in zip(arrays, aliases, strict=True)

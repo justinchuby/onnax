@@ -478,3 +478,62 @@ def test_saved_runtime_arrays_are_released_after_backward():
         assert all(ref() is None for ref in hidden)
         assert snapshots["features"]() is None
         assert loss.item() > 0
+
+
+def test_output_ownership_matches_exact_overlap_checks():
+    from onnax.torch._ownership import output_aliases
+
+    base = np.arange(256, dtype=np.float32).reshape(16, 16)
+    readonly = base.view()
+    readonly.setflags(write=False)
+    candidates = [
+        base,
+        base.copy(),
+        base.T,
+        base[::-1],
+        base[:, ::2],
+        base[:, 1::2],
+        base[:0],
+        readonly,
+        base.view(np.uint8),
+        np.array(1, np.float32),
+        np.asfortranarray(base),
+    ]
+    rng = np.random.default_rng(42)
+    for _ in range(200):
+        outputs = [
+            candidates[i] for i in rng.integers(len(candidates), size=int(rng.integers(1, 12)))
+        ]
+        feeds = [
+            candidates[i] for i in rng.integers(len(candidates), size=int(rng.integers(0, 5)))
+        ]
+        expected = [
+            not value.flags.writeable
+            or any(np.shares_memory(value, feed) for feed in feeds)
+            or any(
+                i != j and np.shares_memory(value, other) for j, other in enumerate(outputs)
+            )
+            for i, value in enumerate(outputs)
+        ]
+        assert output_aliases(outputs, iter(feeds)) == expected
+
+
+def test_wide_disjoint_outputs_avoid_exact_overlap_checks(monkeypatch):
+    from onnax.torch._ownership import output_aliases
+
+    def unexpected(*args):
+        raise AssertionError("Disjoint byte intervals need no exact overlap query")
+
+    outputs = [np.empty(16, np.float32) for _ in range(505)]
+    feeds = [np.empty(16, np.float32) for _ in range(75)]
+    monkeypatch.setattr(np, "shares_memory", unexpected)
+    assert output_aliases(outputs, feeds) == [False] * len(outputs)
+
+
+def test_strided_interleaving_is_not_an_alias():
+    from onnax.torch._ownership import output_aliases
+
+    base = np.arange(32, dtype=np.float32)
+    outputs = [base[::2], base[1::2], *(np.empty(1, np.float32) for _ in range(3))]
+    assert output_aliases(outputs, []) == [False] * 5
+    assert output_aliases(outputs, [base[2:3]]) == [True, False, False, False, False]
