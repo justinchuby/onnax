@@ -10,6 +10,7 @@ data loading, scheduling and checkpoint storage.
 | [PyTorch bridge](torch.md) | Use external losses, autograd, optimizers and reloadable ONNX bundles |
 | [Hugging Face Trainer](huggingface.md) | Use datasets, gradient accumulation and training checkpoint recovery |
 | [MLP classifier](mlp.md) | Train a complete small model with stable cross-entropy |
+| [Implicit hyperparameter tuning](implicit-tuning.md) | Differentiate a fitted model to learn its ridge penalty |
 | [Matrix-free fitting](fitting.md) | Connect JVP/VJP products to an external Gauss–Newton solver |
 
 Continue with [language and diffusion models](models.md) for Mobius model
@@ -24,4 +25,5 @@ torch
 huggingface
 mlp
 fitting
+implicit-tuning
 ```
