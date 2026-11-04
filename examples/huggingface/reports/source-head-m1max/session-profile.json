@@ -1,0 +1,585 @@
+{
+  "mode": "chunked",
+  "phase_instrumentation": true,
+  "validated_updates": 5,
+  "parameter_tensors": 112,
+  "checkpoint_layers": 4,
+  "save_activations": false,
+  "mlx_memory_limit_bytes": 21474836480,
+  "torch_mps_memory_limit_bytes": null,
+  "mps_memory_fraction": null,
+  "provider": "mlx",
+  "torch_chunked_head": false,
+  "mps_fallback_enabled": false,
+  "attention_implementation": "fused",
+  "fused_ops": true,
+  "compile_head": true,
+  "synchronization": "synchronous CPU/ORT execution",
+  "segment_target_nodes": null,
+  "lut4_fusion_disabled": false,
+  "mlx_compile_disabled": false,
+  "real": true,
+  "weight_values": "nf4_reconstructed_fp32",
+  "projection_precision": "fp32",
+  "gradient_and_optimizer_dtype": "float32",
+  "base_storage": "packed_nf4_decoder",
+  "warmup": 2,
+  "samples": 3,
+  "losses": [
+    4.485726356506348,
+    4.329050540924072,
+    4.039088249206543,
+    3.8145320415496826,
+    3.710019826889038
+  ],
+  "batch": 1,
+  "sequence": 4096,
+  "valid_shifted_tokens": 4095,
+  "input_ids_sha256": "660484aa01216cb842ae8031a7946e3228916d51a9d9d5a65610d7c395b0f7b2",
+  "input_pattern": "Prefix of the first naturally long corpus example",
+  "head_chunk_size": 128,
+  "full_logits_bytes": 2489319424,
+  "chunk_logits_bytes": 77791232,
+  "initialization_seconds": 130.6558651670348,
+  "timings_ms": {
+    "forward_and_loss": {
+      "median": 2644.0011670347303,
+      "p95": 2655.066892004106
+    },
+    "backward": {
+      "median": 5445.600499981083,
+      "p95": 5449.160374409985
+    },
+    "process_cpu": {
+      "median": 531.753000000009,
+      "p95": 581.8227000000093
+    },
+    "adamw": {
+      "median": 3.105791984125972,
+      "p95": 3.1067288713529706
+    },
+    "step": {
+      "median": 8092.629415914416,
+      "p95": 8107.318091858179
+    },
+    "onnx_execution": {
+      "median": 8080.824247910641,
+      "p95": 8095.6412473344235
+    },
+    "head_loss_gradient_execution": {
+      "median": 595.3784149605781,
+      "p95": 596.8004139489494
+    },
+    "body_execution": {
+      "median": 7488.122419104911,
+      "p95": 7499.10849200096
+    }
+  },
+  "timing_samples_ms": [
+    {
+      "forward_and_loss": 2656.2964170007035,
+      "backward": 5449.555916013196,
+      "process_cpu": 587.3860000000093,
+      "adamw": 3.0978339491412044,
+      "step": 8108.950166963041,
+      "onnx_execution": 8097.287580603734,
+      "head_loss_gradient_execution": 596.9584138365462,
+      "body_execution": 7500.329166767187
+    },
+    {
+      "forward_and_loss": 2643.9220829633996,
+      "backward": 5445.600499981083,
+      "process_cpu": 531.753000000009,
+      "adamw": 3.1068329699337482,
+      "step": 8092.629415914416,
+      "onnx_execution": 8080.824247910641,
+      "head_loss_gradient_execution": 592.7018288057297,
+      "body_execution": 7488.122419104911
+    },
+    {
+      "forward_and_loss": 2644.0011670347303,
+      "backward": 5431.5108329756185,
+      "process_cpu": 503.92299999998613,
+      "adamw": 3.105791984125972,
+      "step": 8078.617791994475,
+      "onnx_execution": 8066.642747609876,
+      "head_loss_gradient_execution": 595.3784149605781,
+      "body_execution": 7471.264332649298
+    }
+  ],
+  "effective_tokens_per_second": 506.016004136684,
+  "peak_rss_bytes": 6319816704,
+  "rss_scope": "Whole isolated process, including model construction, runtime, arrays and optimizer",
+  "initialization_scope": "Model construction, differentiation, export and selected execution sessions",
+  "parameter_bytes": 2293760,
+  "threads": {
+    "torch": 1,
+    "ort_intra": 1,
+    "ort_inter": 1
+  },
+  "thread_environment": {
+    "OMP_NUM_THREADS": null,
+    "OPENBLAS_NUM_THREADS": null,
+    "MKL_NUM_THREADS": null,
+    "VECLIB_MAXIMUM_THREADS": null
+  },
+  "ort_optimizer": "disabled",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "hardware": {
+    "cpu": "Apple M1 Max",
+    "logical_cores": 10,
+    "physical_memory_bytes": 34359738368
+  },
+  "versions": {
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "onnxruntime": "1.31.1",
+    "onnxscript": "0.7.2",
+    "mobius-onnx": "0.1.0"
+  },
+  "physical_footprint": {
+    "available": true,
+    "current_bytes": 13372201368,
+    "lifetime_peak_bytes": 13435820104,
+    "current_resident_bytes": 6319865856,
+    "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+  },
+  "mlx_allocator": {
+    "active_bytes": 891320200,
+    "cache_bytes": 7786918817,
+    "peak_bytes": 6146193528
+  },
+  "mlx_session_compile_policy": {
+    "body": "eager",
+    "head": "compiled_when_eligible"
+  },
+  "native_construction": {
+    "session_0": {
+      "factory_seconds": 0.36018054198939353,
+      "enable_compile": true,
+      "segments": 1,
+      "source": "gradient.onnx"
+    },
+    "session_1": {
+      "factory_seconds": 0.3111362080089748,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "prefix_forward.onnx"
+    },
+    "session_2": {
+      "factory_seconds": 0.05805379105731845,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_0_4_forward.onnx"
+    },
+    "session_3": {
+      "factory_seconds": 0.12035216600634158,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_0_4_backward.onnx"
+    },
+    "session_4": {
+      "factory_seconds": 0.04675958293955773,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_4_8_forward.onnx"
+    },
+    "session_5": {
+      "factory_seconds": 0.11021220800466835,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_4_8_backward.onnx"
+    },
+    "session_6": {
+      "factory_seconds": 0.049926624982617795,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_8_12_forward.onnx"
+    },
+    "session_7": {
+      "factory_seconds": 0.10988716699648649,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_8_12_backward.onnx"
+    },
+    "session_8": {
+      "factory_seconds": 0.04735770798288286,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_12_16_forward.onnx"
+    },
+    "session_9": {
+      "factory_seconds": 0.11000208300538361,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_12_16_backward.onnx"
+    },
+    "session_10": {
+      "factory_seconds": 0.04715379199478775,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_16_20_forward.onnx"
+    },
+    "session_11": {
+      "factory_seconds": 0.1108968750340864,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_16_20_backward.onnx"
+    },
+    "session_12": {
+      "factory_seconds": 0.04918933392036706,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_20_24_forward.onnx"
+    },
+    "session_13": {
+      "factory_seconds": 0.11196224996820092,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_20_24_backward.onnx"
+    },
+    "session_14": {
+      "factory_seconds": 0.05122504197061062,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_24_28_forward.onnx"
+    },
+    "session_15": {
+      "factory_seconds": 0.12232037493959069,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "decoder_24_28_backward.onnx"
+    },
+    "session_16": {
+      "factory_seconds": 0.001094958046451211,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "suffix_forward.onnx"
+    },
+    "session_17": {
+      "factory_seconds": 0.0010499160271137953,
+      "enable_compile": false,
+      "segments": 1,
+      "source": "suffix_backward.onnx"
+    }
+  },
+  "cpu_fallback_disabled": true,
+  "library": "/tmp/onnax-session-compile-runtime/libonnxruntime_mlx_ep.dylib",
+  "library_sha256": "c32f3a97d966530a5a46c6ae23222a805a9b12e1324a9249a75690f7cc35f359",
+  "head_weight_layout": "vocab_hidden",
+  "head_forward_session_created": false,
+  "initializer_bytes_by_session": {
+    "prefix_forward": 622329856,
+    "decoder_0_4_forward": 56397888,
+    "decoder_0_4_backward": 56397944,
+    "decoder_4_8_forward": 35426360,
+    "decoder_4_8_backward": 35426416,
+    "decoder_8_12_forward": 35426360,
+    "decoder_8_12_backward": 35426416,
+    "decoder_12_16_forward": 35426360,
+    "decoder_12_16_backward": 35426416,
+    "decoder_16_20_forward": 35426360,
+    "decoder_16_20_backward": 35426416,
+    "decoder_20_24_forward": 35426360,
+    "decoder_20_24_backward": 35426416,
+    "decoder_24_28_forward": 35426360,
+    "decoder_24_28_backward": 35426416,
+    "suffix_forward": 4096,
+    "suffix_backward": 4108,
+    "head_backward": 622329900
+  },
+  "initializer_scope": "Logical top-level initializer bytes for each execution session",
+  "decoder_storage_bytes": {
+    "original": 1761607680,
+    "packed": 247726080
+  },
+  "nodes": {
+    "prefix_forward": 1,
+    "decoder_0_4_forward": 138,
+    "decoder_0_4_backward": 1294,
+    "decoder_4_8_forward": 128,
+    "decoder_4_8_backward": 1284,
+    "decoder_8_12_forward": 128,
+    "decoder_8_12_backward": 1284,
+    "decoder_12_16_forward": 128,
+    "decoder_12_16_backward": 1284,
+    "decoder_16_20_forward": 128,
+    "decoder_16_20_backward": 1284,
+    "decoder_20_24_forward": 128,
+    "decoder_20_24_backward": 1284,
+    "decoder_24_28_forward": 128,
+    "decoder_24_28_backward": 1284,
+    "suffix_forward": 1,
+    "suffix_backward": 14,
+    "head_backward": 55
+  },
+  "logical_saved_activation_bytes": 153092096,
+  "saved_activation_count": 0,
+  "input_view_median_us": 16.417005099356174,
+  "input_view_scope": "Host data-input preparation; adapter preparation is included in forward",
+  "exchange_scope": "CPU NumPy input views; input snapshots and parameter/output views are included in execution boundaries",
+  "session_timing_scope": "Synchronous Session.run boundaries, summed per measured training step; observer instrumentation included",
+  "per_session_timings_ms": {
+    "decoder_0_4_backward.onnx": {
+      "median": 774.8978750314564,
+      "p95": 777.166811900679,
+      "step_totals": [
+        777.4189159972593,
+        774.8978750314564,
+        774.6540830703452
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_0_4_forward.onnx": {
+      "median": 291.7657910147682,
+      "p95": 291.8375669280067,
+      "step_totals": [
+        291.84554202947766,
+        290.5761249130592,
+        291.7657910147682
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_12_16_backward.onnx": {
+      "median": 775.5618749652058,
+      "p95": 777.4222875130363,
+      "step_totals": [
+        777.6290000183508,
+        775.0229589873925,
+        775.5618749652058
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_12_16_forward.onnx": {
+      "median": 290.50174995791167,
+      "p95": 298.3694006339647,
+      "step_totals": [
+        299.243584042415,
+        289.4348750123754,
+        290.50174995791167
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_16_20_backward.onnx": {
+      "median": 775.6199591094628,
+      "p95": 779.3203828623518,
+      "step_totals": [
+        779.7315410571173,
+        775.6199591094628,
+        775.5137090571225
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_16_20_forward.onnx": {
+      "median": 289.8162080673501,
+      "p95": 290.2918957406655,
+      "step_totals": [
+        288.9924170449376,
+        290.34474992658943,
+        289.8162080673501
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_20_24_backward.onnx": {
+      "median": 775.1122080953792,
+      "p95": 777.1535960957408,
+      "step_totals": [
+        777.3804169846699,
+        775.1122080953792,
+        773.2372920727357
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_20_24_forward.onnx": {
+      "median": 289.5562920020893,
+      "p95": 290.5571288545616,
+      "step_totals": [
+        289.289208012633,
+        290.66833294928074,
+        289.5562920020893
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_24_28_backward.onnx": {
+      "median": 775.7344999117777,
+      "p95": 777.8570375172421,
+      "step_totals": [
+        778.0928750289604,
+        775.7344999117777,
+        775.7185000227764
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_24_28_forward.onnx": {
+      "median": 291.08579095918685,
+      "p95": 291.14852908533067,
+      "step_totals": [
+        291.15549998823553,
+        291.08579095918685,
+        290.8802080200985
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_4_8_backward.onnx": {
+      "median": 777.1174159133807,
+      "p95": 785.8635790995322,
+      "step_totals": [
+        777.1174159133807,
+        786.8353750091046,
+        776.6251669963822
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_4_8_forward.onnx": {
+      "median": 289.7717090090737,
+      "p95": 289.832645340357,
+      "step_totals": [
+        289.7717090090737,
+        289.8394160438329,
+        289.20258407015353
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_8_12_backward.onnx": {
+      "median": 776.6753749456257,
+      "p95": 776.8007000093348,
+      "step_totals": [
+        776.6753749456257,
+        776.8146250164136,
+        774.8037499841303
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "decoder_8_12_forward.onnx": {
+      "median": 289.38316693529487,
+      "p95": 290.788779722061,
+      "step_totals": [
+        289.376207976602,
+        290.9449589205906,
+        289.38316693529487
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "gradient.onnx": {
+      "median": 595.4791659023613,
+      "p95": 596.8956573517062,
+      "step_totals": [
+        597.0530452905223,
+        592.7610830403864,
+        595.4791659023613
+      ],
+      "calls_per_step": [
+        32,
+        32,
+        32
+      ]
+    },
+    "prefix_forward.onnx": {
+      "median": 10.178958997130394,
+      "p95": 10.805545339826494,
+      "step_totals": [
+        10.875166044570506,
+        9.909916901960969,
+        10.178958997130394
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "suffix_backward.onnx": {
+      "median": 2.46029207482934,
+      "p95": 2.548454189673066,
+      "step_totals": [
+        2.558249980211258,
+        2.46029207482934,
+        2.4239589693024755
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    },
+    "suffix_forward.onnx": {
+      "median": 2.9326670337468386,
+      "p95": 3.2343172701075673,
+      "step_totals": [
+        3.267833963036537,
+        2.9326670337468386,
+        1.543833059258759
+      ],
+      "calls_per_step": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  "source_commit": "ea9ab34cadafe24da73c9a1f52026cfed80d41d7",
+  "driver_sha256": "2579e6a566354cad6a7e7ad7f6205aea5b80c592ac71586738d6d1f0583311be",
+  "source_sha256": {
+    "examples/huggingface/sft.py": "884de7213f8f8acc50e2a6bc9acb13cfafa6af497f8e569f999cef5e7367264e",
+    "examples/huggingface/chunked_loss.py": "e7c2cd535e6e81ca067b8abac3979133544507e02be57330f13a82d2a6f41d8e",
+    "examples/huggingface/benchmark.py": "9202883b5a84c9fc41372243466582d9f4847fa228dda182755fba4b3bd24cae"
+  },
+  "frozen_hashes_unchanged": true,
+  "frozen_sha256": "54ca269c386ecc345139f7a8bda7a0e82341b3a36e34db5941809dcacda3ece6"
+}

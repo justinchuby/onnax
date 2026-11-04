@@ -28,17 +28,19 @@ Native attention pullbacks, NF4 GEMM execution and cached frozen-weight layouts
 reduce the complete 4096-token training step to the following times on an
 M1 Max with 32 GiB memory:
 
-| Projection compute | ONNX / MLX median / P95 | PyTorch / MPS eager median / P95 | Throughput ratio (ONNX / PyTorch) |
-| --- | ---: | ---: | ---: |
-| FP32 | 8.16 / 8.57 s | 9.15 / 9.17 s | 1.122× |
-| BF16 | 9.64 / 10.45 s | 10.47 / 10.51 s | 1.086× |
+| Projection compute | PyTorch attention | ONNX / MLX median / P95 | PyTorch / MPS median / P95 | Throughput ratio (ONNX / PyTorch) |
+| --- | --- | ---: | ---: | ---: |
+| FP32 | eager | 8.16 / 8.57 s | 9.15 / 9.17 s | 1.122× |
+| FP32 | SDPA | 8.16 / 8.57 s | 9.29 / 9.32 s | 1.139× |
+| BF16 | eager | 9.64 / 10.45 s | 10.47 / 10.51 s | 1.086× |
 
 Each run uses microbatch 1, 4095 valid shifted targets, four-layer checkpoint
 groups, 128-token head chunks, 10 warmups and 100 measured updates. The step
 includes forward, loss, backward, array exchange and external FP32 AdamW.
 ONNX keeps packed NF4 weights; PyTorch uses the same reconstructed weight values
 in dense storage. Whole-process peak physical footprint is 12.77 / 12.91 GiB
-for FP32 (ONNX / PyTorch), and 14.15 / 14.51 GiB for BF16.
+for FP32 (ONNX / PyTorch eager); FP32 SDPA peaks at 12.92 GiB.
+BF16 peaks at 14.15 / 14.51 GiB (ONNX / PyTorch eager).
 
 The FP32 run uses the source head layout and compiles the head independently
 of the eager decoder. Its [head-layout measurements](selective-head-compilation)

@@ -8,9 +8,11 @@ optimizers, data loading, schedulers and checkpoint storage.
 
 ## Current priorities
 
-1. **General training interfaces.** Move qualified saved-activation and
-   recomputation policies into the public Torch bridge. Preserve named parameters,
-   upstream gradients, gradient accumulation, export and checkpoint recovery.
+1. **General training interfaces.** Consolidate model-specific wrappers around
+   the public `OnnxModule` and `CheckpointedModule`, which already provide saved
+   activations and named recomputation boundaries. Preserve parameter mappings,
+   upstream gradients, accumulation, export and checkpoint recovery while
+   carrying qualified execution policies across decoder and denoiser tasks.
 2. **MLX execution and memory.** Profile the complete decoder and denoiser paths,
    then improve the measured bottlenecks. Compare saving, recomputing and fused
    pullbacks at the same precision, context and effective batch.

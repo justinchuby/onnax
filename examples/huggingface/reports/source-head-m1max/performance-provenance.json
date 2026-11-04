@@ -85,21 +85,54 @@
       "observation_errors": 0,
       "guard_record_sha256": "3b22f41c3778f5adb9e6231485f0fa6c4463e75fa215ccde3de946c72ff54555",
       "observed_peak_physical_footprint_bytes": 13865339232
+    },
+    "pytorch_mps_sdpa": {
+      "command": [
+        "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+        "/tmp/onnax-source-head-mps-sdpa-worker.py",
+        "--output",
+        "/tmp/onnax-full-source-head-mps-sdpa-formal.json",
+        "--warmup",
+        "10",
+        "--samples",
+        "100"
+      ],
+      "cwd": "/private/tmp/onnax-source-head",
+      "started": "2026-11-04T05:24:00.217396+00:00",
+      "finished": "2026-11-04T05:41:21.881807+00:00",
+      "returncode": 0,
+      "physical_memory_budget_bytes": 25769803776,
+      "minimum_free_disk_bytes": 5368709120,
+      "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+      "observation_errors": 0,
+      "guard_record_sha256": "45dc47f0f08a1a119defbc9057f629f57a3fc98ca012436ca9e9f0c255365e98",
+      "observed_peak_physical_footprint_bytes": 13868206408
+    },
+    "session_profile": {
+      "scope": "Separate diagnostic: 2 warmup and 3 measured steps, Session.run boundary instrumentation. Same Qwen3 input, precision, adapter parameters and execution policy as the qualified ONNX run.",
+      "samples": 3,
+      "warmup": 2
     }
   },
   "files": {
     "legacy-head.json": "d4f2e67089f9d9bc58dc8c12d9065b08100eb45481c4f99a9cba093380f60421",
     "source-head-selective.json": "42c0f0a1e7e206c10dec454406a71f31561a5e7147a383d23f8b38c9cf289dd6",
     "comparison.json": "713a71e0dc0d303f9a56069e023d36b2149d04c2551c3e36939e1cfd4f67725b",
-    "pytorch-mps.json": "038e6f30965fe5c54a03da3bd5a792aedc3d26157c5e13c38eac07070f261652"
+    "pytorch-mps.json": "038e6f30965fe5c54a03da3bd5a792aedc3d26157c5e13c38eac07070f261652",
+    "pytorch-mps-sdpa.json": "d2f32d69147ee4537734d90c2c6ac155acc01e7abe7a4b14c561e68da4f28f55",
+    "sdpa-comparison.json": "9401f83d7cd5808907e8633003c8b7da8ede8ceeaac230c6922ba8933ed0c0ba",
+    "session-profile.json": "d641ff070eff26d06951ca85f824ddd6c4e0eab4591086f6c07d7261985b02af"
   },
   "drivers": {
     "onnx-driver.py.txt": "12077bf49b918bad6105974d670cc9ba478d59a3706b1dcb232c2255be611cd4",
-    "pytorch-driver.py.txt": "90686bf0ba72711c61fb5ea7f3fe87e07e9b3bdf0f82a77d00e50fceec59be3a"
+    "pytorch-driver.py.txt": "90686bf0ba72711c61fb5ea7f3fe87e07e9b3bdf0f82a77d00e50fceec59be3a",
+    "pytorch-sdpa-driver.py.txt": "d623e3415f0218a17514e6561619fe145694b96f306d35586a062061a418bc22",
+    "session-profile-driver.py.txt": "2579e6a566354cad6a7e7ad7f6205aea5b80c592ac71586738d6d1f0583311be"
   },
   "driver_replay": "Copy the archived driver to a .py file, provide the recorded corpus path, and run it from the corresponding source checkout with PYTHONPATH=src:.; ONNX driver arguments are recorded per run. The driver hash identifies the original measured script.",
   "comparison": {
     "onnx_vs_pytorch_eager_throughput_ratio": 1.1218069563004918,
-    "configuration_validation": "Complete; input digest, geometry, precision, versions, hardware and thread settings match. ONNX uses packed NF4; PyTorch uses the same reconstructed decoder weight values in dense storage."
+    "configuration_validation": "Complete; input digest, geometry, precision, versions, hardware and thread settings match. ONNX uses packed NF4; PyTorch uses the same reconstructed decoder weight values in dense storage.",
+    "onnx_vs_pytorch_sdpa_throughput_ratio": 1.138855114510454
   }
 }
