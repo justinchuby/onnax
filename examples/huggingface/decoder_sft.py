@@ -58,6 +58,7 @@ class OnnxDecoder(PreTrainedModel):
         self.onnx = execution
         self.mapping = mapping
         self.family = family
+        self.quantization = getattr(config, "onnax_quantization", None)
         self.head = head
         self.mode = "chunked" if head is not None else "full"
         if head is not None:
@@ -119,6 +120,7 @@ class OnnxDecoder(PreTrainedModel):
             "family": self.family,
             "mapping": self.mapping,
             "base_model": self.config._name_or_path,
+            "quantization": self.quantization,
         }
         if self.head is not None:
             from examples.huggingface.decoder_head import export
@@ -136,6 +138,8 @@ class OnnxDecoder(PreTrainedModel):
         if record.get("version") not in (1, 2) or record.get("family") not in FAMILIES:
             raise ValueError("Unsupported decoder task interface")
         config = AutoConfig.from_pretrained(directory, local_files_only=True)
+        if record.get("quantization") != getattr(config, "onnax_quantization", None):
+            raise ValueError("Decoder quantization differs from the saved configuration")
         configured_head = getattr(config, "onnax_head", None)
         has_head = record["version"] == 2
         if has_head != (configured_head is not None):
@@ -237,6 +241,7 @@ def prepare(
     real=False,
     cache_dir=None,
     head_chunk_size=None,
+    nf4=False,
 ):
     if (
         isinstance(checkpoint_layers, bool)
@@ -246,7 +251,7 @@ def prepare(
         raise ValueError("checkpoint_layers must be a positive integer")
     _validate_head_chunk_size(head_chunk_size)
     graph, parameters, mapping, reference = prepare_graph(
-        family, preserve_fused=fused_ops, real=real, cache_dir=cache_dir
+        family, preserve_fused=fused_ops, real=real, cache_dir=cache_dir, nf4=nf4
     )
     if head_chunk_size is not None:
         from onnxscript import optimizer
@@ -350,6 +355,7 @@ def audit(
     real=False,
     cache_dir=None,
     head_chunk_size=None,
+    nf4=False,
 ):
     """Compare native source modules, including nonzero-B derivatives and PEFT exchange."""
     model, reference = prepare(
@@ -359,6 +365,7 @@ def audit(
         real=real,
         cache_dir=cache_dir,
         head_chunk_size=head_chunk_size,
+        nf4=nf4,
     )
     audit_data = (
         text_batch(task_tokenizer(family, real=True, cache_dir=cache_dir)) if real else batch()
@@ -437,9 +444,18 @@ def audit(
             # A fresh native source model receives the standard PEFT adapter.
             from examples.huggingface.decoder_families import reference_model
 
+            exchange_base = reference_model(family, real=real, cache_dir=cache_dir)
+            if model.quantization is not None:
+                from examples.huggingface.nf4 import quantize_reference
+
+                quantize_reference(
+                    exchange_base,
+                    mapping=model.mapping,
+                    block_size=model.quantization["block_size"],
+                )
             exchange = roundtrip(
                 with_checkpoint,
-                reference_model(family, real=real, cache_dir=cache_dir),
+                exchange_base,
                 audit_data,
                 os.path.join(directory, "adapter"),
                 adam_epsilon=adam_epsilon,
@@ -448,6 +464,7 @@ def audit(
             with_checkpoint.close()
         return {
             "family": family,
+            "quantization": model.quantization,
             "independent_steps": steps,
             "adam_epsilon": adam_epsilon,
             "losses": losses,
@@ -461,7 +478,9 @@ def audit(
         model.close()
 
 
-def _validate_task_source(config, family, real, head_chunk_size):
+def _validate_task_source(config, family, real, head_chunk_size, nf4=False):
+    if (config.get("onnax_quantization") is not None) != nf4:
+        raise ValueError("Checkpoint quantization mode mismatch")
     if config["model_type"] != FAMILIES[family].config_type.model_type:
         raise ValueError("Checkpoint decoder family mismatch")
     if (config.get("onnax_head") is not None) != (head_chunk_size is not None):
@@ -492,6 +511,7 @@ def run(
     real=False,
     cache_dir=None,
     head_chunk_size=None,
+    nf4=False,
     max_length=64,
     pad_to_multiple_of=None,
     train_file=None,
@@ -515,10 +535,10 @@ def run(
     if resume is not None:
         with open(os.path.join(resume, "config.json"), encoding="utf-8") as stream:
             previous_config = json.load(stream)
-        _validate_task_source(previous_config, family, real, head_chunk_size)
+        _validate_task_source(previous_config, family, real, head_chunk_size, nf4)
     if load_export is not None:
         with open(os.path.join(load_export, "config.json"), encoding="utf-8") as stream:
-            _validate_task_source(json.load(stream), family, real, head_chunk_size)
+            _validate_task_source(json.load(stream), family, real, head_chunk_size, nf4)
     os.makedirs(directory, exist_ok=True)
     train_texts, eval_texts = _training_texts(train_file, validation_file)
     tok = task_tokenizer(
@@ -543,6 +563,7 @@ def run(
             real=real,
             cache_dir=cache_dir,
             head_chunk_size=head_chunk_size,
+            nf4=nf4,
         )
         del reference
     else:
@@ -617,6 +638,7 @@ def run(
         export_adapter(model, os.path.join(directory, "adapter"))
         return {
             "family": family,
+            "quantization": model.quantization,
             "pretrained_source": getattr(model.config, "onnax_pretrained", None),
             "steps": trainer.state.global_step,
             "microbatch_size": trainer.args.per_device_train_batch_size,
@@ -651,6 +673,7 @@ def main():
     parser.add_argument("--audit-only", action="store_true")
     parser.add_argument("--audit-steps", type=int, default=6)
     parser.add_argument("--fused-ops", action="store_true")
+    parser.add_argument("--nf4", action="store_true")
     parser.add_argument("--head-chunk-size", type=int)
     parser.add_argument("--max-length", type=int, default=64)
     parser.add_argument("--pad-to-multiple-of", type=int)
@@ -693,6 +716,7 @@ def main():
     options = {
         "session_factory": factory,
         "fused_ops": args.fused_ops,
+        "nf4": args.nf4,
         "adam_epsilon": args.adam_epsilon,
         "real": args.real,
         "cache_dir": args.cache_dir,

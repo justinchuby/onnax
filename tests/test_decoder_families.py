@@ -134,12 +134,13 @@ def test_load_reuses_derivatives(tmp_path, monkeypatch, family):
 
 @pytest.mark.parametrize("family", ["phi3", "qwen35"])
 @pytest.mark.parametrize("head_chunk_size", [None, 3])
-def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size):
+@pytest.mark.parametrize("nf4", [False, True])
+def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size, nf4):
     torch.set_num_threads(1)
     full, partial, resumed = (str(tmp_path / name) for name in ("full", "partial", "resumed"))
-    report = run(full, family=family, steps=4, head_chunk_size=head_chunk_size)
+    report = run(full, family=family, steps=4, head_chunk_size=head_chunk_size, nf4=nf4)
     assert report["validation_loss"][1] < report["validation_loss"][0]
-    run(partial, family=family, steps=4, stop=2, head_chunk_size=head_chunk_size)
+    run(partial, family=family, steps=4, stop=2, head_chunk_size=head_chunk_size, nf4=nf4)
     subprocess.run(
         [
             sys.executable,
@@ -154,6 +155,7 @@ def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size
             "--output-dir",
             resumed,
             *(["--head-chunk-size", str(head_chunk_size)] if head_chunk_size else []),
+            *(["--nf4"] if nf4 else []),
         ],
         check=True,
         env={**os.environ, "HF_HUB_OFFLINE": "1", "HF_DATASETS_OFFLINE": "1"},
@@ -206,14 +208,15 @@ def test_trl_training_and_fresh_process_resume(tmp_path, family, head_chunk_size
 
 
 @pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
-def test_native_family_gradients_and_peft(tmp_path, family):
+@pytest.mark.parametrize("nf4", [False, True])
+def test_native_family_gradients_and_peft(tmp_path, family, nf4):
     if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
         pytest.skip("Native MLX opt-in")
     from examples.lora.mlx_runtime import register_library, session
 
     if path := os.environ.get("ONNAX_MLX_EP_LIBRARY"):
         register_library(path)
-    report = audit(family, str(tmp_path), session_factory=session, fused_ops=True)
+    report = audit(family, str(tmp_path), session_factory=session, fused_ops=True, nf4=nf4)
     assert report["peft"]["gradient_check_passed"] and report["peft"]["update_check_passed"]
 
 
@@ -314,3 +317,69 @@ def test_hybrid_decoder_grouping_preserves_source_layout_and_gradients(checkpoin
                 )
     finally:
         model.close()
+
+
+@pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
+@pytest.mark.parametrize("head_chunk_size", [None, 3])
+def test_nf4_family_independent_updates_and_peft(tmp_path, family, head_chunk_size):
+    torch.set_num_threads(1)
+    report = audit(family, str(tmp_path), nf4=True, head_chunk_size=head_chunk_size, steps=3)
+    assert report["reload"] and report["frozen_source_weights_unchanged"]
+    assert report["peft"]["format_roundtrip_bitwise"]
+    assert report["peft"]["gradient_check_passed"] and report["peft"]["update_check_passed"]
+    quantization = report["quantization"]
+    assert len(quantization["weights"]) == {"phi3": 12, "qwen3": 14, "qwen35": 31}[family]
+    assert quantization["packed_decoder_bytes"] * 7 < quantization["original_decoder_bytes"]
+    interface = json.loads((tmp_path / "adapter/adapter_mapping.json").read_text())
+    assert interface["base_quantization"] == quantization
+
+
+@pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
+def test_nf4_source_slices_reconstruct_exact_reference(family):
+    from examples.huggingface.decoder_families import reference_model
+    from examples.huggingface.nf4 import quantize_reference
+
+    _, _, mapping, expected = prepare_graph(family, nf4=True)
+    actual = reference_model(family)
+    quantize_reference(actual, mapping=mapping)
+    for name, value in expected.state_dict().items():
+        np.testing.assert_array_equal(actual.state_dict()[name].numpy(), value.numpy())
+
+
+def test_nf4_rejects_missing_source_mapping_without_mutation():
+    from examples.huggingface.nf4 import lower_decoder
+
+    graph, _, _, reference = prepare_graph("phi3")
+    previous = {name: value.clone() for name, value in reference.state_dict().items()}
+    with pytest.raises(ValueError, match="Missing source Linear mapping"):
+        lower_decoder(graph, reference)
+    for name, value in reference.state_dict().items():
+        torch.testing.assert_close(value, previous[name], rtol=0, atol=0)
+
+
+@pytest.mark.parametrize("corruption", ["missing", "different"])
+def test_nf4_rejects_source_projection_mismatch(corruption):
+    import onnx_ir as ir
+
+    from examples.huggingface.nf4 import lower_decoder
+
+    graph, _, mapping, reference = prepare_graph("qwen3")
+    node = next(n for n in graph.graph if n.op_type == "MatMul")
+    if corruption == "missing":
+        graph.graph.remove(node, safe=False)
+        message = "cover every source decoder Linear"
+    else:
+        weight = node.inputs[1]
+        weight.const_value = ir.tensor(weight.const_value.numpy() + np.float32(0.01))
+        message = "Source Linear values differ"
+    with pytest.raises(ValueError, match=message):
+        lower_decoder(graph, reference, mapping=mapping)
+
+
+def test_nf4_checkpoint_mode_is_checked_before_loading(tmp_path):
+    from examples.huggingface.decoder_sft import _validate_task_source
+
+    with pytest.raises(ValueError, match="quantization mode"):
+        _validate_task_source({"onnax_quantization": {}}, "phi3", False, None)
+    with pytest.raises(ValueError, match="quantization mode"):
+        _validate_task_source({}, "phi3", False, None, nf4=True)

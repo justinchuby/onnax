@@ -77,6 +77,31 @@ Training and audits use Adam epsilon `1e-5` and compare values at
 `rtol=1e-4, atol=1e-6`. The [Adam conditioning example](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/phi3-fused-adam-conditioning.json)
 includes a scalar replay of small-gradient updates.
 
+## Packed NF4 bases
+
+Add `--nf4` to store frozen decoder Linear weights as packed NF4 while keeping
+adapters, gradients and optimizer state in FP32:
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family phi3 --nf4 --head-chunk-size 128 --steps 30 \
+  --output-dir /tmp/phi3-nf4
+```
+
+The same option applies to Qwen3 and Qwen3.5. The source mapping checks that
+all decoder Linear weights are covered before quantization. Phi-3's Q/K/V
+pieces map back to slices of its fused QKV source weight; each graph piece
+keeps its own row-major NF4 blocks. Qwen3.5's linear-attention projections use
+the same mapping. Embeddings, normalization, recurrent convolutions and the
+output head retain FP32 weights.
+
+The independent Transformers reference reconstructs exactly those stored
+weight values. Audits compare logits, token loss, every adapter gradient and
+multiple AdamW updates, then exchange adapters through PEFT. Adapter files
+record the base quantization alongside the source parameter mapping.
+Export/load preserves the NF4 graph and its mapping; repeat `--nf4` when
+resuming a checkpoint or loading an exported task.
+
 ## Train and restore with TRL
 
 ```sh
