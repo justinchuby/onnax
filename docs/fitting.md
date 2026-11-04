@@ -154,7 +154,7 @@ is included for inspection. Rerun the CLI for measurements on your own machine.
 
 (adapter-curvature)=
 
-## Inspect LoRA adapter curvature
+## Use LoRA curvature for adapter updates
 
 The same products can diagnose a fine-tuning model. For the
 [LoRA workload](lora.md), write its prediction as $f(A,B)$ and its mean squared
@@ -184,6 +184,24 @@ reveals coupling that a first-order gradient inspection misses.
 
 All products execute in FP32. Independent PyTorch products check zero and
 nonzero adapters at three batch sizes, before and after ONNXScript optimization.
-The command writes six checker-validated ONNX files and `report.json`; frozen
-weights and the source graph remain unchanged. The exported products can be
-reused by an external curvature diagnostic or solver.
+The external NumPy loop then fits the adapters with damped Gauss–Newton:
+
+$$
+(G+\lambda I)\,\delta=-\nabla L,\qquad
+(A,B)\leftarrow(A,B)+\alpha\delta.
+$$
+
+CG applies the exported prediction JVP and VJP for each matrix-vector product.
+Positive damping $\lambda=10^{-4}$ makes the system positive definite, including
+the flat A directions at initialization. Armijo backtracking chooses the step
+length $\alpha$. The default command runs up to twelve FP32 updates; set
+`--fit-steps 0` to run the curvature diagnostic alone.
+
+Independent NumPy formulas check prediction, loss and both parameter gradients
+at every trial state, and check every Gauss–Newton product used by CG. The run
+records training and validation loss, linear residuals, CG iteration counts
+and step lengths. It saves `adapter.npz` and checks its reloaded loss through
+the exported ONNX module.
+
+The command writes six checker-validated ONNX files and `report.json`. W and C
+stay frozen throughout the updates, and the source graph is preserved.

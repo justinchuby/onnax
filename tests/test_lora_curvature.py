@@ -32,6 +32,44 @@ def test_lora_curvature_references_and_initial_negative_curvature(artifacts):
     assert len(list(directory.glob("*.onnx"))) == 6
 
 
+def test_external_gauss_newton_adapter_updates_and_reload(artifacts):
+    directory, report = artifacts
+    fitting = report["fit"]
+    steps = fitting["steps"]
+    assert 0 < len(steps) <= 12
+    assert fitting["train_loss"][1] < fitting["train_loss"][0] * 0.5
+    assert fitting["validation_loss"][1] < fitting["validation_loss"][0] * 0.5
+    assert steps[0]["loss"] == fitting["train_loss"][0]
+    assert steps[-1]["next_loss"] == fitting["train_loss"][1]
+    assert all(row["next_loss"] < row["loss"] for row in steps)
+    assert all(0 < row["step_size"] <= 1 for row in steps)
+    assert all(row["linear_residual"] <= 2 * row["linear_tolerance"] for row in steps)
+    assert fitting["reference_products"] > len(steps)
+    assert fitting["product_max_abs_error"] < 1e-6
+    assert fitting["parameter_inputs"] == list(PARAMETERS)
+    with np.load(directory / fitting["adapter"], allow_pickle=False) as archive:
+        params = {name: archive[name] for name in PARAMETERS}
+    assert all(value.dtype == np.float32 for value in params.values())
+    runtime = session(directory / "hvp.optimized.onnx")
+    model = ir.load(directory / "hvp.optimized.onnx")
+    _, _, x, target, _, _, initial = problem()
+    feeds = {"features": x, "target": target, **params}
+    feeds.update(
+        {
+            seed.name: np.zeros_like(initial[name])
+            for seed, name in zip(model.graph.inputs[-2:], PARAMETERS, strict=True)
+        }
+    )
+    (loss,) = runtime.run(["loss"], feeds)
+    assert float(loss) == fitting["train_loss"][1]
+
+
+@pytest.mark.parametrize("steps", [-1, True, 1.5])
+def test_invalid_fit_step_count(tmp_path, steps):
+    with pytest.raises(ValueError, match="nonnegative integer"):
+        run(tmp_path / "invalid", fit_steps=steps)
+
+
 @pytest.mark.parametrize("suffix", ["", ".optimized"])
 def test_exported_hvp_has_symmetric_parameter_blocks(artifacts, suffix):
     directory, _ = artifacts

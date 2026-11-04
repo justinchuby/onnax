@@ -46,8 +46,8 @@ $$
 $$
 
 The outer update is simply $\rho\leftarrow\rho-\eta\,dF/d\rho$.
-It differentiates the optimum using a linear solve; it does not retain a tape
-of the inner solver's iterations.
+The linear solve keeps the derivative's working memory independent of the
+number of inner solver iterations.
 
 ## Compose the derivative graphs
 
