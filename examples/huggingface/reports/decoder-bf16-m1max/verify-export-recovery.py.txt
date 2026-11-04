@@ -1,0 +1,61 @@
+import hashlib,json
+from pathlib import Path
+import numpy as np,onnx,onnx_ir as ir,torch
+from safetensors.torch import load_file
+from examples.huggingface.decoder_families import prepare_graph
+from examples.huggingface.decoder_sft import OnnxDecoder,batch
+from examples.huggingface.long_context import memory_limit
+from examples.lora.mlx_runtime import register_library,session
+root=Path('/tmp/onnax-qwen35-bf16-nf4-cli100')
+assert json.loads((root/'status.json').read_text())['phase']=='training_complete'
+register_library('/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib');memory_limit('/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib',20*1024**3);torch.set_num_threads(1)
+arrays=0
+
+def equal(a,b):
+ global arrays
+ assert type(a)==type(b),(type(a),type(b))
+ if isinstance(a,torch.Tensor):
+  assert a.dtype==b.dtype and a.shape==b.shape and a.detach().numpy().tobytes()==b.detach().numpy().tobytes();arrays+=1
+ elif isinstance(a,dict):
+  assert a.keys()==b.keys()
+  for key in a:equal(a[key],b[key])
+ elif isinstance(a,(list,tuple)):
+  assert len(a)==len(b)
+  for x,y in zip(a,b,strict=True):equal(x,y)
+ else:assert a==b,(a,b)
+
+left=root/'continuous'/'checkpoint-100';right=root/'resumed-export'/'checkpoint-100'
+equal(load_file(left/'model.safetensors'),load_file(right/'model.safetensors'))
+for name in ['optimizer.pt','scheduler.pt']:
+ a=torch.load(left/name,weights_only=True,map_location='cpu');b=torch.load(right/name,weights_only=True,map_location='cpu');equal(a,b)
+ if name=='optimizer.pt':
+  for state in a['state'].values():assert all(v.dtype==torch.float32 for v in state.values())
+expected,_,_,reference=prepare_graph('qwen35',preserve_fused=True,nf4=True,projection_precision='bf16')
+def digest(tensor):
+ a=tensor.numpy();return hashlib.sha256(str(a.dtype).encode()+str(a.shape).encode()+a.tobytes()).hexdigest()
+frozen={};checker=0
+for case in ['continuous','interrupted','resumed-export']:
+ directory=root/case/'export'/'execution';model=ir.load(directory/'model.onnx')
+ hashes={}
+ for name,value in model.graph.initializers.items():
+  assert name in expected.graph.initializers,name
+  actual=digest(value.const_value);assert actual==digest(expected.graph.initializers[name].const_value),name;hashes[name]=actual
+ head=ir.load(directory/'head_loss.onnx').graph.initializers['head.weight'].const_value.numpy()
+ np.testing.assert_array_equal(head,reference.get_output_embeddings().weight.detach().numpy())
+ frozen[case]=hashes
+ for file in directory.glob('*.onnx'):onnx.checker.check_model(str(file),full_check=True);checker+=1
+assert frozen['continuous']==frozen['interrupted']==frozen['resumed-export']
+data=batch();inputs={k:v for k,v in data.items() if k!='labels'}
+a=OnnxDecoder.load(root/'continuous'/'export',session_factory=session);b=OnnxDecoder.load(root/'resumed-export'/'export',session_factory=session)
+try:
+ out=[]
+ for m in [a,b]:
+  result=m(**data);result.loss.backward();out.append((result.loss.detach().numpy().copy(),{n:p.grad.numpy().copy() for n,p in m.onnx.parameters_by_name().items()}))
+ np.testing.assert_array_equal(out[0][0],out[1][0])
+ for name in out[0][1]:np.testing.assert_array_equal(out[0][1][name],out[1][1][name])
+ expected_logits=a(**inputs).logits.detach().numpy()
+ plain=session(str(root/'continuous'/'export'/'execution'/'inference.onnx')).run(None,{k:v.numpy() for k,v in inputs.items()})[0]
+ np.testing.assert_allclose(plain,expected_logits,rtol=1e-4,atol=1e-6)
+ report={'status':'complete','checkpoint_tensor_arrays_byte_equal':arrays,'checked_onnx_modules':checker,'frozen_initializers':len(frozen['continuous']),'frozen_head_equal':True,'optimizer_state_dtype':'float32','plain_inference_max_abs':float(np.max(np.abs(plain-expected_logits))),'reloaded_gradient_arrays_equal':len(out[0][1]),'rtol':1e-4,'atol':1e-6,'losses':{case:json.loads((root/case/'report.json').read_text())['validation_loss'] for case in ['continuous','resumed-export']},'frozen_sha256':frozen['continuous']}
+ (root/'audit-export.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:v for k,v in report.items() if k!='frozen_sha256'}),flush=True)
+finally:a.close();b.close()

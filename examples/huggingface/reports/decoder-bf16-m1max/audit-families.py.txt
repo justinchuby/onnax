@@ -1,0 +1,18 @@
+import hashlib,json,os,subprocess
+from pathlib import Path
+root=Path('/tmp/onnax-decoder-bf16-audits');root.mkdir(exist_ok=False)
+python='/Users/justinc/Documents/GitHub/onnax/.venv/bin/python'
+env={**os.environ,'PYTHONPATH':'src:.','HF_HUB_OFFLINE':'1','HF_DATASETS_OFFLINE':'1','ONNXRUNTIME_EP_MLX_NO_COMPILE':'1','ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES':'536870912','ORT_DISABLE_TELEMETRY':'1'}
+files=['examples/huggingface/decoder_sft.py','examples/huggingface/decoder_families.py','examples/huggingface/mixed_precision.py','examples/huggingface/validation.py','examples/huggingface/peft_adapter.py','examples/lora/bf16_rules.py']
+hashes={p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in files}
+for family in ['phi3','qwen3','qwen35']:
+ for nf4 in [False,True]:
+  name=family+('-nf4' if nf4 else '-unquantized');(root/'status.json').write_text(json.dumps({'phase':name}))
+  command=[python,'-m','examples.huggingface.decoder_sft','--audit-only','--audit-steps','6','--family',family,'--projection-precision','bf16','--fused-ops','--provider','mlx','--library','/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib','--output-dir',str(root/name),*(['--nf4'] if nf4 else [])]
+  with open(root/(name+'.log'),'w') as log:
+   result=subprocess.run([python,'-m','examples.huggingface.guard','--output-dir',str(root/(name+'-guard')),'--',*command],env=env,stdout=log,stderr=subprocess.STDOUT)
+  if result.returncode:
+   (root/'status.json').write_text(json.dumps({'phase':'failed','case':name,'returncode':result.returncode}));raise SystemExit(result.returncode)
+  r=json.loads((root/name/'report.json').read_text());assert r['independent_steps']==6 and r['projection_precision']=='bf16' and r['comparison_policy']=='reference_precision_effect_l2' and r['peft']['precision_control']['passed'] and r['peft']['format_roundtrip_bitwise'] and r['frozen_source_weights_unchanged'] and r['reload']
+for p,h in hashes.items():assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h,p
+(root/'qualification.json').write_text(json.dumps({'source_sha256':hashes,'cases':6,'steps':6,'scope':'Three independent paths: ONNX BF16, Transformers BF16, Transformers FP32 on identical frozen weights. L2 precision-effect gate; original coordinate and maximum differences retained. Includes PEFT roundtrip and fresh reload.'},indent=2)+'\n');(root/'status.json').write_text(json.dumps({'phase':'complete','cases':6}));print((root/'status.json').read_text(),flush=True)

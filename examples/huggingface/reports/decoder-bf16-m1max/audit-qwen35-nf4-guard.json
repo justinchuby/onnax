@@ -1,0 +1,84 @@
+{
+  "command": [
+    "/Users/justinc/Documents/GitHub/onnax/.venv/bin/python",
+    "-m",
+    "examples.huggingface.decoder_sft",
+    "--audit-only",
+    "--audit-steps",
+    "6",
+    "--family",
+    "qwen35",
+    "--projection-precision",
+    "bf16",
+    "--fused-ops",
+    "--provider",
+    "mlx",
+    "--library",
+    "/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib",
+    "--output-dir",
+    "/tmp/onnax-decoder-bf16-audits/qwen35-nf4",
+    "--nf4"
+  ],
+  "cwd": "/private/tmp/onnax-decoder-bf16-delivery",
+  "status": "complete",
+  "physical_memory_budget_bytes": 25769803776,
+  "minimum_free_disk_bytes": 5368709120,
+  "observations": [
+    {
+      "utc": "2026-11-04T13:40:36.066476+00:00",
+      "current_bytes": 180344,
+      "peak_bytes": 295032,
+      "free_disk_bytes": 21596659712
+    },
+    {
+      "utc": "2026-11-04T13:40:37.073526+00:00",
+      "current_bytes": 221496112,
+      "peak_bytes": 221496112,
+      "free_disk_bytes": 21596622848
+    },
+    {
+      "utc": "2026-11-04T13:40:38.078090+00:00",
+      "current_bytes": 293258224,
+      "peak_bytes": 293258224,
+      "free_disk_bytes": 21596610560
+    },
+    {
+      "utc": "2026-11-04T13:40:39.083031+00:00",
+      "current_bytes": 410043592,
+      "peak_bytes": 412222664,
+      "free_disk_bytes": 21596770304
+    },
+    {
+      "utc": "2026-11-04T13:40:40.085469+00:00",
+      "current_bytes": 477840704,
+      "peak_bytes": 477840704,
+      "free_disk_bytes": 21596213248
+    },
+    {
+      "utc": "2026-11-04T13:40:41.090276+00:00",
+      "current_bytes": 518767960,
+      "peak_bytes": 518767960,
+      "free_disk_bytes": 21594161152
+    },
+    {
+      "utc": "2026-11-04T13:40:42.101017+00:00",
+      "current_bytes": 566199856,
+      "peak_bytes": 566199856,
+      "free_disk_bytes": 21593206784
+    },
+    {
+      "utc": "2026-11-04T13:40:43.111818+00:00",
+      "current_bytes": 558433840,
+      "peak_bytes": 592135728,
+      "free_disk_bytes": 21592932352
+    }
+  ],
+  "memory_source": "proc_pid_rusage/RUSAGE_INFO_V4",
+  "observation_errors": 0,
+  "temporary_directory": "/tmp/onnax-decoder-bf16-audits/qwen35-nf4-guard/worker-tmp-vp0syshc",
+  "pid": 99261,
+  "started": "2026-11-04T13:40:36.065802+00:00",
+  "returncode": 0,
+  "finished": "2026-11-04T13:40:44.122507+00:00",
+  "temporary_files_removed": true
+}

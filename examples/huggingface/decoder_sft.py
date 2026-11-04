@@ -785,9 +785,7 @@ def main():
     parser.add_argument("--audit-steps", type=int, default=6)
     parser.add_argument("--fused-ops", action="store_true")
     parser.add_argument("--nf4", action="store_true")
-    parser.add_argument(
-        "--projection-precision", choices=("fp32", "bf16"), default="fp32"
-    )
+    parser.add_argument("--projection-precision", choices=("fp32", "bf16"), default="fp32")
     parser.add_argument("--compile-head", action="store_true")
     parser.add_argument("--head-chunk-size", type=int)
     parser.add_argument("--max-length", type=int, default=64)

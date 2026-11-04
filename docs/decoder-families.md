@@ -125,6 +125,61 @@ The full checker validates 57 exported models per run.
 [Pretrained reports and reproduction drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/generic-nf4-m1max/real-qwen35)
 record the source revision, input batches, memory scope and runtime hashes.
 
+(decoder-bf16-projections)=
+
+### BF16 projection arithmetic
+
+Select `--projection-precision bf16` for BF16 matrix projections, including
+LoRA products and the frozen output head. LoRA parameters, accumulated gradients and
+AdamW moments stay FP32. Attention, normalization and recurrent states use FP32.
+With `--nf4`, the frozen decoder stays packed; its decoded operands are rounded
+for each projection.
+
+For a source-layout head weight $W$, the forward computes
+$Y=\operatorname{fp32}(\operatorname{bf16}(X)\operatorname{bf16}(W)^T)$.
+The registered straight-through pullback computes
+$\bar X=\bar Y\,R(W)$ in FP32, where $R(W)$ is the BF16-rounded weight viewed
+as FP32. The exported loss/gradient modules carry this policy through reloads.
+
+```sh
+python -m examples.huggingface.decoder_sft \
+  --family qwen35 --nf4 --projection-precision bf16 --fused-ops \
+  --head-chunk-size 16 --steps 100 --stop 50 \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --output-dir /tmp/qwen35-bf16-partial
+
+python -m examples.huggingface.decoder_sft \
+  --family qwen35 --nf4 --projection-precision bf16 --fused-ops \
+  --head-chunk-size 16 --steps 100 \
+  --resume /tmp/qwen35-bf16-partial/checkpoint-50 \
+  --load-export /tmp/qwen35-bf16-partial/export \
+  --provider mlx --library /path/to/libonnxruntime_mlx_ep.dylib \
+  --output-dir /tmp/qwen35-bf16-resumed
+```
+
+Repeat the projection precision and quantization options when resuming. Their
+saved configuration is checked before loading parameters. MLX EP executes all
+three families; offline reference-kernel training and recovery tests cover
+Phi-3, including packed and unquantized bases and both output-head modes.
+
+On M1 Max, tiny Qwen3.5 completes 100 NF4/BF16 SFTTrainer updates: training
+loss falls from 5.581 to 5.127 and validation loss from 5.623 to 5.432. A matched
+FP32-compute run on the same frozen weights and data reaches 5.127 and 5.429.
+Step-50 recovery reproduces 42 checkpoint tensors byte for byte. All 99 frozen
+initializers and the head match their source; 51 ONNX modules pass the full
+checker. Reloaded adapter gradients and standalone inference outputs agree
+with continuous training. The
+[raw reports and reproduction scripts](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max)
+include six family/quantization audits and both checkpoint recovery paths.
+
+Half-precision audits include a third Transformers run using FP32 arithmetic
+on the same frozen weight values. The L2 backend difference is checked against
+the measured reference precision effect plus the original FP32 comparison
+floor. Reports retain maximum differences and strict coordinate counts.
+Projection JVP/VJP checks use independent rounded-operand formulas, and a
+corrupted-adjoint regression verifies that the precision control rejects
+excess error.
+
 ### Compile the output head independently
 
 With MLX, add `--compile-head` to compile the chunked loss/gradient and logits
