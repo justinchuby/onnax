@@ -495,9 +495,10 @@ both execution paths:
 ```python
 import numpy as np
 
-np.savez("/tmp/decoder-inputs.npz", **{
-    name: value.detach().cpu().numpy() for name, value in batch.items()
-})
+np.savez(
+    "/tmp/decoder-inputs.npz",
+    **{name: value.detach().cpu().numpy() for name, value in batch.items()},
+)
 ```
 
 The archive contains INT64 `input_ids`, `attention_mask`, `position_ids` and
