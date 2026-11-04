@@ -195,11 +195,13 @@ is 2.19%; 48 of 60 tensors exceed the precision-effect gate. The
 [pretrained reports and drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max/pretrained-qwen35)
 retain all per-tensor comparisons, training results and recovery checks.
 
-A controlled build of the proposed
+onnax uses the
 [symbolic-data budget](https://github.com/onnx/onnx-shape-inference/pull/146)
-reduces one cold shape-inference call on this graph from 125.39 s to 0.61 s.
-The complete serialized inferred graphs are byte identical. The report records
-the two independent processes, package hashes and memory measurements.
+in onnx-shape-inference 0.4.2. In the controlled comparison, this change reduced
+one cold shape-inference call on this graph from 125.39 s to 0.61 s, with byte
+identical serialized inferred graphs. The released package reproduces that
+serialized result. The report records independent processes, package hashes
+and memory measurements.
 
 Tiny-model audits include a third Transformers run using FP32 arithmetic
 on the same frozen weight values. The L2 backend difference is checked against
