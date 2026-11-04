@@ -1,0 +1,19 @@
+import json, os, subprocess
+from pathlib import Path
+root=Path('/tmp/onnax-qwen35-bf16-paired4k');root.mkdir(exist_ok=False)
+python='/Users/justinc/Documents/GitHub/onnax/.venv/bin/python'
+export='/tmp/onnax-qwen35-real-bf16-canonical-30/training/export'
+env={**os.environ,'PYTHONPATH':'src:.','HF_HUB_OFFLINE':'1','HF_DATASETS_OFFLINE':'1','PYTORCH_ENABLE_MPS_FALLBACK':'0'}
+commands=[('mps',[python,'-m','examples.huggingface.torch_decoder_benchmark','--export',export,'--inputs','/tmp/onnax-torch-decoder-real/inputs-4032.npz','--cache-dir','/tmp/onnax-qwen35-real-cache','--device','mps','--attention','sdpa','--checkpoint-layers','1','--head-chunk-size','128','--warmup','10','--samples','100','--output',str(root/'mps.json')]),('native',[python,'/tmp/onnax-bf16-native-benchmark-worker.py','--export',export,'--cache-dir','/tmp/onnax-qwen35-real-cache','--library','/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib','--sequence','4032','--warmup','10','--samples','100','--output',str(root/'native.json'),'--gradients-output',str(root/'native.npz')])]
+for name,cmd in commands:
+ (root/'status.json').write_text(json.dumps({'phase':name}))
+ with (root/(name+'.log')).open('w') as log:
+  result=subprocess.run([python,'-m','examples.huggingface.guard','--output-dir',str(root/(name+'-guard')),'--',*cmd],env=env,stdout=log,stderr=subprocess.STDOUT)
+ if result.returncode:
+  (root/'status.json').write_text(json.dumps({'phase':'failed','case':name,'returncode':result.returncode}));raise SystemExit(result.returncode)
+a=json.loads((root/'mps.json').read_text());b=json.loads((root/'native.json').read_text())
+for key in ['input_sha256','adapter_sha256']: assert a[key]==b[key],key
+assert b['parameters_unchanged']
+assert len(a['samples']) == len(b['samples']) == 100
+assert a['warmup'] == b['warmup_steps'] == 10
+(root/'status.json').write_text(json.dumps({'phase':'complete','input_sha256':a['input_sha256'],'adapter_sha256':a['adapter_sha256'],'scope':'4032-token paired fixed-parameter forward/loss/backward plus output exchange;10 warmup100 samples each'}))
