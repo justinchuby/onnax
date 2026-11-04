@@ -1,0 +1,68 @@
+"""Validate independent frozen-head measurements and derive their comparison."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+
+import numpy as np
+
+parser = argparse.ArgumentParser()
+parser.add_argument('directory', type=Path)
+args = parser.parse_args()
+root = args.directory
+assert json.loads((root / 'status.json').read_text())['phase'] == 'complete'
+reports = {p: json.loads((root / f'{p}.json').read_text()) for p in ('checkpoint', 'eager')}
+a, b = reports.values()
+identity = ('family', 'device', 'attention', 'checkpoint_layers', 'head_chunk_size',
+            'warmup', 'input_shape', 'gradient_count', 'dtype', 'projection_compute',
+            'frozen_weight_storage', 'autocast', 'threads', 'effective_tokens',
+            'input_sha256', 'adapter_sha256', 'source_sha256', 'mps_cpu_fallback',
+            'source', 'hardware', 'versions', 'platform', 'mps_environment',
+            'timing_scope', 'exchange_scope', 'memory_scope')
+for key in identity:
+    assert a[key] == b[key], key
+assert a['device'] == 'mps' and not a['mps_cpu_fallback']
+assert a['warmup'] == 10 and a['gradient_count'] == 60
+for policy, report in reports.items():
+    assert report['head_policy'] == policy
+    assert len(report['samples']) == len(report['losses']) == 100
+    assert np.isfinite(report['losses']).all()
+    for key, stats in report['timings'].items():
+        samples = np.asarray([row[key] for row in report['samples']])
+        assert np.isfinite(samples).all() and np.all(samples >= 0)
+        assert stats['median'] == float(np.median(samples))
+        assert stats['p95'] == float(np.percentile(samples, 95))
+np.testing.assert_allclose(a['losses'], b['losses'], rtol=1e-4, atol=1e-6)
+rows = {}
+with np.load(root / 'checkpoint.json.npz', allow_pickle=False) as x, np.load(
+    root / 'eager.json.npz', allow_pickle=False
+) as y:
+    assert set(x.files) == set(y.files) and len(x.files) == 61 and 'loss' in x.files
+    for name in x.files:
+        left, right = x[name], y[name]
+        assert left.shape == right.shape and left.dtype == right.dtype
+        assert np.isfinite(left).all() and np.isfinite(right).all()
+        np.testing.assert_allclose(left, right, rtol=1e-4, atol=1e-6, err_msg=name)
+        rows[name] = {'max_abs': float(np.max(np.abs(left - right)))}
+physical = {}
+for policy in reports:
+    guard = json.loads((root / f'{policy}-guard' / 'execution.json').read_text())
+    assert guard['status'] == 'complete' and guard['returncode'] == 0
+    assert guard['observations'] and guard['observation_errors'] == 0
+    physical[policy] = max(o['peak_bytes'] for o in guard['observations'])
+    assert physical[policy] <= guard['physical_memory_budget_bytes']
+    assert min(o['free_disk_bytes'] for o in guard['observations']) >= guard['minimum_free_disk_bytes']
+artifacts = [root / f'{p}{suffix}' for p in reports for suffix in ('.json', '.json.npz')]
+artifacts += [root / f'{p}-guard' / 'execution.json' for p in reports]
+result = {
+    'scope': 'Matched frozen-head scheduling; independent MPS processes, fixed parameters, 10 warmups and 100 forward/loss/backward samples including output exchange',
+    'input_shape': a['input_shape'], 'effective_tokens': a['effective_tokens'],
+    'input_sha256': a['input_sha256'], 'adapter_sha256': a['adapter_sha256'],
+    'timings': {p: r['timings'] for p, r in reports.items()},
+    'median_speedup': a['timings']['total_seconds']['median'] / b['timings']['total_seconds']['median'],
+    'peak_physical_bytes': physical, 'all60gradients_and_loss_match': True,
+    'rtol': 1e-4, 'atol': 1e-6, 'checks': rows,
+    'artifact_sha256': {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in artifacts},
+}
+(root / 'summary.json').write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')
+print(json.dumps({k: v for k, v in result.items() if k not in ('checks', 'artifact_sha256')}, indent=2))

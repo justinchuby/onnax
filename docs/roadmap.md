@@ -13,15 +13,20 @@ optimizers, data loading, schedulers and checkpoint storage.
    activations and named recomputation boundaries. Preserve parameter mappings,
    upstream gradients, accumulation, export and checkpoint recovery while
    carrying qualified execution policies across decoder and denoiser tasks.
-2. **MLX execution and memory.** Profile the complete decoder and denoiser paths,
-   then improve the measured bottlenecks. Compare saving, recomputing and fused
-   pullbacks at the same precision, context and effective batch.
+2. **MLX execution and memory.** Complete the matched frozen-head scheduling
+   comparison at 4K context, then profile the decoder VJP, the largest measured
+   component, alongside projection, loss, saved gradients and weight conversions. MLX already caches large frozen Casts;
+   verify reuse in the compiled path before changing their lifetime. Use the
+   same precision, supervision and checkpoint boundaries for runtime comparisons,
+   then apply the measured improvements to denoiser workloads.
 3. **Precision and quantized bases.** Keep FP32 gradients and external optimizer
    state while extending qualified BF16/FP16 projections and packed frozen weights.
    [BF16 family training](decoder-bf16-projections) now covers NF4, PEFT exchange
    and fresh-process recovery, including a pinned Qwen3.5-0.8B run. Next trace
    whole-model BF16 reference differences at shared activation points, qualify
-   FP16 adapter exchange and measure long-context memory and execution costs.
+   FP16 adapter exchange. The decoder reports now include BF16/NF4 execution
+   and memory measurements at 64 and 4,032 tokens; extend them with the matched
+   eager-head reference and source-level bottleneck analysis.
 4. **Adapter curvature.** Explore matrix-free HVP diagnostics for LoRA, connecting
    the existing higher-order transforms to practical fine-tuning questions.
 

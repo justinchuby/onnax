@@ -624,19 +624,30 @@ This makes the reference’s memory representation visible alongside runtime mem
 
 ### Frozen-head scheduling
 
-On the same M1 Max and real Qwen3.5-0.8B BF16/NF4 adapter snapshot,
-selecting valid tokens and computing their hidden gradients during each head
-chunk reduces the 64-token PyTorch step median from 443 ms to 422 ms (1.05×).
-P95 changes from 465 ms to 446 ms. Both independent processes use MPS SDPA,
-one-layer decoder checkpoints, 128-token head chunks, ten warmups and 100
-measured steps. The timed step includes forward, loss, backward and output
-exchange, with parameters held fixed. Peak process physical memory is 6.43 GiB
-for both policies. Loss and all 60 adapter gradients match at `rtol=1e-4,
-atol=1e-6`.
+The pinned Qwen3.5-0.8B BF16/NF4 adapter snapshot runs with both PyTorch
+head schedules on M1 Max. Computing hidden gradients inside each chunk removes
+the backward projection recomputation:
 
-[Raw head-policy samples and process observations](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max/pretrained-qwen35/head-policy64)
-record the independent runs. The earlier ONNX comparisons below use the
-checkpoint head policy recorded in their reports.
+| Input tokens | Head policy | Step median / P95 | Process peak physical footprint |
+| --- | --- | ---: | ---: |
+| 64 | Checkpoint | 443 / 465 ms | 6.43 GiB |
+| 64 | Eager | 422 / 446 ms | 6.43 GiB |
+| 4,032 | Checkpoint | 12.781 / 12.959 s | 11.11 GiB |
+| 4,032 | Eager | 11.798 / 12.338 s | 10.94 GiB |
+
+The median throughput ratio is 1.05× at 64 tokens and 1.08× at 4,032 tokens.
+Each independent process uses MPS SDPA, one-layer decoder checkpoints,
+128-token head chunks, ten warmups and 100 measured steps. The timed step
+includes forward, loss, backward and output exchange with fixed parameters.
+The 64-token pair runs checkpoint first; the 4K pair runs eager first.
+Loss across all 100 samples and all 60 adapter gradients match at
+`rtol=1e-4, atol=1e-6` for each pair.
+
+The [64-token reports](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max/pretrained-qwen35/head-policy64)
+and [4K reports](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max/pretrained-qwen35/head-policy4k)
+retain raw samples, source hashes, process observations and the verifier.
+The earlier ONNX comparisons below use the checkpoint head policy recorded in
+their reports.
 
 ### BF16/NF4 short-context measurement
 
@@ -686,7 +697,9 @@ all samples contribute to the table's median and P95.
 
 [Raw samples, gradient diagnostics, process observations and drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/decoder-bf16-m1max/pretrained-qwen35/benchmark4k)
 retain source and artifact hashes. The next execution comparison profiles
-repeated activation casts and frozen projection conversions in both runtimes.
+projection, loss, hidden-gradient execution and frozen operand
+conversions. MLX already caches large frozen Casts outside compiled capture;
+trace the compiled path to locate the remaining conversion costs.
 
 ### Bounded-head measurement
 
@@ -792,8 +805,8 @@ availability. MPS inputs are staged before warmup; its device execution and
 output exchange are also recorded separately. ONNX exchanges arrays inside its
 block session calls. The external optimizer is outside the timed scope.
 PyTorch checkpoints the frozen head and recomputes logits during backward;
-ONNX shares loss/VJP statistics and saves the hidden gradient. These schedules
-provide the next head-control comparison.
+ONNX shares loss/VJP statistics and saves the hidden gradient. The PyTorch
+benchmark now exposes both schedules through `--head-policy`.
 
 ONNX uses fused recurrent scans and shape-selected 64-token replay, with an
 eager head, ORT optimization and CPU fallback disabled, one CPU thread and a
