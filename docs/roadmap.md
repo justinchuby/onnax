@@ -13,8 +13,8 @@ optimizers, data loading, schedulers and checkpoint storage.
    activations and named recomputation boundaries. Preserve parameter mappings,
    upstream gradients, accumulation, export and checkpoint recovery while
    carrying qualified execution policies across decoder and denoiser tasks.
-2. **MLX execution and memory.** Complete the matched frozen-head scheduling
-   comparison at 4K context, then profile the decoder VJP, the largest measured
+2. **MLX execution and memory.** Build on the matched frozen-head scheduling
+   comparison at 4K context to profile the decoder VJP, the largest measured
    component, alongside projection, loss, saved gradients and weight conversions. MLX already caches large frozen Casts;
    verify reuse in the compiled path before changing their lifetime. Use the
    same precision, supervision and checkpoint boundaries for runtime comparisons,
