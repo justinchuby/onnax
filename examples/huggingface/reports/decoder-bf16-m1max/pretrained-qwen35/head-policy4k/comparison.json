@@ -1,0 +1,192 @@
+{
+  "phase": "complete",
+  "scope": "4032-token formal paired measurement, eager then checkpoint, independent guarded processes, 10 warmups and 100 samples per policy",
+  "all60gradients_and_loss_match": true,
+  "rtol": 0.0001,
+  "atol": 1e-06,
+  "checks": {
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 2.5320332497358322e-09
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 2.0721927285194397e-08
+    },
+    "model.layers.1.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 3.3760443329811096e-09
+    },
+    "model.layers.1.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 1.6851117834448814e-08
+    },
+    "model.layers.2.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 3.958120942115784e-09
+    },
+    "model.layers.2.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 1.280568540096283e-08
+    },
+    "model.layers.3.self_attn.q_proj.lora.A": {
+      "max_abs": 5.3551048040390015e-09
+    },
+    "model.layers.3.self_attn.q_proj.lora.B": {
+      "max_abs": 1.0943040251731873e-08
+    },
+    "model.layers.3.self_attn.v_proj.lora.A": {
+      "max_abs": 1.30385160446167e-08
+    },
+    "model.layers.3.self_attn.v_proj.lora.B": {
+      "max_abs": 2.60770320892334e-08
+    },
+    "model.layers.4.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 4.423782229423523e-09
+    },
+    "model.layers.4.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 9.604264050722122e-09
+    },
+    "model.layers.5.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 6.6356733441352844e-09
+    },
+    "model.layers.5.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 6.461050361394882e-09
+    },
+    "model.layers.6.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 3.725290298461914e-09
+    },
+    "model.layers.6.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 5.282345227897167e-09
+    },
+    "model.layers.7.self_attn.q_proj.lora.A": {
+      "max_abs": 5.587935447692871e-09
+    },
+    "model.layers.7.self_attn.q_proj.lora.B": {
+      "max_abs": 1.0477378964424133e-08
+    },
+    "model.layers.7.self_attn.v_proj.lora.A": {
+      "max_abs": 5.587935447692871e-09
+    },
+    "model.layers.7.self_attn.v_proj.lora.B": {
+      "max_abs": 8.149072527885437e-09
+    },
+    "model.layers.8.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 2.7939677238464355e-09
+    },
+    "model.layers.8.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 8.847564458847046e-09
+    },
+    "model.layers.9.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 5.587935447692871e-09
+    },
+    "model.layers.9.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 1.3969838619232178e-08
+    },
+    "model.layers.10.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 2.7939677238464355e-09
+    },
+    "model.layers.10.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 6.752088665962219e-09
+    },
+    "model.layers.11.self_attn.q_proj.lora.A": {
+      "max_abs": 1.9208528101444244e-09
+    },
+    "model.layers.11.self_attn.q_proj.lora.B": {
+      "max_abs": 7.566995918750763e-09
+    },
+    "model.layers.11.self_attn.v_proj.lora.A": {
+      "max_abs": 1.5133991837501526e-09
+    },
+    "model.layers.11.self_attn.v_proj.lora.B": {
+      "max_abs": 4.889443516731262e-09
+    },
+    "model.layers.12.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 1.3096723705530167e-09
+    },
+    "model.layers.12.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 6.344635039567947e-09
+    },
+    "model.layers.13.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 2.444721758365631e-09
+    },
+    "model.layers.13.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 6.51925802230835e-09
+    },
+    "model.layers.14.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 2.3283064365386963e-09
+    },
+    "model.layers.14.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 6.05359673500061e-09
+    },
+    "model.layers.15.self_attn.q_proj.lora.A": {
+      "max_abs": 1.6298145055770874e-09
+    },
+    "model.layers.15.self_attn.q_proj.lora.B": {
+      "max_abs": 3.259629011154175e-09
+    },
+    "model.layers.15.self_attn.v_proj.lora.A": {
+      "max_abs": 9.89530235528946e-10
+    },
+    "model.layers.15.self_attn.v_proj.lora.B": {
+      "max_abs": 7.450580596923828e-09
+    },
+    "model.layers.16.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 3.3760443329811096e-09
+    },
+    "model.layers.16.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 7.101334631443024e-09
+    },
+    "model.layers.17.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 8.149072527885437e-10
+    },
+    "model.layers.17.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 9.778887033462524e-09
+    },
+    "model.layers.18.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 1.6952981241047382e-09
+    },
+    "model.layers.18.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 9.42964106798172e-09
+    },
+    "model.layers.19.self_attn.q_proj.lora.A": {
+      "max_abs": 3.725290298461914e-09
+    },
+    "model.layers.19.self_attn.q_proj.lora.B": {
+      "max_abs": 1.0244548320770264e-08
+    },
+    "model.layers.19.self_attn.v_proj.lora.A": {
+      "max_abs": 3.725290298461914e-09
+    },
+    "model.layers.19.self_attn.v_proj.lora.B": {
+      "max_abs": 7.275957614183426e-09
+    },
+    "model.layers.20.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 8.149072527885437e-10
+    },
+    "model.layers.20.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 2.1653249859809875e-08
+    },
+    "model.layers.21.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 1.0732037480920553e-09
+    },
+    "model.layers.21.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 1.0157236829400063e-08
+    },
+    "model.layers.22.linear_attn.in_proj_qkv.lora.A": {
+      "max_abs": 1.862645149230957e-09
+    },
+    "model.layers.22.linear_attn.in_proj_qkv.lora.B": {
+      "max_abs": 1.862645149230957e-08
+    },
+    "model.layers.23.self_attn.q_proj.lora.A": {
+      "max_abs": 1.3969838619232178e-09
+    },
+    "model.layers.23.self_attn.q_proj.lora.B": {
+      "max_abs": 1.5512341633439064e-08
+    },
+    "model.layers.23.self_attn.v_proj.lora.A": {
+      "max_abs": 1.862645149230957e-09
+    },
+    "model.layers.23.self_attn.v_proj.lora.B": {
+      "max_abs": 8.614733815193176e-09
+    },
+    "loss": {
+      "max_abs": 0.0
+    }
+  }
+}

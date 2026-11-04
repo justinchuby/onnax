@@ -41,16 +41,23 @@ def checkpoint_decoder(model, group_size):
     return model
 
 
-def chunked_token_loss(model, batch, labels, chunk_size):
-    """Checkpoint each frozen head/CE chunk and normalize over shifted targets.
+def chunked_token_loss(model, batch, labels, chunk_size, *, head_policy="checkpoint"):
+    """Run a bounded head and normalize over valid shifted targets.
 
-    Transformers computes the decoder hidden states. Recomputing each head chunk
-    during backward bounds live logits to chunk_size rows. Native PyTorch CE
-    provides the independent loss implementation.
+    Checkpointing recomputes each head chunk during backward. The eager policy
+    gathers valid rows and computes frozen-head gradients alongside each loss
+    chunk. Both use native PyTorch cross entropy.
     """
     if isinstance(chunk_size, bool) or not isinstance(chunk_size, int) or chunk_size < 1:
         raise ValueError("Expected a positive output-head chunk size")
+    if head_policy not in ("checkpoint", "eager"):
+        raise ValueError("Expected checkpoint or eager head policy")
     hidden = model.model(**batch, use_cache=False).last_hidden_state
+    if head_policy == "eager":
+        from examples.huggingface.torch_head import eager_head_sum
+
+        total = eager_head_sum(model.lm_head, hidden, labels, chunk_size)
+        return total / labels[:, 1:].ne(-100).sum().clamp(min=1)
     rows = hidden[:, :-1].reshape(-1, hidden.shape[-1])
     targets = labels[:, 1:].reshape(-1)
 

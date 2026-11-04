@@ -128,6 +128,7 @@ def measure(
     *,
     device="cpu",
     attention="sdpa",
+    head_policy="eager",
     checkpoint_layers=1,
     head_chunk_size=128,
     warmup=10,
@@ -137,6 +138,8 @@ def measure(
     """Time fixed-parameter forward/loss/backward with explicit device boundaries."""
     if device not in ("cpu", "mps") or attention not in ("eager", "sdpa"):
         raise ValueError("Expected CPU/MPS and eager/SDPA attention")
+    if head_policy not in ("checkpoint", "eager"):
+        raise ValueError("Expected checkpoint or eager head policy")
     if device == "mps" and not torch.backends.mps.is_available():
         raise ValueError("MPS is unavailable")
     if device == "mps" and os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK") == "1":
@@ -161,6 +164,7 @@ def measure(
     source_files = [
         Path(__file__),
         Path(__file__).with_name("torch_context.py"),
+        Path(__file__).with_name("torch_head.py"),
         Path(__file__).with_name("decoder_families.py"),
         Path(__file__).with_name("validation.py"),
         Path(__file__).with_name("mixed_precision.py"),
@@ -203,7 +207,9 @@ def measure(
         model.zero_grad(set_to_none=True)
         synchronize(device)
         before = time.perf_counter()
-        loss = chunked_token_loss(model, values, labels, head_chunk_size)
+        loss = chunked_token_loss(
+            model, values, labels, head_chunk_size, head_policy=head_policy
+        )
         loss.backward()
         synchronize(device)
         elapsed = time.perf_counter() - before
@@ -271,7 +277,12 @@ def measure(
         "timing_scope": "Fixed-parameter forward, mean shifted-token loss and all adapter gradients; excludes optimizer",
         "exchange_scope": "Inputs staged once before warmup; gradients/loss copied to CPU each iteration",
         "memory_scope": "Independent worker, reference construction, adapters and execution",
-        "head_schedule": "Non-reentrant checkpointed frozen projection and native cross entropy",
+        "head_policy": head_policy,
+        "head_schedule": (
+            "Eager native cross entropy and hidden gradients, valid rows only"
+            if head_policy == "eager"
+            else "Non-reentrant checkpointed frozen projection and native cross entropy"
+        ),
         "source": getattr(model.config, "onnax_pretrained", None),
         "hardware": hardware(),
         "versions": {name: version(name) for name in ("torch", "transformers", "numpy")},
@@ -302,6 +313,7 @@ def main():
     parser.add_argument("--cache-dir")
     parser.add_argument("--device", choices=["cpu", "mps"], default="cpu")
     parser.add_argument("--attention", choices=["eager", "sdpa"], default="sdpa")
+    parser.add_argument("--head-policy", choices=["eager", "checkpoint"], default="eager")
     parser.add_argument("--checkpoint-layers", type=int, default=1)
     parser.add_argument("--head-chunk-size", type=int, default=128)
     parser.add_argument("--warmup", type=int, default=10)
@@ -314,6 +326,7 @@ def main():
         batch,
         device=args.device,
         attention=args.attention,
+        head_policy=args.head_policy,
         checkpoint_layers=args.checkpoint_layers,
         head_chunk_size=args.head_chunk_size,
         warmup=args.warmup,
