@@ -362,9 +362,10 @@ class JvpPass(ir.passes.FunctionalPass):
         * Layout/indexing: Reshape, Flatten, Squeeze, Unsqueeze, Transpose,
           Expand, Concat, Split, Gather (including repeated/negative indices).
           Also floating-point Cast/CastLike, Where, Softmax, and LogSoftmax.
-          Forward mode additionally supports Slice, constant/reflect/edge/wrap Pad,
-          and ScatterND with reduction="add";
-          its data/updates are differentiable and its indices are structural.
+          Both modes support Slice, constant Pad, and ScatterND with reduction="none"
+          or "add". Replacement scatter uses unique index tuples; additive scatter
+          supports repeats. Data/updates are differentiable and indices are structural.
+          Forward mode also supports reflect/edge/wrap Pad.
           Pow accepts an inactive integer exponent; floating operands must have
           matching dtypes.
         * Reverse-mode broadcast reduction uses runtime shapes, including
