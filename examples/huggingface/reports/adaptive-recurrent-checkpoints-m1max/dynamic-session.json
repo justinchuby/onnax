@@ -1,0 +1,198 @@
+{
+  "status": "complete",
+  "scope": "same fixed and adaptive MLX sessions across4032/8192/4032 with changed adapters and upstream inputs",
+  "cases": [
+    {
+      "length": 4032,
+      "changed_values": false,
+      "inputs": {
+        "input_ids": {
+          "shape": [
+            1,
+            4032
+          ],
+          "dtype": "int64",
+          "bytes": 32256,
+          "sha256": "e7eb188a4c860579198c1e3d31ada13bdaddcfaab5884798ba7f62edad0f996e"
+        },
+        "v_model.embed_tokens.Gather_109": {
+          "shape": [
+            1,
+            4032,
+            1024
+          ],
+          "dtype": "float32",
+          "bytes": 16515072,
+          "sha256": "0256b29db606c5416ef74e5aa6fae57e31ebbcc76985ae925088558cdd19c696"
+        },
+        "model.layers.0.linear_attn.in_proj_qkv.lora.A": {
+          "shape": [
+            1024,
+            4
+          ],
+          "dtype": "float32",
+          "bytes": 16384,
+          "sha256": "cd21394052551d4dd17f09cf59b7232058d486b48c59ad697c51fb816e1fddac"
+        },
+        "model.layers.0.linear_attn.in_proj_qkv.lora.B": {
+          "shape": [
+            4,
+            6144
+          ],
+          "dtype": "float32",
+          "bytes": 98304,
+          "sha256": "19f74bc30adf7071abe518242ecb37e4e22866107a6f8e79b5d5d106213024f0"
+        },
+        "v_model.layers.0.Add_219_cotangent": {
+          "shape": [
+            1,
+            4032,
+            1024
+          ],
+          "dtype": "float32",
+          "bytes": 16515072,
+          "sha256": "1f722d8883723c76b4a072ad1aabea81158828994ee836dca24733bd8126fd08"
+        }
+      },
+      "outputs": {
+        "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent": {
+          "max_abs": 0.0,
+          "byte_equal": true
+        },
+        "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent": {
+          "max_abs": 0.0,
+          "byte_equal": true
+        }
+      }
+    },
+    {
+      "length": 8192,
+      "changed_values": true,
+      "inputs": {
+        "input_ids": {
+          "shape": [
+            1,
+            8192
+          ],
+          "dtype": "int64",
+          "bytes": 65536,
+          "sha256": "f85ce7a1823f9c440e9374938c41e6e7d520de821d663a0bc48aba98ae47a7a7"
+        },
+        "v_model.embed_tokens.Gather_109": {
+          "shape": [
+            1,
+            8192,
+            1024
+          ],
+          "dtype": "float32",
+          "bytes": 33554432,
+          "sha256": "2999f1b40310c87ca3680045d8e7dfab1462fa3165f577b7760d523821446f43"
+        },
+        "model.layers.0.linear_attn.in_proj_qkv.lora.A": {
+          "shape": [
+            1024,
+            4
+          ],
+          "dtype": "float32",
+          "bytes": 16384,
+          "sha256": "ea024ecf9bf7c7b91818fdcc35469c17005ca6969991afab71f0c6dbfc45d787"
+        },
+        "model.layers.0.linear_attn.in_proj_qkv.lora.B": {
+          "shape": [
+            4,
+            6144
+          ],
+          "dtype": "float32",
+          "bytes": 98304,
+          "sha256": "a19c3961987af06078c8e075d685d328db80375b61e149fa68a7343a529c52ee"
+        },
+        "v_model.layers.0.Add_219_cotangent": {
+          "shape": [
+            1,
+            8192,
+            1024
+          ],
+          "dtype": "float32",
+          "bytes": 33554432,
+          "sha256": "81b553e1c96dc02b6a7aa6b2e2db0374402369aaca8ed45374f5addf160f6733"
+        }
+      },
+      "outputs": {
+        "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent": {
+          "max_abs": 0.0,
+          "byte_equal": true
+        },
+        "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent": {
+          "max_abs": 0.0,
+          "byte_equal": true
+        }
+      }
+    },
+    {
+      "length": 4032,
+      "changed_values": true,
+      "inputs": {
+        "input_ids": {
+          "shape": [
+            1,
+            4032
+          ],
+          "dtype": "int64",
+          "bytes": 32256,
+          "sha256": "e7eb188a4c860579198c1e3d31ada13bdaddcfaab5884798ba7f62edad0f996e"
+        },
+        "v_model.embed_tokens.Gather_109": {
+          "shape": [
+            1,
+            4032,
+            1024
+          ],
+          "dtype": "float32",
+          "bytes": 16515072,
+          "sha256": "bd36aa7daa60e759bd2970c850b28b3c70347cac8a641d0bb8f5ece3936b7259"
+        },
+        "model.layers.0.linear_attn.in_proj_qkv.lora.A": {
+          "shape": [
+            1024,
+            4
+          ],
+          "dtype": "float32",
+          "bytes": 16384,
+          "sha256": "ea024ecf9bf7c7b91818fdcc35469c17005ca6969991afab71f0c6dbfc45d787"
+        },
+        "model.layers.0.linear_attn.in_proj_qkv.lora.B": {
+          "shape": [
+            4,
+            6144
+          ],
+          "dtype": "float32",
+          "bytes": 98304,
+          "sha256": "57154bf68a2a4480e8204a8b045368a7793c5c52748ec694a265a864ecb29ee7"
+        },
+        "v_model.layers.0.Add_219_cotangent": {
+          "shape": [
+            1,
+            4032,
+            1024
+          ],
+          "dtype": "float32",
+          "bytes": 16515072,
+          "sha256": "206f9df0ec24ebf0dc7431da69f0c210072d3998676581340cdd0400d1dd8ee6"
+        }
+      },
+      "outputs": {
+        "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent": {
+          "max_abs": 0.0,
+          "byte_equal": true
+        },
+        "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent": {
+          "max_abs": 0.0,
+          "byte_equal": true
+        }
+      }
+    }
+  ],
+  "library_sha256": "f6079553459908fa84a090201aaea90f71ccdfcb7700e0c090eb5c5a344efabc",
+  "rtol": 0.0001,
+  "atol": 1e-06
+}

@@ -1,0 +1,18 @@
+import hashlib,json,os,runpy,sys
+from pathlib import Path
+from examples.huggingface.decoder_sft import OnnxDecoder
+from examples.huggingface.long_context import memory_limit
+from examples.lora.mlx_runtime import register_library
+library=sys.argv[sys.argv.index('--library')+1];register_library(library);memory_limit(library,20*1024**3)
+root=Path('/tmp/onnax-adaptive-whole-4k');details=json.loads((root/'overrides.json').read_text())
+assert len(details)==18
+for item in details.values():assert hashlib.sha256(Path(item['file']).read_bytes()).hexdigest()==item['sha256']
+for path in (root/'graphs').glob('weights-*.data'):assert hashlib.sha256(path.read_bytes()).hexdigest()==path.stem.removeprefix('weights-')
+overrides={Path(v['file']).name:v['file'] for v in details.values()};original=OnnxDecoder.load.__func__
+def load(cls,directory,**kwargs):
+ factory=kwargs['session_factory']
+ def selected(path):return factory(overrides.get(os.path.basename(os.fspath(path)),path))
+ kwargs['session_factory']=selected
+ return original(cls,directory,**kwargs)
+OnnxDecoder.load=classmethod(load)
+runpy.run_path('/tmp/onnax-mlx-gated-delta-state/bench/onnax_decoder.py',run_name='__main__')

@@ -1,0 +1,241 @@
+{
+  "main_graph_nodes": 472,
+  "declared_initializer_bytes": 86270872,
+  "onnx_file_bytes": 166604,
+  "gradient_mapping": {
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A": "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent",
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B": "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent"
+  },
+  "status": "complete",
+  "mode": "adaptive",
+  "length": 4032,
+  "warmup": 10,
+  "samples": [
+    0.26915399997960776,
+    0.2620814580004662,
+    0.2555535420542583,
+    0.2655535420635715,
+    0.2581879170611501,
+    0.26224658300634474,
+    0.25783679098822176,
+    0.2639957919018343,
+    0.2640819159569219,
+    0.25989941600710154,
+    0.25854774995241314,
+    0.2609660419402644,
+    0.2625710830325261,
+    0.25973779091145843,
+    0.2576990840025246,
+    0.26201075001154095,
+    0.26149129099212587,
+    0.26327558304183185,
+    0.26185229199472815,
+    0.2589138330658898,
+    0.2613579590106383,
+    0.26221804099623114,
+    0.2654697080142796,
+    0.2616663329536095,
+    0.26280766702257097,
+    0.26717133296187967,
+    0.25881599995773286,
+    0.2602469170233235,
+    0.26081995794083923,
+    0.2660312089137733,
+    0.2596219589468092,
+    0.2634695830056444,
+    0.2630994999781251,
+    0.25639262492768466,
+    0.2663182090036571,
+    0.26250345807056874,
+    0.2634347090497613,
+    0.2630339169409126,
+    0.2619075420079753,
+    0.2660997500643134,
+    0.2663596250349656,
+    0.2640482080169022,
+    0.2668735000770539,
+    0.26498974999412894,
+    0.2630030409200117,
+    0.26567824999801815,
+    0.2651850839611143,
+    0.2669277499662712,
+    0.25952558405697346,
+    0.2589679580414668,
+    0.2651122909737751,
+    0.2656675409525633,
+    0.2584050410659984,
+    0.25786433299072087,
+    0.26905979204457253,
+    0.25816729106009007,
+    0.26688420807477087,
+    0.2649934170767665,
+    0.2646473339991644,
+    0.26310766697861254,
+    0.2701293750433251,
+    0.2667201249860227,
+    0.26331033394671977,
+    0.26150329201482236,
+    0.26500979100819677,
+    0.27437154203653336,
+    0.26531408296432346,
+    0.26259670790750533,
+    0.26779237505979836,
+    0.2650927499635145,
+    0.26802595902699977,
+    0.26797795796301216,
+    0.266951791010797,
+    0.2685829579131678,
+    0.2670705000637099,
+    0.2666663749841973,
+    0.2771970829926431,
+    0.267394291004166,
+    0.2657731670187786,
+    0.2685339580057189,
+    0.2609885419951752,
+    0.2609837919007987,
+    0.26081066601909697,
+    0.2664117910899222,
+    0.26378358295187354,
+    0.2618998329853639,
+    0.2667567919706926,
+    0.264335332904011,
+    0.2614359579747543,
+    0.2650002499576658,
+    0.2675468330271542,
+    0.26681004103738815,
+    0.26468233298510313,
+    0.2657733329106122,
+    0.263590749935247,
+    0.26744833402335644,
+    0.26471241598483175,
+    0.26145266694948077,
+    0.2714688749983907,
+    0.2652628750074655
+  ],
+  "median_seconds": 0.26402199995936826,
+  "p95_seconds": 0.2690645024413243,
+  "session_creation_seconds": 0.1751527499873191,
+  "first_execution_seconds": 0.6175376250175759,
+  "inputs": {
+    "input_ids": {
+      "shape": [
+        1,
+        4032
+      ],
+      "dtype": "int64",
+      "bytes": 32256,
+      "sha256": "e7eb188a4c860579198c1e3d31ada13bdaddcfaab5884798ba7f62edad0f996e"
+    },
+    "v_model.embed_tokens.Gather_109": {
+      "shape": [
+        1,
+        4032,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 16515072,
+      "sha256": "0256b29db606c5416ef74e5aa6fae57e31ebbcc76985ae925088558cdd19c696"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "cd21394052551d4dd17f09cf59b7232058d486b48c59ad697c51fb816e1fddac"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B": {
+      "shape": [
+        4,
+        6144
+      ],
+      "dtype": "float32",
+      "bytes": 98304,
+      "sha256": "19f74bc30adf7071abe518242ecb37e4e22866107a6f8e79b5d5d106213024f0"
+    },
+    "v_model.layers.0.Add_219_cotangent": {
+      "shape": [
+        1,
+        4032,
+        1024
+      ],
+      "dtype": "float32",
+      "bytes": 16515072,
+      "sha256": "1f722d8883723c76b4a072ad1aabea81158828994ee836dca24733bd8126fd08"
+    }
+  },
+  "outputs": {
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent": {
+      "shape": [
+        1024,
+        4
+      ],
+      "dtype": "float32",
+      "bytes": 16384,
+      "sha256": "d71f4ff1f7619ff7c9b61c4bf26b8ba217a1085a6337931e526c2d50f10ab91e"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent": {
+      "shape": [
+        4,
+        6144
+      ],
+      "dtype": "float32",
+      "bytes": 98304,
+      "sha256": "68813e3af31d5918a49246b84a87ebebd9a3b90763ca85d7de4a6898c8422960"
+    }
+  },
+  "checks": {
+    "model.layers.0.linear_attn.in_proj_qkv.lora.A_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "d71f4ff1f7619ff7c9b61c4bf26b8ba217a1085a6337931e526c2d50f10ab91e"
+    },
+    "model.layers.0.linear_attn.in_proj_qkv.lora.B_cotangent": {
+      "max_abs": 0.0,
+      "sha256": "68813e3af31d5918a49246b84a87ebebd9a3b90763ca85d7de4a6898c8422960"
+    }
+  },
+  "allocator_before": {
+    "active_bytes": 86270824,
+    "cache_bytes": 569769984,
+    "peak_bytes": 0
+  },
+  "allocator_after": {
+    "active_bytes": 86270824,
+    "cache_bytes": 569769984,
+    "peak_bytes": 3402654580
+  },
+  "physical_memory": {
+    "available": true,
+    "current_bytes": 1139410024,
+    "lifetime_peak_bytes": 4010935400,
+    "current_resident_bytes": 294256640,
+    "scope": "macOS kernel whole-process physical footprint; includes setup and runtime"
+  },
+  "peak_rss_bytes": 339591168,
+  "library_sha256": "f6079553459908fa84a090201aaea90f71ccdfcb7700e0c090eb5c5a344efabc",
+  "model_sha256": "4c582f5ebe8d6aa80d6b24e1ade8511a028e9c8d24640fb3181bedef28a0047a",
+  "scope": "One real Qwen3.5 linear decoder block recomputation/VJP with fixed weights and captured upstream seed; 8192 repeats captured sequence arguments; runtime exchange included",
+  "rtol": 0.0001,
+  "atol": 1e-06,
+  "ort_optimizer": "disabled",
+  "cpu_fallback": false,
+  "compile": false,
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "python": "3.11.17",
+  "versions": {
+    "numpy": "2.4.6",
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnxscript": "0.7.2",
+    "onnxruntime": "1.31.1",
+    "mlx": "0.32.4",
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "mobius-onnx": "0.1.0"
+  },
+  "cpu_threads": 1,
+  "inter_threads": 1,
+  "onnax_source": "709912c1cf8d6761099d038fbefd684e4f5568e4",
+  "native_source": "fa333d7f203f9e3d758ebf6a315f34ecd034b627"
+}

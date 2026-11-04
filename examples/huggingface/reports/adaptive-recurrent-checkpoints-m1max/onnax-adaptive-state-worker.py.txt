@@ -1,0 +1,40 @@
+import argparse,hashlib,json,os,platform,resource,time
+from importlib.metadata import version
+from pathlib import Path
+import numpy as np
+import onnx
+import onnx_ir as ir
+p=argparse.ArgumentParser();p.add_argument('--mode',choices=['fixed','adaptive'],required=True);p.add_argument('--length',type=int,required=True);p.add_argument('--samples',type=int,default=100);p.add_argument('--warmup',type=int,default=10);p.add_argument('--suffix',default='');a=p.parse_args()
+from examples.huggingface.block_runtime import load_case,arrays_record,check_outputs,MlxMemory
+from examples.huggingface.long_context import memory_limit
+from examples.lora.mlx_runtime import register_library,session
+from examples.process_memory import physical_footprint
+library='/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib'
+root=Path('/tmp/onnax-adaptive-state-measurement');label=f'{a.mode}-{a.length}{a.suffix}'
+record,block,feeds,captured=load_case('/tmp/onnax-qwen35-complete-context4k-sft/export/execution','/tmp/onnax-qwen35-complete-context4k-block-captures','decoder_0_1')
+old=feeds['input_ids'].shape[1]
+feeds={k:np.ascontiguousarray(np.take(v,np.arange(a.length)%old,axis=1)) if v.ndim>=2 and v.shape[1]==old else v.copy() for k,v in feeds.items()}
+expected=captured if a.length==old else None
+if a.mode=='adaptive':
+ with np.load(root/f'fixed-{a.length}.npz',allow_pickle=False) as f:expected={k:f[k] for k in f.files}
+path='/tmp/onnax-qwen35-complete-context4k-sft/export/execution/block_1_backward.onnx' if a.mode=='fixed' else str(root/'adaptive.onnx')
+metadata=ir.from_proto(onnx.load(path,load_external_data=False))
+model_stats={'main_graph_nodes':len(metadata.graph),'declared_initializer_bytes':sum(v.const_value.nbytes for v in metadata.graph.initializers.values()),'onnx_file_bytes':Path(path).stat().st_size}
+del metadata
+register_library(library);memory_limit(library,20*1024**3);memory=MlxMemory(library)
+start=time.perf_counter();executor=session(path,enable_compile=False);creation=time.perf_counter()-start
+assert {v.name for v in executor.get_inputs()}==set(feeds)
+names=block['output_names'];initial=arrays_record(feeds)
+start=time.perf_counter();values=executor.run(names,feeds);first=time.perf_counter()-start
+assert all(np.isfinite(v).all() for v in values)
+checks=None if expected is None else check_outputs(names,values,expected)
+del values
+for _ in range(a.warmup):executor.run(names,feeds)
+memory.reset_peak();before=memory.snapshot();samples=[]
+for _ in range(a.samples):
+ start=time.perf_counter();values=executor.run(names,feeds);samples.append(time.perf_counter()-start)
+after=memory.snapshot();assert arrays_record(feeds)==initial
+if expected is not None:check_outputs(names,values,expected)
+np.savez(root/(label+'.npz'),**dict(zip(names,values,strict=True)))
+result={**model_stats,'gradient_mapping':dict(zip(record['blocks'][block['index']]['active_inputs'],names,strict=True)),'status':'complete','mode':a.mode,'length':a.length,'warmup':a.warmup,'samples':samples,'median_seconds':float(np.median(samples)),'p95_seconds':float(np.percentile(samples,95)),'session_creation_seconds':creation,'first_execution_seconds':first,'inputs':initial,'outputs':arrays_record(dict(zip(names,values,strict=True))),'checks':checks,'allocator_before':before,'allocator_after':after,'physical_memory':physical_footprint(),'peak_rss_bytes':resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,'library_sha256':hashlib.sha256(Path(library).read_bytes()).hexdigest(),'model_sha256':hashlib.sha256(Path(path).read_bytes()).hexdigest(),'scope':'One real Qwen3.5 linear decoder block recomputation/VJP with fixed weights and captured upstream seed; 8192 repeats captured sequence arguments; runtime exchange included','rtol':1e-4,'atol':1e-6,'ort_optimizer':'disabled','cpu_fallback':False,'compile':False,'platform':platform.platform(),'python':platform.python_version(),'versions':{name:version(name) for name in ['numpy','onnx','onnx-ir','onnxscript','onnxruntime','mlx','torch','transformers','mobius-onnx']},'cpu_threads':executor.get_session_options().intra_op_num_threads,'inter_threads':executor.get_session_options().inter_op_num_threads,'onnax_source':'709912c1cf8d6761099d038fbefd684e4f5568e4','native_source':'fa333d7f203f9e3d758ebf6a315f34ecd034b627'}
+(root/(label+'.json')).write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:v for k,v in result.items() if k not in ['samples','inputs','outputs']}),flush=True)

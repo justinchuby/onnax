@@ -1,0 +1,27 @@
+import hashlib,json
+from pathlib import Path
+import numpy as np
+from examples.huggingface.block_runtime import load_case,arrays_record
+from examples.huggingface.long_context import memory_limit
+from examples.lora.mlx_runtime import register_library,session
+root=Path('/tmp/onnax-adaptive-dynamic-session');root.mkdir(exist_ok=False)
+library='/tmp/onnax-gated-delta-state-runtime/libonnxruntime_mlx_ep.dylib';register_library(library);memory_limit(library,20*1024**3)
+record,block,original,expected=load_case('/tmp/onnax-qwen35-complete-context4k-sft/export/execution','/tmp/onnax-qwen35-complete-context4k-block-captures','decoder_0_1')
+fixed=session('/tmp/onnax-qwen35-complete-context4k-sft/export/execution/block_1_backward.onnx',enable_compile=False)
+adaptive=session('/tmp/onnax-adaptive-state-measurement/adaptive.onnx',enable_compile=False)
+rows=[]
+for index,length in enumerate([4032,8192,4032]):
+ feeds={k:np.ascontiguousarray(np.take(v,np.arange(length)%4032,axis=1)) if v.ndim>=2 and v.shape[1]==4032 else v.copy() for k,v in original.items()}
+ if index:
+  for name in feeds:
+   if name.endswith('.lora.B'):feeds[name]+=np.float32(.0003*index)
+   elif name.endswith('.lora.A'):feeds[name]*=np.float32(.8)
+   elif feeds[name].dtype==np.float32:feeds[name]*=np.float32(.97)
+ before=arrays_record(feeds);a=fixed.run(block['output_names'],feeds);b=adaptive.run(block['output_names'],feeds)
+ assert arrays_record(feeds)==before
+ diffs={}
+ for name,x,y in zip(block['output_names'],a,b,strict=True):
+  np.testing.assert_allclose(x,y,rtol=1e-4,atol=1e-6)
+  diffs[name]={'max_abs':float(np.max(np.abs(x-y))),'byte_equal':x.dtype==y.dtype and x.shape==y.shape and x.tobytes()==y.tobytes()}
+ rows.append({'length':length,'changed_values':bool(index),'inputs':before,'outputs':diffs})
+(root/'report.json').write_text(json.dumps({'status':'complete','scope':'same fixed and adaptive MLX sessions across4032/8192/4032 with changed adapters and upstream inputs','cases':rows,'library_sha256':hashlib.sha256(Path(library).read_bytes()).hexdigest(),'rtol':1e-4,'atol':1e-6},indent=2)+'\n');print('Three dynamic cases passed with reused sessions',flush=True)

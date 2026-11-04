@@ -1,0 +1,28 @@
+import hashlib,json,subprocess
+from pathlib import Path
+import onnx,onnx_ir as ir
+from onnx_ir.passes import common
+import onnax
+from onnax._shared_weights import SharedWeights
+from examples.huggingface.optimization import optimize_training_graph
+root=Path('/tmp/onnax-adaptive-state-measurement');root.mkdir(exist_ok=True)
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()=='709912c1cf8d6761099d038fbefd684e4f5568e4'
+assert not subprocess.check_output(['git','status','--porcelain'],text=True)
+prepared=root/'prepared.json'
+if prepared.exists():
+ record=json.loads(prepared.read_text());assert record['source']=='709912c1cf8d6761099d038fbefd684e4f5568e4'
+ for name,digest in record['files'].items():assert hashlib.sha256((root/name).read_bytes()).hexdigest()==digest,name
+ print(json.dumps({'phase':'reused_checked_preparation','record':record}),flush=True)
+ raise SystemExit(0)
+source=Path('/tmp/onnax-qwen35-complete-context4k-sft/export/execution')
+row=json.loads((source/'interface.json').read_text())['blocks'][1]
+model=ir.load(source/'block_1_forward.onnx')
+derivative=onnax.vjp(model,inputs=row['active_inputs'],outputs=row['active_outputs'])
+values={v.name:v for v in derivative.graph.outputs};derivative.graph.outputs.clear();derivative.graph.outputs.extend(values[n] for n in row['gradients'])
+derivative=optimize_training_graph(derivative);common.RemoveUnusedNodesPass()(derivative)
+for value in list(derivative.graph.inputs):
+ if not value.uses() and value not in derivative.graph.outputs:derivative.graph.inputs.remove(value)
+with SharedWeights(root) as weights:path=weights.save(derivative,'adaptive')
+onnx.checker.check_model(path,full_check=True)
+record={'source':'709912c1cf8d6761099d038fbefd684e4f5568e4','source_block':str(source/'block_1_forward.onnx'),'original_derivative':str(source/'block_1_backward.onnx'),'adaptive':path,'inputs':[v.name for v in derivative.graph.inputs],'outputs':[v.name for v in derivative.graph.outputs],'files':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in root.iterdir() if p.is_file() and p.suffix in {".onnx", ".data"}}}
+(root/'prepared.json').write_text(json.dumps(record,indent=2)+'\n');print(json.dumps(record),flush=True)
