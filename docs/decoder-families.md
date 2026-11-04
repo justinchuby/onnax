@@ -111,6 +111,20 @@ ONNX loss, all ten adapter gradients and standalone logits match the continuous
 run exactly. Its 31 frozen Linear projections occupy 93,024 packed/scale bytes,
 compared with 661,504 FP32 bytes.
 
+The same path completes 30 MLX updates for the pinned Qwen3.5-0.8B checkpoint
+at sequence length 64, microbatch one and accumulation four. On the fixed
+version-controlled corpus, train loss changes from 5.361 to 0.303 and validation
+loss from 6.145 to 5.813. Its 186 frozen Linear projections use 279.9 MB of NF4
+codes/scales instead of 1,990.5 MB of FP32 weights. Embeddings and the head are
+stored separately in FP32.
+
+A fresh process resumes from step 15 using `--load-export` to reuse the exported
+ONNX graphs. Final adapters, AdamW, scheduler, loaded loss, all 60 adapter
+gradients and standalone logits are bitwise equal to continuous training.
+The full checker validates 57 exported models per run.
+[Pretrained reports and reproduction drivers](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/generic-nf4-m1max/real-qwen35)
+record the source revision, input batches, memory scope and runtime hashes.
+
 ### Compile the output head independently
 
 With MLX, add `--compile-head` to compile the chunked loss/gradient and logits

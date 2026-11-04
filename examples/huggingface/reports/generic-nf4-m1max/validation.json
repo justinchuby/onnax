@@ -21,5 +21,32 @@
     "loss_and_all_10_exported_gradients_bitwise_equal": true,
     "checkpoint_adapter_optimizer_scheduler_equal": true
   },
-  "scope": "Quality/recovery validation; elapsed time includes evaluation, training and export after construction"
+  "scope": "Quality/recovery validation; elapsed time includes evaluation, training and export after construction",
+  "head_session_validation": {
+    "source_commit": "ee178a006a84265bb4b46aa65ceddf30a4bacd4e",
+    "cpu_passed": 23,
+    "native_compiled_head_passed": 3,
+    "native_log_sha256": "41ac044a096600af01757c4639e44a1ceec6fa7f7793f86a21e33bc57d601871",
+    "cli": "tiny Qwen3.5 NF4, four SFTTrainer steps, eager decoder and compiled head",
+    "custom_session_cleanup": "Two close/error/idempotence cases passed; external-data files removed after runtime references are released"
+  },
+  "real_qwen35": {
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "steps": 30,
+    "resume_from_step": 15,
+    "export_reuse": true,
+    "all_60_exported_gradients_and_state_bitwise_equal": true,
+    "onnx_checker_models_per_run": 57
+  },
+  "final_regression": {
+    "passed": 100,
+    "native_opt_in_skipped": 12,
+    "log_sha256": "e34d7fcc109c77eaedb77818e764e912516398726ddcaf32e486b7fb3f686a78"
+  },
+  "head_supervision_regression": {
+    "passed": 20,
+    "native_opt_in_skipped": 17,
+    "custom_close_final_passed": 2
+  }
 }

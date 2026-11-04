@@ -182,9 +182,11 @@ class OnnxDecoder(PreTrainedModel):
             return result
 
     def close(self):
-        self.onnx.close()
-        if self.head is not None:
-            self.head.close()
+        try:
+            self.onnx.close()
+        finally:
+            if self.head is not None:
+                self.head.close()
 
 
 def _check_head_identity(module, state_dict, prefix, *_args):
