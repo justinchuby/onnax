@@ -32,9 +32,7 @@ squared = tape.op("Mul", [y, y])
 loss = tape.op("ReduceSum", [squared], {"keepdims": 0})
 loss.name = "loss"
 model = ir.Model(
-    ir.Graph(
-        [x, w], [loss], nodes=tape.nodes, opset_imports={"": 24}, name="squared_loss"
-    ),
+    ir.Graph([x, w], [loss], nodes=tape.nodes, opset_imports={"": 24}, name="squared_loss"),
     ir_version=10,
 )
 gradient = onnax.grad(model, inputs=["weight"], output="loss")
