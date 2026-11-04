@@ -1,0 +1,24 @@
+import json,os,subprocess,hashlib
+from pathlib import Path
+import numpy as np
+ROOT=Path('/tmp/onnax-head-shared-training');ROOT.mkdir(exist_ok=False)
+PYTHON='/Users/justinc/Documents/GitHub/onnax/.venv/bin/python';LIB='/tmp/onnax-key-tiles-runtime/libonnxruntime_mlx_ep.dylib'
+env={**os.environ,'PYTHONPATH':'src:.','HF_HUB_OFFLINE':'1','HF_DATASETS_OFFLINE':'1','ONNAX_TILED_ATTENTION':'1','ONNXRUNTIME_EP_MLX_NO_COMPILE':'1','ONNXRUNTIME_EP_MLX_ATTENTION_VJP_DENSE_LIMIT_BYTES':'0'}
+for key in ('ONNXRUNTIME_EP_MLX_TRACE','ONNXRUNTIME_EP_MLX_CACHE_LIMIT_BYTES'):env.pop(key,None)
+for label,source,head in [('baseline','/tmp/onnax-generic-nf4','3249d6786f52e1dc84903c56db6f6a0089a40192'),('shared','/tmp/onnax-head-shared-terms','34d2d2482d4b268918b254d92b6866c2669c2108')]:
+ assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()==head
+ assert not subprocess.check_output(['git','status','--porcelain'],cwd=source,text=True)
+ print(json.dumps({'phase':label}),flush=True)
+ command=[PYTHON,'-m','examples.huggingface.guard','--output-dir',str(ROOT/(label+'-guard')),'--',PYTHON,'/tmp/onnax-tiled-training-worker.py','--output',str(ROOT/(label+'.json')),'--capture','--warmup','2','--samples','3','--library',LIB]
+ with open(ROOT/(label+'.log'),'w') as log:
+  child=subprocess.Popen(command,cwd=source,env=env,stdout=log,stderr=subprocess.STDOUT);print(json.dumps({'phase':label,'pid':child.pid}),flush=True);code=child.wait()
+ if code:raise SystemExit(code)
+a=json.loads((ROOT/'baseline.json').read_text());b=json.loads((ROOT/'shared.json').read_text());x=np.load(ROOT/'baseline.json.npz');y=np.load(ROOT/'shared.json.npz')
+assert set(x.files)==set(y.files) and len(x.files)==448
+rows={k:{'bitwise_equal':bool(np.array_equal(x[k],y[k])),'violations':int(np.count_nonzero(~np.isclose(x[k],y[k],rtol=1e-4,atol=1e-6))),'max_abs':float(np.max(np.abs(x[k]-y[k])))} for k in x.files}
+assert all(v['violations']==0 for v in rows.values())
+assert len(a['losses'])==len(b['losses'])==5
+np.testing.assert_allclose(a['losses'],b['losses'],rtol=1e-4,atol=1e-6)
+assert a['frozen_hashes_unchanged'] and b['frozen_hashes_unchanged'] and a['frozen_sha256']==b['frozen_sha256'] and a['input_ids_sha256']==b['input_ids_sha256']
+report={'scope':'Five-update real Qwen3-0.6B 4K functional comparison; two warmups and three timed steps per binary','arrays':rows,'arrays_bitwise_equal':sum(v['bitwise_equal'] for v in rows.values()),'losses_bitwise_equal':a['losses']==b['losses'],'frozen_weights_unchanged':True,'rtol':1e-4,'atol':1e-6}
+(ROOT/'comparison.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:v for k,v in report.items() if k!='arrays'}),flush=True)

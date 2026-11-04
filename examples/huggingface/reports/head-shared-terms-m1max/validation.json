@@ -1,0 +1,82 @@
+{
+  "component_scope": "Isolated head loss and hidden VJP, 10 warmups and 100 synchronous samples per fresh process",
+  "component_cases": [
+    {
+      "rows": 17,
+      "policy": "compiled",
+      "baseline_ms": {
+        "median": 10.052875441033393,
+        "p95": 10.31869372818619
+      },
+      "shared_ms": {
+        "median": 10.007083066739142,
+        "p95": 10.20359757822007
+      },
+      "bitwise_equal": {
+        "loss": true,
+        "gradient": true
+      }
+    },
+    {
+      "rows": 17,
+      "policy": "eager",
+      "baseline_ms": {
+        "median": 12.095000478439033,
+        "p95": 12.286670779576525
+      },
+      "shared_ms": {
+        "median": 10.690583498217165,
+        "p95": 10.946291376603767
+      },
+      "bitwise_equal": {
+        "loss": true,
+        "gradient": true
+      }
+    },
+    {
+      "rows": 128,
+      "policy": "compiled",
+      "baseline_ms": {
+        "median": 28.786291484721005,
+        "p95": 29.069320217240602
+      },
+      "shared_ms": {
+        "median": 29.005250486079603,
+        "p95": 29.281403811182827
+      },
+      "bitwise_equal": {
+        "loss": true,
+        "gradient": true
+      }
+    },
+    {
+      "rows": 128,
+      "policy": "eager",
+      "baseline_ms": {
+        "median": 42.73156251292676,
+        "p95": 43.1002777419053
+      },
+      "shared_ms": {
+        "median": 33.08847948210314,
+        "p95": 33.54089024360292
+      },
+      "bitwise_equal": {
+        "loss": true,
+        "gradient": true
+      }
+    }
+  ],
+  "full_training_scope": "Five Qwen3-0.6B 4K updates for equivalence; two warmups and three timed samples",
+  "cpu_checks": 34,
+  "native_checks": 45,
+  "independent_family_checks": 6,
+  "native_precisions": [
+    "fp32",
+    "bf16",
+    "fp16"
+  ],
+  "scope": "Selective inlining after AD; analytic loss functions remain in the source graph",
+  "measured_source_commit": "34d2d2482d4b268918b254d92b6866c2669c2108",
+  "rebased_equivalent_source_commit": "a852fdce79f66798808f8b7b0b1b0b0bf02d2614",
+  "source_identity": "Implementation and test files unchanged by rebase onto merged #184"
+}

@@ -1,0 +1,38 @@
+{
+  "hardware": "Apple M1 Max",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "numpy": "2.4.6",
+    "onnx": "1.23.2",
+    "onnx-ir": "1.1.0",
+    "onnxscript": "0.7.2",
+    "onnxruntime": "1.31.1",
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "mobius-onnx": "0.1.0"
+  },
+  "source_model": "Qwen/Qwen3.5-0.8B",
+  "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "projection_layout": "[vocab,hidden] FP32; Gemm transB=1",
+  "head_gradient_model_sha256": "73298280c70f7700fbb65c60b2034f027c57db20d4109750d081ae07eb23caa2",
+  "threads": {
+    "torch_reference": 1,
+    "ort_intra": 1,
+    "ort_inter": 1
+  },
+  "mlx_allocator_cap_bytes": 21474836480,
+  "process_guard_bytes": 25769803776,
+  "disk_reserve_bytes": 5368709120,
+  "warmup": 10,
+  "samples": 100,
+  "scope": "Isolated head Session.run including NumPy array exchange; physical/RSS peak includes process construction and runtime",
+  "linked_native_libraries": {
+    "/opt/homebrew/Cellar/mlx/0.32.4/lib/libjaccl.dylib": "204fcbb464a337ae49ea7abf616674033f527aaddc67a05f16fb6df82ba374ac",
+    "/opt/homebrew/Cellar/mlx/0.32.4/lib/libmlx.dylib": "119d45ec9efbf726e4761c118e9d65d5224ddeb1082ad8f521b4601c68f5a03e",
+    "/opt/homebrew/Cellar/mlx-c/0.7.0_1/lib/libmlxc.dylib": "e439256facb869ff64b1283989508586bca65c18d95bc741feef316d48a1b48c"
+  },
+  "homebrew_prefixes": {
+    "mlx": "/opt/homebrew/Cellar/mlx/0.32.4",
+    "mlx-c": "/opt/homebrew/Cellar/mlx-c/0.7.0_1"
+  }
+}
