@@ -392,3 +392,46 @@ def test_checkpoint_releases_values_unused_by_backward(skip, monkeypatch, tmp_pa
                 expected.sum().backward()
                 torch.testing.assert_close(gradient, parameter.grad)
                 torch.testing.assert_close(runtime.trainable[0].grad, 2 * parameter.grad)
+
+
+def test_checkpoint_output_ownership_and_disjoint_scan(monkeypatch):
+    from types import SimpleNamespace
+
+    from onnax.torch._checkpoint_execution import _forward_arrays
+
+    feed = np.arange(32, dtype=np.float32)
+    shared = np.arange(16, dtype=np.float32)
+    readonly = np.arange(4, dtype=np.float32)
+    readonly.flags.writeable = False
+    owned = [np.arange(8, dtype=np.float32) for _ in range(64)]
+    outputs = [feed[::2], shared[:12], shared[4:], readonly, *owned]
+    names = tuple(f"output_{i}" for i in range(len(outputs)))
+
+    class Session:
+        def run(self, requested, feeds):
+            assert requested == list(names)
+            assert feeds["x"] is feed
+            return outputs
+
+    execution = SimpleNamespace(
+        block=SimpleNamespace(inputs=("x",), outputs=names),
+        forward_inputs=None,
+        forward=Session(),
+    )
+    original = np.shares_memory
+    checks = 0
+
+    def counted(left, right):
+        nonlocal checks
+        checks += 1
+        return original(left, right)
+
+    monkeypatch.setattr(np, "shares_memory", counted)
+    actual = _forward_arrays(execution, {"x": feed})
+    assert checks < len(outputs)
+    for result, source in zip(actual, outputs, strict=True):
+        np.testing.assert_array_equal(result, source)
+        assert result.flags.writeable
+    for result, source in zip(actual[:4], outputs[:4], strict=True):
+        assert not original(result, source)
+    assert all(result is source for result, source in zip(actual[4:], owned, strict=True))
