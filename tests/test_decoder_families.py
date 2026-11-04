@@ -230,7 +230,7 @@ def test_trl_training_and_fresh_process_resume(
 
 @pytest.mark.parametrize("family", ["phi3", "qwen3", "qwen35"])
 @pytest.mark.parametrize("nf4", [False, True])
-@pytest.mark.parametrize("precision", ["fp32", "bf16", "fp16"])
+@pytest.mark.parametrize("precision", ["fp32", "bf16"])
 def test_native_family_gradients_and_peft(tmp_path, family, nf4, precision):
     if os.environ.get("ONNAX_TEST_MLX_EP") != "1":
         pytest.skip("Native MLX opt-in")

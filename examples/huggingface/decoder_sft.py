@@ -615,8 +615,8 @@ def run(
     load_export=None,
 ):
     """Let TRL own training, accumulation, optimizer and checkpoint policy."""
-    if projection_precision not in ("fp32", "bf16", "fp16"):
-        raise ValueError("Expected fp32, bf16 or fp16 decoder projection precision")
+    if projection_precision not in ("fp32", "bf16"):
+        raise ValueError("Expected fp32 or bf16 decoder projection precision")
     _validate_head_chunk_size(head_chunk_size)
     if head_session_factory is not None and head_chunk_size is None:
         raise ValueError("A head session factory requires head_chunk_size")
@@ -786,7 +786,7 @@ def main():
     parser.add_argument("--fused-ops", action="store_true")
     parser.add_argument("--nf4", action="store_true")
     parser.add_argument(
-        "--projection-precision", choices=("fp32", "bf16", "fp16"), default="fp32"
+        "--projection-precision", choices=("fp32", "bf16"), default="fp32"
     )
     parser.add_argument("--compile-head", action="store_true")
     parser.add_argument("--head-chunk-size", type=int)
