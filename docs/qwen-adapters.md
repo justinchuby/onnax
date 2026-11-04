@@ -102,6 +102,7 @@ head chunks gives:
 | Previous head layout, eager sessions | 8.606 / 9.167 s | 1.061 s | 14.50 GiB |
 | Source head layout, compiled head and eager decoder | 8.157 / 8.574 s | 0.612 s | 12.77 GiB |
 | PyTorch / MPS eager, chunked head | 9.151 / 9.170 s | — | 12.91 GiB |
+| PyTorch / MPS SDPA, chunked head | 9.290 / 9.320 s | — | 12.92 GiB |
 
 Both runs use the same MLX EP library, input tokens, thread settings and
 20 GiB allocator limit, with 10 warmup updates followed by 100 measured updates.
@@ -112,9 +113,18 @@ records bitwise-equal gradients and updated parameters for all 112 adapters
 over the first two updates; all 110 losses agree within `rtol=1e-4, atol=1e-6`.
 The [raw reports and provenance](https://github.com/justinchuby/onnax/tree/main/examples/huggingface/reports/source-head-m1max)
 retain every timing sample, settings and source/library hashes.
-The ONNX path delivers 1.122 times the PyTorch eager throughput on this workload.
+The ONNX path delivers 1.122 times the PyTorch eager throughput and 1.139 times
+the PyTorch SDPA throughput on this workload.
 PyTorch uses the same NF4-reconstructed decoder weight values in dense storage;
 ONNX keeps the decoder weights packed.
+
+The [session profile](https://github.com/justinchuby/onnax/blob/main/examples/huggingface/reports/source-head-m1max/session-profile.json)
+breaks a separate three-step run into checkpoint sessions after two warmups.
+The seven decoder backward groups each take 775–777 ms; their medians total
+5.43 s. Decoder forward medians total 2.03 s, and the head takes 0.60 s.
+These backward sessions include replay of their group's forward operations.
+The next profiling target is projection and temporary-weight work inside a
+representative backward group.
 
 ## Save or recompute
 
