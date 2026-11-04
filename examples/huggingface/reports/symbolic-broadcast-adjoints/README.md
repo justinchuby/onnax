@@ -75,3 +75,7 @@ Across all 25 backward blocks, nodes fall from 14,489 to 8,951. Every input and
 output name remains identical. `all-blocks.json` records each graph's digest and
 node counts; `frozen-weights.json` compares the shape, dtype and payload digest
 of every `model.*` frozen initializer in the saved backward graphs.
+
+The rebased implementation also passes 39 FP32 layout and mixed-product tests
+on native MLX EP with CPU fallback disabled. The copied test plugin, JUnit
+results and library digest record that backend qualification.

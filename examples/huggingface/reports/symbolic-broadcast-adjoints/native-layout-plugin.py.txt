@@ -1,0 +1,13 @@
+"""Run existing FP32 derivative oracles on the native MLX EP."""
+from examples.lora.mlx_runtime import register_library, session
+from examples.huggingface.long_context import memory_limit
+LIBRARY='/tmp/onnax-mlx-lookup-reuse-runtime/libonnxruntime_mlx_ep.dylib'
+
+def pytest_configure(config):
+    register_library(LIBRARY)
+    memory_limit(LIBRARY, 12 * 1024**3)
+
+def pytest_collection_modifyitems(items):
+    for item in items:
+        if hasattr(item.module, 'runtime_session'):
+            item.module.runtime_session = lambda model: session(model, enable_compile=False)
