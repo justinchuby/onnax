@@ -52,7 +52,11 @@ def test_external_gauss_newton_adapter_updates_and_reload(artifacts):
     assert all(value.dtype == np.float32 for value in params.values())
     runtime = session(directory / "hvp.optimized.onnx")
     model = ir.load(directory / "hvp.optimized.onnx")
-    _, _, x, target, _, _, initial = problem()
+    w, c, x, target, _, _, initial = problem()
+    for name in PARAMETERS:
+        assert not np.array_equal(params[name], initial[name])
+    for name, expected in (("base.W", w), ("base.C", c)):
+        np.testing.assert_array_equal(model.graph.initializers[name].const_value.numpy(), expected)
     feeds = {"features": x, "target": target, **params}
     feeds.update(
         {
