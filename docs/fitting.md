@@ -197,6 +197,12 @@ the flat A directions at initialization. Armijo backtracking chooses the step
 length $\alpha$. The default command runs up to twelve FP32 updates; set
 `--fit-steps 0` to run the curvature diagnostic alone.
 
+On the seeded, noiseless LoRA problem, twelve updates reduce training MSE
+from **0.01896 to $8.68\times10^{-9}$** and held-out MSE from **0.01626 to
+$1.24\times10^{-8}$**. The [qualification report](https://github.com/justinchuby/onnax/blob/main/examples/lora/reports/gauss-newton-fp32.json)
+retains every accepted update, the source revision and the exported-artifact
+digests.
+
 Independent NumPy formulas check prediction, loss and both parameter gradients
 at every trial state, and check every Gauss–Newton product used by CG. The run
 records training and validation loss, linear residuals, CG iteration counts
