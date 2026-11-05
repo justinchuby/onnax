@@ -1,0 +1,152 @@
+{
+  "dtype": "float32",
+  "parameter_count": 160,
+  "reference_cases": 12,
+  "full_checker_graphs": 6,
+  "initial_a_gradient_zero": true,
+  "cross_block_norm": 0.006675933834472765,
+  "negative_direction_curvature": -0.000985572609351948,
+  "gauss_newton_direction_curvature": 0.0006331504555419087,
+  "reference": "Independent PyTorch FP32 HVP and JVP/VJP",
+  "rtol": 0.0001,
+  "atol": 1e-06,
+  "ort_graph_optimizer": false,
+  "fit": {
+    "damping": 0.0001,
+    "steps": [
+      {
+        "loss": 0.018961653113365173,
+        "next_loss": 0.013777296990156174,
+        "cg_iterations": 19,
+        "linear_residual": 3.71479495697713e-06,
+        "linear_tolerance": 3.8968443404883145e-06,
+        "step_size": 1.0
+      },
+      {
+        "loss": 0.013777296990156174,
+        "next_loss": 0.0009077556314878166,
+        "cg_iterations": 40,
+        "linear_residual": 1.7143418517662212e-05,
+        "linear_tolerance": 2.0825503394007683e-05,
+        "step_size": 1.0
+      },
+      {
+        "loss": 0.0009077556314878166,
+        "next_loss": 0.00010726737673394382,
+        "cg_iterations": 51,
+        "linear_residual": 4.126616659050342e-06,
+        "linear_tolerance": 4.569252021610737e-06,
+        "step_size": 1.0
+      },
+      {
+        "loss": 0.00010726737673394382,
+        "next_loss": 1.7360051060677506e-05,
+        "cg_iterations": 49,
+        "linear_residual": 9.024125233736413e-07,
+        "linear_tolerance": 1.1830233270302416e-06,
+        "step_size": 1.0
+      },
+      {
+        "loss": 1.7360051060677506e-05,
+        "next_loss": 3.5613679756352212e-06,
+        "cg_iterations": 50,
+        "linear_residual": 2.729508139509562e-07,
+        "linear_tolerance": 3.094003477599472e-07,
+        "step_size": 1.0
+      },
+      {
+        "loss": 3.5613679756352212e-06,
+        "next_loss": 1.0169945880988962e-06,
+        "cg_iterations": 54,
+        "linear_residual": 9.11753446075636e-08,
+        "linear_tolerance": 1e-07,
+        "step_size": 1.0
+      },
+      {
+        "loss": 1.0169945880988962e-06,
+        "next_loss": 3.4597678677528165e-07,
+        "cg_iterations": 48,
+        "linear_residual": 7.29325009274362e-08,
+        "linear_tolerance": 1e-07,
+        "step_size": 1.0
+      },
+      {
+        "loss": 3.4597678677528165e-07,
+        "next_loss": 1.3283886346471263e-07,
+        "cg_iterations": 40,
+        "linear_residual": 8.43649843318417e-08,
+        "linear_tolerance": 1e-07,
+        "step_size": 1.0
+      },
+      {
+        "loss": 1.3283886346471263e-07,
+        "next_loss": 5.744998787804434e-08,
+        "cg_iterations": 34,
+        "linear_residual": 9.174329562711137e-08,
+        "linear_tolerance": 1e-07,
+        "step_size": 1.0
+      },
+      {
+        "loss": 5.744998787804434e-08,
+        "next_loss": 2.7937732127725212e-08,
+        "cg_iterations": 28,
+        "linear_residual": 9.035451142835882e-08,
+        "linear_tolerance": 1e-07,
+        "step_size": 1.0
+      },
+      {
+        "loss": 2.7937732127725212e-08,
+        "next_loss": 1.502012203502545e-08,
+        "cg_iterations": 23,
+        "linear_residual": 9.91425110896671e-08,
+        "linear_tolerance": 1e-07,
+        "step_size": 1.0
+      },
+      {
+        "loss": 1.502012203502545e-08,
+        "next_loss": 8.68174687695955e-09,
+        "cg_iterations": 21,
+        "linear_residual": 8.013333996359506e-08,
+        "linear_tolerance": 1e-07,
+        "step_size": 1.0
+      }
+    ],
+    "train_loss": [
+      0.018961653113365173,
+      8.68174687695955e-09
+    ],
+    "validation_loss": [
+      0.016257058829069138,
+      1.2422636253006658e-08
+    ],
+    "adapter": "adapter.npz",
+    "parameter_inputs": [
+      "lora.A",
+      "lora.B"
+    ],
+    "gradient_outputs": [
+      "lora.A_cotangent",
+      "lora.B_cotangent"
+    ],
+    "reference_products": 469,
+    "product_max_abs_error": 3.259629011154175e-09
+  },
+  "qualification": {
+    "source_commit": "ae93a4e7ce80aef08572dafaea97904416527881",
+    "ci_run": "https://github.com/justinchuby/onnax/actions/runs/41939075723",
+    "artifact_id": 13374982798,
+    "workflow_job": "huggingface",
+    "command": "python -m examples.lora.curvature --output-dir \"$RUNNER_TEMP/lora-curvature\"",
+    "artifact_sha256": {
+      "adapter.npz": "a1240486ecf99f7b250e25a13a87213c5c89e73b981fbe6b977cc5ae69b2cf39",
+      "hvp.onnx": "8d9ae6793c14fe5db7062cbd64a742fe31551b8f7b5ab1563a886825d738fe8e",
+      "hvp.optimized.onnx": "9ca0aa5ffcb10f937e60339074a1f1d26b481eef94a7dc95fcb709ae38512a21",
+      "jvp.onnx": "b9992f718d099d1f5f87ea1f3b5ba1dd249771176f8f7ebfc6e262ee0001f428",
+      "jvp.optimized.onnx": "6b88c8a6d92552ff64b0d6af855de2eac25f5794a930db6d8328d0675876b9f1",
+      "report.json": "2e614a7a33ae501377e123fb87c465e867d2ebef68ea4922154500a5e0ae8e15",
+      "vjp.onnx": "acd48a25e99ba8485b7870ec3b4dd085d74d8ab9ea32e810aa3f2660cf45732b",
+      "vjp.optimized.onnx": "40b7eeb10d7ffe0a9c35034a07cdc1171f3d8ce4bc0fb9deda3a4caa8816c7e1"
+    },
+    "scope": "Offline seeded noiseless LoRA problem; FP32 CPU ONNX Runtime, ORT graph optimization disabled; twelve external Gauss-Newton updates; correctness qualification"
+  }
+}

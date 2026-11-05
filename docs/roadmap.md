@@ -27,8 +27,10 @@ optimizers, data loading, schedulers and checkpoint storage.
    FP16 adapter exchange. The decoder reports now include BF16/NF4 execution
    and memory measurements at 64 and 4,032 tokens; extend them with the matched
    eager-head reference and source-level bottleneck analysis.
-4. **Adapter curvature.** Explore matrix-free HVP diagnostics for LoRA, connecting
-   the existing higher-order transforms to practical fine-tuning questions.
+4. **Scientific workflows.** Build on the LoRA HVP diagnostic and external
+   Gauss–Newton adapter updates. Extend implicit hyperparameter tuning to
+   nonlinear inner objectives, preserving matrix-free products and external
+   solvers.
 
 ## Working baselines
 
