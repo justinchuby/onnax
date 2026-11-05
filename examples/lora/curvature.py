@@ -252,7 +252,9 @@ def run(output_dir, *, fit_steps=12):
             raise AssertionError("Expected a descending Gauss-Newton update")
     initial_loss, _ = evaluate(initial)
     final_loss, _ = evaluate(fitted)
-    validation = [evaluate(params, features=vx, observed=vy)[0] for params in (initial, fitted)]
+    validation = [
+        evaluate(params, features=vx, observed=vy)[0] for params in (initial, fitted)
+    ]
     np.savez(output_dir / "adapter.npz", **fitted)
     with np.load(output_dir / "adapter.npz", allow_pickle=False) as archive:
         restored = {name: archive[name] for name in PARAMETERS}
